@@ -59,7 +59,7 @@
     const hands = { [vorhand]: d.slice(0, 5), [st.dealer]: d.slice(5, 10) };
     const r = { hands, vorhand, schlag: null, trump: null, trick: [], lastTrick: null, leader: vorhand,
       tricks: { [vorhand]: 0, [st.dealer]: 0 }, won: { [vorhand]: [], [st.dealer]: [] }, value: 2, noBid: false, bid: null, lastBidder: null,
-      giveUpBy: null, played: 0, result: null, ready: {} };
+      giveUpBy: null, decided: false, played: 0, result: null, ready: {} };
     // Gestrichen (2 Punkte vor dem Ziel): darf nicht bieten. Ist nur einer gestrichen und liegt der andere
     // mindestens 4 zurück, geht die Runde um 4 Punkte. Sind beide gestrichen, wird nicht geboten.
     const [a, b] = st.seats, ga = gestrichen(st, a), gb = gestrichen(st, b);
@@ -81,6 +81,8 @@
     if (st.scores[winner] >= st.target) { st.step = "final"; st.winners = [winner]; }
   }
 
+  // Bei „4 gehen“ muss der Gestrichene vor seiner ersten Karte halten oder gehen
+  const needsDecision = (r, pid) => !!(r.vierer && !r.decided && r.giveUpBy === pid && r.hands[pid].length === 5);
   function currentTurn(st) {
     const r = st.round;
     if (st.step !== "play" || r.bid) return null;
@@ -107,6 +109,7 @@
         if (currentTurn(st) !== pid) return false;
         const hand = r.hands[pid];
         if (!hand.includes(a.card) || !legalCards(hand, r).includes(a.card)) return false;
+        if (needsDecision(r, pid)) return false; // Gestrichener muss bei „4 gehen“ erst halten oder gehen
         hand.splice(hand.indexOf(a.card), 1);
         r.trick.push({ pid, card: a.card }); r.played++;
         if (r.trick.length === 2) {
@@ -125,9 +128,12 @@
         if (a.accept) { r.value = r.bid.to; r.lastBidder = r.bid.by; r.bid = null; }
         else { const by = r.bid.by; r.bid = null; endRound(st, by, r.value, "abgelehnt"); }
         return true;
-      case "wGiveUp":
-        if (st.step !== "play" || r.giveUpBy !== pid || r.played > 0 || r.bid) return false;
+      case "wGiveUp": // gehen: Gegner bekommt 2 (nur vor der eigenen ersten Karte)
+        if (st.step !== "play" || r.giveUpBy !== pid || r.decided || r.hands[pid].length < 5 || r.bid) return false;
         endRound(st, other(st, pid), 2, "aufgegeben"); return true;
+      case "wHold": // halten: um 4 weiterspielen
+        if (st.step !== "play" || !needsDecision(r, pid)) return false;
+        r.decided = true; return true;
       case "wNext": {
         if (st.step !== "roundEnd") return false;
         if (st.seats.includes(pid)) r.ready[pid] = !r.ready[pid];
@@ -152,7 +158,8 @@
       gestrichen: Object.fromEntries(st.seats.map((id) => [id, gestrichen(st, id)])), winners: st.winners,
       vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump) : null,
       trick: r.trick.slice(), lastTrick: r.lastTrick, won: { ...r.won }, tricks: { ...r.tricks }, value: r.value, bid: r.bid, vierer: !!r.vierer,
-      noBid: r.noBid, giveUpBy: r.played === 0 ? r.giveUpBy : null, turn: currentTurn(st),
+      noBid: r.noBid, giveUpBy: r.giveUpBy && !r.decided && r.hands[r.giveUpBy].length === 5 ? r.giveUpBy : null, turn: currentTurn(st),
+      mustDecide: r.giveUpBy && needsDecision(r, r.giveUpBy) ? r.giveUpBy : null,
       canBid: Object.fromEntries(st.seats.map((id) => [id, canBid(st, id)])),
       handCount: Object.fromEntries(st.seats.map((id) => [id, r.hands[id].length])),
       result: r.result, ready: { ...r.ready }, history: st.history.slice(-12),
@@ -165,7 +172,7 @@
     const st = s.watten;
     if (!st || !st.round || !st.seats.includes(pid)) return null;
     const r = st.round, hand = r.hands[pid];
-    return { roundNo: st.roundNo, hand: hand.slice(), legal: currentTurn(st) === pid ? legalCards(hand, r) : [] };
+    return { roundNo: st.roundNo, hand: hand.slice(), legal: currentTurn(st) === pid && !needsDecision(r, pid) ? legalCards(hand, r) : [] };
   }
 
   root.S10Watten = { start, apply, publicState, privateState, legalCards, power, guterOf, cardName, deck,

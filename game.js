@@ -921,7 +921,7 @@
         <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
         <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
         <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
-        <li><b>Gestrichen</b> ist man 2 Punkte vor dem Ziel: dann darf man nicht mehr bieten, aber nach der Ansage aufgeben (Gegner +2). Liegt der andere mindestens 4 zurück, geht die Runde um 4 Punkte. Sind beide gestrichen, wird nicht geboten.</li>
+        <li><b>Gestrichen</b> ist man 2 Punkte vor dem Ziel: dann darf man nicht mehr bieten, aber vor der ersten eigenen Karte aufgeben (Gegner +2). Liegt der andere mindestens 4 zurück, gehen 4: Der Gestrichene muss vor seiner ersten Karte <b>halten</b> (um 4) oder <b>gehen</b> (Gegner +2). Sind beide gestrichen, wird nicht geboten.</li>
       </ul>
     </details>`;
   const hlRulesHtml = `
@@ -1503,7 +1503,7 @@
     const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
         <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
         ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}</span>`;
-    const myMove = (st.step === "schlag" && st.vorhand === me) || (st.step === "trumpf" && st.dealer === me) ||
+    const myMove = (st.step === "play" && st.mustDecide === me) || (st.step === "schlag" && st.vorhand === me) || (st.step === "trumpf" && st.dealer === me) ||
       (st.step === "play" && (st.bid ? st.bid.by !== me && seated : st.turn === me));
     const whoMoves = st.step === "schlag" ? st.vorhand : st.step === "trumpf" ? st.dealer : st.step === "play" ? (st.bid ? st.seats.find((x) => x !== st.bid.by) : st.turn) : null;
     // „Du bist dran“ unten rechts (bei den eigenen Karten), „… ist dran“ oben rechts (beim Gegner)
@@ -1554,7 +1554,10 @@
         : seated ? `<p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} Punkte.</b></p><div class="wbtns">
             <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
             <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} bekommt ${st.value})</button></div>` : "";
-      else action = `<p class="muted small">${st.turn === me ? "Spiel eine Karte aus." : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+      else if (st.mustDecide === me) action = `<p><b>Du bist gestrichen – es gehen 4.</b> Hältst du oder gehst du?</p><div class="wbtns">
+            <button class="btn primary" id="w-hold4">Halten (um 4)</button>
+            <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} bekommt 2)</button></div>`;
+      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? "Spiel eine Karte aus." : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">Bieten (auf ${st.value + 1})</button>` : ""}
         ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
     } else if (st.step === "roundEnd" || st.step === "final") {
@@ -1609,6 +1612,8 @@
     on("#w-bid", () => send({ type: "wBid" }));
     on("#w-hold", () => send({ type: "wBidAnswer", accept: true }));
     on("#w-fold", () => send({ type: "wBidAnswer", accept: false }));
+    on("#w-hold4", () => send({ type: "wHold" }));
+    on("#w-go", () => send({ type: "wGiveUp" }));
     on("#w-giveup", () => { if (confirm("Wirklich aufgeben? Dein Gegner bekommt 2 Punkte.")) send({ type: "wGiveUp" }); });
     on("#w-next", () => send({ type: "wNext" }));
     on("#w-force", () => send({ type: "wNext", force: true }));
