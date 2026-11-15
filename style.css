@@ -306,3 +306,9 @@ textarea { resize: vertical; font: inherit; }
 .m-item.emo.solo { font-size: 4.5rem; line-height: 1; }
 /* einzelner Knopf (Ja/Nein-Karten) über die volle Breite */
 .opts:has(> .opt:only-child) { grid-template-columns: 1fr; }
+/* Flaggen füllen das Kärtchen (Größe relativ zur Kartenbreite) */
+.emo-solo .slot { padding: 4px 4px 6px; }
+.emo-solo .slot-t { font-size: 10.5cqw; }
+@media (max-width: 640px) {
+  .emo-solo .slot-t { font-size: 19cqw; }
+}
