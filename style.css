@@ -224,3 +224,74 @@ textarea { resize: vertical; font: inherit; }
 .host-tag { flex: none; margin-left: auto; font-size: .7rem; font-weight: 600; letter-spacing: .3px; padding: 2px 8px; border-radius: 99px;
   background: rgba(255, 200, 61, .15); color: var(--accent); border: 1px solid rgba(255, 200, 61, .4); }
 .plist .host-tag { margin-left: auto; }
+
+/* ======================================================================
+   Spielansicht 2.0: Karte passt auf den Bildschirm, Seitenleiste am PC,
+   kompakte Spielerkarten mit Farben, einzeilige Aktionszeile
+   ====================================================================== */
+.screen.game { max-width: 1240px; padding-bottom: 20px; }
+.game-grid { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "players" "action" "board" "tools" "log"; }
+.game-grid > .players { grid-area: players; }
+.game-grid > .action { grid-area: action; display: grid; gap: 10px; }
+.game-grid > .board { grid-area: board; margin: 0; }
+.game-grid > .card-tools { grid-area: tools; margin: 0; }
+.game-grid > .log { grid-area: log; }
+.action .banner, .action .undo-bar { margin: 0; }
+.action:empty { display: none; }
+
+/* Karte: Größe richtet sich nach Breite UND Höhe des Fensters */
+.ring { width: min(100%, 700px, calc(100vh - 240px)); min-width: 300px; container-type: inline-size; }
+.slot { font-size: clamp(.66rem, 2.15cqw, .95rem); }
+.progress { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+
+/* Spielerkarten kompakt */
+.players { gap: 8px; }
+.chip { padding: 8px 12px; gap: 5px; }
+.chip-l1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.chip-l1 .chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.chip-score { flex: none; }
+.chip-score b { font-size: 1.25rem; }
+.chip-score small { color: var(--muted); margin-left: 2px; font-size: .8rem; }
+.chip-l2 { display: flex; align-items: center; gap: 6px; font-size: .8rem; min-height: 20px; flex-wrap: wrap; }
+.chip-l2 .badge { margin-left: auto; }
+.chip .host-tag { margin-left: 0; font-size: .65rem; padding: 1px 6px; }
+.rpts { color: var(--muted); }
+.rpts.pos { color: var(--ok); font-weight: 600; }
+.bar { height: 5px; }
+.bar i { background: var(--pc, var(--accent)); }
+.chip.turn { border-color: var(--pc); box-shadow: 0 0 0 4px rgba(255, 255, 255, .06); }
+.chip.turn .badge { background: var(--pc); color: #1a1530; }
+
+/* Spielerfarben */
+.pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc, #888); flex: none; display: inline-block;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .15); vertical-align: middle; }
+.pdot.off { background: transparent; box-shadow: inset 0 0 0 2px var(--pc); opacity: .6; }
+.slot.has-by { box-shadow: 0 0 0 3px var(--pc), 0 4px 0 rgba(0, 0, 0, .25); }
+.slot-by { display: inline-flex; align-items: center; gap: 4px; }
+.slot-by .pdot { width: 8px; height: 8px; box-shadow: 0 0 0 1.5px #fff; }
+
+/* Aktionszeile: Text links, Knopf rechts */
+.banner.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; text-align: left; padding: 10px 14px; }
+.banner.row .banner-text { flex: 1 1 200px; }
+.banner.row .btn { flex: none; }
+
+/* Am PC: Karte links, Seitenleiste rechts */
+@media (min-width: 900px) {
+  .game-grid { grid-template-columns: minmax(0, 1fr) 320px; align-items: start;
+    grid-template-areas: "board players" "board action" "board log" "board tools"; grid-template-rows: auto auto 1fr auto; }
+  .ring { width: min(100%, calc(100vh - 110px)); }
+  .game-grid > .players { grid-template-columns: 1fr; }
+  .game-grid > .log { max-height: calc(100vh - 360px); min-height: 120px; overflow: auto; }
+  .log ol { max-height: none; }
+  .game-grid > .card-tools { justify-content: flex-start; }
+}
+
+/* Am Handy: Frage bleibt beim Scrollen sichtbar */
+@media (max-width: 640px) {
+  .slot { font-size: .9rem; }
+  .ring { width: 100%; }
+  .ring .center { position: sticky; top: 8px; z-index: 3; box-shadow: 0 8px 18px rgba(0, 0, 0, .4), inset 0 0 0 3px #5b48c9; }
+  .game-grid > .players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chip-score b { font-size: 1.1rem; }
+}

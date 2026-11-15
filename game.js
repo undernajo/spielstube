@@ -459,6 +459,7 @@
   }
 
   const fmt = (card, a) => L.fmt(card, a);
+  const PLAYER_COLORS = ["#ffc83d", "#4fc3f7", "#f472b6", "#a3e635", "#fb923c", "#c084fc", "#2dd4bf", "#f87171"];
   const statusLabel = { active: "spielt", passed: "gepasst", out: "raus" };
 
   function renderGame() {
@@ -469,18 +470,21 @@
     const myTurn = v.phase === "playing" && cur && cur.id === myId && !pend && !v.undoReq;
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
 
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const chips = v.players.map((p, i) => {
       const turn = v.phase === "playing" && i === v.turn;
       const res = v.roundResult && v.roundResult.find((r) => r.id === p.id);
       const pct = Math.min(100, (p.score / v.target) * 100);
-      return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}">
-        <div class="chip-top"><span class="dot ${p.connected ? "on" : ""}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>${p.id === v.hostId ? `<span class="host-tag" title="Das Spiel läuft auf diesem Gerät">Gastgeber</span>` : ""}</div>
-        <div class="chip-score"><b>${p.score}</b><small>/ ${v.target}</small></div>
+      const rp = v.phase === "playing" ? (p.status === "out" ? "Runde: 0" : `Runde: ${p.roundPts ? "+" + p.roundPts : 0}`) : res ? `Runde: ${res.gained ? "+" + res.gained : 0}` : "";
+      const badge = v.phase === "playing" ? (turn ? "am Zug" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]) : "";
+      return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
+          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+          <span class="chip-score"><b>${p.score}</b><small>/${v.target}</small></span></div>
         <div class="bar"><i style="width:${pct}%"></i></div>
-        <div class="chip-round">${v.phase === "playing"
-          ? `<span class="tokens">${"●".repeat(p.roundPts) || "–"}</span> <span class="badge">${turn ? "am Zug" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]}</span>`
-          : res ? `<span class="gain ${res.gained ? "pos" : ""}">+${res.gained}</span>` : ""}</div>
+        <div class="chip-l2"><span class="rpts ${res && res.gained ? "pos" : ""}">${rp}</span>
+          ${p.id === v.hostId ? `<span class="host-tag" title="Das Spiel läuft auf diesem Gerät">Gastgeber</span>` : ""}
+          ${badge ? `<span class="badge">${badge}</span>` : ""}</div>
       </div>`;
     }).join("");
 
@@ -492,8 +496,9 @@
       const ans = r ? r.pending ? `<span class="slot-a">„${esc(r.given)}“ ?</span>` : (r.ok === false && card.type !== "tf"
         ? `<span class="slot-a"><s>${esc(fmt(card, r.given))}</s> ${esc(fmt(card, r.a))}</span>`
         : `<span class="slot-a">${esc(fmt(card, r.a))}</span>`) : "";
-      const by = r && r.by ? `<span class="slot-by">${esc(nameOf(r.by))}</span>` : "";
-      return `<button class="slot ${cls} ${selected === pos ? "sel" : ""}" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%" data-pos="${pos}" ${myTurn && !r ? "" : "disabled"}>
+      const by = r && r.by ? `<span class="slot-by"><i class="pdot" style="--pc:${colorOf(r.by)}"></i>${esc(nameOf(r.by))}</span>` : "";
+      const pc = r && r.by ? `;--pc:${colorOf(r.by)}` : "";
+      return `<button class="slot ${cls} ${r && r.by ? "has-by" : ""} ${selected === pos ? "sel" : ""}" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%${pc}" data-pos="${pos}" ${myTurn && !r ? "" : "disabled"}>
         <span class="slot-t">${esc(it.t)}</span>${ans}${by}</button>`;
     }).join("");
 
@@ -513,13 +518,13 @@
         </div>`;
     } else if (v.phase === "playing") {
       banner = myTurn
-        ? `<div class="banner me"><b>Du bist dran!</b> Wähle eine Antwort${me.roundPts ? ` – oder passe und sichere ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""}` : ""}.
-            <div class="banner-actions"><button id="pass" class="btn">Passen${me.roundPts ? ` (+${me.roundPts} sichern)` : ""}</button></div></div>`
-        : `<div class="banner"><b>${esc(cur.name)}</b> ist am Zug …
-            ${isHost && !cur.connected ? `<div class="banner-actions"><button id="skip" class="btn ghost">${esc(cur.name)} ist getrennt – überspringen</button></div>` : ""}</div>`;
+        ? `<div class="banner me row"><div class="banner-text"><b>Du bist dran!</b> Wähle eine Antwort${me.roundPts ? ` – oder sichere deine ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""}` : ""}.</div>
+            <button id="pass" class="btn">Passen${me.roundPts ? ` (+${me.roundPts})` : ""}</button></div>`
+        : `<div class="banner row"><div class="banner-text"><span class="pdot" style="--pc:${colorOf(cur.id)}"></span> <b>${esc(cur.name)}</b> ist am Zug …</div>
+            ${isHost && !cur.connected ? `<button id="skip" class="btn ghost sm">Getrennt – überspringen</button>` : ""}</div>`;
     } else if (v.phase === "roundEnd") {
-      banner = `<div class="banner end"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind jetzt aufgedeckt.
-        <div class="banner-actions"><button id="next" class="btn primary">Nächste Runde</button></div></div>`;
+      banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
+        <button id="next" class="btn primary">Nächste Runde</button></div>`;
     } else {
       const w = v.players.filter((p) => v.winners.includes(p.id));
       const iWon = v.winners.includes(myId);
@@ -541,21 +546,23 @@
           </div>
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
-        <section class="players">${chips}</section>
-        ${banner}
-        ${undoHtml(v, nameOf)}
-        <section class="board">
-          <div class="ring">
-            <div class="center">
-              <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
-              <div class="q">${esc(card.q)}</div>
-              ${card.hint ? `<div class="hint">${esc(card.hint)}</div>` : ""}
+        <div class="game-grid">
+          <section class="players">${chips}</section>
+          <section class="action">${banner}${undoHtml(v, nameOf)}</section>
+          <section class="board">
+            <div class="ring">
+              <div class="center">
+                <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
+                <div class="q">${esc(card.q)}</div>
+                ${card.hint ? `<div class="hint">${esc(card.hint)}</div>` : ""}
+                <div class="progress">${card.items.filter((it) => it.r && !it.r.pending && it.r.by).length} von 10 aufgedeckt</div>
+              </div>
+              ${slots}
             </div>
-            ${slots}
-          </div>
-        </section>
-        <div class="card-tools"><button id="report" class="btn ghost sm">⚑ Karte melden</button></div>
-        <section class="log"><h3>Verlauf</h3><ol>${v.log.map((l) => `<li>${esc(l)}</li>`).join("")}</ol></section>
+          </section>
+          <div class="card-tools"><button id="report" class="btn ghost sm">⚑ Karte melden</button></div>
+          <section class="log"><h3>Verlauf</h3><ol>${v.log.filter((l) => !/ist beigetreten|hat den Raum verlassen/.test(l)).map((l) => `<li>${esc(l)}</li>`).join("") || `<li class="muted">Noch keine Züge.</li>`}</ol></section>
+        </div>
       </main>`;
 
     app.querySelectorAll(".slot").forEach((b) => b.onclick = () => { selected = Number(b.dataset.pos); render(); });
