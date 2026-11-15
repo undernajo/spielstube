@@ -37,7 +37,8 @@
   function start(s, opts, now) {
     opts = opts || {};
     const region = data()[opts.region] ? opts.region : "europa";
-    const level = LEVELS[opts.level] ? opts.level : "gemischt";
+    // „Von oben“ nur mit bekannten Orten – unbekannte erkennt man aus der Luft nicht
+    const level = opts.mode === "oben" ? "leicht" : LEVELS[opts.level] ? opts.level : "gemischt";
     const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
     const mode = opts.mode === "oben" ? "oben" : "karte";
