@@ -17,6 +17,13 @@ Lädt er die Seite neu, kann er mit **Laufendes Spiel fortsetzen** weitermachen.
 
 Die Spielzüge sind mit einem Schlüssel aus dem Raum-Code verschlüsselt (AES-GCM). Auch der Kanalname auf dem Server verrät den Code nicht. Nur wer den Code kennt, kann mitlesen oder mitspielen. Dafür muss die Seite über `https://` (z. B. GitHub Pages) oder `http://localhost` geöffnet werden.
 
+## Spiele
+
+Der Gastgeber wählt in der Lobby das Spiel:
+
+- **Schlaue Zehn:** das Quiz mit zehn Antworten pro Karte (siehe unten).
+- **Stadt, Land, Fluss:** Buchstabe, Kategorien (Klassisch, Gemischt, Spaß, Südtirol oder eigene), 3/5/8 Runden, „Stopp!“ mit 10 Sekunden Nachfrist oder feste Zeit. Punkte: 10 für eine eigene Antwort, 5 bei gleicher Antwort, 20 wenn nur einer etwas hat. Bei der Auswertung kann jeder Antworten anzweifeln oder anerkennen.
+
 ## Extras
 
 - **Töne & Effekte:** Ein dezenter Hinweiston (und auf Android eine Vibration), wenn man dran ist oder entscheiden soll, Konfetti am Spielende. Ist der Tab im Hintergrund, zeigt der Titel „● Du bist dran!“. Der 🔊-Knopf oben schaltet den Ton stumm.

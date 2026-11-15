@@ -28,7 +28,14 @@
   // zuletzt gewählte Fragen-Sets merken (alte Einzelauswahl wird übernommen)
   let chosenSets = store.get("s10-sets");
   if (!Array.isArray(chosenSets)) { const old = store.get("s10-set"); chosenSets = old ? L.normSets(old) : null; }
-  let chosenTarget = store.get("s10-target"); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
+  let chosenTarget = store.get("s10-target");
+  const SLF = window.S10Slf;
+  const GAMES = [
+    { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten" },
+    { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!" },
+  ];
+  let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
+  let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
@@ -100,6 +107,7 @@
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
     S.hostId = myId;
+    S.game = chosenGame;
     L.addPlayer(S, myId, name);
     hostOpen(0);
   }
@@ -145,11 +153,14 @@
       else if (m.type === "action" || m.type === "ping") {
         let changed = false;
         if (p && !p.connected) { p.connected = true; changed = true; }
-        if (m.type === "action" && L.applyAction(S, CARDS, cid, m.action, false)) changed = true;
+        if (m.type === "action" && applyAny(cid, m.action)) changed = true;
         if (changed) publish();
       }
     });
   }
+
+  // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
+  setInterval(() => { if (isHost && S && S.phase === "slf" && SLF.tick(S, Date.now())) publish(); }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
   setInterval(() => {
@@ -160,11 +171,30 @@
   }, 5000);
 
   function act(pid, action) {
-    if (L.applyAction(S, CARDS, pid, action, pid === myId)) publish();
+    if (applyAny(pid, action)) publish();
+  }
+  // Verteilt eine Aktion an das richtige Spiel; true = Zustand geändert
+  function applyAny(pid, action) {
+    if (!action || typeof action !== "object") return false;
+    const host = pid === myId, now = Date.now(), type = String(action.type || "");
+    if (type === "setGame") {
+      if (!host || S.phase !== "lobby" || !GAMES.some((g) => g.key === action.game)) return false;
+      S.game = action.game; return true;
+    }
+    if (type === "start" && action.game === "slf") {
+      if (!host || S.phase !== "lobby") return false;
+      SLF.start(S, action.opts, now); return true;
+    }
+    if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
+    if (type === "start") S.game = "zehn";
+    if (type === "lobby" && host) S.slf = null;
+    return L.applyAction(S, CARDS, pid, action, host);
   }
 
   function publish() {
     view = L.publicState(S, CARDS, roomCode);
+    view.game = S.game || "zehn";
+    view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -256,7 +286,7 @@
 
   function render() {
     if (!view) return renderStart();
-    if (view.phase === "lobby") renderLobby(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -328,10 +358,15 @@
       myTurn: v.phase === "playing" && cur && cur.id === myId && !v.pending && !v.undoReq,
       mustJudge: !!(v.phase === "playing" && v.pending && v.pending.judges.includes(myId) && v.pending.by !== myId),
       mustVote: !!(v.undoReq && v.undoReq.approvers.includes(myId)),
+      slfKey: v.slf ? v.slf.round + ":" + v.slf.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
       if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
+      if (now.slfKey && now.slfKey !== prev.slfKey) {
+        if (v.slf.step === "writing") sfx.turn();
+        if (v.slf.step === "final") { if (v.slf.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
+      }
       if (now.phase === "gameOver" && prev.phase !== "gameOver") {
         if (v.winners && v.winners.includes(myId)) { sfx.win(); confetti(); } else { sfx.lose(); confetti(); }
       }
@@ -418,7 +453,9 @@
           <h3>Spieler</h3>
           <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
-          ${isHost ? `
+          ${isHost ? gamePickerHtml() : `<p class="muted">Gespielt wird: <b>${esc((GAMES.find((g) => g.key === view.game) || GAMES[0]).name)}</b></p>`}
+          ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
+          ${isHost && chosenGame !== "slf" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
               <button id="resetSeen" class="btn ghost sm">Gespielte Karten vergessen</button></div>` : ""}
@@ -426,14 +463,16 @@
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
             <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
             ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}
-          ` : `<p class="muted">Warte, bis der Gastgeber das Spiel startet …</p>`}
+          ` : ""}
+          ${!isHost ? `<p class="muted">Warte, bis der Gastgeber das Spiel startet …</p>` : ""}
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${rulesHtml}
+        ${(isHost ? chosenGame : view.game) === "slf" ? slfRulesHtml : rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
+    bindGamePicker();
     const copy = app.querySelector("#copy");
     if (copy) copy.onclick = () => {
       const t = app.querySelector("#link");
@@ -454,7 +493,10 @@
     });
     const all = app.querySelector("#setall");
     if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); renderLobby(); };
-    if (start) start.onclick = () => { if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() }); };
+    if (start) start.onclick = () => {
+      if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
+      if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
+    };
     app.querySelector("#leave").onclick = leave;
   }
 
@@ -606,6 +648,51 @@
   let reportOpen = false;
   const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", kindheit: "Kindheit der 2000er", mixed: "Gemischt" };
 
+  // ---------- Spielauswahl & Einstellungen ----------
+  function gamePickerHtml() {
+    return `<div class="field"><span>Spiel</span><div class="setlist">${GAMES.map((g) => `
+      <label class="setopt ${chosenGame === g.key ? "on" : ""}"><input type="radio" name="game" value="${g.key}" ${chosenGame === g.key ? "checked" : ""}>
+        <span class="setname">${g.name}</span><span class="setcount">${g.desc}</span></label>`).join("")}</div></div>`;
+  }
+  function slfSettingsHtml() {
+    const presetCats = slfOpts.preset !== "eigene" && SLF.PRESETS[slfOpts.preset] ? SLF.PRESETS[slfOpts.preset].cats : null;
+    return `<label class="field"><span>Kategorien</span>
+        <select id="slf-preset">${Object.entries(SLF.PRESETS).map(([k, p]) => `<option value="${k}" ${slfOpts.preset === k ? "selected" : ""}>${p.name}</option>`).join("")}
+          <option value="eigene" ${slfOpts.preset === "eigene" ? "selected" : ""}>Eigene Kategorien …</option></select></label>
+      ${presetCats ? `<p class="muted small">${presetCats.map(esc).join(" · ")}</p>`
+        : `<label class="field"><span>Eigene Kategorien (mit Komma getrennt, höchstens 10)</span>
+            <textarea id="slf-custom" rows="2" maxlength="400" placeholder="z. B. Stadt, Pizzabelag, Ausrede, Promi">${esc(slfOpts.custom)}</textarea></label>`}
+      <div class="row2">
+        <label class="field"><span>Runden</span><select id="slf-rounds">${SLF.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(slfOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
+        <label class="field"><span>Zeit</span><select id="slf-timer">${Object.entries(SLF.TIMERS).map(([k, t]) => `<option value="${k}" ${slfOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
+      </div>
+      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
+      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+  }
+  function bindGamePicker() {
+    app.querySelectorAll('input[name="game"]').forEach((r) => r.onchange = () => {
+      chosenGame = r.value; store.set("s10-game", chosenGame); send({ type: "setGame", game: chosenGame }); renderLobby();
+    });
+    const saveOpts = () => store.set("s10-slf", slfOpts);
+    const ps = app.querySelector("#slf-preset");
+    if (ps) ps.onchange = () => { slfOpts.preset = ps.value; saveOpts(); renderLobby(); };
+    const cu = app.querySelector("#slf-custom");
+    if (cu) cu.oninput = () => { slfOpts.custom = cu.value; saveOpts(); };
+    const ro = app.querySelector("#slf-rounds");
+    if (ro) ro.onchange = () => { slfOpts.rounds = Number(ro.value); saveOpts(); };
+    const ti = app.querySelector("#slf-timer");
+    if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); };
+  }
+  const slfRulesHtml = `
+    <details class="rules"><summary>Regeln: Stadt, Land, Fluss</summary>
+      <ul>
+        <li>Jede Runde gibt es einen Buchstaben. Finde zu jeder Kategorie ein passendes Wort mit diesem Anfangsbuchstaben.</li>
+        <li>Wer fertig ist, ruft <b>„Stopp!“</b> – dann haben alle anderen noch 10 Sekunden. (Oder ihr spielt mit fester Zeit.)</li>
+        <li><b>Punkte:</b> 10 für eine eigene Antwort, 5 wenn jemand dasselbe hat, 20 wenn nur du in der Kategorie etwas hast.</li>
+        <li>Bei der Auswertung kann jeder Antworten anzweifeln (✗) oder anerkennen (✓). Weiter geht's, wenn alle bestätigt haben.</li>
+      </ul>
+    </details>`;
+
   // ---------- Fragen-Sets (Mehrfachauswahl) ----------
   function currentSets() {
     if (Array.isArray(chosenSets)) return L.SET_KEYS.filter((k) => chosenSets.includes(k));
@@ -708,6 +795,148 @@
     }
     try { await navigator.clipboard.writeText(url); toast("Einladungslink kopiert – einfach verschicken!", "ok"); }
     catch { prompt("Diesen Link verschicken:", url); }
+  }
+
+  // ---------- Stadt, Land, Fluss: Darstellung ----------
+  let slfLocal = { key: null, answers: {} }, slfDraftTimer = null, slfSubmitted = null, slfDeadline = 0, slfRendered = null;
+  const slfKeyOf = (v) => v.code + ":" + v.slf.round + ":" + v.slf.letter;
+  function slfLoadLocal(v) {
+    const key = slfKeyOf(v);
+    if (slfLocal.key === key) return;
+    let saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem("s10-slf-" + key)); } catch {}
+    slfLocal = { key, answers: saved || {} };
+  }
+  function slfSaveLocal() { try { sessionStorage.setItem("s10-slf-" + slfLocal.key, JSON.stringify(slfLocal.answers)); } catch {} }
+  function slfSend(final) {
+    if (!view || !view.slf) return;
+    send({ type: final ? "slfSubmit" : "slfDraft", round: view.slf.round, answers: slfLocal.answers });
+  }
+  const fmtClock = (ms) => { const t = Math.ceil(ms / 1000); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+  setInterval(() => {
+    const el = document.getElementById("slf-timer");
+    if (!el || !view || !view.slf || view.slf.step !== "writing") return;
+    const ms = Math.max(0, slfDeadline - Date.now());
+    el.textContent = fmtClock(ms); el.classList.toggle("urgent", ms <= 10000);
+  }, 250);
+
+  function slfChips(v, st) {
+    return v.players.map((p, i) => {
+      let badge = "";
+      if (st.step === "writing") badge = st.done[p.id] ? "fertig ✓" : "schreibt …";
+      else if (st.step === "review") badge = st.ready && st.ready[p.id] ? "bereit ✓" : "prüft …";
+      const rp = st.roundPoints && st.roundPoints[p.id] != null && st.step === "review" ? `Runde: +${st.roundPoints[p.id]}` : "";
+      return `<div class="chip ${st.done[p.id] || (st.ready && st.ready[p.id]) ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
+          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+          <span class="chip-score"><b>${st.total[p.id] || 0}</b></span></div>
+        <div class="chip-l2"><span class="rpts pos">${rp}</span>${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
+      </div>`;
+    }).join("");
+  }
+
+  function renderSlf() {
+    const v = view, st = v.slf;
+    if (!st) return;
+    slfLoadLocal(v);
+    slfDeadline = Date.now() + (st.endsIn || 0);
+    if (st.step === "collecting" && slfSubmitted !== slfLocal.key) { slfSubmitted = slfLocal.key; slfSend(true); }
+    const key = slfLocal.key + ":" + st.step;
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    if (st.step === "writing" && slfRendered === key && app.querySelector(".slf-form")) {
+      // Eingaben nicht neu zeichnen – nur Spieler, Stopp-Hinweis und Knopf aktualisieren
+      app.querySelector(".players").innerHTML = slfChips(v, st);
+      app.querySelector("#slf-stop").innerHTML = slfStopHtml(st, nameOf);
+      const done = app.querySelector("#slf-done");
+      if (done && st.done[myId]) { done.disabled = true; done.textContent = "Fertig – warte auf die anderen …"; }
+      return;
+    }
+    slfRendered = key;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    let main = "";
+    if (st.step === "writing") {
+      main = `
+        <div class="slf-head">
+          <div class="slf-letter" aria-label="Buchstabe ${st.letter}">${st.letter}</div>
+          <div class="slf-info"><div class="muted small">Alles mit <b>${st.letter}</b> · ${esc(st.timerName)}</div>
+            <div id="slf-timer" class="slf-timer">${fmtClock(st.endsIn)}</div><div id="slf-stop">${slfStopHtml(st, nameOf)}</div></div>
+        </div>
+        <form class="slf-form" autocomplete="off" onsubmit="return false">
+          ${st.cats.map((c, i) => `<label class="slf-field"><span>${esc(c)}</span>
+            <input data-cat="${i}" maxlength="60" autocapitalize="words" spellcheck="false" placeholder="${st.letter} …" value="${esc(slfLocal.answers[c] || "")}"></label>`).join("")}
+        </form>
+        <button id="slf-done" class="btn primary big" ${st.done[myId] ? "disabled" : ""}>${st.done[myId] ? "Fertig – warte auf die anderen …" : st.timer === "stopp" ? "Stopp! Ich bin fertig" : "Fertig"}</button>`;
+    } else if (st.step === "collecting") {
+      main = `<div class="slf-wait"><div class="slf-letter small">${st.letter}</div><p><b>Zeit ist um!</b> Die Antworten werden eingesammelt …</p></div>`;
+    } else if (st.step === "review") {
+      const iReady = st.ready && st.ready[myId];
+      main = `
+        <div class="banner row"><div class="banner-text"><b>Runde ${st.round} – Buchstabe ${st.letter}.</b> Prüft die Antworten: ✗ zweifelt an, ✓ erkennt an.</div></div>
+        <div class="slf-review">${st.cats.map((c, ci) => `
+          <div class="slf-cat"><h4>${esc(c)}</h4>
+            ${st.answered.map((pid) => { const cell = st.table[c][pid]; return `
+              <div class="slf-row ${cell.valid ? "" : "bad"}" style="--pc:${colorOf(pid)}">
+                <span class="pdot"></span><span class="slf-name">${esc(nameOf(pid))}</span>
+                <span class="slf-ans">${cell.text ? esc(cell.text) : "—"}${cell.dup ? ` <em>doppelt</em>` : ""}${cell.overridden ? ` <em>${cell.valid ? "anerkannt" : "angezweifelt"}</em>` : ""}</span>
+                <b class="slf-pts">${cell.points}</b>
+                ${cell.text ? `<button class="slf-tog btn ghost sm" data-pid="${esc(pid)}" data-cat="${ci}" title="${cell.valid ? "Antwort anzweifeln" : "Antwort anerkennen"}">${cell.valid ? "✗" : "✓"}</button>` : `<span class="slf-tog-space"></span>`}
+              </div>`; }).join("")}
+          </div>`).join("")}</div>
+        <div class="slf-actions">
+          <button id="slf-ready" class="btn ${iReady ? "ghost" : "primary"} big">${iReady ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde"}</button>
+          ${isHost ? `<button id="slf-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}
+        </div>`;
+    } else if (st.step === "final") {
+      const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
+      const medal = ["🥇", "🥈", "🥉"];
+      main = `
+        <div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((p) => st.winners.includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${st.winners.length > 1 ? "gewinnen" : "gewinnt"}!</b>
+          <div class="banner-actions"><button id="slf-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${ranking.map((p, i) => `
+          <div class="slf-rank" style="--pc:${colorOf(p.id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
+            <span class="slf-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0} Punkte</b></div>`).join("")}
+          <p class="muted small">${st.rounds} Runden · Buchstaben: ${(st.used || []).join(" · ")}</p></div>`;
+    }
+    app.innerHTML = `
+      <main class="screen game slf">
+        <header class="top">
+          <div class="logo tiny">Schlaue<span>10</span></div>
+          <div class="meta">Stadt, Land, Fluss · Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
+          <div class="top-actions">
+            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
+            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
+            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
+          </div>
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <section class="players">${slfChips(v, st)}</section>
+        <section class="slf-main">${main}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#slf-done", () => { slfSend(false); send({ type: "slfDone" }); });
+    on("#slf-ready", () => send({ type: "slfReady" }));
+    on("#slf-next", () => send({ type: "slfNext" }));
+    on("#slf-restart", () => send({ type: "slfRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    app.querySelectorAll(".slf-tog").forEach((b) => b.onclick = () => send({ type: "slfToggle", pid: b.dataset.pid, cat: st.cats[Number(b.dataset.cat)] }));
+    const inputs = [...app.querySelectorAll(".slf-form input")];
+    inputs.forEach((inp, i) => {
+      const cat = st.cats[Number(inp.dataset.cat)];
+      const mark = () => inp.classList.toggle("wrong", !!inp.value.trim() && SLF.firstLetter(inp.value) !== st.letter);
+      mark();
+      inp.oninput = () => {
+        slfLocal.answers[cat] = inp.value; slfSaveLocal(); mark();
+        clearTimeout(slfDraftTimer); slfDraftTimer = setTimeout(() => slfSend(false), 800);
+      };
+      inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); (inputs[i + 1] || inp).focus(); } };
+    });
+    if (st.step === "writing" && inputs.length && !inputs.some((x) => x.value) && matchMedia("(pointer: fine)").matches) inputs[0].focus();
+  }
+  function slfStopHtml(st, nameOf) {
+    if (!st.stoppedBy) return "";
+    return `<div class="slf-stopped">⏱ <b>${esc(nameOf(st.stoppedBy))}</b> hat Stopp gerufen!</div>`;
   }
 
   // ---------- Antwort-Dialog ----------
