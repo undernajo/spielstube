@@ -300,3 +300,9 @@ textarea { resize: vertical; font: inherit; }
 .emo .slot-t, .m-item.emo { font-family: "Fredoka", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
 .emo .slot-t { font-size: 1.7em; line-height: 1.15; letter-spacing: 2px; }
 .m-item.emo { font-size: 2.4rem; letter-spacing: 3px; }
+/* einzelne Emojis (Flaggen) groß darstellen */
+.emo-solo .slot-t { font-size: 3.2em; line-height: 1; letter-spacing: 0; }
+.emo-solo .slot { gap: 4px; }
+.m-item.emo.solo { font-size: 4.5rem; line-height: 1; }
+/* einzelner Knopf (Ja/Nein-Karten) über die volle Breite */
+.opts:has(> .opt:only-child) { grid-template-columns: 1fr; }

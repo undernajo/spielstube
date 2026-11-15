@@ -459,6 +459,8 @@
   }
 
   const fmt = (card, a) => L.fmt(card, a);
+  // Anzahl sichtbarer Zeichen (eine Flagge = 1, obwohl sie aus zwei Codepunkten besteht)
+  const graphemes = (t) => (window.Intl && Intl.Segmenter ? [...new Intl.Segmenter("de", { granularity: "grapheme" }).segment(t)].length : [...t].length);
   const PLAYER_COLORS = ["#ffc83d", "#4fc3f7", "#f472b6", "#a3e635", "#fb923c", "#c084fc", "#2dd4bf", "#f87171"];
   const statusLabel = { active: "spielt", passed: "gepasst", out: "raus" };
 
@@ -550,7 +552,7 @@
           <section class="players">${chips}</section>
           <section class="action">${banner}${undoHtml(v, nameOf)}</section>
           <section class="board">
-            <div class="ring ${card.emoji ? "emo" : ""}">
+            <div class="ring ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
               <div class="center">
                 <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
                 <div class="q">${esc(card.q)}</div>
@@ -738,7 +740,7 @@
       <div class="modal-back">
         <div class="modal" role="dialog" aria-modal="true">
           <div class="m-q">${esc(card.q)}</div>
-          <div class="m-item ${card.emoji ? "emo" : ""}">${esc(it.t)}</div>
+          <div class="m-item ${card.emoji ? "emo" : ""} ${card.emoji && graphemes(it.t) === 1 ? "solo" : ""}">${esc(it.t)}</div>
           ${controls}
           <button class="btn ghost" data-close>Andere Antwort wählen</button>
         </div>
