@@ -19,6 +19,7 @@ Hinweis: Der Vermittlungsserver ist öffentlich. Wer den Raum-Code kennt, könnt
 
 ## Extras
 
+- **Fragen-Sets kombinieren:** In der Lobby wählt der Gastgeber per Häkchen beliebige Sets (Standard, Südtirol, Wirtschaft) oder mit „Alle auswählen“ alles. Die Auswahl wird gemerkt.
 - **Keine Wiederholungen:** Das Spiel merkt sich auf dem Gerät des Gastgebers, welche Karten schon gespielt wurden. Ungespielte Karten kommen zuerst. Sind alle Karten eines Sets durch, beginnt es von vorn. In der Lobby steht bei jedem Set, wie viele Karten noch neu sind. Mit „Gespielte Karten vergessen“ setzt man den Speicher zurück.
 - **Einspruch:** Nach jedem Zug kann jeder Spieler „Zug zurücknehmen“ (z. B. bei einem Fehlklick) oder „Wertung umdrehen“ (richtig ↔ falsch) beantragen. Ein Mitspieler muss zustimmen.
 - **Karte melden:** Über „⚑ Karte melden“ unter der Karte. Die Meldungen landen beim Melder und beim Gastgeber. Auf der Startseite und in der Lobby kann man die Liste unter „Gemeldete Karten“ kopieren.

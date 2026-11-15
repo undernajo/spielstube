@@ -42,20 +42,29 @@
     s.log.length = Math.min(s.log.length, 40);
   }
 
-  // Fragen-Sets: Standard (ohne Set-Markierung), Südtirol oder gemischt
-  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", mixed: "Gemischt" };
+  // Fragen-Sets: beliebig kombinierbar (Karten ohne Markierung gehören zu „standard“)
+  const SET_KEYS = ["standard", "suedtirol", "wirtschaft"];
+  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft" };
+  // akzeptiert eine Liste, einen einzelnen Schlüssel oder das alte „mixed“
+  function normSets(v) {
+    if (v === "mixed") return SET_KEYS.slice();
+    const arr = (Array.isArray(v) ? v : [v]).filter((k) => SETS[k]);
+    return arr.length ? SET_KEYS.filter((k) => arr.includes(k)) : ["standard"];
+  }
+  const cardSetKey = (c) => c.set || "standard";
   const cardKey = (c) => c.q + "|" + c.items[0][0];
-  function setIds(cards, set) {
-    const ids = range(cards.length).filter((i) => set === "mixed" || (set === "standard" ? !cards[i].set : cards[i].set === set));
+  function setIds(cards, sets) {
+    const ss = normSets(sets);
+    const ids = range(cards.length).filter((i) => ss.includes(cardSetKey(cards[i])));
     return ids.length ? ids : range(cards.length);
   }
-  function unseenCount(cards, set, seen) {
+  function unseenCount(cards, sets, seen) {
     const sn = new Set(seen || []);
-    return setIds(cards, set || "standard").filter((i) => !sn.has(cardKey(cards[i]))).length;
+    return setIds(cards, sets).filter((i) => !sn.has(cardKey(cards[i]))).length;
   }
   // Ungespielte Karten zuerst; sind alle durch, beginnt das Set von vorn
   function pool(s, cards) {
-    const all = setIds(cards, s.cardSet || "standard");
+    const all = setIds(cards, s.cardSet);
     s.seen = s.seen || [];
     const seen = new Set(s.seen);
     let fresh = all.filter((i) => !seen.has(cardKey(cards[i])));
@@ -71,7 +80,7 @@
   function startGame(s, cards, target, set) {
     const t = Math.round(Number(target));
     s.target = t >= 5 && t <= 100 ? t : 30;
-    if (set !== undefined) s.cardSet = SETS[set] ? set : "standard";
+    if (set !== undefined) s.cardSet = normSets(set);
     s.deck = pool(s, cards); s.deckPos = 0;
     s.players.forEach((p) => { p.score = 0; });
     s.round = 0; s.winners = null; s.startPlayer = -1;
@@ -385,7 +394,7 @@
     const out = {
       code, phase: s.phase, target: s.target, round: s.round, turn: s.turn,
       players: s.players.map((p) => ({ ...p })), lastEvent: s.lastEvent, log: s.log.slice(0, 15),
-      roundResult: s.roundResult, winners: s.winners, card: null, cardSet: s.cardSet || "standard",
+      roundResult: s.roundResult, winners: s.winners, card: null, cardSet: normSets(s.cardSet || "standard"),
       pending: s.phase === "playing" && s.pending ? { ...s.pending, judges: judges(s) } : null,
       undo: s.phase !== "lobby" && s.undo && s.undo.move && !s.pending ? { by: s.undo.by, text: s.undo.move.text, canFlip: s.undo.move.type === "answer" } : null,
       undoReq: s.undoReq ? { ...s.undoReq, approvers: undoApprovers(s) } : null,
@@ -394,7 +403,7 @@
       const c = cards[s.cardIdx];
       const showAll = s.phase !== "playing";
       out.card = {
-        q: c.q, type: c.type, unit: c.unit || "", hint: c.hint || "", tol: c.type === "estimate" ? (c.tol != null ? c.tol : 0.1) : null,
+        q: c.q, type: c.type, set: cardSetKey(c), unit: c.unit || "", hint: c.hint || "", tol: c.type === "estimate" ? (c.tol != null ? c.tol : 0.1) : null,
         items: s.perm.map((oi, pos) => {
           const it = c.items[oi], r = s.revealed[pos];
           const pend = out.pending && out.pending.pos === pos ? { by: out.pending.by, ok: null, pending: true, given: out.pending.given, a: it[1] } : null;
@@ -405,5 +414,5 @@
     return out;
   }
 
-  root.S10Logic = { newGame, addPlayer, setConnected, applyAction, publicState, fmt, textMatches, parseNumCandidates, parseDecade, cardKey, unseenCount };
+  root.S10Logic = { newGame, addPlayer, setConnected, applyAction, publicState, fmt, textMatches, parseNumCandidates, parseDecade, cardKey, unseenCount, normSets, SET_KEYS };
 })(typeof window !== "undefined" ? window : globalThis);

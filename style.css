@@ -202,3 +202,13 @@ textarea { resize: vertical; font: inherit; }
 .reptext { white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: .85rem; color: #d6d1f3;
   background: #15123a; border-radius: 10px; padding: 10px; max-height: 300px; overflow: auto; }
 .seen-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: -6px; }
+
+/* ---------- Fragen-Sets (Mehrfachauswahl) ---------- */
+.setlist { display: grid; gap: 8px; }
+.setopt { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px;
+  border: 2px solid var(--line); background: #15123a; cursor: pointer; transition: border-color .15s, background .15s; }
+.setopt.on { border-color: var(--accent); background: #2a2350; }
+.setopt input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); padding: 0; }
+.setname { font-weight: 600; }
+.setcount { color: var(--muted); font-size: .85rem; text-align: right; }
+.setsum { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: 4px; }

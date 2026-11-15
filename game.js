@@ -25,7 +25,9 @@
   let status = "";
   let errorMsg = "";
   let lastToastId = null;
-  let chosenSet = store.get("s10-set");       // zuletzt gewähltes Fragen-Set merken
+  // zuletzt gewählte Fragen-Sets merken (alte Einzelauswahl wird übernommen)
+  let chosenSets = store.get("s10-sets");
+  if (!Array.isArray(chosenSets)) { const old = store.get("s10-set"); chosenSets = old ? L.normSets(old) : null; }
   let chosenTarget = store.get("s10-target"); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
@@ -285,14 +287,12 @@
           <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</li>`).join("")}</ul>
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
           ${isHost ? `
-            <label class="field"><span>Fragen</span>
-              <select id="cardset">${[["standard", "Standard"], ["suedtirol", "Südtirol"], ["wirtschaft", "Wirtschaft"], ["mixed", "Gemischt (alle Fragen)"]].map(([k, n]) =>
-                `<option value="${k}" ${k === (chosenSet || view.cardSet || "standard") ? "selected" : ""}>${n} – ${CARDS.filter((c) => k === "mixed" || (k === "standard" ? !c.set : c.set === k)).length} Karten${isHost && S ? ` (${L.unseenCount(CARDS, k, S.seen)} neu)` : ""}</option>`).join("")}</select></label>
+            ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
               <button id="resetSeen" class="btn ghost sm">Gespielte Karten vergessen</button></div>` : ""}
             <label class="field"><span>Spielen bis</span>
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
-            <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
+            <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
             ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}
           ` : `<p class="muted">Warte, bis der Gastgeber das Spiel startet …</p>`}
           <p class="err">${esc(status)}</p>
@@ -316,9 +316,13 @@
       if (!confirm("Alle gespielten Karten vergessen? Danach kann jede Karte wieder vorkommen.")) return;
       S.seen = []; store.set("s10-seen", []); publish(); toast("Speicher gelöscht – alle Karten sind wieder neu.", "ok");
     };
-    const ssel = app.querySelector("#cardset");
-    if (ssel) ssel.onchange = () => { chosenSet = ssel.value; store.set("s10-set", chosenSet); };
-    if (start) start.onclick = () => send({ type: "start", target: Number(tsel.value), set: ssel.value });
+    app.querySelectorAll(".setopt input").forEach((cb) => cb.onchange = () => {
+      chosenSets = [...app.querySelectorAll(".setopt input:checked")].map((x) => x.value);
+      store.set("s10-sets", chosenSets); renderLobby();
+    });
+    const all = app.querySelector("#setall");
+    if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); renderLobby(); };
+    if (start) start.onclick = () => { if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() }); };
     app.querySelector("#leave").onclick = leave;
   }
 
@@ -397,7 +401,7 @@
       <main class="screen game">
         <header class="top">
           <div class="logo tiny">Schlaue<span>10</span></div>
-          <div class="meta">${v.cardSet && v.cardSet !== "standard" ? (SET_NAMES[v.cardSet] || v.cardSet) + " · " : ""}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
           <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
           <button id="leave" class="btn ghost sm">Verlassen</button>
         </header>
@@ -456,6 +460,34 @@
   // ---------- Karten melden ----------
   let reportOpen = false;
   const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", mixed: "Gemischt" };
+
+  // ---------- Fragen-Sets (Mehrfachauswahl) ----------
+  function currentSets() {
+    if (Array.isArray(chosenSets)) return L.SET_KEYS.filter((k) => chosenSets.includes(k));
+    return L.normSets(view && view.cardSet);
+  }
+  function setLabel(sets) {
+    const arr = L.normSets(sets);
+    if (arr.length === 1 && arr[0] === "standard") return "";
+    if (arr.length === L.SET_KEYS.length) return "Alle Sets · ";
+    return arr.map((k) => SET_NAMES[k]).join(" + ") + " · ";
+  }
+  function setPickerHtml() {
+    const cur = currentSets();
+    const count = (k) => CARDS.filter((c) => (c.set || "standard") === k).length;
+    const fresh = (sets) => (S ? L.unseenCount(CARDS, sets, S.seen) : null);
+    const total = cur.reduce((n, k) => n + count(k), 0);
+    return `<div class="field"><span>Fragen – beliebig kombinierbar</span>
+      <div class="setlist">${L.SET_KEYS.map((k) => {
+        const on = cur.includes(k), f = fresh([k]);
+        return `<label class="setopt ${on ? "on" : ""}"><input type="checkbox" value="${k}" ${on ? "checked" : ""}>
+          <span class="setname">${SET_NAMES[k]}</span><span class="setcount">${count(k)} Karten${f !== null ? ` · ${f} neu` : ""}</span></label>`;
+      }).join("")}</div>
+      <div class="setsum">${cur.length
+        ? `<span class="muted small">Zusammen: <b>${total}</b> Karten${S ? ` (${fresh(cur)} neu)` : ""}</span>`
+        : `<span class="err small">Bitte mindestens ein Set auswählen.</span>`}
+        ${cur.length < L.SET_KEYS.length ? `<button id="setall" class="btn ghost sm">Alle auswählen</button>` : ""}</div></div>`;
+  }
   function addReport(rep) {
     const r = {
       ts: Number(rep.ts) || Date.now(), by: cleanName(rep.by), set: String(rep.set || "").slice(0, 20),
@@ -515,7 +547,7 @@
     m.querySelector(".modal-back").onclick = (e) => { if (e.target.classList.contains("modal-back")) close(); };
     m.querySelector("#repsend").onclick = () => {
       const idx = m.querySelector("#repitem").value, it = idx === "" ? null : card.items[Number(idx)];
-      const rep = { ts: Date.now(), by: myName, set: view.cardSet, q: card.q, item: it ? it.t : "",
+      const rep = { ts: Date.now(), by: myName, set: card.set || "standard", q: card.q, item: it ? it.t : "",
         answer: it && it.r && it.r.a !== undefined ? L.fmt(card, it.r.a) : "", note: m.querySelector("#repnote").value.trim() };
       addReport(rep);
       if (!isHost) sendUp({ type: "report", report: rep });
