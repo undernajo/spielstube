@@ -697,3 +697,10 @@ textarea { resize: vertical; font: inherit; }
 .slot.ok { border-color: rgba(255, 255, 255, .25); }
 .slot.bad { border-color: rgba(255, 255, 255, .25); }
 .slot.pending { border-color: transparent; }
+/* Schlaue Zehn: größere, besser lesbare Schrift auf den Kärtchen */
+.ring { width: min(100%, 760px, calc(100vh - 200px)); }
+.slot { width: 22.5%; font-size: clamp(.76rem, 2.45cqw, 1.08rem); line-height: 1.18; padding: 6px 6px 8px; hyphens: auto; }
+.slot-t { font-weight: 600; letter-spacing: .1px; }
+@media (max-width: 640px) {
+  .slot { width: auto; font-size: 1.05rem; min-height: 78px; }
+}
