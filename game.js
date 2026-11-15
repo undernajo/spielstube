@@ -917,7 +917,7 @@
     <details class="rules"><summary>Regeln: Watten zu zweit</summary>
       <ul>
         <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli als kleinste Schelle). Jeder bekommt 5 Karten, der Geber wechselt.</li>
-        <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt, der Weli geht nicht). Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
+        <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt). Ist der Weli Schlag, ist er der einzige Schlag und der Gute die Trumpf-Sieben. Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
         <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
         <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
         <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
@@ -1503,6 +1503,13 @@
     const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
         <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
         ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}</span>`;
+    const callTag = (id) => {
+      if (id === st.vorhand && st.schlag) return `<span class="wcall">Schlag: <b>${rankName(st.schlag)}</b></span>`;
+      if (id === st.dealer && st.trump) return `<span class="wcall">Trumpf: ${wSuitIcon(st.trump)} <b>${suitName(st.trump)}</b></span>`;
+      if (id === st.vorhand && st.step === "schlag") return `<span class="wcall wait">sagt Schlag an …</span>`;
+      if (id === st.dealer && st.step === "trumpf") return `<span class="wcall wait">sagt Trumpf an …</span>`;
+      return "";
+    };
     const tricksDots = (id) => `<span class="wdots">${[0, 1, 2].map((i) => `<i class="${i < st.tricks[id] ? "on" : ""}"></i>`).join("")}</span>`;
     const ann = st.schlag || st.trump ? `<div class="wann">
         ${st.schlag ? `<span>Schlag <b>${rankName(st.schlag)}</b></span>` : ""}
@@ -1529,7 +1536,7 @@
     // Aktionen
     let action = "";
     if (st.step === "schlag") action = st.vorhand === me
-      ? `<p><b>Sag den Schlag an:</b> Tippe auf eine deiner Karten – ihr Wert wird der Schlag.</p>`
+      ? `<p><b>Sag den Schlag an:</b> Tippe auf eine deiner Karten – ihr Wert wird der Schlag. Beim Weli ist der Weli der einzige Schlag.</p>`
       : `<p class="muted">${esc(nameOf(st.vorhand))} sagt den Schlag an …</p>`;
     else if (st.step === "trumpf") action = st.dealer === me
       ? `<p><b>Sag den Trumpf an:</b> Tippe auf eine deiner Karten – ihre Farbe wird Trumpf. (Schlag ist ${rankName(st.schlag)}.)</p>`
@@ -1556,7 +1563,7 @@
       : hand.map((c) => {
           // Ansagen über die eigenen Karten: Schlag = Wert der Karte (nicht der Weli), Trumpf = Farbe der Karte
           if (st.step === "schlag" && st.vorhand === me) {
-            const r = c.split("-")[1], ok = WAT.RANKS.includes(r);
+            const r = c.split("-")[1], ok = true; // auch der Weli darf Schlag sein
             return wCard(c, ok ? "play" : "dim", ok ? `data-schlag="${r}" role="button" tabindex="0" aria-label="Schlag ${rankName(r)} ansagen" title="Schlag: ${rankName(r)}"` : "");
           }
           if (st.step === "trumpf" && st.dealer === me) {
@@ -1577,9 +1584,9 @@
         <div class="wlayout">
           <section class="wtable">
             ${pile(opp, "top")}${pile(self, "bottom")}
-            <div class="wside"><span class="muted small">${esc(nameOf(opp))} ${tricksDots(opp)}</span><div class="whand opp">${oppCards}</div></div>
+            <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
-            <div class="wside"><span class="muted small">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)}</span><div class="whand mine">${myCards}</div></div>
+            <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
             <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>

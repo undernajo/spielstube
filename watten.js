@@ -13,13 +13,14 @@
   const cardName = (c) => (c === "schelle-6" ? "Weli" : SUIT_NAMES[suitOf(c)] + "-" + RANK_NAMES[rankOf(c)]);
 
   // Guter: Trumpfkarte einen Rang über dem Schlag (beim Ass ist es die Trumpf-Sieben)
-  const guterOf = (schlag, trump) => trump + "-" + (schlag === "A" ? "7" : RANKS[RANKS.indexOf(schlag) + 1]);
+  // Ist der Weli Schlag, gibt es nur diesen einen Schlag, und der Gute ist die Trumpf-Sieben
+  const guterOf = (schlag, trump) => trump + "-" + (schlag === "A" || schlag === "6" ? "7" : RANKS[RANKS.indexOf(schlag) + 1]);
   const isTrump = (c, trump) => suitOf(c) === trump;
 
   // Stärke einer Karte im Stich (höher sticht); gleich starke Schläge: der zuerst gespielte gewinnt
   function power(c, r, ledSuit) {
     if (c === guterOf(r.schlag, r.trump)) return 1000;
-    if (rankOf(c) === r.schlag) return suitOf(c) === r.trump ? 900 : 800;
+    if (rankOf(c) === r.schlag) return suitOf(c) === r.trump || r.schlag === "6" ? 900 : 800;
     if (isTrump(c, r.trump)) return 500 + ORDER.indexOf(rankOf(c));
     if (suitOf(c) === ledSuit) return 100 + ORDER.indexOf(rankOf(c));
     return 0;
@@ -28,7 +29,8 @@
   function legalCards(hand, r) {
     if (r.trick.length !== 1) return hand.slice();
     const led = r.trick[0].card;
-    if (!isTrump(led, r.trump) || led === guterOf(r.schlag, r.trump)) return hand.slice();
+    const trumpLed = isTrump(led, r.trump) || (r.schlag === "6" && led === "schelle-6"); // Weli als Schlag zählt wie der Rechte
+    if (!trumpLed || led === guterOf(r.schlag, r.trump)) return hand.slice();
     const ok = hand.filter((c) => isTrump(c, r.trump) || rankOf(c) === r.schlag);
     return ok.length ? ok : hand.slice();
   }
@@ -96,7 +98,7 @@
     if (!st.seats.includes(pid) && a.type !== "wNext") return false;
     switch (a.type) {
       case "wSchlag":
-        if (st.step !== "schlag" || pid !== r.vorhand || !RANKS.includes(a.rank)) return false;
+        if (st.step !== "schlag" || pid !== r.vorhand || !(RANKS.includes(a.rank) || a.rank === "6")) return false;
         r.schlag = a.rank; st.step = "trumpf"; return true;
       case "wTrumpf":
         if (st.step !== "trumpf" || pid !== st.dealer || !SUITS.includes(a.suit)) return false;
