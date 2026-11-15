@@ -684,3 +684,6 @@ textarea { resize: vertical; font: inherit; }
 /* Spieltitel in der Leiste: ohne eigene Umrandung, nur Symbol + Name */
 .top.topbar .gtitle { background: none; border: 0; padding: 0; gap: 10px; }
 .top.topbar .gtitle .gt-icon { border: 0; background: color-mix(in srgb, var(--gc) 35%, #1a1640); }
+.rules .game-list { list-style: none; padding-left: 0; display: grid; gap: 8px; }
+.rules .game-list li { display: flex; align-items: center; gap: 8px; }
+.rules .game-list .gt-icon.xs { border: 0; background: color-mix(in srgb, var(--gc) 35%, #1a1640); }

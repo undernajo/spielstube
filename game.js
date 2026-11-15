@@ -540,7 +540,10 @@
           ${resumable && !code ? `<button id="resume" class="btn ghost">Spiel ${esc(saved.code)} fortsetzen</button>` : ""}
           <p class="err">${esc(errorMsg || status)}</p>
         </div>
-        ${rulesHtml}
+        <details class="rules"><summary>Die Spiele</summary>
+          <ul class="game-list">${GAMES.map((g) => `<li style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b> – ${esc(g.desc)}</li>`).join("")}</ul>
+          <p class="muted small">Ein Spiel erstellen, Freunde per Link einladen, in der Lobby das Spiel wählen. Die genauen Regeln stehen dort beim jeweiligen Spiel.</p>
+        </details>
         ${reportsHtml()}
       </main>`;
     bindReports(renderStart);
