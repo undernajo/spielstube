@@ -1208,6 +1208,17 @@
         <b>${(st.total[p.id] || 0).toLocaleString("de-DE")}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
     }).join("");
   }
+  // Auflösung: Entfernung, Rundenpunkte, Gesamtstand und wer schon weiter will
+  function geoResults(v, st) {
+    const fmt = (km) => km == null ? "keine Nadel" : (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km).toLocaleString("de-DE")) + " km";
+    return v.players.map((p, i) => ({ p, i })).filter(({ p }) => st.result[p.id])
+      .sort((a, b) => st.result[b.p.id].points - st.result[a.p.id].points).map(({ p, i }) => {
+        const r = st.result[p.id];
+        return `<div class="geo-res ${st.ready[p.id] ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
+          <span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${st.ready[p.id] ? ` <span class="geo-mark">✓</span>` : ""}</span>
+          <span class="muted small">${fmt(r.km)}</span><b>+${r.points}</b><span class="geo-total" title="Gesamt">${(st.total[p.id] || 0).toLocaleString("de-DE")}</span></div>`;
+      }).join("");
+  }
   function geoSubmit() {
     const st = view && view.geo;
     if (!st || !geoMine || st.step !== "guess" || geoSent === st.round) return;
@@ -1242,7 +1253,7 @@
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); }
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
       if (st.step === "reveal") { const rb = app.querySelector("#geo-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"; }
       return;
     }
@@ -1255,21 +1266,18 @@
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
             <div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div></div>
+          <div class="geo-scores">${geoChips(v, st)}</div>
           ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
           <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
-          <div class="geo-scores">${geoChips(v, st)}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
     } else if (st.step === "reveal") {
-      const rows = v.players.filter((p) => st.result[p.id]).sort((a, b) => st.result[b.id].points - st.result[a.id].points);
       main = `
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.place.name)}</div></div>
-          <div class="geo-results">${rows.map((p) => { const r = st.result[p.id]; return `<div class="geo-res" style="--pc:${colorOf(p.id)}"><span class="pdot"></span>
-            <span>${esc(p.name)}</span><span class="muted small">${r.km == null ? "keine Nadel" : r.km < 10 ? r.km.toFixed(1).replace(".", ",") + " km" : Math.round(r.km).toLocaleString("de-DE") + " km"}</span><b>+${r.points}</b></div>`; }).join("")}</div>
+          <div class="geo-results">${geoResults(v, st)}</div>
           <div class="geo-actions"><button id="geo-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"}</button>
             ${isHost ? `<button id="geo-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>
-          <div class="geo-scores">${geoChips(v, st)}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
     } else {
