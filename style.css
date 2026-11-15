@@ -295,3 +295,8 @@ textarea { resize: vertical; font: inherit; }
   .game-grid > .players { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .chip-score b { font-size: 1.1rem; }
 }
+
+/* ---------- Emoji-Karten: Flaggen überall als Bild (Noto Color Emoji), große Darstellung ---------- */
+.emo .slot-t, .m-item.emo { font-family: "Fredoka", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+.emo .slot-t { font-size: 1.7em; line-height: 1.15; letter-spacing: 2px; }
+.m-item.emo { font-size: 2.4rem; letter-spacing: 3px; }

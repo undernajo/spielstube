@@ -43,8 +43,8 @@
   }
 
   // Fragen-Sets: beliebig kombinierbar (Karten ohne Markierung gehören zu „standard“)
-  const SET_KEYS = ["standard", "suedtirol", "wirtschaft"];
-  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft" };
+  const SET_KEYS = ["standard", "suedtirol", "wirtschaft", "emoji", "winter", "film"];
+  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien" };
   // akzeptiert eine Liste, einen einzelnen Schlüssel oder das alte „mixed“
   function normSets(v) {
     if (v === "mixed") return SET_KEYS.slice();
@@ -403,7 +403,7 @@
       const c = cards[s.cardIdx];
       const showAll = s.phase !== "playing";
       out.card = {
-        q: c.q, type: c.type, set: cardSetKey(c), unit: c.unit || "", hint: c.hint || "", tol: c.type === "estimate" ? (c.tol != null ? c.tol : 0.1) : null,
+        q: c.q, type: c.type, set: cardSetKey(c), emoji: !!c.emoji, unit: c.unit || "", hint: c.hint || "", tol: c.type === "estimate" ? (c.tol != null ? c.tol : 0.1) : null,
         items: s.perm.map((oi, pos) => {
           const it = c.items[oi], r = s.revealed[pos];
           const pend = out.pending && out.pending.pos === pos ? { by: out.pending.by, ok: null, pending: true, given: out.pending.given, a: it[1] } : null;

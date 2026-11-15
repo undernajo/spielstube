@@ -550,7 +550,7 @@
           <section class="players">${chips}</section>
           <section class="action">${banner}${undoHtml(v, nameOf)}</section>
           <section class="board">
-            <div class="ring">
+            <div class="ring ${card.emoji ? "emo" : ""}">
               <div class="center">
                 <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
                 <div class="q">${esc(card.q)}</div>
@@ -602,7 +602,7 @@
 
   // ---------- Karten melden ----------
   let reportOpen = false;
-  const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", mixed: "Gemischt" };
+  const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", mixed: "Gemischt" };
 
   // ---------- Fragen-Sets (Mehrfachauswahl) ----------
   function currentSets() {
@@ -738,7 +738,7 @@
       <div class="modal-back">
         <div class="modal" role="dialog" aria-modal="true">
           <div class="m-q">${esc(card.q)}</div>
-          <div class="m-item">${esc(it.t)}</div>
+          <div class="m-item ${card.emoji ? "emo" : ""}">${esc(it.t)}</div>
           ${controls}
           <button class="btn ghost" data-close>Andere Antwort wählen</button>
         </div>
