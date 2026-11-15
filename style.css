@@ -687,3 +687,13 @@ textarea { resize: vertical; font: inherit; }
 .rules .game-list { list-style: none; padding-left: 0; display: grid; gap: 8px; }
 .rules .game-list li { display: flex; align-items: center; gap: 8px; }
 .rules .game-list .gt-icon.xs { border: 0; background: color-mix(in srgb, var(--gc) 35%, #1a1640); }
+/* Schlaue Zehn: dunkle Kärtchen mit heller Schrift (blendet nicht) */
+:root { --slot: #3a2f8a; --slot-ink: #f4f1ff; }
+.slot { border: 2px solid rgba(255, 255, 255, .14); box-shadow: 0 4px 0 rgba(0, 0, 0, .3); }
+.slot.open { border-color: rgba(255, 255, 255, .22); }
+.slot.open:hover { background: #4535a3; border-color: var(--accent); }
+.slot.sel { background: #4535a3; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 200, 61, .25), 0 4px 0 rgba(0, 0, 0, .3); }
+.slot.shown { background: #2a2366; color: #c9c3ea; border-color: rgba(255, 255, 255, .1); }
+.slot.ok { border-color: rgba(255, 255, 255, .25); }
+.slot.bad { border-color: rgba(255, 255, 255, .25); }
+.slot.pending { border-color: transparent; }
