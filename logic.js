@@ -392,7 +392,7 @@
 
   function publicState(s, cards, code) {
     const out = {
-      code, phase: s.phase, target: s.target, round: s.round, turn: s.turn,
+      code, hostId: s.hostId || (s.players[0] && s.players[0].id), phase: s.phase, target: s.target, round: s.round, turn: s.turn,
       players: s.players.map((p) => ({ ...p })), lastEvent: s.lastEvent, log: s.log.slice(0, 15),
       roundResult: s.roundResult, winners: s.winners, card: null, cardSet: normSets(s.cardSet || "standard"),
       pending: s.phase === "playing" && s.pending ? { ...s.pending, judges: judges(s) } : null,

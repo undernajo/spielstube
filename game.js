@@ -99,6 +99,7 @@
     isHost = true; roomCode = genCode();
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
+    S.hostId = myId;
     L.addPlayer(S, myId, name);
     hostOpen(0);
   }
@@ -106,6 +107,7 @@
   function hostResume(saved) {
     isHost = true; roomCode = saved.code; S = saved.state;
     if (saved.hostId) { myId = saved.hostId; setTabId(myId); }
+    S.hostId = myId;
     S.players.forEach((p) => { if (p.id !== myId) p.connected = false; });
     hostOpen(saved.broker || 0);
   }
@@ -414,7 +416,7 @@
             <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>
             <p class="muted small">Schick deinen Mitspielern den Link oder den Code.</p>`}` : ""}
           <h3>Spieler</h3>
-          <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</li>`).join("")}</ul>
+          <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
           ${isHost ? `
             ${setPickerHtml()}
@@ -473,7 +475,7 @@
       const pct = Math.min(100, (p.score / v.target) * 100);
       return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}">
         <div class="chip-top"><span class="dot ${p.connected ? "on" : ""}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span></div>
+          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>${p.id === v.hostId ? `<span class="host-tag" title="Das Spiel läuft auf diesem Gerät">Gastgeber</span>` : ""}</div>
         <div class="chip-score"><b>${p.score}</b><small>/ ${v.target}</small></div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         <div class="chip-round">${v.phase === "playing"

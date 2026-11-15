@@ -221,3 +221,6 @@ textarea { resize: vertical; font: inherit; }
   .lbl-short { display: inline; }
   .top-actions { gap: 6px; }
 }
+.host-tag { flex: none; margin-left: auto; font-size: .7rem; font-weight: 600; letter-spacing: .3px; padding: 2px 8px; border-radius: 99px;
+  background: rgba(255, 200, 61, .15); color: var(--accent); border: 1px solid rgba(255, 200, 61, .4); }
+.plist .host-tag { margin-left: auto; }
