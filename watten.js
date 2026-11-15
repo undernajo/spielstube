@@ -158,6 +158,9 @@
         if (st.seats.every((id) => r.ready[id])) deal(st);
         return true;
       }
+      case "wShow": // eigene Restkarten nach der Runde zeigen
+        if (st.step !== "roundEnd" && st.step !== "final") return false;
+        r.shown = { ...(r.shown || {}), [pid]: true }; return true;
       case "wRestart":
         if (st.step !== "final") return false;
         st.scores = { [st.seats[0]]: 0, [st.seats[1]]: 0 }; st.history = []; st.winners = null; st.roundNo = 0;
@@ -181,7 +184,9 @@
       handCount: Object.fromEntries(st.seats.map((id) => [id, r.hands[id].length])),
       result: r.result, ready: { ...r.ready }, history: st.history.slice(), games: { ...(st.games || {}) },
       // nach der Runde dürfen beide die übrigen Karten sehen
-      reveal: st.step === "roundEnd" || st.step === "final" ? { ...r.hands } : null,
+      // Restkarten bleiben verdeckt, außer der Spieler zeigt sie selbst
+      reveal: (st.step === "roundEnd" || st.step === "final") && r.shown ? Object.fromEntries(Object.keys(r.shown).map((id) => [id, r.hands[id].slice()])) : null,
+      shown: { ...(r.shown || {}) },
     };
   }
   // Private Sicht eines Spielers: die eigene Hand und welche Karten gerade erlaubt sind

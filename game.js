@@ -1614,12 +1614,13 @@
       const r = st.result, why = { stiche: "mit 3 Stichen", abgelehnt: "– Bieten abgelehnt", aufgegeben: "– der andere hat aufgegeben" }[r.reason] || "";
       action = `<div class="banner ${r.winner === me ? "win" : ""}"><b>${esc(nameOf(r.winner))} gewinnt die Runde ${why}: +${r.points}</b>
         ${st.step === "final" ? `<div style="margin-top:6px">🏆 <b>${esc(nameOf(st.winners[0]))} gewinnt die Partie!</b></div>` : ""}
+        ${seated && st.handCount[me] ? `<div class="wshow">${st.shown && st.shown[me] ? `<span class="muted small">Deine Karten sind aufgedeckt.</span>` : `<button id="w-show" class="btn ghost sm">Meine Karten zeigen</button>`}</div>` : ""}
         <div class="banner-actions">${st.step === "final"
           ? `<button id="w-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
           : seated ? `<button id="w-next" class="btn primary">${st.ready[me] ? "Warte auf den anderen … (zurücknehmen)" : "Nächste Runde"}</button>${isHost ? `<button id="w-force" class="btn ghost sm">Sofort weiter</button>` : ""}` : ""}</div></div>`;
     }
-    const oppCards = st.reveal ? (st.reveal[opp] || []).map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
-    const myCards = st.reveal && !seated ? (st.reveal[self] || []).map((c) => wCard(c)).join("")
+    const oppCards = st.reveal && st.reveal[opp] ? st.reveal[opp].map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
+    const myCards = !seated ? (st.reveal && st.reveal[self] ? st.reveal[self].map((c) => wCard(c)).join("") : Array.from({ length: st.handCount[self] || 0 }, wBack).join(""))
       : hand.map((c) => {
           // Ansagen über die eigenen Karten: Schlag = Wert der Karte (nicht der Weli), Trumpf = Farbe der Karte
           if (st.step === "schlag" && st.vorhand === me) {
@@ -1669,6 +1670,7 @@
     on("#w-hold4", () => send({ type: "wHold" }));
     on("#w-go", () => send({ type: "wGiveUp" }));
     on("#w-giveup", () => { if (confirm("Wirklich aufgeben? Dein Gegner bekommt 2 Punkte.")) send({ type: "wGiveUp" }); });
+    on("#w-show", () => send({ type: "wShow" }));
     on("#w-next", () => send({ type: "wNext" }));
     on("#w-force", () => send({ type: "wNext", force: true }));
     on("#w-restart", () => send({ type: "wRestart" }));

@@ -661,3 +661,4 @@ textarea { resize: vertical; font: inherit; }
 }
 /* „Du bist dran“: zwischen Stich in der Mitte und den eigenen Karten */
 .wtable .wturn.me { position: static; justify-self: center; align-self: end; }
+.wshow { margin-top: 8px; }
