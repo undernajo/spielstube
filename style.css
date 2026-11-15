@@ -704,3 +704,8 @@ textarea { resize: vertical; font: inherit; }
 @media (max-width: 640px) {
   .slot { width: auto; font-size: 1.05rem; min-height: 78px; }
 }
+/* Schlaue Zehn: „Du bist dran“ gut sichtbar im Spielfeld */
+.zturn { align-self: center; margin-bottom: 6px; padding: 5px 16px; border-radius: 99px; font-weight: 700; font-size: clamp(.85rem, 2.6cqw, 1.1rem);
+  background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 4px rgba(255, 200, 61, .25); animation: wpulse 1.6s ease-in-out infinite; }
+.ring.myturn { box-shadow: 0 0 0 4px var(--accent), 0 0 30px rgba(255, 200, 61, .25), 0 12px 30px rgba(0, 0, 0, .4); }
+@media (max-width: 640px) { .zturn { font-size: 1rem; } .ring.myturn { box-shadow: 0 0 0 3px var(--accent), 0 12px 30px rgba(0, 0, 0, .4); } }

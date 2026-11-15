@@ -700,7 +700,7 @@
         </div>`;
     } else if (v.phase === "playing") {
       banner = myTurn
-        ? `<div class="banner me row"><div class="banner-text"><b>Du bist dran!</b> Wähle eine Antwort${me.roundPts ? ` – oder sichere deine ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""}` : ""}.</div>
+        ? `<div class="banner me row"><div class="banner-text">Wähle eine Antwort${me.roundPts ? ` – oder sichere deine ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""}` : ""}.</div>
             <button id="pass" class="btn">Passen${me.roundPts ? ` (+${me.roundPts})` : ""}</button></div>`
         : `<div class="banner row"><div class="banner-text"><span class="pdot" style="--pc:${colorOf(cur.id)}"></span> <b>${esc(cur.name)}</b> ist am Zug …</div>
             ${isHost && !cur.connected ? `<button id="skip" class="btn ghost sm">Getrennt – überspringen</button>` : ""}</div>`;
@@ -728,8 +728,9 @@
           <section class="players">${chips}</section>
           <section class="action">${banner}${undoHtml(v, nameOf)}</section>
           <section class="board">
-            <div class="ring ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
+            <div class="ring ${myTurn && v.phase === "playing" ? "myturn" : ""} ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
               <div class="center">
+                ${myTurn && v.phase === "playing" ? `<div class="zturn">Du bist dran!</div>` : ""}
                 <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
                 <div class="q">${esc(card.q)}</div>
                 ${card.hint ? `<div class="hint">${esc(card.hint)}</div>` : ""}
