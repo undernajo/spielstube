@@ -45,7 +45,7 @@
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
   let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
   const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
-  let wattenOpts = Object.assign({ target: 15 }, store.get("s10-watten") || {});
+  let wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
@@ -241,7 +241,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
-      watten: { target: Number(wattenOpts.target) },
+      watten: { target: Number(wattenOpts.target), weli: wattenOpts.weli },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -828,7 +828,7 @@
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (view.game === "watten" && lb.watten) {
-      return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Südtiroler Regeln mit Gutem und Weli</p>`;
+      return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${Object.keys(HLDATA).length} Kategorien (z. B. Berge, Flüsse, Tiere, Filme, Lieder) · je ${HL.PER_CAT} Vergleiche</p>`;
@@ -874,6 +874,8 @@
     };
     const wT = app.querySelector("#watten-target");
     if (wT) wT.onchange = () => { wattenOpts.target = Number(wT.value); store.set("s10-watten", wattenOpts); publish(); };
+    const wW = app.querySelector("#watten-weli");
+    if (wW) wW.onchange = () => { wattenOpts.weli = wW.value; store.set("s10-watten", wattenOpts); publish(); };
     const hlL = app.querySelector("#hl-length");
     if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
@@ -910,15 +912,18 @@
     const n = view.players.filter((p) => p.connected).length;
     return `<label class="field"><span>Spielen bis</span><select id="watten-target">${WAT.TARGETS.map((t) =>
         `<option value="${t}" ${Number(wattenOpts.target) === t ? "selected" : ""}>${t} Punkte (gestrichen ab ${t - 2})</option>`).join("")}</select></label>
+      <label class="field"><span>Weli</span><select id="watten-weli">
+        <option value="schell" ${wattenOpts.weli !== "trumpf" ? "selected" : ""}>kleinste Schelle (Guter beim Schell-Ass, als Schlag der Rechte)</option>
+        <option value="trumpf" ${wattenOpts.weli === "trumpf" ? "selected" : ""}>kleinster Trumpf (als Schlag die beste Karte, kein Guter)</option></select></label>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       <p class="muted small">${n < 2 ? "Watten braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Watten zu zweit nach Südtiroler Regeln."}</p>`;
   }
   const wattenRulesHtml = `
     <details class="rules"><summary>Regeln: Watten zu zweit</summary>
       <ul>
-        <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli als kleinste Schelle). Jeder bekommt 5 Karten, der Geber wechselt.</li>
-        <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt). Ist der Weli Schlag, ist er der einzige Schlag und der Gute die Trumpf-Sieben. Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
-        <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
+        <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli – je nach Einstellung kleinste Schelle oder kleinster Trumpf). Jeder bekommt 5 Karten, der Geber wechselt.</li>
+        <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt). Ist der Weli Schlag, ist er der einzige Schlag: als kleinste Schelle ist er der Rechte und die Trumpf-Sieben der Gute, als kleinster Trumpf ist er die beste Karte (kein Guter). Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
+        <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben; ist der Weli die kleinste Schelle, ist beim Schell-Ass der Weli der Gute) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
         <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
         <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
         <li><b>Gestrichen</b> ist man 2 Punkte vor dem Ziel: dann darf man nicht mehr bieten, aber vor der ersten eigenen Karte aufgeben (Gegner +2). Liegt der andere mindestens 4 zurück, gehen 4: Der Gestrichene muss vor seiner ersten Karte <b>halten</b> (um 4) oder <b>gehen</b> (Gegner +2). Sind beide gestrichen, wird nicht geboten.</li>

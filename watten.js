@@ -14,14 +14,22 @@
 
   // Guter: Trumpfkarte einen Rang über dem Schlag (beim Ass ist es die Trumpf-Sieben)
   // Ist der Weli Schlag, gibt es nur diesen einen Schlag, und der Gute ist die Trumpf-Sieben
-  const guterOf = (schlag, trump) => trump + "-" + (schlag === "A" || schlag === "6" ? "7" : RANKS[RANKS.indexOf(schlag) + 1]);
-  const isTrump = (c, trump) => suitOf(c) === trump;
+  // Weli-Variante (Lobby): "schell" = Weli ist die kleinste Schelle, "trumpf" = Weli ist immer der kleinste Trumpf.
+  // Guter beim Ass: Trumpf-Sieben – bei „schell“ und Trumpf Schelle aber der Weli (die kleinste Schelle).
+  // Weli als Schlag: bei „schell“ ist der Weli der Rechte und die Trumpf-Sieben der Gute; bei „trumpf“ gibt es keinen Guten.
+  function guterOf(schlag, trump, mode = "schell") {
+    if (schlag === "6") return mode === "trumpf" ? null : trump + "-7";
+    if (schlag === "A") return mode === "schell" && trump === "schelle" ? "schelle-6" : trump + "-7";
+    return trump + "-" + RANKS[RANKS.indexOf(schlag) + 1];
+  }
+  const isTrump = (c, trump, mode) => suitOf(c) === trump || (mode === "trumpf" && c === "schelle-6");
 
   // Stärke einer Karte im Stich (höher sticht); gleich starke Schläge: der zuerst gespielte gewinnt
   function power(c, r, ledSuit) {
-    if (c === guterOf(r.schlag, r.trump)) return 1000;
+    const g = guterOf(r.schlag, r.trump, r.weliMode);
+    if (g && c === g) return 1000;
     if (rankOf(c) === r.schlag) return suitOf(c) === r.trump || r.schlag === "6" ? 900 : 800;
-    if (isTrump(c, r.trump)) return 500 + ORDER.indexOf(rankOf(c));
+    if (isTrump(c, r.trump, r.weliMode)) return 500 + ORDER.indexOf(rankOf(c));
     if (suitOf(c) === ledSuit) return 100 + ORDER.indexOf(rankOf(c));
     return 0;
   }
@@ -29,9 +37,9 @@
   function legalCards(hand, r) {
     if (r.trick.length !== 1) return hand.slice();
     const led = r.trick[0].card;
-    const trumpLed = isTrump(led, r.trump) || (r.schlag === "6" && led === "schelle-6"); // Weli als Schlag zählt wie der Rechte
-    if (!trumpLed || led === guterOf(r.schlag, r.trump)) return hand.slice();
-    const ok = hand.filter((c) => isTrump(c, r.trump) || rankOf(c) === r.schlag);
+    const trumpLed = isTrump(led, r.trump, r.weliMode) || (r.schlag === "6" && led === "schelle-6"); // Weli als Schlag zählt wie der Rechte
+    if (!trumpLed || led === guterOf(r.schlag, r.trump, r.weliMode)) return hand.slice();
+    const ok = hand.filter((c) => isTrump(c, r.trump, r.weliMode) || rankOf(c) === r.schlag);
     return ok.length ? ok : hand.slice();
   }
 
@@ -41,11 +49,12 @@
   function start(s, opts) {
     opts = opts || {};
     const target = TARGETS.includes(Number(opts.target)) ? Number(opts.target) : 15;
+    const weliMode = opts.weli === "trumpf" ? "trumpf" : "schell";
     const seats = s.players.filter((p) => p.connected).slice(0, 2).map((p) => p.id);
     if (seats.length < 2) return false;
     s.game = "watten"; s.phase = "watten";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.watten = { opts: { target }, target, seats, scores: { [seats[0]]: 0, [seats[1]]: 0 },
+    s.watten = { opts: { target, weli: weliMode }, target, weliMode, seats, scores: { [seats[0]]: 0, [seats[1]]: 0 },
       dealer: seats[Math.floor(Math.random() * 2)], roundNo: 0, history: [], winners: null, games: { [seats[0]]: 0, [seats[1]]: 0 } };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
     deal(s.watten, true);
@@ -57,7 +66,7 @@
     st.roundNo++;
     const d = shuffle(deck()), vorhand = other(st, st.dealer);
     const hands = { [vorhand]: d.slice(0, 5), [st.dealer]: d.slice(5, 10) };
-    const r = { hands, vorhand, schlag: null, trump: null, trick: [], lastTrick: null, leader: vorhand,
+    const r = { weliMode: st.weliMode || "schell", hands, vorhand, schlag: null, trump: null, trick: [], lastTrick: null, leader: vorhand,
       tricks: { [vorhand]: 0, [st.dealer]: 0 }, won: { [vorhand]: [], [st.dealer]: [] }, value: 2, noBid: false, bid: null, lastBidder: null,
       giveUpBy: null, decided: false, played: 0, result: null, ready: {} };
     // Gestrichen (2 Punkte vor dem Ziel): darf nicht bieten. Ist nur einer gestrichen und liegt der andere
@@ -156,7 +165,7 @@
     return {
       step: st.step, target: st.target, seats: st.seats.slice(), scores: { ...st.scores }, dealer: st.dealer, roundNo: st.roundNo,
       gestrichen: Object.fromEntries(st.seats.map((id) => [id, gestrichen(st, id)])), winners: st.winners,
-      vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump) : null,
+      vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump, r.weliMode) : null, weliMode: st.weliMode,
       trick: r.trick.slice(), lastTrick: r.lastTrick, won: { ...r.won }, tricks: { ...r.tricks }, value: r.value, bid: r.bid, vierer: !!r.vierer,
       noBid: r.noBid, giveUpBy: r.giveUpBy && !r.decided && r.hands[r.giveUpBy].length === 5 ? r.giveUpBy : null, turn: currentTurn(st),
       mustDecide: r.giveUpBy && needsDecision(r, r.giveUpBy) ? r.giveUpBy : null,
