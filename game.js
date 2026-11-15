@@ -1521,7 +1521,7 @@
     // Trumpf-Symbol mit Schlagwert sitzt auf dem Spielfeld (rechts, mittig neben dem Stich)
     const combo = st.schlag || st.trump ? `<div class="wcombo" title="${st.trump ? "Trumpf " + suitName(st.trump) : "Trumpf noch offen"}${st.schlag ? " · Schlag " + rankName(st.schlag) : ""}">
           ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b>
-          <span class="wvalue">zählt <b>${st.value}</b>${st.vierer ? " · 4 gehen" : ""}</span></div>` : "";
+          <span class="wvalue">Es gehen <b>${st.value}</b></span></div>` : "";
     const ann = "";
     // Mitte: aktueller Stich, sonst kurz der letzte
     let table;
