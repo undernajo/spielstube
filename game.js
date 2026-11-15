@@ -917,7 +917,7 @@
     <details class="rules"><summary>Regeln: Watten zu zweit</summary>
       <ul>
         <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli als kleinste Schelle). Jeder bekommt 5 Karten, der Geber wechselt.</li>
-        <li>Der Nicht-Geber sagt den <b>Schlag</b> an (einen Wert), der Geber den <b>Trumpf</b> (eine Farbe).</li>
+        <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt, der Weli geht nicht). Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
         <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
         <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
         <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
@@ -1507,10 +1507,10 @@
     // Aktionen
     let action = "";
     if (st.step === "schlag") action = st.vorhand === me
-      ? `<p><b>Sag den Schlag an</b> (einen Wert):</p><div class="wbtns">${WAT.RANKS.map((r) => `<button class="btn ghost wbtn" data-schlag="${r}">${rankName(r)}</button>`).join("")}</div>`
+      ? `<p><b>Sag den Schlag an:</b> Tippe auf eine deiner Karten – ihr Wert wird der Schlag.</p>`
       : `<p class="muted">${esc(nameOf(st.vorhand))} sagt den Schlag an …</p>`;
     else if (st.step === "trumpf") action = st.dealer === me
-      ? `<p><b>Sag den Trumpf an</b> (Schlag ist ${rankName(st.schlag)}):</p><div class="wbtns">${WAT.SUITS.map((s2) => `<button class="btn ghost wbtn" data-trumpf="${s2}">${wSuitIcon(s2)} ${suitName(s2)}</button>`).join("")}</div>`
+      ? `<p><b>Sag den Trumpf an:</b> Tippe auf eine deiner Karten – ihre Farbe wird Trumpf. (Schlag ist ${rankName(st.schlag)}.)</p>`
       : `<p class="muted">${esc(nameOf(st.dealer))} sagt den Trumpf an …</p>`;
     else if (st.step === "play") {
       if (st.bid) action = st.bid.by === me
@@ -1532,6 +1532,15 @@
     const oppCards = st.reveal ? (st.reveal[opp] || []).map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
     const myCards = st.reveal && !seated ? (st.reveal[self] || []).map((c) => wCard(c)).join("")
       : hand.map((c) => {
+          // Ansagen über die eigenen Karten: Schlag = Wert der Karte (nicht der Weli), Trumpf = Farbe der Karte
+          if (st.step === "schlag" && st.vorhand === me) {
+            const r = c.split("-")[1], ok = WAT.RANKS.includes(r);
+            return wCard(c, ok ? "play" : "dim", ok ? `data-schlag="${r}" role="button" tabindex="0" aria-label="Schlag ${rankName(r)} ansagen" title="Schlag: ${rankName(r)}"` : "");
+          }
+          if (st.step === "trumpf" && st.dealer === me) {
+            const su = c.split("-")[0];
+            return wCard(c, "play", `data-trumpf="${su}" role="button" tabindex="0" aria-label="Trumpf ${suitName(su)} ansagen" title="Trumpf: ${suitName(su)}"`);
+          }
           const ok = st.step === "play" && !st.bid && st.turn === me && legal.includes(c);
           return wCard(c, (ok ? "play" : st.turn === me && st.step === "play" && !st.bid ? "dim" : "") + (c === st.guter ? " guter" : ""), ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(WAT.cardName(c))} spielen"` : "");
         }).join("");
@@ -1566,8 +1575,9 @@
     on("#w-next", () => send({ type: "wNext" }));
     on("#w-force", () => send({ type: "wNext", force: true }));
     on("#w-restart", () => send({ type: "wRestart" }));
-    app.querySelectorAll("[data-schlag]").forEach((b) => b.onclick = () => send({ type: "wSchlag", rank: b.dataset.schlag }));
-    app.querySelectorAll("[data-trumpf]").forEach((b) => b.onclick = () => send({ type: "wTrumpf", suit: b.dataset.trumpf }));
+    const key = (el, fn) => { el.onclick = fn; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }; };
+    app.querySelectorAll("[data-schlag]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wSchlag", rank: b.dataset.schlag }); }));
+    app.querySelectorAll("[data-trumpf]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wTrumpf", suit: b.dataset.trumpf }); }));
     app.querySelectorAll("[data-card]").forEach((el) => {
       const go = () => { el.classList.add("going"); send({ type: "wPlay", card: el.dataset.card }); };
       el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
