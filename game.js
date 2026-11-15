@@ -794,8 +794,7 @@
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (view.game === "hl" && lb.hl) {
-      return `<div class="field"><span>Kategorien</span><p class="muted small">${Object.values(HLDATA).map((c) => esc(c.name)).join(" · ")}</p></div>
-        <p class="muted small">${esc((HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).name)} · je ${HL.PER_CAT} Vergleiche</p>`;
+      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${Object.keys(HLDATA).length} Kategorien (z. B. Berge, Flüsse, Tiere, Filme, Lieder) · je ${HL.PER_CAT} Vergleiche</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -864,7 +863,7 @@
   function hlSettingsHtml() {
     return `<label class="field"><span>Länge</span><select id="hl-length">${Object.entries(HL.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${hlOpts.length === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
-      <p class="muted small">Kategorien werden zufällig gezogen aus: ${Object.values(HLDATA).map((c) => esc(c.name)).join(" · ")}.</p>
+      <p class="muted small">${Object.keys(HLDATA).length} Kategorien, zufällig gezogen – z. B. Berge, Flüsse, Tiere, Filme, Lieder.</p>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }

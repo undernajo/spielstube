@@ -397,7 +397,7 @@ textarea { resize: vertical; font: inherit; }
 
 /* Gäste: gewähltes Spiel gut sichtbar */
 .game-banner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius);
-  border: 2px solid var(--accent); background: #2a2350; box-shadow: 0 0 0 4px rgba(255, 200, 61, .12); }
+  border: 1px solid var(--accent); background: #221d4b; }
 .game-icon { font-size: 2.4rem; line-height: 1; flex: none; }
 .game-label { font-size: .75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 600; }
 .game-name { font-size: 1.45rem; font-weight: 700; line-height: 1.15; }
@@ -484,24 +484,21 @@ textarea { resize: vertical; font: inherit; }
   .hl-vs { font-size: 1.3rem; }
   .hl-card { min-height: 0; padding: 14px 12px; }
 }
-/* Lobby: Spielauswahl als Kacheln */
-.gamegrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.gametile { position: relative; display: grid; justify-items: center; align-content: start; gap: 4px; text-align: center; cursor: pointer;
-  padding: 16px 10px 14px; border-radius: 16px; border: 2px solid var(--line);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--gc) 14%, #1d1845), #17133a);
-  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease; }
-.gametile:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--gc) 60%, var(--line)); }
+/* Lobby: Spielauswahl als Kacheln (ruhig: flache Flächen, gedämpfte Farben) */
+.gamegrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gametile { position: relative; display: grid; justify-items: center; align-content: start; gap: 3px; text-align: center; cursor: pointer;
+  padding: 14px 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: #1a1640;
+  transition: border-color .15s ease, background-color .15s ease; }
+.gametile:hover { border-color: color-mix(in srgb, var(--gc) 45%, var(--line)); }
 .gametile input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-.gametile:has(input:focus-visible) { outline: 3px solid var(--accent); outline-offset: 2px; }
-.gametile.on { border-color: var(--accent); background: linear-gradient(160deg, color-mix(in srgb, var(--gc) 28%, #2a2350), #221c4a);
-  box-shadow: 0 0 0 4px rgba(255, 200, 61, .14), 0 8px 22px rgba(0, 0, 0, .3); }
-.gt-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; font-size: 1.7rem; line-height: 1; margin-bottom: 4px;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--gc) 75%, #fff), var(--gc));
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .18), 0 4px 10px rgba(0, 0, 0, .3); }
-.gt-icon.big { width: 60px; height: 60px; font-size: 2rem; margin: 0; flex: none; }
-.gt-name { font-weight: 700; font-size: 1rem; line-height: 1.15; }
-.gt-desc { font-size: .78rem; color: var(--muted); line-height: 1.25; }
-.gt-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
-  font-size: .8rem; font-weight: 700; background: var(--accent); color: var(--accent-ink); transform: scale(0); transition: transform .15s ease; }
-.gametile.on .gt-check { transform: scale(1); }
+.gametile:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gametile.on { border-color: var(--accent); background: #221d4b; }
+.gt-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; font-size: 1.35rem; line-height: 1; margin-bottom: 4px;
+  background: color-mix(in srgb, var(--gc) 30%, #1a1640); border: 1px solid color-mix(in srgb, var(--gc) 45%, transparent); }
+.gt-icon.big { width: 52px; height: 52px; font-size: 1.7rem; margin: 0; flex: none; }
+.gt-name { font-weight: 600; font-size: .95rem; line-height: 1.15; }
+.gt-desc { font-size: .76rem; color: var(--muted); line-height: 1.25; }
+.gt-check { position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  font-size: .68rem; font-weight: 700; background: var(--accent); color: var(--accent-ink); opacity: 0; transition: opacity .15s ease; }
+.gametile.on .gt-check { opacity: 1; }
 @media (max-width: 360px) { .gt-desc { display: none; } }
