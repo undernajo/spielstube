@@ -62,7 +62,9 @@
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
 
   // Logo: „Spielstube“ mit gelber Würfel-Münze
-  const LOGO = `Spielstube<span class="die" aria-hidden="true"><svg viewBox="0 0 24 24"><g fill="currentColor"><circle cx="6.5" cy="6.5" r="2.3"/><circle cx="17.5" cy="6.5" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="6.5" cy="17.5" r="2.3"/><circle cx="17.5" cy="17.5" r="2.3"/></g></svg></span>`;
+  // Logo: ein kleines Haus (die Stube), dessen Vorderseite ein Würfel mit fünf Augen ist
+  const MARK = `<svg class="mark-svg" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.6 30 13.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V13.4Z" fill="#c48f0a"/><path d="M16 1.6 30 12.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V12.4Z" fill="var(--accent)"/><path d="M16 1.6 30 12.4v1.6L16 3.2 2 14v-1.6Z" fill="#fff" opacity=".35"/><g fill="var(--accent-ink)"><circle cx="9.5" cy="16" r="2"/><circle cx="22.5" cy="16" r="2"/><circle cx="16" cy="20.3" r="2"/><circle cx="9.5" cy="24.6" r="2"/><circle cx="22.5" cy="24.6" r="2"/></g></svg>`;
+  const LOGO = `<span class="mark">${MARK}</span><span class="brand-name">Spielstube</span>`;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cleanName = (n) => String(n || "").trim().slice(0, 20) || "Spieler";
   const genCode = () => Array.from({ length: 5 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join("");
@@ -713,9 +715,9 @@
 
     app.innerHTML = `
       <main class="screen game">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml("zehn")}${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
+        <header class="top topbar">
+          ${headBrandHtml("zehn")}
+          <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -806,6 +808,12 @@
   function gameTagHtml(key) {
     const g = GAMES.find((x) => x.key === key) || GAMES[0];
     return `<span class="gtag" style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b></span>`;
+  }
+  // Kopfzeile der Spielbildschirme: Marke Spielstube · großer Spieltitel · Infos · Knöpfe
+  function headBrandHtml(key) {
+    const g = GAMES.find((x) => x.key === key) || GAMES[0];
+    return `<div class="brand" title="Spielstube">${LOGO}</div>
+      <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b></div>`;
   }
   function gameBannerHtml() {
     const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
@@ -1201,9 +1209,9 @@
     }
     app.innerHTML = `
       <main class="screen game slf">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml("slf")}Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
+        <header class="top topbar">
+          ${headBrandHtml("slf")}
+          <div class="meta">Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1310,9 +1318,9 @@
     }
     app.innerHTML = `
       <main class="screen game slf wl">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml("wl")}${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
+        <header class="top topbar">
+          ${headBrandHtml("wl")}
+          <div class="meta">${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1463,9 +1471,9 @@
     }
     app.innerHTML = `
       <main class="screen game slf geo hl">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml("hl")}Raum <b>${esc(v.code)}</b></div>
+        <header class="top topbar">
+          ${headBrandHtml("hl")}
+          <div class="meta">Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1636,9 +1644,8 @@
         }).join("");
     app.innerHTML = `
       <main class="screen game slf geo watten">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="gtitle" style="--gc:${GAMES.find((g) => g.key === "watten").color}"><span class="gt-icon" aria-hidden="true">${GAMES.find((g) => g.key === "watten").icon}</span><b>Watten</b></div>
+        <header class="top topbar">
+          ${headBrandHtml("watten")}
           <div class="meta">Runde ${st.roundNo} · bis ${st.target} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
@@ -1749,9 +1756,9 @@
     if (obenMap) { obenMap.remove(); obenMap = null; obenZoom = null; }
     app.innerHTML = `
       <main class="screen game slf geo ${oben ? "oben" : ""}">
-        <header class="top">
-          <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml(oben ? "oben" : "geo")}${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
+        <header class="top topbar">
+          ${headBrandHtml(oben ? "oben" : "geo")}
+          <div class="meta">${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
