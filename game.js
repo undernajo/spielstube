@@ -764,9 +764,14 @@
         <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
     }
     if ((view.game === "geo" || view.game === "oben") && lb.geo) {
-      const regs = Object.entries(GEODATA).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(GEO.poolFor(k, view.game === "oben" ? "leicht" : lb.geo.level).length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
+      if (view.game === "oben") {
+        const r = GEODATA.oben;
+        return `<div class="field"><span>Orte</span><div class="setlist">${row(true, esc(r.name), esc(r.places.length + " Orte, z. B. Bozen · Venedig · München …"))}</div></div>
+        <p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
+      }
+      const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(GEO.poolFor(k, lb.geo.level).length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
-        <p class="muted small">${view.game === "oben" ? "Nur bekannte Orte" : esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${view.game === "oben" ? GEO.OBEN.steps * GEO.OBEN.stepMs / 1000 + " Sekunden" : esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
+        <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -811,14 +816,15 @@
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
   function geoSettingsHtml(oben) {
-    const level = oben ? "leicht" : GEO.LEVELS[geoOpts.level] ? geoOpts.level : "gemischt";
-    const nw = GEODATA[geoOpts.region] ? GEO.countNew(S && S.geoSeen, geoOpts.region, level) : null;
-    return `<div class="row2">
-        <label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).map(([k, r]) =>
+    const level = oben ? "gemischt" : GEO.LEVELS[geoOpts.level] ? geoOpts.level : "gemischt";
+    const region = oben ? "oben" : geoOpts.region;
+    const nw = GEODATA[region] ? GEO.countNew(S && S.geoSeen, region, level) : null;
+    return `${oben ? `<p class="muted small">Die wichtigsten Städte und ein paar Orte, die man von oben gut erkennt – von Bozen und Meran bis Venedig, München und Paris.</p>` : `<div class="row2">
+        <label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) =>
           `<option value="${k}" ${geoOpts.region === k ? "selected" : ""}>${esc(r.name)} (${GEO.poolFor(k, level).length} Orte)</option>`).join("")}</select></label>
-        ${oben ? `<div class="field"><span>Orte</span><p class="muted small">Nur bekannte Orte – die anderen erkennt man von oben kaum.</p></div>` : `<label class="field"><span>Schwierigkeit</span><select id="geo-level">${Object.entries(GEO.LEVELS).map(([k, l]) =>
-          `<option value="${k}" ${level === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>`}
-      </div>
+        <label class="field"><span>Schwierigkeit</span><select id="geo-level">${Object.entries(GEO.LEVELS).map(([k, l]) =>
+          `<option value="${k}" ${level === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+      </div>`}
       ${nw ? `<p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} Orte sind neu.` : `Noch ${nw.fresh} von ${nw.total} Orten neu – gespielte kommen erst wieder, wenn alle durch sind.`}
         ${nw.fresh < nw.total ? `<button id="geo-reset" class="btn ghost sm">Gespielte Orte vergessen</button>` : ""}</p>` : ""}
       <div class="row2">
@@ -832,10 +838,10 @@
   const obenRulesHtml = `
     <details class="rules"><summary>Regeln: Von oben</summary>
       <ul>
-        <li>Du siehst einen Ort ganz nah von oben (Satellitenbild) – nur die Art ist verraten, z. B. „See“ oder „Stadt“.</li>
+        <li>Du siehst einen Ort ganz nah von oben (Satellitenbild) – meistens eine bekannte Stadt.</li>
         <li>Alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild ein Stück heraus. Tippe auf der zweiten Karte, wo das ist, und lege deine Nadel fest.</li>
         <li>Punkte wie bei „Wo liegt das?“ (bis 1000, je näher, desto mehr), aber mal einem Faktor: früh getippt ×1, dann ×0,85, ×0,7 … bis ×0,4.</li>
-        <li>Es kommen nur bekannte Orte dran (die Stufe „Leicht“ von „Wo liegt das?“). Orte wiederholen sich erst, wenn alle dran waren.</li>
+        <li>Es kommen nur die wichtigsten Städte und ein paar Orte dran, die man von oben gut erkennt. Sie wiederholen sich erst, wenn alle dran waren.</li>
       </ul>
     </details>`;
   const geoRulesHtml = `

@@ -1,6 +1,27 @@
 // Orte für „Wo liegt das?“ – [Name, Art, Breitengrad, Längengrad, schwer?]
 // Das fünfte Feld 1 markiert schwere Orte (für die Stufen „Leicht“ und „Profi“).
 window.SCHLAU10_GEO = {
+  // Nur für „Von oben“: die wichtigsten Städte und Orte mit hohem Wiedererkennungswert aus der Luft
+  oben: {
+    name: "Bekannte Städte & Orte", scale: 40, hidden: true,
+    bounds: [[39.5, -2], [54.5, 20.5]],
+    places: [
+      ["Bozen", "Stadt", 46.4983, 11.3548], ["Meran", "Stadt", 46.6713, 11.1594], ["Brixen", "Stadt", 46.7150, 11.6560],
+      ["Bruneck", "Stadt", 46.7966, 11.9367], ["Sterzing", "Stadt", 46.8960, 11.4330], ["Innsbruck", "Stadt", 47.2692, 11.4041],
+      ["Lienz", "Stadt", 46.8297, 12.7695], ["Trient", "Stadt", 46.0748, 11.1217], ["Reschensee mit Kirchturm", "See", 46.8336, 10.5185],
+      ["Kalterer See", "See", 46.3880, 11.2560], ["Pragser Wildsee", "See", 46.6943, 12.0857], ["Drei Zinnen", "Berg", 46.6187, 12.3022],
+      ["Verona", "Stadt", 45.4384, 10.9916], ["Venedig", "Stadt", 45.4408, 12.3155], ["Mailand", "Stadt", 45.4642, 9.1900],
+      ["Rom", "Stadt", 41.9028, 12.4964], ["Florenz", "Stadt", 43.7696, 11.2558], ["Neapel", "Stadt", 40.8518, 14.2681],
+      ["Bologna", "Stadt", 44.4949, 11.3426], ["Turin", "Stadt", 45.0703, 7.6869], ["Genua", "Stadt", 44.4056, 8.9463],
+      ["Triest", "Stadt", 45.6495, 13.7768], ["Pisa", "Stadt", 43.7228, 10.4017], ["Padua", "Stadt", 45.4064, 11.8768],
+      ["Sirmione (Gardasee)", "Halbinsel", 45.4920, 10.6080], ["Riva del Garda", "Stadt", 45.8858, 10.8406], ["Jesolo", "Badeort", 45.5340, 12.6440],
+      ["Rimini", "Stadt", 44.0678, 12.5695], ["Wien", "Stadt", 48.2082, 16.3738], ["Salzburg", "Stadt", 47.8095, 13.0550],
+      ["Graz", "Stadt", 47.0707, 15.4395], ["München", "Stadt", 48.1372, 11.5755], ["Berlin", "Stadt", 52.5200, 13.4050],
+      ["Hamburg", "Stadt", 53.5511, 9.9937], ["Frankfurt am Main", "Stadt", 50.1109, 8.6821], ["Köln", "Stadt", 50.9375, 6.9603],
+      ["Zürich", "Stadt", 47.3769, 8.5417], ["Paris", "Stadt", 48.8566, 2.3522], ["London", "Stadt", 51.5074, -0.1278],
+      ["Amsterdam", "Stadt", 52.3676, 4.9041], ["Barcelona", "Stadt", 41.3851, 2.1734], ["Prag", "Stadt", 50.0755, 14.4378],
+      ["Budapest", "Stadt", 47.4979, 19.0402] ] },
+
   suedtirol: {
     name: "Südtirol", scale: 10, // km: bei dieser Entfernung gibt es noch ~37 % der Punkte
     bounds: [[46.2, 10.35], [47.12, 12.5]],

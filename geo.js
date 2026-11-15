@@ -5,7 +5,7 @@
   const TIMERS = { t30: { name: "30 Sekunden", ms: 30000 }, t60: { name: "60 Sekunden", ms: 60000 }, none: { name: "ohne Zeitlimit", ms: 0 } };
   // „Von oben“: Satellitenbild zoomt in Stufen heraus; wer früher tippt, bekommt mehr Punkte
   const OBEN = { steps: 6, stepMs: 5000, factors: [1, 0.85, 0.7, 0.6, 0.5, 0.4],
-    zoom: { suedtirol: 16, italien: 15, dach: 15, europa: 14, welt: 13 } };
+    zoom: { oben: 14, suedtirol: 16, italien: 15, dach: 15, europa: 14, welt: 13 } };
   const obenStep = (ms) => Math.max(0, Math.min(OBEN.steps - 1, Math.floor(ms / OBEN.stepMs)));
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const data = () => root.SCHLAU10_GEO || {};
@@ -36,12 +36,12 @@
 
   function start(s, opts, now) {
     opts = opts || {};
-    const region = data()[opts.region] ? opts.region : "europa";
-    // „Von oben“ nur mit bekannten Orten – unbekannte erkennt man aus der Luft nicht
-    const level = opts.mode === "oben" ? "leicht" : LEVELS[opts.level] ? opts.level : "gemischt";
+    const mode = opts.mode === "oben" ? "oben" : "karte";
+    // „Von oben“ hat eine eigene feste Liste; die normalen Regionen nur für „Wo liegt das?“
+    const region = mode === "oben" ? "oben" : data()[opts.region] && !data()[opts.region].hidden ? opts.region : "europa";
+    const level = mode === "oben" ? "gemischt" : LEVELS[opts.level] ? opts.level : "gemischt";
     const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
-    const mode = opts.mode === "oben" ? "oben" : "karte";
     const places = data()[region].places;
     // Ungespielte Orte zuerst. Reichen sie nicht mehr, beginnt diese Auswahl von vorn.
     if (!s.geoSeen || typeof s.geoSeen !== "object") s.geoSeen = {};
