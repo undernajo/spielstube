@@ -212,3 +212,12 @@ textarea { resize: vertical; font: inherit; }
 .setname { font-weight: 600; }
 .setcount { color: var(--muted); font-size: .85rem; text-align: right; }
 .setsum { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: 4px; }
+
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 40; }
+.top-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.lbl-short { display: none; }
+@media (max-width: 420px) {
+  .lbl-long { display: none; }
+  .lbl-short { display: inline; }
+  .top-actions { gap: 6px; }
+}

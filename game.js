@@ -1,7 +1,7 @@
 (() => {
   const CARDS = window.SCHLAU10_CARDS;
   const L = window.S10Logic;
-  const NS = "schlaue10/v1/";
+  const NS = "schlaue10/v2/";
   const app = document.getElementById("app");
   const modalEl = document.getElementById("modal");
   const toastEl = document.getElementById("toast");
@@ -41,8 +41,46 @@
 
   // ---------- Verbindung über einen öffentlichen MQTT-Vermittlungsserver ----------
   // Alle Nachrichten laufen über den Server, daher klappt es hinter jedem Router.
+  // Inhalte sind mit einem Schlüssel aus dem Raum-Code verschlüsselt (AES-GCM),
+  // und auch der Kanalname verrät den Code nicht.
   const BROKERS = ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
-  const T = (k) => NS + roomCode + "/" + k;
+  let roomTopic = null, cryptoKey = null, cryptoCode = null;
+  const T = (k) => NS + roomTopic + "/" + k;
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  const hasCrypto = !!(window.crypto && crypto.subtle);
+
+  async function ensureCrypto(code) {
+    if (cryptoCode === code) return;
+    const h = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode("schlaue10-raum:" + code)));
+    roomTopic = [...h.slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const base = await crypto.subtle.importKey("raw", enc.encode(code), "PBKDF2", false, ["deriveKey"]);
+    cryptoKey = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode("schlaue10-v2"), iterations: 150000, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    cryptoCode = code;
+  }
+  const toB64 = (u8) => { let s = ""; for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]); return btoa(s); };
+  const fromB64 = (b) => Uint8Array.from(atob(b), (c) => c.charCodeAt(0));
+  async function seal(obj) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, enc.encode(JSON.stringify(obj))));
+    const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12);
+    return toB64(out);
+  }
+  async function unseal(buf) {
+    try {
+      const raw = fromB64(buf.toString());
+      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, cryptoKey, raw.slice(12));
+      return JSON.parse(dec.decode(pt));
+    } catch { return undefined; } // falscher Schlüssel oder fremde Nachricht -> ignorieren
+  }
+  // Verschlüsselte Nachrichten der Reihe nach senden (Reihenfolge bleibt erhalten)
+  let outChain = Promise.resolve();
+  function sendSealed(topic, obj, opts) {
+    const c = mq;
+    outChain = outChain.then(async () => { const p = await seal(obj); if (c) c.publish(topic, p, opts); }).catch(() => {});
+    return outChain;
+  }
 
   function connectBroker(idx, will) {
     brokerIdx = ((idx % BROKERS.length) + BROKERS.length) % BROKERS.length;
@@ -51,12 +89,13 @@
       clean: true, keepalive: 20, reconnectPeriod: 2000, connectTimeout: 8000, will,
     });
   }
-  const parse = (buf) => { try { return JSON.parse(buf.toString()); } catch { return null; } };
 
   // ---------- Gastgeber ----------
   const lastSeen = new Map();
+  let seq = 0;
 
   function hostCreate(name) {
+    if (!hasCrypto) { toast(errorMsg, "bad"); return; }
     isHost = true; roomCode = genCode();
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
@@ -71,10 +110,12 @@
     hostOpen(saved.broker || 0);
   }
 
-  function hostOpen(idx, tries = 0) {
+  async function hostOpen(idx, tries = 0) {
     status = "Raum wird geöffnet …";
     view = L.publicState(S, CARDS, roomCode); render();
-    const c = mq = connectBroker(idx, { topic: T("host"), payload: "offline", qos: 1, retain: true });
+    await ensureCrypto(roomCode);
+    const willPayload = await seal("offline");
+    const c = mq = connectBroker(idx, { topic: T("host"), payload: willPayload, qos: 1, retain: true });
     let opened = false;
     const fail = setTimeout(() => {
       if (opened || mq !== c) return;
@@ -85,12 +126,12 @@
     c.on("connect", () => {
       opened = true; clearTimeout(fail); status = "";
       c.subscribe(T("up"), { qos: 1 });
-      c.publish(T("host"), "online", { qos: 1, retain: true });
+      sendSealed(T("host"), "online", { qos: 1, retain: true });
       publish();
     });
     c.on("reconnect", () => { if (opened) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
-    c.on("message", (topic, buf) => {
-      const m = parse(buf);
+    c.on("message", async (topic, buf) => {
+      const m = await unseal(buf);
       if (!m || typeof m !== "object") return;
       const cid = String(m.clientId || "").slice(0, 40);
       if (!cid || cid === myId) return;
@@ -122,26 +163,32 @@
 
   function publish() {
     view = L.publicState(S, CARDS, roomCode);
+    seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
+    view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
     if (S.seen) store.set("s10-seen", S.seen);
-    if (mq) mq.publish(T("state"), JSON.stringify(view), { qos: 1, retain: true });
+    if (mq && roomTopic) sendSealed(T("state"), view, { qos: 1, retain: true });
     render();
   }
 
   // ---------- Mitspieler ----------
   function sendUp(msg) {
-    if (!mq) return false;
-    mq.publish(T("up"), JSON.stringify({ ...msg, clientId: myId }), { qos: 1 });
+    if (!mq || !roomTopic) return false;
+    sendSealed(T("up"), { ...msg, clientId: myId }, { qos: 1 });
     return mq.connected;
   }
 
-  function guestJoin(code, name, idx, fixed) {
+  let lastSeq = 0;
+  async function guestJoin(code, name, idx, fixed) {
+    if (!hasCrypto) { toast(errorMsg, "bad"); return; }
     isHost = false; roomCode = code; myName = name;
     store.set("s10-guest", { code, name });
     if (mq) mq.end(true);
     clearTimeout(findTimer);
     status = "Verbinde …"; render();
-    const c = mq = connectBroker(idx, { topic: T("up"), payload: JSON.stringify({ type: "leave", clientId: myId }), qos: 1, retain: false });
+    await ensureCrypto(code);
+    const willPayload = await seal({ type: "leave", clientId: myId });
+    const c = mq = connectBroker(idx, { topic: T("up"), payload: willPayload, qos: 1, retain: false });
     c.on("connect", () => {
       if (mq !== c) return;
       status = view ? "" : `Suche Raum ${code} …`; render();
@@ -149,19 +196,24 @@
       sendUp({ type: "join", name: myName });
     });
     c.on("reconnect", () => { if (mq === c) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
-    c.on("message", (topic, buf) => {
+    c.on("message", async (topic, buf) => {
       if (mq !== c) return;
-      const s = buf.toString();
+      if (!buf.length) { // gelöschte Nachricht = Gastgeber hat beendet
+        if (topic === T("state")) { status = "Der Gastgeber hat das Spiel beendet."; render(); }
+        return;
+      }
+      const m = await unseal(buf);
+      if (m === undefined || mq !== c) return;
       if (topic === T("host")) {
-        status = s === "offline" ? "Der Gastgeber ist gerade offline – warte auf ihn …" : "";
+        status = m === "offline" ? "Der Gastgeber ist gerade offline – warte auf ihn …" : "";
         render(); return;
       }
-      if (!s) { status = "Der Gastgeber hat das Spiel beendet."; render(); return; }
-      const st = parse(buf);
-      if (!st || !st.players) return;
-      view = st;
+      if (!m || !m.players) return;
+      if (m.seq && m.seq <= lastSeq) return; // veralteten Stand ignorieren
+      lastSeq = m.seq || lastSeq;
+      view = m;
       if (status.startsWith("Suche Raum")) status = "";
-      if (!st.players.some((p) => p.id === myId) && Date.now() - lastRejoin > 3000) { lastRejoin = Date.now(); sendUp({ type: "join", name: myName }); }
+      if (!m.players.some((p) => p.id === myId) && Date.now() - lastRejoin > 3000) { lastRejoin = Date.now(); sendUp({ type: "join", name: myName }); }
       render();
     });
     // Raum nicht gefunden? -> beim anderen Server suchen (außer der Link legt den Server fest)
@@ -180,15 +232,15 @@
     if (!sendUp({ type: "action", action })) toast("Verbindung wackelt – Zug wird nachgeschickt …", "bad");
   }
 
-  function leave() {
+  async function leave() {
     if (isHost && !confirm("Spiel wirklich beenden? Alle Mitspieler fliegen dann raus.")) return;
     store.del(isHost ? "s10-host" : "s10-guest");
     const go = () => { location.href = location.pathname; };
-    if (!mq) return go();
+    if (!mq || !roomTopic) return go();
     if (isHost) {
       mq.publish(T("state"), "", { qos: 1, retain: true });
       mq.publish(T("host"), "", { qos: 1, retain: true });
-    } else sendUp({ type: "leave" });
+    } else { sendUp({ type: "leave" }); await outChain; }
     setTimeout(() => { try { mq.end(); } catch {} go(); }, 400);
   }
 
@@ -204,11 +256,93 @@
     if (!view) return renderStart();
     if (view.phase === "lobby") renderLobby(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
-      if (lastToastId !== null && view.phase !== "lobby") toast(view.lastEvent.text, view.lastEvent.kind);
+      if (lastToastId !== null && view.phase !== "lobby") {
+        toast(view.lastEvent.text, view.lastEvent.kind);
+        if (view.lastEvent.kind === "ok") sfx.ok(); else if (view.lastEvent.kind === "bad") sfx.bad();
+      }
       lastToastId = view.lastEvent.id;
     }
+    reactToChanges(view);
     syncModal();
   }
+
+  // ---------- Töne, Konfetti, Tab-Titel ----------
+  const sfx = (() => {
+    let ctx = null, muted = store.get("s10-muted") === true;
+    const unlock = () => {
+      if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) ctx = new AC(); }
+      if (ctx && ctx.state === "suspended") ctx.resume();
+    };
+    ["pointerdown", "keydown", "touchstart"].forEach((e) => addEventListener(e, unlock, { passive: true }));
+    function tone(freq, start, dur, type, vol, slideTo) {
+      const t0 = ctx.currentTime + start, o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(freq, t0);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || 0.18, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g).connect(ctx.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+    const play = (fn) => { if (muted || !ctx) return; if (ctx.state === "suspended") ctx.resume(); try { fn(); } catch {} };
+    return {
+      get muted() { return muted; },
+      toggle() { muted = !muted; store.set("s10-muted", muted); if (!muted) { unlock(); this.turn(); } },
+      ok: () => play(() => { tone(660, 0, 0.12, "triangle"); tone(990, 0.09, 0.25, "triangle"); }),
+      bad: () => play(() => tone(220, 0, 0.4, "sawtooth", 0.07, 110)),
+      turn: () => play(() => { tone(880, 0, 0.16, "sine", 0.2); tone(1175, 0.17, 0.28, "sine", 0.2); }),
+      round: () => play(() => { tone(523, 0, 0.12, "triangle"); tone(659, 0.1, 0.12, "triangle"); tone(784, 0.2, 0.25, "triangle"); }),
+      win: () => play(() => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.13, 0.3, "triangle", 0.2)); tone(1047, 0.55, 0.7, "triangle", 0.16); }),
+      lose: () => play(() => { tone(392, 0, 0.25, "triangle", 0.15); tone(330, 0.22, 0.25, "triangle", 0.15); tone(262, 0.44, 0.5, "triangle", 0.15); }),
+    };
+  })();
+
+  function confetti() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cv = document.createElement("canvas"), dpr = devicePixelRatio || 1;
+    cv.className = "confetti"; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    document.body.appendChild(cv);
+    const c = cv.getContext("2d"); c.scale(dpr, dpr);
+    const colors = ["#ffc83d", "#2fbf71", "#ef4b5a", "#5b48c9", "#ffffff", "#4fc3f7"];
+    const parts = Array.from({ length: 160 }, () => ({
+      x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.35,
+      vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 14 - 4, s: 5 + Math.random() * 6,
+      r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3, col: colors[Math.floor(Math.random() * colors.length)],
+    }));
+    const t0 = performance.now();
+    (function frame(t) {
+      const age = (t - t0) / 1000;
+      c.clearRect(0, 0, innerWidth, innerHeight);
+      parts.forEach((p) => {
+        p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+        c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.globalAlpha = Math.max(0, 1 - age / 3.5);
+        c.fillStyle = p.col; c.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); c.restore();
+      });
+      if (age < 3.5) requestAnimationFrame(frame); else cv.remove();
+    })(t0);
+  }
+
+  const BASE_TITLE = document.title;
+  let prev = null; // vorheriger Zustand, um Wechsel zu erkennen
+  function reactToChanges(v) {
+    const cur = v.players && v.players[v.turn];
+    const now = {
+      phase: v.phase, round: v.round,
+      myTurn: v.phase === "playing" && cur && cur.id === myId && !v.pending && !v.undoReq,
+      mustJudge: !!(v.phase === "playing" && v.pending && v.pending.judges.includes(myId) && v.pending.by !== myId),
+      mustVote: !!(v.undoReq && v.undoReq.approvers.includes(myId)),
+    };
+    if (prev) {
+      const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
+      if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
+      if (now.phase === "roundEnd" && prev.phase === "playing") sfx.round();
+      if (now.phase === "gameOver" && prev.phase !== "gameOver") {
+        if (v.winners && v.winners.includes(myId)) { sfx.win(); confetti(); } else { sfx.lose(); confetti(); }
+      }
+    }
+    prev = now;
+    const attention = now.myTurn || now.mustJudge || now.mustVote;
+    document.title = attention && document.hidden ? (now.myTurn ? "● Du bist dran! – " : "● Deine Entscheidung – ") + BASE_TITLE : BASE_TITLE;
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) document.title = BASE_TITLE; else if (view) reactToChanges(view); });
 
   const rulesHtml = `
     <details class="rules"><summary>Spielregeln</summary>
@@ -402,8 +536,11 @@
         <header class="top">
           <div class="logo tiny">Schlaue<span>10</span></div>
           <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
-          <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
-          <button id="leave" class="btn ghost sm">Verlassen</button>
+          <div class="top-actions">
+            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
+            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
+            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
+          </div>
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="players">${chips}</section>
@@ -434,6 +571,7 @@
     on("#toLobby", () => send({ type: "lobby" }));
     on("#leave", leave);
     on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#report", () => { reportOpen = true; renderReport(); });
     on("#uback", () => send({ type: "undoReq", kind: "undo" }));
     on("#uflip", () => send({ type: "undoReq", kind: "flip" }));
@@ -622,6 +760,9 @@
   }
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && selected !== null) { selected = null; render(); } });
 
+  if (!hasCrypto) {
+    errorMsg = "Dieser Browser bietet hier keine Verschlüsselung an. Bitte die Seite über https:// (z. B. GitHub Pages) oder http://localhost öffnen.";
+  }
   if (typeof mqtt === "undefined") {
     errorMsg = "Die Netzwerk-Bibliothek konnte nicht geladen werden. Bist du online?";
   }
