@@ -1543,13 +1543,17 @@
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
-        <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>
-        <section class="wtable">
-          <div class="wside"><span class="muted small">${esc(nameOf(opp))} ${tricksDots(opp)}</span><div class="whand opp">${oppCards}</div></div>
-          ${table}
-          <div class="wside"><span class="muted small">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)}</span><div class="whand mine">${myCards}</div></div>
-        </section>
-        <section class="waction">${action}</section>
+        <div class="wlayout">
+          <section class="wtable">
+            <div class="wside"><span class="muted small">${esc(nameOf(opp))} ${tricksDots(opp)}</span><div class="whand opp">${oppCards}</div></div>
+            ${table}
+            <div class="wside"><span class="muted small">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)}</span><div class="whand mine">${myCards}</div></div>
+          </section>
+          <aside class="wpanel">
+            <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>
+            <section class="waction">${action}</section>
+          </aside>
+        </div>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
