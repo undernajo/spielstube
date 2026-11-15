@@ -1478,9 +1478,21 @@
   const wCard = (id, extra = "", attrs = "") => `<div class="wcard ${extra}" ${attrs}>${WCARDS.svg(id)}</div>`;
   const wBack = () => `<div class="wcard back">${WCARDS.back()}</div>`;
   const wSuitIcon = (suit) => `<span class="wsuit">${WCARDS.sym(suit, 1)}</span>`;
+  // Stich-Animation: fertiger Stich bleibt kurz in der Mitte, dann wandern die Karten zum Stapel des Gewinners
+  let wShown = { round: 0, n: 0 }, wHold = null, wFly = null;
   function renderWatten() {
     const v = view, st = v.watten;
     if (!st) return;
+    const nTricks = st.seats.reduce((a, id) => a + st.tricks[id], 0);
+    if (wShown.round !== st.roundNo) { wShown = { round: st.roundNo, n: nTricks }; wHold = null; }
+    if (nTricks > wShown.n && !wHold && st.lastTrick) {
+      wHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards };
+      setTimeout(() => {
+        const tr = app.querySelector(".wtrick");
+        wFly = { winner: wHold.winner, from: tr ? tr.getBoundingClientRect() : null };
+        wShown.n = nTricks; wHold = null; if (view && view.phase === "watten") renderWatten();
+      }, 1000);
+    }
     const me = myId, seated = st.seats.includes(me), opp = seated ? st.seats.find((x) => x !== me) : st.seats[1];
     const self = seated ? me : st.seats[0];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
@@ -1499,11 +1511,16 @@
         <span>Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
     // Mitte: aktueller Stich, sonst kurz der letzte
     let table;
-    if (st.trick.length) table = `<div class="wtrick">${st.trick.map((t) => `<div class="wplayed"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}</div>`;
-    else if (st.lastTrick && (st.step === "play" || st.step === "roundEnd" || st.step === "final"))
-      table = `<div class="wtrick last">${st.lastTrick.cards.map((t) => `<div class="wplayed ${t.pid === st.lastTrick.winner ? "won" : ""}"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}
-        <p class="muted small wlast">Letzter Stich: ${esc(nameOf(st.lastTrick.winner))}</p></div>`;
+    const shownTrick = wHold ? wHold.cards : st.trick;
+    if (shownTrick.length) table = `<div class="wtrick">${shownTrick.map((t) => `<div class="wplayed ${wHold && t.pid === wHold.winner ? "won" : ""}"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}
+        ${wHold ? `<p class="muted small wlast">Stich für ${wHold.winner === me ? "dich" : esc(nameOf(wHold.winner))}</p>` : ""}</div>`;
     else table = `<div class="wtrick empty"><span class="muted">${st.step === "play" ? "Noch keine Karte gespielt" : ""}</span></div>`;
+    // Stiche-Stapel links: oben der Gegner, unten ich (während der Animation ohne den neuesten Stich)
+    const pile = (id, pos) => {
+      let groups = (st.won && st.won[id]) || [];
+      if (wHold && wHold.winner === id) groups = groups.slice(0, -1);
+      return `<div class="wpile ${pos}" data-pile="${id}">${groups.map((g, i) => `<div class="wpile-g ${i === groups.length - 1 ? "newest" : ""}" style="--i:${i}">${g.map((c) => wCard(c, "xs")).join("")}</div>`).join("")}</div>`;
+    };
     // Aktionen
     let action = "";
     if (st.step === "schlag") action = st.vorhand === me
@@ -1554,6 +1571,7 @@
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <div class="wlayout">
           <section class="wtable">
+            ${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small">${esc(nameOf(opp))} ${tricksDots(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
             <div class="wside"><span class="muted small">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)}</span><div class="whand mine">${myCards}</div></div>
@@ -1578,6 +1596,16 @@
     const key = (el, fn) => { el.onclick = fn; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }; };
     app.querySelectorAll("[data-schlag]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wSchlag", rank: b.dataset.schlag }); }));
     app.querySelectorAll("[data-trumpf]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wTrumpf", suit: b.dataset.trumpf }); }));
+    if (wFly) {
+      const g = app.querySelector(`[data-pile="${wFly.winner}"] .wpile-g.newest`);
+      if (g && wFly.from && g.animate) {
+        const to = g.getBoundingClientRect(), f = wFly.from;
+        const dx = f.left + f.width / 2 - (to.left + to.width / 2), dy = f.top + f.height / 2 - (to.top + to.height / 2);
+        g.animate([{ transform: `translate(${dx}px, ${dy}px) scale(2.2)`, opacity: .9 }, { transform: "translate(0, 0) scale(1)", opacity: 1 }],
+          { duration: 550, easing: "cubic-bezier(.3,.7,.3,1)" });
+      }
+      wFly = null;
+    }
     app.querySelectorAll("[data-card]").forEach((el) => {
       const go = () => { el.classList.add("going"); send({ type: "wPlay", card: el.dataset.card }); };
       el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };

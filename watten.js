@@ -56,7 +56,7 @@
     const d = shuffle(deck()), vorhand = other(st, st.dealer);
     const hands = { [vorhand]: d.slice(0, 5), [st.dealer]: d.slice(5, 10) };
     const r = { hands, vorhand, schlag: null, trump: null, trick: [], lastTrick: null, leader: vorhand,
-      tricks: { [vorhand]: 0, [st.dealer]: 0 }, value: 2, noBid: false, bid: null, lastBidder: null,
+      tricks: { [vorhand]: 0, [st.dealer]: 0 }, won: { [vorhand]: [], [st.dealer]: [] }, value: 2, noBid: false, bid: null, lastBidder: null,
       giveUpBy: null, played: 0, result: null, ready: {} };
     // Gestrichen (2 Punkte vor dem Ziel): darf nicht bieten. Ist nur einer gestrichen und liegt der andere
     // mindestens 4 zurück, geht die Runde um 4 Punkte. Sind beide gestrichen, wird nicht geboten.
@@ -110,7 +110,7 @@
         if (r.trick.length === 2) {
           const [l, f] = r.trick, ledSuit = suitOf(l.card);
           const win = power(f.card, r, ledSuit) > power(l.card, r, ledSuit) ? f.pid : l.pid;
-          r.tricks[win]++; r.lastTrick = { cards: r.trick.slice(), winner: win }; r.trick = []; r.leader = win;
+          r.tricks[win]++; r.won[win].push([l.card, f.card]); r.lastTrick = { cards: r.trick.slice(), winner: win }; r.trick = []; r.leader = win;
           if (r.tricks[win] >= 3) endRound(st, win, r.value, "stiche");
         }
         return true;
@@ -149,7 +149,7 @@
       step: st.step, target: st.target, seats: st.seats.slice(), scores: { ...st.scores }, dealer: st.dealer, roundNo: st.roundNo,
       gestrichen: Object.fromEntries(st.seats.map((id) => [id, gestrichen(st, id)])), winners: st.winners,
       vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump) : null,
-      trick: r.trick.slice(), lastTrick: r.lastTrick, tricks: { ...r.tricks }, value: r.value, bid: r.bid, vierer: !!r.vierer,
+      trick: r.trick.slice(), lastTrick: r.lastTrick, won: { ...r.won }, tricks: { ...r.tricks }, value: r.value, bid: r.bid, vierer: !!r.vierer,
       noBid: r.noBid, giveUpBy: r.played === 0 ? r.giveUpBy : null, turn: currentTurn(st),
       canBid: Object.fromEntries(st.seats.map((id) => [id, canBid(st, id)])),
       handCount: Object.fromEntries(st.seats.map((id) => [id, r.hands[id].length])),
