@@ -20,7 +20,7 @@ Die Spielzüge sind mit einem Schlüssel aus dem Raum-Code verschlüsselt (AES-G
 ## Extras
 
 - **Töne & Effekte:** Ein dezenter Hinweiston (und auf Android eine Vibration), wenn man dran ist oder entscheiden soll, Konfetti am Spielende. Ist der Tab im Hintergrund, zeigt der Titel „● Du bist dran!“. Der 🔊-Knopf oben schaltet den Ton stumm.
-- **Fragen-Sets kombinieren:** In der Lobby wählt der Gastgeber per Häkchen beliebige Sets (Standard 300, Südtirol 50, Wirtschaft 50, Emoji & Flaggen 30, Weihnachten & Winter 20, Film & Serien 20 Karten) oder mit „Alle auswählen“ alles. Die Auswahl wird gemerkt.
+- **Fragen-Sets kombinieren:** In der Lobby wählt der Gastgeber per Häkchen beliebige Sets (Standard 300, Südtirol 50, Wirtschaft 50, Emoji & Flaggen 30, Weihnachten & Winter 20, Film & Serien 20, Kindheit der 2000er 30 Karten – insgesamt 500) oder mit „Alle auswählen“ alles. Die Auswahl wird gemerkt.
 - **Keine Wiederholungen:** Das Spiel merkt sich auf dem Gerät des Gastgebers, welche Karten schon gespielt wurden. Ungespielte Karten kommen zuerst. Sind alle Karten eines Sets durch, beginnt es von vorn. In der Lobby steht bei jedem Set, wie viele Karten noch neu sind. Mit „Gespielte Karten vergessen“ setzt man den Speicher zurück.
 - **Einspruch:** Nach jedem Zug kann jeder Spieler „Zug zurücknehmen“ (z. B. bei einem Fehlklick) oder „Wertung umdrehen“ (richtig ↔ falsch) beantragen. Ein Mitspieler muss zustimmen.
 - **Karte melden:** Über „⚑ Karte melden“ unter der Karte. Die Meldungen landen beim Melder und beim Gastgeber. Auf der Startseite und in der Lobby kann man die Liste unter „Gemeldete Karten“ kopieren.

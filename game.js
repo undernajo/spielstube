@@ -604,7 +604,7 @@
 
   // ---------- Karten melden ----------
   let reportOpen = false;
-  const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", mixed: "Gemischt" };
+  const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", kindheit: "Kindheit der 2000er", mixed: "Gemischt" };
 
   // ---------- Fragen-Sets (Mehrfachauswahl) ----------
   function currentSets() {

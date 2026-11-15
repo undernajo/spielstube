@@ -43,8 +43,8 @@
   }
 
   // Fragen-Sets: beliebig kombinierbar (Karten ohne Markierung gehören zu „standard“)
-  const SET_KEYS = ["standard", "suedtirol", "wirtschaft", "emoji", "winter", "film"];
-  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien" };
+  const SET_KEYS = ["standard", "suedtirol", "wirtschaft", "emoji", "winter", "film", "kindheit"];
+  const SETS = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", kindheit: "Kindheit der 2000er" };
   // akzeptiert eine Liste, einen einzelnen Schlüssel oder das alte „mixed“
   function normSets(v) {
     if (v === "mixed") return SET_KEYS.slice();
