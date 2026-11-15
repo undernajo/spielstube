@@ -1,6 +1,6 @@
-# Schlaue Zehn
+# Spielstube
 
-Ein Online-Quiz mit zehn Antworten pro Karte für zwei oder mehr Spieler.
+Kleine Online-Spielesammlung für zwei oder mehr Spieler: Schlaue Zehn (Quiz mit zehn Antworten pro Karte), Stadt, Land, Fluss und Gleiche Wellenlänge.
 Es braucht keinen eigenen Server. Die Spielzüge laufen über einen öffentlichen MQTT-Vermittlungsserver (HiveMQ, bei Ausfall EMQX). Das funktioniert hinter jedem Router.
 
 ## Spielen

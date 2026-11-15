@@ -43,6 +43,8 @@
   const urlRoom = (params.get("room") || "").toUpperCase();
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
 
+  // Logo: „Spielstube“ mit gelber Würfel-Münze
+  const LOGO = `Spielstube<span class="die" aria-hidden="true"><svg viewBox="0 0 24 24"><g fill="currentColor"><circle cx="6.5" cy="6.5" r="2.3"/><circle cx="17.5" cy="6.5" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="6.5" cy="17.5" r="2.3"/><circle cx="17.5" cy="17.5" r="2.3"/></g></svg></span>`;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cleanName = (n) => String(n || "").trim().slice(0, 20) || "Spieler";
   const genCode = () => Array.from({ length: 5 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join("");
@@ -425,8 +427,8 @@
     const code = urlRoom || "";
     app.innerHTML = `
       <main class="screen start">
-        <h1 class="logo">Schlaue<span>10</span></h1>
-        <p class="tag">Das Quiz mit zehn Antworten – online, zu zweit oder mehr.</p>
+        <h1 class="logo">${LOGO}</h1>
+        <p class="tag">Quiz, Stadt, Land, Fluss & mehr – online gemeinsam spielen.</p>
         <div class="panel">
           <label class="field"><span>Dein Name</span>
             <input id="name" maxlength="20" autocomplete="nickname" value="${esc(myName)}" placeholder="z. B. Josef"></label>
@@ -471,7 +473,7 @@
     const isFile = location.protocol === "file:";
     app.innerHTML = `
       <main class="screen lobby">
-        <h1 class="logo small">Schlaue<span>10</span></h1>
+        <h1 class="logo small">${LOGO}</h1>
         <div class="panel">
           <p class="muted">Raum-Code</p>
           <div class="code">${esc(view.code)}</div>
@@ -612,7 +614,7 @@
     app.innerHTML = `
       <main class="screen game">
         <header class="top">
-          <div class="logo tiny">Schlaue<span>10</span></div>
+          <div class="logo tiny">${LOGO}</div>
           <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
           <div class="top-actions">
             <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
@@ -869,7 +871,7 @@
   async function invite() {
     const url = shareLink();
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
-      try { await navigator.share({ title: "Schlaue Zehn", text: `Spiel mit! Raum ${roomCode}`, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      try { await navigator.share({ title: "Spielstube", text: `Spiel mit! Raum ${roomCode}`, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
     try { await navigator.clipboard.writeText(url); toast("Einladungslink kopiert – einfach verschicken!", "ok"); }
     catch { prompt("Diesen Link verschicken:", url); }
@@ -978,7 +980,7 @@
     app.innerHTML = `
       <main class="screen game slf">
         <header class="top">
-          <div class="logo tiny">Schlaue<span>10</span></div>
+          <div class="logo tiny">${LOGO}</div>
           <div class="meta">Stadt, Land, Fluss · Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
           <div class="top-actions">
             <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
@@ -1091,7 +1093,7 @@
     app.innerHTML = `
       <main class="screen game slf wl">
         <header class="top">
-          <div class="logo tiny">Schlaue<span>10</span></div>
+          <div class="logo tiny">${LOGO}</div>
           <div class="meta">Gleiche Wellenlänge · ${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
           <div class="top-actions">
             <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>

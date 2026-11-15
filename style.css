@@ -391,3 +391,6 @@ textarea { resize: vertical; font: inherit; }
 .setopt.ro { grid-template-columns: auto auto minmax(0, 1fr); }
 .setopt.ro { grid-template-columns: auto minmax(0, 1fr); row-gap: 2px; }
 .setopt.ro .setcount { grid-column: 2; text-align: left; }
+
+/* Logo-Münze mit Würfelaugen */
+.logo span.die svg { width: 64%; height: 64%; display: block; }
