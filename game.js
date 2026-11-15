@@ -34,7 +34,10 @@
     { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
     { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
     { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
+    { key: "geo", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
   ];
+  const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
+  let geoOpts = Object.assign({ region: "suedtirol", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const WL = window.S10Wl;
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
@@ -167,7 +170,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -197,10 +200,15 @@
       if (!host || S.phase !== "lobby") return false;
       WL.start(S, action.opts); return true;
     }
+    if (type === "start" && action.game === "geo") {
+      if (!host || S.phase !== "lobby") return false;
+      GEO.start(S, action.opts, now); return true;
+    }
+    if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -211,6 +219,7 @@
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
+      geo: { region: geoOpts.region, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -221,6 +230,7 @@
       store.set("s10-wl-best", S.wl.best);
     }
     view.wl = S.phase === "wl" ? WL.publicState(S) : null;
+    view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -337,7 +347,7 @@
       }
       lastLobbyGame = view.game;
     }
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -411,10 +421,15 @@
       mustVote: !!(v.undoReq && v.undoReq.approvers.includes(myId)),
       slfKey: v.slf ? v.slf.round + ":" + v.slf.step : null,
       wlKey: v.wl ? v.wl.impulse + ":" + v.wl.attempt + ":" + v.wl.step : null,
+      geoKey: v.geo ? v.geo.round + ":" + v.geo.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
       if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
+      if (now.geoKey && now.geoKey !== prev.geoKey) {
+        if (v.geo.step === "guess") sfx.turn();
+        if (v.geo.step === "final") { if (v.geo.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
+      }
       if (now.wlKey && now.wlKey !== prev.wlKey) {
         if (v.wl.step === "reveal" && v.wl.result) { if (v.wl.result.hit) { sfx.win(); confetti(); } else sfx.lose(); }
         if (v.wl.step === "final") confetti();
@@ -512,6 +527,7 @@
           ${isHost ? gamePickerHtml() : `${gameBannerHtml()}${guestSettingsHtml()}`}
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
+          ${isHost && chosenGame === "geo" ? geoSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
@@ -525,7 +541,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -553,6 +569,7 @@
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
+      if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: geoOpts });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
     app.querySelector("#leave").onclick = leave;
@@ -741,6 +758,11 @@
       return `<div class="field"><span>Kategorien (wählt der Gastgeber)</span><div class="setlist">${presets.join("")}</div></div>
         <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
     }
+    if (view.game === "geo" && lb.geo) {
+      const regs = Object.entries(GEODATA).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(r.places.length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
+      return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
+        <p class="muted small">${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
+    }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
       return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n, d]) => row(lb.wl.pack === k, esc(n), esc(d))).join("")}</div></div>
@@ -766,9 +788,34 @@
     if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); publish(); };
     const wp = app.querySelector("#wl-pack");
     if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
+    const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
+    const gr = app.querySelector("#geo-region");
+    if (gr) gr.onchange = () => { geoOpts.region = gr.value; saveGeo(); };
+    const gn = app.querySelector("#geo-rounds");
+    if (gn) gn.onchange = () => { geoOpts.rounds = Number(gn.value); saveGeo(); };
+    const gt = app.querySelector("#geo-timer");
+    if (gt) gt.onchange = () => { geoOpts.timer = gt.value; saveGeo(); };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
+  function geoSettingsHtml() {
+    return `<label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).map(([k, r]) =>
+        `<option value="${k}" ${geoOpts.region === k ? "selected" : ""}>${esc(r.name)} (${r.places.length} Orte)</option>`).join("")}</select></label>
+      <div class="row2">
+        <label class="field"><span>Runden</span><select id="geo-rounds">${GEO.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(geoOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
+        <label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
+      </div>
+      <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
+      ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+  }
+  const geoRulesHtml = `
+    <details class="rules"><summary>Regeln: Wo liegt das?</summary>
+      <ul>
+        <li>Ein Ort wird genannt – tippe auf der Karte (ohne Beschriftungen) dorthin, wo du ihn vermutest, und lege deine Nadel fest.</li>
+        <li>Sind alle fertig oder ist die Zeit um, wird aufgelöst: richtige Stelle, alle Nadeln und die Entfernungen.</li>
+        <li>Bis zu 1000 Punkte pro Runde – je näher, desto mehr. Die Skala passt sich der Region an.</li>
+      </ul>
+    </details>`;
   function wlSettingsHtml() {
     const best = store.get("s10-wl-best");
     return `<div class="row2">
@@ -1145,6 +1192,143 @@
         app.querySelector("#wl-status").innerHTML = wlStatusHtml({ ...st, submitted: st.submitted.includes(myId) ? st.submitted : st.submitted.concat(myId) });
       };
     }
+  }
+
+  // ---------- Wo liegt das?: Darstellung ----------
+  let geoMap = null, geoRendered = null, geoMine = null, geoMarker = null, geoDeadline = 0, geoSent = null;
+  // Satellitenbilder ohne Beschriftungen (Esri World Imagery, ohne API-Schlüssel nutzbar)
+  const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+  function geoChips(v, st) {
+    return v.players.map((p, i) => {
+      const badge = st.step === "guess" ? (st.submitted.includes(p.id) ? "festgelegt ✓" : "sucht …") : st.step === "reveal" ? (st.ready[p.id] ? "bereit ✓" : "") : "";
+      const rp = st.step === "reveal" && st.result && st.result[p.id] ? `+${st.result[p.id].points}` : "";
+      return `<div class="chip ${badge.includes("✓") ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
+          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><span class="chip-score"><b>${st.total[p.id] || 0}</b></span></div>
+        <div class="chip-l2"><span class="rpts pos">${rp}</span>${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
+      </div>`;
+    }).join("");
+  }
+  function geoSubmit() {
+    const st = view && view.geo;
+    if (!st || !geoMine || st.step !== "guess" || geoSent === st.round) return;
+    geoSent = st.round;
+    send({ type: "geoGuess", round: st.round, lat: geoMine.lat, lng: geoMine.lng });
+    const b = app.querySelector("#geo-lock");
+    if (b) { b.disabled = true; b.textContent = "Festgelegt ✓ – warte auf die anderen …"; }
+  }
+  setInterval(() => {
+    const st = view && view.geo, el = document.getElementById("geo-timer");
+    if (!st || st.step !== "guess" || !el || st.endsIn == null) return;
+    const ms = Math.max(0, geoDeadline - Date.now());
+    el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000);
+    if (ms <= 300) geoSubmit(); // gesetzte Nadel bei Zeitablauf automatisch abgeben
+  }, 250);
+  function geoMakeMap(el, bounds) {
+    if (geoMap) { geoMap.remove(); geoMap = null; }
+    const b = LF.latLngBounds(bounds);
+    geoMap = LF.map(el, { zoomControl: true, attributionControl: true, worldCopyJump: false, maxBounds: b.pad(0.6), maxBoundsViscosity: 0.8 });
+    LF.tileLayer(TILE_URL, { maxZoom: 17, attribution: "Bilder © Esri, Maxar, Earthstar Geographics und GIS-Community" }).addTo(geoMap);
+    geoMap.fitBounds(b);
+    geoMap.setMinZoom(Math.max(1, geoMap.getZoom() - 1));
+    return geoMap;
+  }
+  const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
+
+  function renderGeo() {
+    const v = view, st = v.geo;
+    if (!st) return;
+    geoDeadline = st.endsIn != null ? Date.now() + st.endsIn : 0;
+    const key = v.code + ":" + st.round + ":" + st.step;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
+      app.querySelector(".players").innerHTML = geoChips(v, st);
+      if (st.step === "reveal") { const rb = app.querySelector("#geo-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"; }
+      return;
+    }
+    if (st.step === "guess" && (!geoRendered || !geoRendered.startsWith(v.code + ":" + st.round + ":"))) { geoMine = null; geoSent = null; }
+    geoRendered = key;
+    let main = "";
+    if (st.step === "guess") {
+      const locked = st.submitted.includes(myId);
+      main = `
+        <div class="geo-bar">
+          <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
+            <div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div></div>
+          ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
+          <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
+        </div>
+        <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
+    } else if (st.step === "reveal") {
+      const rows = v.players.filter((p) => st.result[p.id]).sort((a, b) => st.result[b.id].points - st.result[a.id].points);
+      main = `
+        <div class="geo-bar">
+          <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.place.name)}</div></div>
+          <div class="geo-results">${rows.map((p) => { const r = st.result[p.id]; return `<div class="geo-res" style="--pc:${colorOf(p.id)}"><span class="pdot"></span>
+            <span>${esc(p.name)}</span><span class="muted small">${r.km == null ? "keine Nadel" : r.km < 10 ? r.km.toFixed(1).replace(".", ",") + " km" : Math.round(r.km).toLocaleString("de-DE") + " km"}</span><b>+${r.points}</b></div>`; }).join("")}</div>
+          <div class="geo-actions"><button id="geo-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"}</button>
+            ${isHost ? `<button id="geo-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>
+        </div>
+        <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
+    } else {
+      const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
+      const medal = ["🥇", "🥈", "🥉"];
+      main = `
+        <div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((p) => st.winners.includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${st.winners.length > 1 ? "gewinnen" : "gewinnt"}!</b>
+          <div class="banner-actions"><button id="geo-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${ranking.map((p, i) => `
+          <div class="slf-rank" style="--pc:${colorOf(p.id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
+            <span class="slf-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><b>${(st.total[p.id] || 0).toLocaleString("de-DE")} Punkte</b></div>`).join("")}
+          <p class="muted small">${esc(st.regionName)} · ${st.rounds} Runden · max. ${(st.rounds * 1000).toLocaleString("de-DE")} Punkte</p></div>`;
+    }
+    if (geoMap) { geoMap.remove(); geoMap = null; }
+    app.innerHTML = `
+      <main class="screen game slf geo">
+        <header class="top">
+          <div class="logo tiny">${LOGO}</div>
+          <div class="meta">Wo liegt das? · ${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
+          ${topActionsHtml()}
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <section class="players">${geoChips(v, st)}</section>
+        <section class="slf-main">${main}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#geo-lock", geoSubmit);
+    on("#geo-ready", () => send({ type: "geoReady" }));
+    on("#geo-next", () => send({ type: "geoNext" }));
+    on("#geo-restart", () => send({ type: "geoRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    const mapEl = app.querySelector("#geo-map");
+    if (!mapEl || !LF) return;
+    const map = geoMakeMap(mapEl, st.bounds);
+    if (st.step === "guess") {
+      const locked = st.submitted.includes(myId);
+      if (geoMine) geoMarker = LF.marker([geoMine.lat, geoMine.lng], { icon: pin(colorOf(myId)) }).addTo(map);
+      if (!locked) map.on("click", (e) => {
+        if (geoSent === st.round) return;
+        geoMine = { lat: e.latlng.lat, lng: LF.Util.wrapNum(e.latlng.lng, [-180, 180], true) };
+        if (geoMarker && map.hasLayer(geoMarker)) geoMarker.setLatLng(e.latlng); else geoMarker = LF.marker(e.latlng, { icon: pin(colorOf(myId)) }).addTo(map);
+        const b = app.querySelector("#geo-lock"); if (b) { b.disabled = false; b.textContent = "Nadel festlegen"; }
+      });
+    } else if (st.step === "reveal") {
+      const target = [st.answer.lat, st.answer.lng], pts = [target];
+      LF.marker(target, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-goal">★</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }), zIndexOffset: 1000 })
+        .addTo(map).bindTooltip(esc(st.place.name), { permanent: true, direction: "top", offset: [0, -14], className: "geo-tip goal" });
+      v.players.forEach((p) => {
+        const r = st.result[p.id];
+        if (!r || r.lat == null) return;
+        const g = [r.lat, r.lng]; pts.push(g);
+        LF.polyline([target, g], { color: colorOf(p.id), weight: 3, dashArray: "6 6", opacity: .9 }).addTo(map);
+        LF.marker(g, { icon: pin(colorOf(p.id)) }).addTo(map)
+          .bindTooltip(`${esc(p.name)}: ${r.km < 10 ? r.km.toFixed(1).replace(".", ",") : Math.round(r.km).toLocaleString("de-DE")} km`, { permanent: true, direction: "bottom", offset: [0, 10], className: "geo-tip" });
+      });
+      if (pts.length > 1) map.fitBounds(LF.latLngBounds(pts).pad(0.25), { maxZoom: 12 }); else map.setView(target, Math.max(map.getZoom(), 8));
+    }
+    setTimeout(() => map.invalidateSize(), 50);
   }
 
   // ---------- Antwort-Dialog ----------
