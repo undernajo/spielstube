@@ -1528,7 +1528,7 @@
     const priv = seated && wattenPriv && wattenPriv.roundNo === st.roundNo ? wattenPriv : null;
     const hand = priv ? priv.hand : [], legal = priv ? priv.legal : [];
     const rankName = (r) => WAT.RANK_NAMES[r], suitName = (s) => WAT.SUIT_NAMES[s];
-    // Wattblock: je Spieler eine Spalte, nach jeder gewonnenen Runde wird der neue Stand notiert.
+    // Wattblock: je Spieler eine Spalte, pro Runde die gewonnenen Punkte (die Summe steht oben neben dem Namen).
     // Wer gestrichen ist (2 vor dem Ziel), bekommt einen Strich unter die Zahl. Oben: gewonnene Partien als Kreuzl.
     const wattBlock = () => {
       const cols = [self, opp], run = { [self]: 0, [opp]: 0 }, struck = { [self]: false, [opp]: false };
@@ -1537,7 +1537,7 @@
         const strich = !struck[h.winner] && run[h.winner] >= st.target - 2 && run[h.winner] < st.target;
         if (strich) struck[h.winner] = true;
         return cols.map((id) => id === h.winner
-          ? `<td class="${strich ? "strich" : ""} ${run[id] >= st.target ? "sieg" : ""}" title="+${h.points}${h.reason === "aufgegeben" ? " (gegangen)" : h.reason === "abgelehnt" ? " (Bieten abgelehnt)" : ""}">${run[id]}</td>`
+          ? `<td class="${strich ? "strich" : ""} ${run[id] >= st.target ? "sieg" : ""}" title="+${h.points}${h.reason === "aufgegeben" ? " (gegangen)" : h.reason === "abgelehnt" ? " (Bieten abgelehnt)" : ""}">${h.points}</td>`
           : `<td class="wdash">–</td>`).join("");
       });
       const tally = (n) => n ? "✕".repeat(Math.min(n, 10)) + (n > 10 ? " " + n : "") : "";
