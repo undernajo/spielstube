@@ -30,6 +30,13 @@
   if (!Array.isArray(chosenSets)) { const old = store.get("s10-set"); chosenSets = old ? L.normSets(old) : null; }
   let chosenTarget = store.get("s10-target");
   const SLF = window.S10Slf;
+  // Symbol für Watten: drei aufgefächerte Wattkarten (Herz, Laub, Eichel aus dem eigenen Blatt)
+  function wattenIcon() {
+    const C = window.S10WattenCards;
+    const card = (rot, suit) => `<g transform="rotate(${rot} 32 58)"><rect x="20" y="10" width="24" height="36" rx="3.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
+      ${C ? `<svg x="20.5" y="12" width="14" height="14" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : ""}</g>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(-22, "laub")}${card(0, "eichel")}${card(22, "herz")}</svg>`;
+  }
   const GAMES = [
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
@@ -37,7 +44,7 @@
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: "↕️" },
-    { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: "🃏" },
+    { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
