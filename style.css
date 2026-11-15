@@ -699,7 +699,8 @@ textarea { resize: vertical; font: inherit; }
 .slot.pending { border-color: transparent; }
 /* Schlaue Zehn: größere, besser lesbare Schrift auf den Kärtchen */
 .slot { width: 23%; font-size: clamp(.8rem, 2.75cqw, 1.25rem); line-height: 1.15; padding: 6px 6px 8px; hyphens: auto; }
-.slot-t { font-weight: 600; letter-spacing: .1px; }
+.slot-t { font-weight: 500; letter-spacing: .3px; }
+.slot-a { font-weight: 600; }
 @media (max-width: 640px) {
   .slot { width: auto; font-size: 1.05rem; min-height: 78px; }
 }
