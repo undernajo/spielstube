@@ -487,8 +487,8 @@
       if (!confirm("Alle gespielten Karten vergessen? Danach kann jede Karte wieder vorkommen.")) return;
       S.seen = []; store.set("s10-seen", []); publish(); toast("Speicher gelöscht – alle Karten sind wieder neu.", "ok");
     };
-    app.querySelectorAll(".setopt input").forEach((cb) => cb.onchange = () => {
-      chosenSets = [...app.querySelectorAll(".setopt input:checked")].map((x) => x.value);
+    app.querySelectorAll('.setopt input[type="checkbox"]').forEach((cb) => cb.onchange = () => {
+      chosenSets = [...app.querySelectorAll('.setopt input[type="checkbox"]:checked')].map((x) => x.value);
       store.set("s10-sets", chosenSets); renderLobby();
     });
     const all = app.querySelector("#setall");
