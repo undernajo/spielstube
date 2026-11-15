@@ -1198,15 +1198,14 @@
   let geoMap = null, geoRendered = null, geoMine = null, geoMarker = null, geoDeadline = 0, geoSent = null;
   // Satellitenbilder ohne Beschriftungen (Esri World Imagery, ohne API-Schlüssel nutzbar)
   const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+  // Kompakter Punktestand im Kopf-Element (spart Platz für die Karte)
   function geoChips(v, st) {
     return v.players.map((p, i) => {
-      const badge = st.step === "guess" ? (st.submitted.includes(p.id) ? "festgelegt ✓" : "sucht …") : st.step === "reveal" ? (st.ready[p.id] ? "bereit ✓" : "") : "";
-      const rp = st.step === "reveal" && st.result && st.result[p.id] ? `+${st.result[p.id].points}` : "";
-      return `<div class="chip ${badge.includes("✓") ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
-        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><span class="chip-score"><b>${st.total[p.id] || 0}</b></span></div>
-        <div class="chip-l2"><span class="rpts pos">${rp}</span>${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
-      </div>`;
+      const done = st.step === "guess" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
+      const mark = st.step === "guess" ? (done ? "✓" : "…") : done ? "✓" : "";
+      return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}" title="${st.step === "guess" ? (done ? "festgelegt" : "sucht noch") : done ? "bereit" : ""}">
+        <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+        <b>${(st.total[p.id] || 0).toLocaleString("de-DE")}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
     }).join("");
   }
   function geoSubmit() {
@@ -1243,7 +1242,7 @@
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      app.querySelector(".players").innerHTML = geoChips(v, st);
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); }
       if (st.step === "reveal") { const rb = app.querySelector("#geo-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"; }
       return;
     }
@@ -1258,6 +1257,7 @@
             <div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div></div>
           ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
           <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
+          <div class="geo-scores">${geoChips(v, st)}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
     } else if (st.step === "reveal") {
@@ -1269,6 +1269,7 @@
             <span>${esc(p.name)}</span><span class="muted small">${r.km == null ? "keine Nadel" : r.km < 10 ? r.km.toFixed(1).replace(".", ",") + " km" : Math.round(r.km).toLocaleString("de-DE") + " km"}</span><b>+${r.points}</b></div>`; }).join("")}</div>
           <div class="geo-actions"><button id="geo-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"}</button>
             ${isHost ? `<button id="geo-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>
+          <div class="geo-scores">${geoChips(v, st)}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
     } else {
@@ -1291,7 +1292,6 @@
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
-        <section class="players">${geoChips(v, st)}</section>
         <section class="slf-main">${main}</section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
