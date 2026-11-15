@@ -31,12 +31,12 @@
   let chosenTarget = store.get("s10-target");
   const SLF = window.S10Slf;
   const GAMES = [
-    { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
-    { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
-    { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
-    { key: "geo", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
-    { key: "oben", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
-    { key: "hl", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: "↕️" },
+    { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
+    { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
+    { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
+    { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
+    { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
+    { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: "↕️" },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -743,9 +743,12 @@
 
   // ---------- Spielauswahl & Einstellungen ----------
   function gamePickerHtml() {
-    return `<div class="field"><span>Spiel</span><div class="setlist">${GAMES.map((g) => `
-      <label class="setopt ${chosenGame === g.key ? "on" : ""}"><input type="radio" name="game" value="${g.key}" ${chosenGame === g.key ? "checked" : ""}>
-        <span class="setname">${g.name}</span><span class="setcount">${g.desc}</span></label>`).join("")}</div></div>`;
+    return `<div class="field"><span>Spiel wählen</span><div class="gamegrid" role="radiogroup">${GAMES.map((g) => `
+      <label class="gametile ${chosenGame === g.key ? "on" : ""}" style="--gc:${g.color}">
+        <input type="radio" name="game" value="${g.key}" ${chosenGame === g.key ? "checked" : ""}>
+        <span class="gt-icon" aria-hidden="true">${g.icon}</span>
+        <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
+        <span class="gt-check" aria-hidden="true">✓</span></label>`).join("")}</div></div>`;
   }
   function slfSettingsHtml() {
     const presetCats = slfOpts.preset !== "eigene" && SLF.PRESETS[slfOpts.preset] ? SLF.PRESETS[slfOpts.preset].cats : null;
@@ -765,7 +768,7 @@
   // Für Gäste: gut sichtbar, welches Spiel der Gastgeber gewählt hat
   function gameBannerHtml() {
     const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
-    return `<div class="game-banner"><span class="game-icon" aria-hidden="true">${g.icon}</span>
+    return `<div class="game-banner" style="--gc:${g.color}"><span class="gt-icon big" aria-hidden="true">${g.icon}</span>
       <div><div class="game-label">Gespielt wird</div><div class="game-name">${esc(g.name)}</div><div class="muted small">${esc(g.desc)}</div></div></div>`;
   }
   // Für Gäste: Einstellungen des Gastgebers nur anzeigen (ändern kann nur der Gastgeber)
