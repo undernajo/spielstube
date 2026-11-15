@@ -34,7 +34,8 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cleanName = (n) => String(n || "").trim().slice(0, 20) || "Spieler";
   const genCode = () => Array.from({ length: 5 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join("");
-  const shareLink = () => location.origin + location.pathname + "?room=" + roomCode + "&b=" + brokerIdx;
+  // Server-Index nur anhängen, wenn der Ersatzserver genutzt wird (Standard 0 = Hauptserver)
+  const shareLink = () => location.origin + location.pathname + "?room=" + roomCode + (brokerIdx ? "&b=" + brokerIdx : "");
 
   // ---------- Verbindung über einen öffentlichen MQTT-Vermittlungsserver ----------
   // Alle Nachrichten laufen über den Server, daher klappt es hinter jedem Router.
