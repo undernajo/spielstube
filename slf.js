@@ -194,5 +194,5 @@
     return out;
   }
 
-  root.S10Slf = { start, apply, tick, publicState, PRESETS, TIMERS, ROUND_CHOICES, firstLetter };
+  root.S10Slf = { start, apply, tick, publicState, PRESETS, TIMERS, ROUND_CHOICES, firstLetter, categoriesFrom };
 })(typeof window !== "undefined" ? window : globalThis);

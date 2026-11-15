@@ -380,3 +380,14 @@ textarea { resize: vertical; font: inherit; }
 .wl-word.hit { background: #1c4a33; border-color: var(--ok); box-shadow: 0 0 0 4px rgba(47, 191, 113, .25); }
 .wl-who { color: var(--muted); font-size: .85rem; display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
 .wl-who .pdot { width: 8px; height: 8px; }
+
+/* Gäste sehen die Lobby-Einstellungen nur an */
+.setopt.ro { cursor: default; }
+.setopt.ro:not(.on) { opacity: .55; }
+.ro-mark { width: 20px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-weight: 700; font-size: .85rem;
+  border: 2px solid var(--line); color: var(--accent-ink); }
+.setopt.ro.on .ro-mark { background: var(--accent); border-color: var(--accent); }
+.setopt.ro .setcount { text-align: right; }
+.setopt.ro { grid-template-columns: auto auto minmax(0, 1fr); }
+.setopt.ro { grid-template-columns: auto minmax(0, 1fr); row-gap: 2px; }
+.setopt.ro .setcount { grid-column: 2; text-align: left; }

@@ -205,6 +205,11 @@
   function publish() {
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
+    if (S.phase === "lobby") view.lobby = {
+      sets: currentSets(), target: chosenTarget || 30,
+      slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
+      wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
+    };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
       // Rekord (nur beim Gastgeber gespeichert)
@@ -477,7 +482,7 @@
           <h3>Spieler</h3>
           <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
-          ${isHost ? gamePickerHtml() : `<p class="muted">Gespielt wird: <b>${esc((GAMES.find((g) => g.key === view.game) || GAMES[0]).name)}</b></p>`}
+          ${isHost ? gamePickerHtml() : `<p class="muted">Gespielt wird: <b>${esc((GAMES.find((g) => g.key === view.game) || GAMES[0]).name)}</b></p>${guestSettingsHtml()}`}
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
@@ -506,7 +511,7 @@
     };
     const start = app.querySelector("#start");
     const tsel = app.querySelector("#target");
-    if (tsel) tsel.onchange = () => { chosenTarget = Number(tsel.value); store.set("s10-target", chosenTarget); };
+    if (tsel) tsel.onchange = () => { chosenTarget = Number(tsel.value); store.set("s10-target", chosenTarget); publish(); };
     const reset = app.querySelector("#resetSeen");
     if (reset) reset.onclick = () => {
       if (!confirm("Alle gespielten Karten vergessen? Danach kann jede Karte wieder vorkommen.")) return;
@@ -514,10 +519,10 @@
     };
     app.querySelectorAll('.setopt input[type="checkbox"]').forEach((cb) => cb.onchange = () => {
       chosenSets = [...app.querySelectorAll('.setopt input[type="checkbox"]:checked')].map((x) => x.value);
-      store.set("s10-sets", chosenSets); renderLobby();
+      store.set("s10-sets", chosenSets); publish();
     });
     const all = app.querySelector("#setall");
-    if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); renderLobby(); };
+    if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); publish(); };
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
@@ -695,23 +700,45 @@
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  // Für Gäste: Einstellungen des Gastgebers nur anzeigen (ändern kann nur der Gastgeber)
+  function guestSettingsHtml() {
+    const lb = view.lobby;
+    if (!lb) return "";
+    const row = (on, name, detail) => `<div class="setopt ro ${on ? "on" : ""}"><span class="ro-mark">${on ? "✓" : ""}</span>
+      <span class="setname">${name}</span><span class="setcount">${detail}</span></div>`;
+    if (view.game === "slf") {
+      const presets = Object.entries(SLF.PRESETS).map(([k, p]) => row(lb.slf.preset === k, esc(p.name), esc(p.cats.join(" · "))));
+      if (lb.slf.preset === "eigene") presets.push(row(true, "Eigene", esc(lb.slf.cats.join(" · "))));
+      return `<div class="field"><span>Kategorien (wählt der Gastgeber)</span><div class="setlist">${presets.join("")}</div></div>
+        <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
+    }
+    if (view.game === "wl") {
+      const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
+      return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n, d]) => row(lb.wl.pack === k, esc(n), esc(d))).join("")}</div></div>
+        <p class="muted small">${lb.wl.rounds} Impulse</p>`;
+    }
+    const sets = L.SET_KEYS.map((k) => row(lb.sets.includes(k), esc(SET_NAMES[k]), `${CARDS.filter((c) => (c.set || "standard") === k).length} Karten`));
+    const total = CARDS.filter((c) => lb.sets.includes(c.set || "standard")).length;
+    return `<div class="field"><span>Fragen-Sets (wählt der Gastgeber)</span><div class="setlist">${sets.join("")}</div></div>
+      <p class="muted small">Zusammen ${total} Karten · Spielen bis ${lb.target} Punkte</p>`;
+  }
   function bindGamePicker() {
     app.querySelectorAll('input[name="game"]').forEach((r) => r.onchange = () => {
-      chosenGame = r.value; store.set("s10-game", chosenGame); send({ type: "setGame", game: chosenGame }); renderLobby();
+      chosenGame = r.value; store.set("s10-game", chosenGame); send({ type: "setGame", game: chosenGame }); publish();
     });
     const saveOpts = () => store.set("s10-slf", slfOpts);
     const ps = app.querySelector("#slf-preset");
-    if (ps) ps.onchange = () => { slfOpts.preset = ps.value; saveOpts(); renderLobby(); };
+    if (ps) ps.onchange = () => { slfOpts.preset = ps.value; saveOpts(); publish(); };
     const cu = app.querySelector("#slf-custom");
-    if (cu) cu.oninput = () => { slfOpts.custom = cu.value; saveOpts(); };
+    if (cu) { cu.oninput = () => { slfOpts.custom = cu.value; saveOpts(); }; cu.onchange = () => publish(); } // erst beim Verlassen des Felds teilen
     const ro = app.querySelector("#slf-rounds");
-    if (ro) ro.onchange = () => { slfOpts.rounds = Number(ro.value); saveOpts(); };
+    if (ro) ro.onchange = () => { slfOpts.rounds = Number(ro.value); saveOpts(); publish(); };
     const ti = app.querySelector("#slf-timer");
-    if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); };
+    if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); publish(); };
     const wp = app.querySelector("#wl-pack");
-    if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); };
+    if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
-    if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); };
+    if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
   function wlSettingsHtml() {
     const best = store.get("s10-wl-best");
