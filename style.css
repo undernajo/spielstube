@@ -636,7 +636,7 @@ textarea { resize: vertical; font: inherit; }
 .wblock tbody td { font-size: 1.05rem; height: 1.6em; font-family: "Fredoka", sans-serif; }
 .wblock tbody td.strich { box-shadow: inset 0 -2px 0 var(--bad); }
 .wblock tbody td.sieg { color: var(--accent); font-weight: 700; }
-.wblock tfoot tr:first-child td { border-top: 2px solid var(--ink); font-size: 1.35rem; font-weight: 700; padding-top: 6px; }
-.wblock tfoot tr:first-child td.dran { color: var(--accent); }
-.wblock tfoot td .wtag { display: block; width: fit-content; margin: 2px auto 0; font-size: .65rem; font-weight: 500; }
-.wblock tfoot tr + tr td { border-left: 0; padding-top: 6px; }
+.wblock tfoot td { border-left: 0 !important; padding-top: 8px; }
+.wsum { font-size: 1.5rem; font-weight: 700; margin-right: 8px; vertical-align: middle; }
+.wsum.dran { color: var(--accent); }
+.wblock thead th .wtag { font-size: .65rem; font-weight: 500; }

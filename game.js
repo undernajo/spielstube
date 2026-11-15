@@ -1516,11 +1516,11 @@
       });
       const tally = (n) => n ? "✕".repeat(Math.min(n, 10)) + (n > 10 ? " " + n : "") : "";
       return `<table class="wblock">
-        <thead><tr>${cols.map((id) => `<th style="--pc:${colorOf(id)}"><span class="pdot"></span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
+        <thead><tr>${cols.map((id) => `<th style="--pc:${colorOf(id)}"><span class="wsum ${st.turn === id ? "dran" : ""}">${st.scores[id]}</span><span class="pdot"></span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
+          ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}
           ${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}<div class="wkreuz" title="gewonnene Partien">${tally((st.games || {})[id] || 0)}</div></th>`).join("")}</tr></thead>
         <tbody>${rows.map((r) => `<tr>${r}</tr>`).join("") || `<tr><td colspan="2" class="muted small">noch keine Punkte</td></tr>`}</tbody>
-        <tfoot><tr>${cols.map((id) => `<td class="${st.turn === id ? "dran" : ""}">${st.scores[id]}${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}</td>`).join("")}</tr>
-          <tr><td colspan="2" class="muted small">bis ${st.target} · gestrichen ab ${st.target - 2}</td></tr></tfoot></table>`;
+        <tfoot><tr><td colspan="2" class="muted small">bis ${st.target} · gestrichen ab ${st.target - 2}</td></tr></tfoot></table>`;
     };
     const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
         <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
