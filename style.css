@@ -649,3 +649,13 @@ textarea { resize: vertical; font: inherit; }
 @media (max-width: 899px) { .wmode { margin-top: 12px; } }
 .wrule { font-size: .85rem; padding: 6px 10px; border-radius: 10px; background: rgba(255, 200, 61, .12); border: 1px solid rgba(255, 200, 61, .35); }
 .gt-icon .wicon { width: 92%; height: 92%; display: block; }
+/* großer Spieltitel in der Kopfzeile */
+.gtitle { display: flex; align-items: center; gap: 10px; padding: 4px 16px 4px 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--gc) 18%, #1a1640); border: 1px solid color-mix(in srgb, var(--gc) 50%, transparent); }
+.gtitle .gt-icon { width: 44px; height: 44px; margin: 0; }
+.gtitle b { font-size: 1.5rem; font-weight: 700; letter-spacing: .3px; }
+@media (max-width: 640px) {
+  .gtitle { order: 2; padding: 2px 12px 2px 4px; }
+  .gtitle .gt-icon { width: 34px; height: 34px; }
+  .gtitle b { font-size: 1.2rem; }
+}

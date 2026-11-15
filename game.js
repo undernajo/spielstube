@@ -1637,7 +1637,8 @@
       <main class="screen game slf geo watten">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${gameTagHtml("watten")}Runde ${st.roundNo} · bis ${st.target} · Raum <b>${esc(v.code)}</b></div>
+          <div class="gtitle" style="--gc:${GAMES.find((g) => g.key === "watten").color}"><span class="gt-icon" aria-hidden="true">${GAMES.find((g) => g.key === "watten").icon}</span><b>Watten</b></div>
+          <div class="meta">Runde ${st.roundNo} · bis ${st.target} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
