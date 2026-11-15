@@ -659,3 +659,5 @@ textarea { resize: vertical; font: inherit; }
   .gtitle .gt-icon { width: 34px; height: 34px; }
   .gtitle b { font-size: 1.2rem; }
 }
+/* „Du bist dran“: zwischen Stich in der Mitte und den eigenen Karten */
+.wtable .wturn.me { position: static; justify-self: center; align-self: end; }
