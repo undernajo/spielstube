@@ -9,13 +9,13 @@ Es braucht keinen eigenen Server. Die Spielzüge laufen über einen öffentliche
    - **Netlify Drop:** Ordner auf https://app.netlify.com/drop ziehen und den Link teilen, oder
    - **GitHub Pages:** Repo pushen und Pages aktivieren.
    - Lokal testen: `python3 -m http.server 8000` und http://localhost:8000 in zwei Fenstern öffnen.
-2. Einer klickt **Neues Spiel erstellen** und schickt den Link (`…?room=ABCDE`) oder den 5-stelligen Code.
+2. Einer klickt **Neue Spielstube eröffnen** und schickt den Link (`…?room=ABCDE`) oder den 5-stelligen Code.
 3. Der andere öffnet den Link (oder gibt den Code ein). Dann startet der Gastgeber das Spiel.
 
 Der Gastgeber muss die Seite offen lassen, denn das Spiel läuft in seinem Browser.
 Lädt er die Seite neu, kann er mit **Laufendes Spiel fortsetzen** weitermachen. Der Mitspieler verbindet sich dann automatisch neu.
 
-Die Spielzüge sind mit einem Schlüssel aus dem Raum-Code verschlüsselt (AES-GCM). Auch der Kanalname auf dem Server verrät den Code nicht. Nur wer den Code kennt, kann mitlesen oder mitspielen. Dafür muss die Seite über `https://` (z. B. GitHub Pages) oder `http://localhost` geöffnet werden.
+Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES-GCM). Auch der Kanalname auf dem Server verrät den Code nicht. Nur wer den Code kennt, kann mitlesen oder mitspielen. Dafür muss die Seite über `https://` (z. B. GitHub Pages) oder `http://localhost` geöffnet werden.
 
 ## Spiele
 

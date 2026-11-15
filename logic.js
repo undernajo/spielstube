@@ -31,7 +31,7 @@
   function setConnected(s, id, on) {
     const i = s.players.findIndex((x) => x.id === id);
     if (i < 0) return;
-    if (!on && s.phase === "lobby") { event(s, "info", `${s.players[i].name} hat den Raum verlassen.`); s.players.splice(i, 1); return; }
+    if (!on && s.phase === "lobby") { event(s, "info", `${s.players[i].name} hat die Stube verlassen.`); s.players.splice(i, 1); return; }
     s.players[i].connected = on;
   }
 

@@ -148,7 +148,7 @@
   }
 
   async function hostOpen(idx, tries = 0) {
-    status = "Raum wird geöffnet …";
+    status = "Spielstube wird geöffnet …";
     view = L.publicState(S, CARDS, roomCode); render();
     await ensureCrypto(roomCode);
     const willPayload = await seal("offline");
@@ -299,7 +299,7 @@
     const c = mq = connectBroker(idx, { topic: T("up"), payload: willPayload, qos: 1, retain: false });
     c.on("connect", () => {
       if (mq !== c) return;
-      status = view ? "" : `Suche Raum ${code} …`; render();
+      status = view ? "" : `Suche Stube ${code} …`; render();
       c.subscribe([T("state"), T("host"), T("hand/" + myId)], { qos: 1 });
       sendUp({ type: "join", name: myName });
     });
@@ -307,7 +307,7 @@
     c.on("message", async (topic, buf) => {
       if (mq !== c) return;
       if (!buf.length) { // gelöschte Nachricht = Gastgeber hat beendet
-        if (topic === T("state")) { status = "Der Gastgeber hat das Spiel beendet."; render(); }
+        if (topic === T("state")) { status = "Der Gastgeber hat die Spielstube geschlossen."; render(); }
         return;
       }
       const m = await unseal(buf);
@@ -324,16 +324,16 @@
       if (m.seq && m.seq <= lastSeq) return; // veralteten Stand ignorieren
       lastSeq = m.seq || lastSeq;
       view = m;
-      if (status.startsWith("Suche Raum")) status = "";
+      if (status.startsWith("Suche Stube")) status = "";
       if (!m.players.some((p) => p.id === myId) && Date.now() - lastRejoin > 3000) { lastRejoin = Date.now(); sendUp({ type: "join", name: myName }); }
       render();
     });
     // Raum nicht gefunden? -> beim anderen Server suchen (außer der Link legt den Server fest)
     findTimer = setTimeout(() => {
       if (view || mq !== c) return;
-      if (fixed) { status = `Raum „${code}“ nicht gefunden. Ist das Spiel beim Gastgeber offen? Ich warte weiter …`; render(); return; }
+      if (fixed) { status = `Stube „${code}“ nicht gefunden. Ist die Spielstube beim Gastgeber offen? Ich warte weiter …`; render(); return; }
       guestJoin(code, name, brokerIdx + 1, false);
-      status = `Raum „${code}“ noch nicht gefunden – suche weiter …`; render();
+      status = `Stube „${code}“ noch nicht gefunden – suche weiter …`; render();
     }, 6000);
   }
 
@@ -345,7 +345,7 @@
   }
 
   async function leave() {
-    if (isHost && !confirm("Spiel wirklich beenden? Alle Mitspieler fliegen dann raus.")) return;
+    if (isHost && !confirm("Spielstube wirklich schließen? Alle Mitspieler fliegen dann raus.")) return;
     store.del(isHost ? "s10-host" : "s10-guest");
     const go = () => { location.href = location.pathname; };
     if (!mq || !roomTopic) return go();
@@ -370,7 +370,7 @@
       <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
       <button id="invite" class="btn sm" title="Link zum Beitreten teilen" aria-label="Einladen"><span class="lbl-long">＋ Einladen</span><span class="lbl-short">＋</span></button>
       ${isHost ? `<button id="hostLobby" class="btn ghost sm" title="Spiel beenden – alle zurück in die Lobby" aria-label="Zur Lobby"><span class="lbl-long">Zur Lobby</span><span class="lbl-short">⌂</span></button>` : ""}
-      <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
+      <button id="leave" class="btn ghost sm" title="${isHost ? "Stube schließen" : "Verlassen"}" aria-label="${isHost ? "Stube schließen" : "Verlassen"}"><span class="lbl-long">${isHost ? "Stube schließen" : "Verlassen"}</span><span class="lbl-short">✕</span></button>
     </div>`;
   }
   document.addEventListener("click", (e) => {
@@ -528,21 +528,21 @@
           <label class="field"><span>Dein Name</span>
             <input id="name" maxlength="20" autocomplete="nickname" value="${esc(myName)}" placeholder="z. B. Josef"></label>
           ${code ? `
-            <p class="invite">Du wurdest in Raum <b>${esc(code)}</b> eingeladen.</p>
-            <button id="joinUrl" class="btn primary big">Raum ${esc(code)} beitreten</button>
+            <p class="invite">Du wurdest in die Spielstube <b>${esc(code)}</b> eingeladen.</p>
+            <button id="joinUrl" class="btn primary big">Stube ${esc(code)} beitreten</button>
           ` : `
-            <button id="create" class="btn primary big">Neues Spiel erstellen</button>
+            <button id="create" class="btn primary big">Neue Spielstube eröffnen</button>
             <div class="divider"><span>oder beitreten</span></div>
             <div class="row">
               <input id="code" maxlength="5" placeholder="CODE" autocapitalize="characters" value="${esc(guestSaved ? guestSaved.code : "")}">
               <button id="join" class="btn">Beitreten</button>
             </div>`}
-          ${resumable && !code ? `<button id="resume" class="btn ghost">Spiel ${esc(saved.code)} fortsetzen</button>` : ""}
+          ${resumable && !code ? `<button id="resume" class="btn ghost">Spielstube ${esc(saved.code)} fortsetzen</button>` : ""}
           <p class="err">${esc(errorMsg || status)}</p>
         </div>
         <details class="rules"><summary>Die Spiele</summary>
-          <ul class="game-list">${GAMES.map((g) => `<li style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b> – ${esc(g.desc)}</li>`).join("")}</ul>
-          <p class="muted small">Ein Spiel erstellen, Freunde per Link einladen, in der Lobby das Spiel wählen. Die genauen Regeln stehen dort beim jeweiligen Spiel.</p>
+          <ul class="game-list">${GAMES.map((g) => `<li style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><span><b>${esc(g.name)}</b> – ${esc(g.desc)}</span></li>`).join("")}</ul>
+          <p class="muted small">Eine Spielstube eröffnen, Freunde per Link einladen, in der Lobby das Spiel wählen. Die genauen Regeln stehen dort beim jeweiligen Spiel.</p>
         </details>
         ${reportsHtml()}
       </main>`;
@@ -559,7 +559,7 @@
     on("#joinUrl", () => { const n = getName(); if (n) guestJoin(code, n, urlBroker ?? 0, urlBroker !== null); });
     const joinCode = () => {
       const c = app.querySelector("#code").value.trim().toUpperCase();
-      if (!/^[A-Z]{5}$/.test(c)) { errorMsg = "Der Raum-Code hat 5 Buchstaben."; return renderStart(); }
+      if (!/^[A-Z]{5}$/.test(c)) { errorMsg = "Der Stuben-Code hat 5 Buchstaben."; return renderStart(); }
       const n = getName(); if (n) guestJoin(c, n, 0, false);
     };
     on("#join", joinCode);
@@ -573,7 +573,7 @@
       <main class="screen lobby">
         <h1 class="logo small">${LOGO}</h1>
         <div class="panel">
-          <p class="muted">Raum-Code</p>
+          <p class="muted">Stuben-Code</p>
           <div class="code">${esc(view.code)}</div>
           ${isHost ? `
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>` : `
@@ -599,7 +599,7 @@
           ` : ""}
           ${!isHost ? `<p class="muted">Warte, bis der Gastgeber das Spiel startet …</p>` : ""}
           <p class="err">${esc(status)}</p>
-          <button id="leave" class="btn ghost">Verlassen</button>
+          <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
         </div>
         ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
@@ -720,7 +720,7 @@
       <main class="screen game">
         <header class="top topbar">
           ${headBrandHtml("zehn")}
-          <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -739,7 +739,7 @@
             </div>
           </section>
           <div class="card-tools"><button id="report" class="btn ghost sm">⚑ Karte melden</button></div>
-          <section class="log"><h3>Verlauf</h3><ol>${v.log.filter((l) => !/ist beigetreten|hat den Raum verlassen/.test(l)).map((l) => `<li>${esc(l)}</li>`).join("") || `<li class="muted">Noch keine Züge.</li>`}</ol></section>
+          <section class="log"><h3>Verlauf</h3><ol>${v.log.filter((l) => !/ist beigetreten|hat den Raum verlassen|hat die Stube verlassen/.test(l)).map((l) => `<li>${esc(l)}</li>`).join("") || `<li class="muted">Noch keine Züge.</li>`}</ol></section>
         </div>
       </main>`;
 
@@ -1104,7 +1104,7 @@
   async function invite() {
     const url = shareLink();
     if (navigator.share && matchMedia("(pointer: coarse)").matches) {
-      try { await navigator.share({ title: "Spielstube", text: `Spiel mit! Raum ${roomCode}`, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
+      try { await navigator.share({ title: "Spielstube", text: `Spiel mit! Spielstube ${roomCode}`, url }); return; } catch (e) { if (e && e.name === "AbortError") return; }
     }
     try { await navigator.clipboard.writeText(url); toast("Einladungslink kopiert – einfach verschicken!", "ok"); }
     catch { prompt("Diesen Link verschicken:", url); }
@@ -1214,7 +1214,7 @@
       <main class="screen game slf">
         <header class="top topbar">
           ${headBrandHtml("slf")}
-          <div class="meta">Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.round}/${st.rounds} · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1323,7 +1323,7 @@
       <main class="screen game slf wl">
         <header class="top topbar">
           ${headBrandHtml("wl")}
-          <div class="meta">${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1476,7 +1476,7 @@
       <main class="screen game slf geo hl">
         <header class="top topbar">
           ${headBrandHtml("hl")}
-          <div class="meta">Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1649,7 +1649,7 @@
       <main class="screen game slf geo watten">
         <header class="top topbar">
           ${headBrandHtml("watten")}
-          <div class="meta">Runde ${st.roundNo} · bis ${st.target} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.roundNo} · bis ${st.target} · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1761,7 +1761,7 @@
       <main class="screen game slf geo ${oben ? "oben" : ""}">
         <header class="top topbar">
           ${headBrandHtml(oben ? "oben" : "geo")}
-          <div class="meta">${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${esc(st.regionName)} · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
