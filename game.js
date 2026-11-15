@@ -310,9 +310,26 @@
     toast.t = setTimeout(() => { toastEl.className = "toast " + (kind || ""); }, 3800);
   }
 
-  let lastLobbyGame = null;
+  // Kopfzeilen-Knöpfe aller Spiele; der Gastgeber kann jederzeit alle zurück in die Lobby holen
+  function topActionsHtml() {
+    return `<div class="top-actions">
+      <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
+      <button id="invite" class="btn sm" title="Link zum Beitreten teilen" aria-label="Einladen"><span class="lbl-long">＋ Einladen</span><span class="lbl-short">＋</span></button>
+      ${isHost ? `<button id="hostLobby" class="btn ghost sm" title="Spiel beenden – alle zurück in die Lobby" aria-label="Zur Lobby"><span class="lbl-long">Zur Lobby</span><span class="lbl-short">⌂</span></button>` : ""}
+      <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
+    </div>`;
+  }
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest || !e.target.closest("#hostLobby") || !isHost) return;
+    if (confirm("Spiel beenden und alle zurück in die Lobby holen? Der aktuelle Spielstand geht verloren.")) {
+      selected = null; send({ type: "lobby" });
+    }
+  });
+  let lastLobbyGame = null, lastPhase = null;
   function render() {
     if (!view) return renderStart();
+    if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
+    lastPhase = view.phase;
     if (!isHost && view.phase === "lobby") {
       if (lastLobbyGame && view.game !== lastLobbyGame) {
         const g = GAMES.find((x) => x.key === view.game);
@@ -624,11 +641,7 @@
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
           <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
-          <div class="top-actions">
-            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
-            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
-            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
-          </div>
+          ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <div class="game-grid">
@@ -996,11 +1009,7 @@
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
           <div class="meta">Stadt, Land, Fluss · Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
-          <div class="top-actions">
-            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
-            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
-            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
-          </div>
+          ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="players">${slfChips(v, st)}</section>
@@ -1109,11 +1118,7 @@
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
           <div class="meta">Gleiche Wellenlänge · ${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
-          <div class="top-actions">
-            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
-            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
-            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
-          </div>
+          ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="players">${wlChips(v, st)}</section>
