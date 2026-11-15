@@ -1512,13 +1512,13 @@
         if (strich) struck[h.winner] = true;
         return cols.map((id) => id === h.winner
           ? `<td class="${strich ? "strich" : ""} ${run[id] >= st.target ? "sieg" : ""}" title="+${h.points}${h.reason === "aufgegeben" ? " (gegangen)" : h.reason === "abgelehnt" ? " (Bieten abgelehnt)" : ""}">${run[id]}</td>`
-          : "<td></td>").join("");
+          : `<td class="wdash">–</td>`).join("");
       });
       const tally = (n) => n ? "✕".repeat(Math.min(n, 10)) + (n > 10 ? " " + n : "") : "";
       return `<table class="wblock">
-        <thead><tr>${cols.map((id) => `<th style="--pc:${colorOf(id)}"><span class="wsum ${st.turn === id ? "dran" : ""}">${st.scores[id]}</span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
+        <thead><tr>${cols.map((id) => `<th style="--pc:${colorOf(id)}"><div class="wgeber">${id === st.dealer ? "Geber" : ""}</div><span class="wsum ${st.turn === id ? "dran" : ""}">${st.scores[id]}</span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
           ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}
-          ${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}<div class="wkreuz" title="gewonnene Partien">${tally((st.games || {})[id] || 0)}</div></th>`).join("")}</tr></thead>
+          <div class="wkreuz" title="gewonnene Partien">${tally((st.games || {})[id] || 0)}</div></th>`).join("")}</tr></thead>
         <tbody>${rows.map((r) => `<tr>${r}</tr>`).join("") || `<tr><td colspan="2" class="muted small">noch keine Punkte</td></tr>`}</tbody>
         <tfoot><tr><td colspan="2" class="muted small">bis ${st.target} · gestrichen ab ${st.target - 2}</td></tr></tfoot></table>`;
     };

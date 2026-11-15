@@ -640,3 +640,5 @@ textarea { resize: vertical; font: inherit; }
 .wsum { font-size: 1.5rem; font-weight: 700; margin-right: 8px; vertical-align: middle; }
 .wsum.dran { color: var(--accent); }
 .wblock thead th .wtag { font-size: .65rem; font-weight: 500; }
+.wgeber { font-size: .7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); min-height: 1.2em; }
+.wblock tbody td.wdash { color: var(--muted); }
