@@ -487,7 +487,8 @@
     app.innerHTML = `
       <main class="screen start">
         <h1 class="logo">${LOGO}</h1>
-        <p class="tag">Quiz, Stadt, Land, Fluss & mehr – online gemeinsam spielen.</p>
+        <p class="tag">${GAMES.length} Spiele für gemütliche Runden – online gemeinsam spielen.</p>
+        <div class="start-games" aria-label="Spiele">${GAMES.map((g) => `<span class="gt-icon sm" style="--gc:${g.color}" title="${esc(g.name)}">${g.icon}</span>`).join("")}</div>
         <div class="panel">
           <label class="field"><span>Dein Name</span>
             <input id="name" maxlength="20" autocomplete="nickname" value="${esc(myName)}" placeholder="z. B. Josef"></label>
@@ -679,7 +680,7 @@
       <main class="screen game">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${gameTagHtml("zehn")}${setLabel(v.cardSet)}Runde ${v.round} · bis ${v.target} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -766,6 +767,11 @@
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
   // Für Gäste: gut sichtbar, welches Spiel der Gastgeber gewählt hat
+  // Kleines Spielsymbol mit Namen für die Kopfzeile der Spielbildschirme
+  function gameTagHtml(key) {
+    const g = GAMES.find((x) => x.key === key) || GAMES[0];
+    return `<span class="gtag" style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b></span>`;
+  }
   function gameBannerHtml() {
     const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
     return `<div class="game-banner" style="--gc:${g.color}"><span class="gt-icon big" aria-hidden="true">${g.icon}</span>
@@ -789,7 +795,7 @@
         return `<div class="field"><span>Orte</span><div class="setlist">${row(true, esc(r.name), esc(r.places.length + " Orte, z. B. Bozen · Venedig · München …"))}</div></div>
         <p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
       }
-      const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(GEO.poolFor(k, lb.geo.level).length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
+      const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), ""));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
@@ -798,7 +804,7 @@
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
-      return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n, d]) => row(lb.wl.pack === k, esc(n), esc(d))).join("")}</div></div>
+      return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n]) => row(lb.wl.pack === k, esc(n), "")).join("")}</div></div>
         <p class="muted small">${lb.wl.rounds} Impulse</p>`;
     }
     const sets = L.SET_KEYS.map((k) => row(lb.sets.includes(k), esc(SET_NAMES[k]), `${CARDS.filter((c) => (c.set || "standard") === k).length} Karten`));
@@ -1134,7 +1140,7 @@
       <main class="screen game slf">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">Stadt, Land, Fluss · Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${gameTagHtml("slf")}Runde ${st.round}/${st.rounds} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1243,7 +1249,7 @@
       <main class="screen game slf wl">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">Gleiche Wellenlänge · ${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${gameTagHtml("wl")}${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1396,7 +1402,7 @@
       <main class="screen game slf geo hl">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">Höher oder tiefer · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${gameTagHtml("hl")}Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1475,7 +1481,7 @@
       <main class="screen game slf geo ${oben ? "oben" : ""}">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">${oben ? "Von oben" : "Wo liegt das?"} · ${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${gameTagHtml(oben ? "oben" : "geo")}${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}

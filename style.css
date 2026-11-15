@@ -11,7 +11,7 @@
   --accent-ink: #2a1d00;
   --ok: #2fbf71;
   --bad: #ef4b5a;
-  --slot: #fbfaff;
+  --slot: #e8e4f4;
   --slot-ink: #231d4d;
   --radius: 16px;
   color-scheme: dark;
@@ -119,7 +119,7 @@ em { color: var(--muted); font-style: normal; font-size: .9em; }
   box-shadow: 0 0 0 10px #2a2170, 0 0 0 12px #5b48c9, 0 20px 50px rgba(0, 0, 0, .5); }
 .center { position: absolute; inset: 27%; border-radius: 50%; background: #170f4d; display: flex; flex-direction: column;
   align-items: center; justify-content: center; text-align: center; padding: 6%; gap: 6px; box-shadow: inset 0 0 0 3px #5b48c9; }
-.qtype { font-size: .75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); }
+.qtype { font-size: .75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
 .q { font-size: clamp(1rem, 2.6vw, 1.35rem); font-weight: 600; line-height: 1.25; }
 .hint { color: var(--muted); font-size: .85rem; }
 
@@ -172,10 +172,14 @@ em { color: var(--muted); font-style: normal; font-size: .9em; }
 @keyframes fade { from { opacity: 0; } }
 @keyframes pop { from { transform: scale(.92); opacity: 0; } }
 
-.toast { position: fixed; left: 50%; bottom: 20px; transform: translate(-50%, 140%); background: #2e2870; color: var(--ink); padding: 12px 18px;
-  border-radius: 14px; max-width: min(560px, calc(100% - 32px)); box-shadow: 0 10px 30px rgba(0, 0, 0, .4); transition: transform .3s, opacity .3s; z-index: 30; text-align: center;
+/* Hinweise: am Handy als schmale Leiste ganz oben, am Computer klein unten rechts (verdeckt keine Karten) */
+.toast { position: fixed; left: 0; right: 0; top: 0; transform: translateY(-110%); background: #2e2870; color: var(--ink); padding: 7px 14px; font-size: .85rem;
+  border-radius: 0 0 12px 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, .35); transition: transform .3s, opacity .3s; z-index: 30; text-align: center;
   opacity: 0; pointer-events: none; }
-.toast.show { transform: translate(-50%, 0); opacity: 1; }
+.toast.show { transform: translateY(0); opacity: 1; }
+@media (min-width: 900px) {
+  .toast { left: auto; right: 20px; top: auto; bottom: 20px; max-width: 340px; border-radius: 12px; transform: translateY(140%); text-align: left; }
+}
 .toast.ok { background: #1c6b45; }
 .toast.bad { background: #8d2531; }
 
@@ -336,7 +340,7 @@ textarea { resize: vertical; font: inherit; }
 .slf-wait { text-align: center; padding: 40px 0; }
 .slf-review { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
 .slf-cat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 6px; }
-.slf-cat h4 { margin: 0 0 2px; font-size: .9rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+.slf-cat h4 { margin: 0 0 2px; font-size: .9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 .slf-row { display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 10px;
   background: #15123a; border-left: 4px solid var(--pc); }
 .slf-row.bad .slf-ans { text-decoration: line-through; opacity: .55; }
@@ -399,7 +403,7 @@ textarea { resize: vertical; font: inherit; }
 .game-banner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius);
   border: 1px solid var(--accent); background: #221d4b; }
 .game-icon { font-size: 2.4rem; line-height: 1; flex: none; }
-.game-label { font-size: .75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 600; }
+.game-label { font-size: .75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 600; }
 .game-name { font-size: 1.45rem; font-weight: 700; line-height: 1.15; }
 
 /* ======================================================================
@@ -502,3 +506,9 @@ textarea { resize: vertical; font: inherit; }
   font-size: .68rem; font-weight: 700; background: var(--accent); color: var(--accent-ink); opacity: 0; transition: opacity .15s ease; }
 .gametile.on .gt-check { opacity: 1; }
 @media (max-width: 360px) { .gt-desc { display: none; } }
+/* Startseite: Spielsymbole; Kopfzeile: Spiel-Kennzeichen */
+.start-games { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: -12px 0 22px; }
+.gt-icon.sm { width: 36px; height: 36px; font-size: 1.1rem; margin: 0; }
+.gt-icon.xs { width: 24px; height: 24px; font-size: .8rem; margin: 0; flex: none; }
+.gtag { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; vertical-align: middle; color: var(--ink); }
+.gtag b { font-weight: 600; }
