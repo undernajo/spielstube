@@ -451,3 +451,36 @@ textarea { resize: vertical; font: inherit; }
   .oben-grid { grid-template-columns: 1fr; gap: 8px; }
   .oben-grid .geo-map { height: max(220px, calc((100vh - 300px) / 2)); }
 }
+/* Höher oder tiefer */
+.hl-main { display: grid; gap: 14px; margin-top: 12px; }
+.hl-cards { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: stretch; }
+.hl-card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: 22px 16px; text-align: center;
+  display: grid; align-content: center; gap: 8px; min-height: 150px; }
+.hl-card.unknown { border-style: dashed; }
+.hl-card.shown { border-color: var(--accent); animation: hlPop .35s ease-out; }
+.hl-name { font-size: clamp(1.1rem, 3.2vw, 1.6rem); font-weight: 700; line-height: 1.2; }
+.hl-val { font-size: clamp(1.4rem, 4.5vw, 2.3rem); font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.hl-card.unknown .hl-val { color: var(--muted); }
+.hl-vs { display: grid; place-items: center; font-size: 1.8rem; font-weight: 700; color: var(--muted); }
+.hl-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 12px; border-radius: var(--radius);
+  border: 2px solid var(--line); background: #1d1845; color: var(--ink, #fff); font: 700 1.25rem Fredoka, sans-serif; cursor: pointer; }
+.hl-btn:hover:not(:disabled) { border-color: var(--accent); }
+.hl-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.hl-btn.right { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(47, 191, 113, .35); }
+.hl-btn:disabled { cursor: default; opacity: 1; }
+.hl-ico { font-size: 1.1rem; }
+.hl-who { display: inline-flex; gap: 4px; }
+.hl-who .pdot { background: var(--pc); }
+.hl-status { text-align: center; margin: 0; }
+.hl-chain { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .85rem; color: var(--muted); }
+.hl-link { background: #15123a; border-radius: 8px; padding: 2px 8px; }
+.hl-link b { color: #fff; }
+.geo-score.miss { border-color: var(--bad, #e5484d); }
+.geo-score.miss .geo-mark { color: var(--bad, #e5484d); }
+@keyframes hlPop { from { transform: scale(.94); } to { transform: scale(1); } }
+@media (max-width: 640px) {
+  .hl-cards { grid-template-columns: 1fr; gap: 6px; }
+  .hl-vs { font-size: 1.3rem; }
+  .hl-card { min-height: 0; padding: 14px 12px; }
+}

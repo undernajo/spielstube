@@ -36,10 +36,13 @@
     { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
     { key: "geo", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
     { key: "oben", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
+    { key: "hl", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: "↕️" },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const WL = window.S10Wl;
+  const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
+  let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
   let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
@@ -173,7 +176,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -207,11 +210,16 @@
       if (!host || S.phase !== "lobby") return false;
       GEO.start(S, action.opts, now); return true;
     }
+    if (type === "start" && action.game === "hl") {
+      if (!host || S.phase !== "lobby") return false;
+      HL.start(S, action.opts, now); return true;
+    }
+    if (type.startsWith("hl")) return S.phase === "hl" && HL.apply(S, pid, action, host, now);
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -223,6 +231,7 @@
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
+      hl: { length: hlOpts.length },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -234,6 +243,7 @@
     }
     view.wl = S.phase === "wl" ? WL.publicState(S) : null;
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
+    view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -351,7 +361,7 @@
       }
       lastLobbyGame = view.game;
     }
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -426,6 +436,7 @@
       slfKey: v.slf ? v.slf.round + ":" + v.slf.step : null,
       wlKey: v.wl ? v.wl.impulse + ":" + v.wl.attempt + ":" + v.wl.step : null,
       geoKey: v.geo ? v.geo.round + ":" + v.geo.step : null,
+      hlKey: v.hl ? v.hl.catNo + ":" + v.hl.pos + ":" + v.hl.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
@@ -433,6 +444,10 @@
       if (now.geoKey && now.geoKey !== prev.geoKey) {
         if (v.geo.step === "guess") sfx.turn();
         if (v.geo.step === "final") { if (v.geo.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
+      }
+      if (now.hlKey && now.hlKey !== prev.hlKey) {
+        if (v.hl.step === "reveal" && v.hl.result && myId in v.hl.result.ok) { if (v.hl.result.ok[myId]) sfx.turn(); }
+        if (v.hl.step === "final") { if (v.hl.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.wlKey && now.wlKey !== prev.wlKey) {
         if (v.wl.step === "reveal" && v.wl.result) { if (v.wl.result.hit) { sfx.win(); confetti(); } else sfx.lose(); }
@@ -532,6 +547,7 @@
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${isHost && (chosenGame === "geo" || chosenGame === "oben") ? geoSettingsHtml(chosenGame === "oben") : ""}
+          ${isHost && chosenGame === "hl" ? hlSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
@@ -545,7 +561,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -574,6 +590,7 @@
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
+      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
       if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
@@ -773,6 +790,10 @@
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
+    if (view.game === "hl" && lb.hl) {
+      return `<div class="field"><span>Kategorien</span><p class="muted small">${Object.values(HLDATA).map((c) => esc(c.name)).join(" · ")}</p></div>
+        <p class="muted small">${esc((HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).name)} · je ${HL.PER_CAT} Vergleiche</p>`;
+    }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
       return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n, d]) => row(lb.wl.pack === k, esc(n), esc(d))).join("")}</div></div>
@@ -812,6 +833,8 @@
       if (!confirm("Gespielte Orte vergessen? Danach sind in allen Regionen wieder alle Orte neu.")) return;
       S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
     };
+    const hlL = app.querySelector("#hl-length");
+    if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
@@ -835,6 +858,22 @@
       <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
       ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  function hlSettingsHtml() {
+    return `<label class="field"><span>Länge</span><select id="hl-length">${Object.entries(HL.LENGTHS).map(([k, l]) =>
+        `<option value="${k}" ${hlOpts.length === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+      <p class="muted small">Kategorien werden zufällig gezogen aus: ${Object.values(HLDATA).map((c) => esc(c.name)).join(" · ")}.</p>
+      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
+      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+  }
+  const hlRulesHtml = `
+    <details class="rules"><summary>Regeln: Höher oder tiefer</summary>
+      <ul>
+        <li>Ein Begriff wird mit seinem Wert gezeigt (z. B. „Schlern – 2.563 m“), daneben der nächste Begriff ohne Wert.</li>
+        <li>Tippe, ob der Wert des neuen Begriffs <b>höher</b> oder <b>tiefer</b> ist (bei Jahreszahlen: später oder früher). Alle wählen gleichzeitig, ohne Zeitdruck.</li>
+        <li>Sobald alle gewählt haben, wird aufgedeckt: richtig = 1 Punkt. Der neue Begriff wird zur nächsten Vergleichszahl.</li>
+        <li>Pro Kategorie ${HL.PER_CAT} Vergleiche, dann kommt die nächste Kategorie. Die meisten Punkte gewinnen.</li>
+      </ul>
+    </details>`;
   const obenRulesHtml = `
     <details class="rules"><summary>Regeln: Von oben</summary>
       <ul>
@@ -1290,6 +1329,92 @@
     geoMap.setMinZoom(Math.max(1, geoMap.getZoom() - 1));
     return geoMap;
   }
+  // ---------- Höher oder tiefer ----------
+  let hlRendered = null;
+  function hlChips(v, st) {
+    return v.players.map((p, i) => {
+      const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id);
+      const ok = st.step === "reveal" && st.result ? st.result.ok[p.id] : undefined;
+      const mark = st.step === "guess" ? (done ? "✓" : "…") : ok === true ? "✓" : ok === false ? "✗" : "";
+      return `<span class="geo-score ${done || ok ? "done" : ""} ${ok === false ? "miss" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+        <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+        <b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
+    }).join("");
+  }
+  function renderHl() {
+    const v = view, st = v.hl;
+    if (!st) return;
+    const key = v.code + ":" + st.catNo + ":" + st.pos + ":" + st.step;
+    if (hlRendered === key && app.querySelector(".hl-main")) {
+      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = hlChips(v, st);
+      return;
+    }
+    hlRendered = key;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    let main = "";
+    if (st.step !== "final") {
+      const up = st.cat.year ? "später" : "höher", down = st.cat.year ? "früher" : "tiefer";
+      const mine = st.step === "guess" ? hlMine(st) : st.picks && st.picks[myId];
+      const right = st.result && st.result.right;
+      const whoPicked = (dir) => st.step === "reveal" ? Object.entries(st.picks).filter(([, d]) => d === dir).map(([pid]) => `<i class="pdot" style="--pc:${colorOf(pid)}"></i>`).join("") : "";
+      const btn = (dir, label, icon) => `<button class="hl-btn ${mine === dir ? "on" : ""} ${right && (right === dir || right === "both") ? "right" : ""}" data-dir="${dir}" ${st.step !== "guess" ? "disabled" : ""}>
+          <span class="hl-ico">${icon}</span><span>${label}</span><span class="hl-who">${whoPicked(dir)}</span></button>`;
+      main = `
+        <div class="geo-bar">
+          <div class="geo-target"><span class="game-label">Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps}</span>
+            <div class="geo-name">${esc(st.cat.name)}</div><div class="muted small">${esc(st.cat.q)}${st.cat.approx ? " · Werte ca." : ""}${st.cat.note ? " · " + esc(st.cat.note) : ""}</div></div>
+          <div class="geo-scores">${hlChips(v, st)}</div>
+        </div>
+        <div class="hl-main">
+          <div class="hl-cards">
+            <div class="hl-card known"><div class="hl-name">${esc(st.prev.name)}</div><div class="hl-val">${esc(st.prev.value)}</div></div>
+            <div class="hl-vs">${st.step === "reveal" ? (right === "up" ? "▲" : right === "down" ? "▼" : "=") : "?"}</div>
+            <div class="hl-card ${st.step === "reveal" ? "shown" : "unknown"}"><div class="hl-name">${esc(st.cur.name)}</div>
+              <div class="hl-val">${st.step === "reveal" ? esc(st.cur.value) : "?"}</div></div>
+          </div>
+          <div class="hl-btns">${btn("up", up, "▲")}${btn("down", down, "▼")}</div>
+          <p class="muted small hl-status">${st.step === "guess"
+            ? (mine ? `Du hast „${mine === "up" ? up : down}“ gewählt – du kannst noch umentscheiden. Warte auf die anderen …` : `Ist der Wert von „${esc(st.cur.name)}“ ${up} oder ${down}?`)
+            : st.result.ok[myId] === true ? "✓ Richtig! Gleich geht es weiter …" : st.result.ok[myId] === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
+          ${st.chain.length ? `<div class="hl-chain"><span class="hl-link">${esc(st.start.name)} <b>${esc(st.start.value)}</b></span>${st.chain.map((c) =>
+            `<span class="hl-arrow">${c.right === "up" ? "▲" : c.right === "down" ? "▼" : "="}</span><span class="hl-link">${esc(c.name)} <b>${esc(c.value)}</b></span>`).join("")}</div>` : ""}
+        </div>`;
+    } else {
+      const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
+      const medal = ["🥇", "🥈", "🥉"];
+      main = `
+        <div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((p) => st.winners.includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${st.winners.length > 1 ? "gewinnen" : "gewinnt"}!</b>
+          <div class="banner-actions"><button id="hl-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${ranking.map((p, i) => `
+          <div class="slf-rank" style="--pc:${colorOf(p.id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
+            <span class="slf-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0} von ${st.max}</b></div>`).join("")}
+          <p class="muted small">Kategorien: ${st.cats.map(esc).join(" · ")}</p></div>`;
+    }
+    app.innerHTML = `
+      <main class="screen game slf geo hl">
+        <header class="top">
+          <div class="logo tiny">${LOGO}</div>
+          <div class="meta">Höher oder tiefer · Raum <b>${esc(v.code)}</b></div>
+          ${topActionsHtml()}
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <section class="slf-main">${main}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#hl-restart", () => send({ type: "hlRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    app.querySelectorAll(".hl-btn").forEach((b) => b.onclick = () => {
+      if (st.step !== "guess") return;
+      hlPick = { key: st.ci + ":" + st.pos, dir: b.dataset.dir };
+      send({ type: "hlPick", ci: st.ci, pos: st.pos, dir: b.dataset.dir });
+      hlRendered = null; renderHl();
+    });
+  }
+  let hlPick = null; // eigene Wahl (sofort anzeigen, bevor der Gastgeber bestätigt)
+  const hlMine = (st) => hlPick && hlPick.key === st.ci + ":" + st.pos ? hlPick.dir : null;
+
   const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
 
   function renderGeo() {
