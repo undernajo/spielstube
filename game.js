@@ -1503,6 +1503,11 @@
     const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
         <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
         ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}</span>`;
+    const myMove = (st.step === "schlag" && st.vorhand === me) || (st.step === "trumpf" && st.dealer === me) ||
+      (st.step === "play" && (st.bid ? st.bid.by !== me && seated : st.turn === me));
+    const whoMoves = st.step === "schlag" ? st.vorhand : st.step === "trumpf" ? st.dealer : st.step === "play" ? (st.bid ? st.seats.find((x) => x !== st.bid.by) : st.turn) : null;
+    const turnBadge = myMove ? `<div class="wturn me">Du bist dran!</div>`
+      : whoMoves ? `<div class="wturn">${esc(nameOf(whoMoves))} ist dran …</div>` : "";
     const callTag = (id) => {
       if (id === st.vorhand && st.schlag) return `<span class="wcall">Schlag: <b>${rankName(st.schlag)}</b></span>`;
       if (id === st.dealer && st.trump) return `<span class="wcall">Trumpf: ${wSuitIcon(st.trump)} <b>${suitName(st.trump)}</b></span>`;
@@ -1511,11 +1516,11 @@
       return "";
     };
     const tricksDots = (id) => `<span class="wdots">${[0, 1, 2].map((i) => `<i class="${i < st.tricks[id] ? "on" : ""}"></i>`).join("")}</span>`;
+    // kompakt: Trumpf-Symbol und daneben der Wert des Schlags
     const ann = st.schlag || st.trump ? `<div class="wann">
-        ${st.schlag ? `<span>Schlag <b>${rankName(st.schlag)}</b></span>` : ""}
-        ${st.trump ? `<span>Trumpf ${wSuitIcon(st.trump)} <b>${suitName(st.trump)}</b></span>` : ""}
-        ${st.guter ? `<span class="muted">Guter: ${esc(WAT.cardName(st.guter))}</span>` : ""}
-        <span>Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
+        <span class="wcombo" title="${st.trump ? "Trumpf " + suitName(st.trump) : "Trumpf noch offen"}${st.schlag ? " · Schlag " + rankName(st.schlag) : ""}">
+          ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b></span>
+        <span class="muted small">Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
     // Mitte: aktueller Stich, sonst kurz der letzte
     let table;
     const shownTrick = wHold ? wHold.cards : st.trick;
@@ -1547,7 +1552,7 @@
         : seated ? `<p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} Punkte.</b></p><div class="wbtns">
             <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
             <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} bekommt ${st.value})</button></div>` : "";
-      else action = `<p class="${st.turn === me ? "" : "muted"}">${st.turn === me ? "<b>Du bist dran</b> – spiel eine Karte." : esc(nameOf(st.turn)) + " ist dran …"}</p>
+      else action = `<p class="muted small">${st.turn === me ? "Spiel eine Karte aus." : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">Bieten (auf ${st.value + 1})</button>` : ""}
         ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
     } else if (st.step === "roundEnd" || st.step === "final") {
@@ -1583,7 +1588,7 @@
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <div class="wlayout">
           <section class="wtable">
-            ${pile(opp, "top")}${pile(self, "bottom")}
+            ${turnBadge}${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>

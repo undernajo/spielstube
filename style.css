@@ -591,3 +591,16 @@ textarea { resize: vertical; font: inherit; }
 .wname { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .wcall { font-size: .8rem; padding: 2px 9px; border-radius: 99px; background: rgba(0, 0, 0, .28); color: #fff; }
 .wcall.wait { color: #cfe7d8; background: rgba(0, 0, 0, .15); font-style: italic; }
+.wcombo { display: inline-flex; align-items: center; gap: 10px; font-size: 1.6rem; line-height: 1; }
+.wcombo b { font-size: 1.5rem; }
+.wsuit.big { width: 2.1rem; height: 2.1rem; vertical-align: middle; }
+.wq { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 2px dashed var(--line); color: var(--muted); font-size: 1.1rem; }
+.wturn { position: absolute; top: 12px; right: 12px; z-index: 3; padding: 6px 14px; border-radius: 99px; font-weight: 600; font-size: .9rem;
+  background: rgba(0, 0, 0, .3); color: #cfe7d8; }
+.wturn.me { background: var(--accent); color: var(--accent-ink); font-size: 1.05rem; padding: 8px 18px; box-shadow: 0 0 0 4px rgba(255, 200, 61, .25); animation: wpulse 1.6s ease-in-out infinite; }
+@keyframes wpulse { 50% { box-shadow: 0 0 0 8px rgba(255, 200, 61, .1); } }
+@media (min-width: 900px) {
+  .wpanel .wann { flex-direction: row; align-items: center; justify-content: space-between; }
+  .wturn { top: 18px; right: 18px; }
+}
+@media (max-width: 899px) { .wturn { position: static; justify-self: center; font-size: .85rem; padding: 5px 12px; } .wturn.me { font-size: .95rem; padding: 6px 14px; } }
