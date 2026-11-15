@@ -258,7 +258,6 @@
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
-        if (view.lastEvent.kind === "ok") sfx.ok(); else if (view.lastEvent.kind === "bad") sfx.bad();
       }
       lastToastId = view.lastEvent.id;
     }
@@ -286,12 +285,10 @@
     return {
       get muted() { return muted; },
       toggle() { muted = !muted; store.set("s10-muted", muted); if (!muted) { unlock(); this.turn(); } },
-      ok: () => play(() => { tone(660, 0, 0.12, "triangle"); tone(990, 0.09, 0.25, "triangle"); }),
-      bad: () => play(() => tone(220, 0, 0.4, "sawtooth", 0.07, 110)),
-      turn: () => play(() => { tone(880, 0, 0.16, "sine", 0.2); tone(1175, 0.17, 0.28, "sine", 0.2); }),
-      round: () => play(() => { tone(523, 0, 0.12, "triangle"); tone(659, 0.1, 0.12, "triangle"); tone(784, 0.2, 0.25, "triangle"); }),
-      win: () => play(() => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.13, 0.3, "triangle", 0.2)); tone(1047, 0.55, 0.7, "triangle", 0.16); }),
-      lose: () => play(() => { tone(392, 0, 0.25, "triangle", 0.15); tone(330, 0.22, 0.25, "triangle", 0.15); tone(262, 0.44, 0.5, "triangle", 0.15); }),
+      // bewusst sparsam: nur wenn man gebraucht wird und am Spielende
+      turn: () => play(() => { tone(880, 0, 0.14, "sine", 0.12); tone(1175, 0.15, 0.24, "sine", 0.12); }),
+      win: () => play(() => { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.25, "triangle", 0.1)); }),
+      lose: () => play(() => { tone(392, 0, 0.22, "triangle", 0.08); tone(330, 0.2, 0.35, "triangle", 0.08); }),
     };
   })();
 
@@ -333,7 +330,6 @@
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
       if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
-      if (now.phase === "roundEnd" && prev.phase === "playing") sfx.round();
       if (now.phase === "gameOver" && prev.phase !== "gameOver") {
         if (v.winners && v.winners.includes(myId)) { sfx.win(); confetti(); } else { sfx.lose(); confetti(); }
       }
