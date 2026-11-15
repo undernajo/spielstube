@@ -37,12 +37,16 @@
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: "↕️" },
+    { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: "🃏" },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
   let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
+  const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
+  let wattenOpts = Object.assign({ target: 15 }, store.get("s10-watten") || {});
+  let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
   let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
@@ -210,6 +214,11 @@
       if (!host || S.phase !== "lobby") return false;
       GEO.start(S, action.opts, now); return true;
     }
+    if (type === "start" && action.game === "watten") {
+      if (!host || S.phase !== "lobby") return false;
+      return WAT.start(S, action.opts);
+    }
+    if (/^w[A-Z]/.test(type)) return S.phase === "watten" && WAT.apply(S, pid, action, host);
     if (type === "start" && action.game === "hl") {
       if (!host || S.phase !== "lobby") return false;
       HL.start(S, action.opts, now); return true;
@@ -219,7 +228,7 @@
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.watten = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -232,6 +241,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
+      watten: { target: Number(wattenOpts.target) },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -244,6 +254,13 @@
     view.wl = S.phase === "wl" ? WL.publicState(S) : null;
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
+    view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
+    if (S.phase === "watten") {
+      // Hände nur privat verteilen: eigene direkt, Gäste über ihren eigenen Kanal
+      wattenPriv = WAT.privateState(S, myId);
+      if (mq && roomTopic) S.watten.seats.filter((id) => id !== myId).forEach((id) =>
+        sendSealed(T("hand/" + id), { seq: Date.now(), priv: WAT.privateState(S, id) }, { qos: 1, retain: true }));
+    }
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -274,7 +291,7 @@
     c.on("connect", () => {
       if (mq !== c) return;
       status = view ? "" : `Suche Raum ${code} …`; render();
-      c.subscribe([T("state"), T("host")], { qos: 1 });
+      c.subscribe([T("state"), T("host"), T("hand/" + myId)], { qos: 1 });
       sendUp({ type: "join", name: myName });
     });
     c.on("reconnect", () => { if (mq === c) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
@@ -286,6 +303,10 @@
       }
       const m = await unseal(buf);
       if (m === undefined || mq !== c) return;
+      if (topic === T("hand/" + myId)) {
+        if (m && (!wattenPriv || !wattenPriv._seq || m.seq >= wattenPriv._seq)) { wattenPriv = m.priv ? { ...m.priv, _seq: m.seq } : null; render(); }
+        return;
+      }
       if (topic === T("host")) {
         status = m === "offline" ? "Der Gastgeber ist gerade offline – warte auf ihn …" : "";
         render(); return;
@@ -361,7 +382,7 @@
       }
       lastLobbyGame = view.game;
     }
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "watten") renderWatten(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -437,6 +458,9 @@
       wlKey: v.wl ? v.wl.impulse + ":" + v.wl.attempt + ":" + v.wl.step : null,
       geoKey: v.geo ? v.geo.round + ":" + v.geo.step : null,
       hlKey: v.hl ? v.hl.catNo + ":" + v.hl.pos + ":" + v.hl.step : null,
+      wMine: !!(v.watten && ((v.watten.turn === myId) || (v.watten.step === "schlag" && v.watten.vorhand === myId) ||
+        (v.watten.step === "trumpf" && v.watten.dealer === myId) || (v.watten.bid && v.watten.bid.by !== myId))),
+      wStep: v.watten ? v.watten.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
@@ -445,6 +469,8 @@
         if (v.geo.step === "guess") sfx.turn();
         if (v.geo.step === "final") { if (v.geo.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
+      if (now.wMine && !prev.wMine) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(80); } catch {} }
+      if (now.wStep === "final" && prev.wStep !== "final") { if ((v.watten.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       if (now.hlKey && now.hlKey !== prev.hlKey) {
         if (v.hl.step === "reveal" && v.hl.result && myId in v.hl.result.ok) { if (v.hl.result.ok[myId]) sfx.turn(); }
         if (v.hl.step === "final") { if (v.hl.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
@@ -549,6 +575,7 @@
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${isHost && (chosenGame === "geo" || chosenGame === "oben") ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${isHost && chosenGame === "hl" ? hlSettingsHtml() : ""}
+          ${isHost && chosenGame === "watten" ? wattenSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
@@ -562,7 +589,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -592,6 +619,7 @@
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
+      if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
       if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
@@ -799,6 +827,9 @@
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
+    if (view.game === "watten" && lb.watten) {
+      return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Südtiroler Regeln mit Gutem und Weli</p>`;
+    }
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${Object.keys(HLDATA).length} Kategorien (z. B. Berge, Flüsse, Tiere, Filme, Lieder) · je ${HL.PER_CAT} Vergleiche</p>`;
     }
@@ -841,6 +872,8 @@
       if (!confirm("Gespielte Orte vergessen? Danach sind in allen Regionen wieder alle Orte neu.")) return;
       S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
     };
+    const wT = app.querySelector("#watten-target");
+    if (wT) wT.onchange = () => { wattenOpts.target = Number(wT.value); store.set("s10-watten", wattenOpts); publish(); };
     const hlL = app.querySelector("#hl-length");
     if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
@@ -873,6 +906,24 @@
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  function wattenSettingsHtml() {
+    const n = view.players.filter((p) => p.connected).length;
+    return `<label class="field"><span>Spielen bis</span><select id="watten-target">${WAT.TARGETS.map((t) =>
+        `<option value="${t}" ${Number(wattenOpts.target) === t ? "selected" : ""}>${t} Punkte (gestrichen ab ${t - 2})</option>`).join("")}</select></label>
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      <p class="muted small">${n < 2 ? "Watten braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Watten zu zweit nach Südtiroler Regeln."}</p>`;
+  }
+  const wattenRulesHtml = `
+    <details class="rules"><summary>Regeln: Watten zu zweit</summary>
+      <ul>
+        <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli als kleinste Schelle). Jeder bekommt 5 Karten, der Geber wechselt.</li>
+        <li>Der Nicht-Geber sagt den <b>Schlag</b> an (einen Wert), der Geber den <b>Trumpf</b> (eine Farbe).</li>
+        <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
+        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
+        <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
+        <li><b>Gestrichen</b> ist man 2 Punkte vor dem Ziel: dann darf man nicht mehr bieten, aber nach der Ansage aufgeben (Gegner +2). Liegt der andere mindestens 4 zurück, geht die Runde um 4 Punkte. Sind beide gestrichen, wird nicht geboten.</li>
+      </ul>
+    </details>`;
   const hlRulesHtml = `
     <details class="rules"><summary>Regeln: Höher oder tiefer</summary>
       <ul>
@@ -1422,6 +1473,102 @@
   }
   let hlPick = null; // eigene Wahl (sofort anzeigen, bevor der Gastgeber bestätigt)
   const hlMine = (st) => hlPick && hlPick.key === st.ci + ":" + st.pos ? hlPick.dir : null;
+
+  // ---------- Watten ----------
+  const wCard = (id, extra = "", attrs = "") => `<div class="wcard ${extra}" ${attrs}>${WCARDS.svg(id)}</div>`;
+  const wBack = () => `<div class="wcard back">${WCARDS.back()}</div>`;
+  const wSuitIcon = (suit) => `<span class="wsuit">${WCARDS.sym(suit, 1)}</span>`;
+  function renderWatten() {
+    const v = view, st = v.watten;
+    if (!st) return;
+    const me = myId, seated = st.seats.includes(me), opp = seated ? st.seats.find((x) => x !== me) : st.seats[1];
+    const self = seated ? me : st.seats[0];
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const priv = seated && wattenPriv && wattenPriv.roundNo === st.roundNo ? wattenPriv : null;
+    const hand = priv ? priv.hand : [], legal = priv ? priv.legal : [];
+    const rankName = (r) => WAT.RANK_NAMES[r], suitName = (s) => WAT.SUIT_NAMES[s];
+    const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
+        <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
+        ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}</span>`;
+    const tricksDots = (id) => `<span class="wdots">${[0, 1, 2].map((i) => `<i class="${i < st.tricks[id] ? "on" : ""}"></i>`).join("")}</span>`;
+    const ann = st.schlag || st.trump ? `<div class="wann">
+        ${st.schlag ? `<span>Schlag <b>${rankName(st.schlag)}</b></span>` : ""}
+        ${st.trump ? `<span>Trumpf ${wSuitIcon(st.trump)} <b>${suitName(st.trump)}</b></span>` : ""}
+        ${st.guter ? `<span class="muted">Guter: ${esc(WAT.cardName(st.guter))}</span>` : ""}
+        <span>Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
+    // Mitte: aktueller Stich, sonst kurz der letzte
+    let table;
+    if (st.trick.length) table = `<div class="wtrick">${st.trick.map((t) => `<div class="wplayed"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}</div>`;
+    else if (st.lastTrick && (st.step === "play" || st.step === "roundEnd" || st.step === "final"))
+      table = `<div class="wtrick last">${st.lastTrick.cards.map((t) => `<div class="wplayed ${t.pid === st.lastTrick.winner ? "won" : ""}"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}
+        <p class="muted small wlast">Letzter Stich: ${esc(nameOf(st.lastTrick.winner))}</p></div>`;
+    else table = `<div class="wtrick empty"><span class="muted">${st.step === "play" ? "Noch keine Karte gespielt" : ""}</span></div>`;
+    // Aktionen
+    let action = "";
+    if (st.step === "schlag") action = st.vorhand === me
+      ? `<p><b>Sag den Schlag an</b> (einen Wert):</p><div class="wbtns">${WAT.RANKS.map((r) => `<button class="btn ghost wbtn" data-schlag="${r}">${rankName(r)}</button>`).join("")}</div>`
+      : `<p class="muted">${esc(nameOf(st.vorhand))} sagt den Schlag an …</p>`;
+    else if (st.step === "trumpf") action = st.dealer === me
+      ? `<p><b>Sag den Trumpf an</b> (Schlag ist ${rankName(st.schlag)}):</p><div class="wbtns">${WAT.SUITS.map((s2) => `<button class="btn ghost wbtn" data-trumpf="${s2}">${wSuitIcon(s2)} ${suitName(s2)}</button>`).join("")}</div>`
+      : `<p class="muted">${esc(nameOf(st.dealer))} sagt den Trumpf an …</p>`;
+    else if (st.step === "play") {
+      if (st.bid) action = st.bid.by === me
+        ? `<p class="muted">Du hast auf ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
+        : seated ? `<p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} Punkte.</b></p><div class="wbtns">
+            <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
+            <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} bekommt ${st.value})</button></div>` : "";
+      else action = `<p class="${st.turn === me ? "" : "muted"}">${st.turn === me ? "<b>Du bist dran</b> – spiel eine Karte." : esc(nameOf(st.turn)) + " ist dran …"}</p>
+        <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">Bieten (auf ${st.value + 1})</button>` : ""}
+        ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
+    } else if (st.step === "roundEnd" || st.step === "final") {
+      const r = st.result, why = { stiche: "mit 3 Stichen", abgelehnt: "– Bieten abgelehnt", aufgegeben: "– der andere hat aufgegeben" }[r.reason] || "";
+      action = `<div class="banner ${r.winner === me ? "win" : ""}"><b>${esc(nameOf(r.winner))} gewinnt die Runde ${why}: +${r.points}</b>
+        ${st.step === "final" ? `<div style="margin-top:6px">🏆 <b>${esc(nameOf(st.winners[0]))} gewinnt die Partie!</b></div>` : ""}
+        <div class="banner-actions">${st.step === "final"
+          ? `<button id="w-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
+          : seated ? `<button id="w-next" class="btn primary">${st.ready[me] ? "Warte auf den anderen … (zurücknehmen)" : "Nächste Runde"}</button>${isHost ? `<button id="w-force" class="btn ghost sm">Sofort weiter</button>` : ""}` : ""}</div></div>`;
+    }
+    const oppCards = st.reveal ? (st.reveal[opp] || []).map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
+    const myCards = st.reveal && !seated ? (st.reveal[self] || []).map((c) => wCard(c)).join("")
+      : hand.map((c) => {
+          const ok = st.step === "play" && !st.bid && st.turn === me && legal.includes(c);
+          return wCard(c, (ok ? "play" : st.turn === me && st.step === "play" && !st.bid ? "dim" : "") + (c === st.guter ? " guter" : ""), ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(WAT.cardName(c))} spielen"` : "");
+        }).join("");
+    app.innerHTML = `
+      <main class="screen game slf geo watten">
+        <header class="top">
+          <div class="logo tiny">${LOGO}</div>
+          <div class="meta">${gameTagHtml("watten")}Runde ${st.roundNo} · bis ${st.target} · Raum <b>${esc(v.code)}</b></div>
+          ${topActionsHtml()}
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>
+        <section class="wtable">
+          <div class="wside"><span class="muted small">${esc(nameOf(opp))} ${tricksDots(opp)}</span><div class="whand opp">${oppCards}</div></div>
+          ${table}
+          <div class="wside"><span class="muted small">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)}</span><div class="whand mine">${myCards}</div></div>
+        </section>
+        <section class="waction">${action}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#toLobby", () => send({ type: "lobby" }));
+    on("#w-bid", () => send({ type: "wBid" }));
+    on("#w-hold", () => send({ type: "wBidAnswer", accept: true }));
+    on("#w-fold", () => send({ type: "wBidAnswer", accept: false }));
+    on("#w-giveup", () => { if (confirm("Wirklich aufgeben? Dein Gegner bekommt 2 Punkte.")) send({ type: "wGiveUp" }); });
+    on("#w-next", () => send({ type: "wNext" }));
+    on("#w-force", () => send({ type: "wNext", force: true }));
+    on("#w-restart", () => send({ type: "wRestart" }));
+    app.querySelectorAll("[data-schlag]").forEach((b) => b.onclick = () => send({ type: "wSchlag", rank: b.dataset.schlag }));
+    app.querySelectorAll("[data-trumpf]").forEach((b) => b.onclick = () => send({ type: "wTrumpf", suit: b.dataset.trumpf }));
+    app.querySelectorAll("[data-card]").forEach((el) => {
+      const go = () => { el.classList.add("going"); send({ type: "wPlay", card: el.dataset.card }); };
+      el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+    });
+  }
 
   const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
 

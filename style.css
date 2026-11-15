@@ -512,3 +512,43 @@ textarea { resize: vertical; font: inherit; }
 .gt-icon.xs { width: 24px; height: 24px; font-size: .8rem; margin: 0; flex: none; }
 .gtag { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; vertical-align: middle; color: var(--ink); }
 .gtag b { font-weight: 600; }
+/* Watten */
+.wann { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .92rem; align-items: center; }
+.wsuit { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -.2em; }
+.wsuit svg { width: 100%; height: 100%; display: block; }
+.wtag { font-size: .7rem; padding: 1px 7px; border-radius: 99px; background: rgba(239, 75, 90, .2); color: #ffb3ba; }
+.wtag.dim { background: #2e2870; color: var(--muted); }
+.wtable { display: grid; gap: 10px; margin-top: 12px; padding: 14px; border-radius: var(--radius);
+  background: radial-gradient(circle at 50% 35%, #2c6b4a, #173d2b); border: 1px solid #24563c; }
+.wside { display: grid; gap: 6px; justify-items: center; }
+.wside > .muted { color: #cfe7d8; }
+.whand { display: flex; justify-content: center; flex-wrap: nowrap; min-height: 40px; }
+.wcard { width: clamp(58px, 15vw, 96px); flex: none; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .35)); transition: transform .15s; }
+.wcard svg { width: 100%; height: auto; display: block; }
+.whand .wcard { margin: 0 -6px; }
+.whand.opp .wcard { width: clamp(34px, 8vw, 52px); margin: 0 -8px; }
+.whand.opp .wcard.sm { width: clamp(44px, 10vw, 64px); margin: 0 2px; }
+.wcard.play { cursor: pointer; }
+.wcard.play:hover, .wcard.play:focus-visible { transform: translateY(-10px); outline: none; }
+.wcard.play:focus-visible { filter: drop-shadow(0 0 0 3px var(--accent)); }
+.wcard.dim { opacity: .45; }
+.wcard.going { transform: translateY(-24px); opacity: .6; }
+.wtrick { display: flex; justify-content: center; align-items: flex-end; gap: 18px; min-height: 140px; flex-wrap: wrap; }
+.wtrick.empty { align-items: center; }
+.wtrick.last .wcard { opacity: .7; width: clamp(50px, 12vw, 80px); }
+.wplayed { display: grid; justify-items: center; gap: 2px; }
+.wplayed .muted { color: #cfe7d8; }
+.wplayed.won .wcard { opacity: 1; }
+.wlast { flex-basis: 100%; text-align: center; margin: 0; color: #cfe7d8 !important; }
+.wdots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.wdots i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #cfe7d8; }
+.wdots i.on { background: var(--accent); border-color: var(--accent); }
+.waction { margin-top: 12px; text-align: center; }
+.waction p { margin: 4px 0 8px; }
+.wbtns { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.wbtn { min-width: 84px; }
+@media (max-width: 640px) {
+  .wtable { padding: 10px 6px; }
+  .whand .wcard { margin: 0 -9px; }
+  .wtrick { min-height: 110px; }
+}
