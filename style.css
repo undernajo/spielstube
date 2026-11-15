@@ -617,3 +617,9 @@ textarea { resize: vertical; font: inherit; }
   .wtop .wcombo .wsuit.big, .wtop .wcombo .wq { width: 1.7rem; height: 1.7rem; }
   .wtop .wcombo b { font-size: 1.15rem; }
 }
+.wvalue { flex-basis: 100%; text-align: center; font-size: .8rem; font-weight: 500; color: #cfe7d8; }
+.wvalue b { font-size: .95rem !important; color: #fff; }
+.wcombo { flex-wrap: wrap; justify-content: center; }
+@media (min-width: 900px) {
+  .wtable .wturn.me { top: auto; bottom: 18px; }
+}

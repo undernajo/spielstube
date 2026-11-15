@@ -1506,8 +1506,9 @@
     const myMove = (st.step === "schlag" && st.vorhand === me) || (st.step === "trumpf" && st.dealer === me) ||
       (st.step === "play" && (st.bid ? st.bid.by !== me && seated : st.turn === me));
     const whoMoves = st.step === "schlag" ? st.vorhand : st.step === "trumpf" ? st.dealer : st.step === "play" ? (st.bid ? st.seats.find((x) => x !== st.bid.by) : st.turn) : null;
+    // „Du bist dran“ unten rechts (bei den eigenen Karten), „… ist dran“ oben rechts (beim Gegner)
     const turnBadge = myMove ? `<div class="wturn me">Du bist dran!</div>`
-      : whoMoves ? `<div class="wturn">${esc(nameOf(whoMoves))} ist dran …</div>` : "";
+      : whoMoves ? `<div class="wturn other">${esc(nameOf(whoMoves))} ist dran …</div>` : "";
     const callTag = (id) => {
       if (id === st.vorhand && st.schlag) return `<span class="wcall">Schlag: <b>${rankName(st.schlag)}</b></span>`;
       if (id === st.dealer && st.trump) return `<span class="wcall">Trumpf: ${wSuitIcon(st.trump)} <b>${suitName(st.trump)}</b></span>`;
@@ -1519,8 +1520,9 @@
     // kompakt: Trumpf-Symbol und daneben der Wert des Schlags
     // Trumpf-Symbol mit Schlagwert sitzt auf dem Spielfeld (rechts, mittig neben dem Stich)
     const combo = st.schlag || st.trump ? `<div class="wcombo" title="${st.trump ? "Trumpf " + suitName(st.trump) : "Trumpf noch offen"}${st.schlag ? " · Schlag " + rankName(st.schlag) : ""}">
-          ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b></div>` : "";
-    const ann = st.schlag || st.trump ? `<div class="wann"><span class="muted small">Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
+          ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b>
+          <span class="wvalue">zählt <b>${st.value}</b>${st.vierer ? " · 4 gehen" : ""}</span></div>` : "";
+    const ann = "";
     // Mitte: aktueller Stich, sonst kurz der letzte
     let table;
     const shownTrick = wHold ? wHold.cards : st.trick;
@@ -1588,10 +1590,11 @@
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <div class="wlayout">
           <section class="wtable">
-            <div class="wtop">${combo}${turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
+            <div class="wtop">${combo}${myMove ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
+            ${myMove ? turnBadge : ""}
           </section>
           <aside class="wpanel">
             <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>
