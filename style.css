@@ -591,7 +591,13 @@ textarea { resize: vertical; font: inherit; }
 .wname { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .wcall { font-size: .8rem; padding: 2px 9px; border-radius: 99px; background: rgba(0, 0, 0, .28); color: #fff; }
 .wcall.wait { color: #cfe7d8; background: rgba(0, 0, 0, .15); font-style: italic; }
-.wcombo { display: inline-flex; align-items: center; gap: 10px; font-size: 1.6rem; line-height: 1; }
+.wcombo { display: inline-flex; align-items: center; gap: 10px; font-size: 1.6rem; line-height: 1; color: #fff;
+  padding: 10px 16px; border-radius: 16px; background: rgba(0, 0, 0, .22); border: 1px solid rgba(255, 255, 255, .12); justify-self: center; }
+@media (min-width: 900px) {
+  .wtable .wcombo { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); flex-direction: column; gap: 8px; padding: 16px 18px; z-index: 2; }
+  .wtable .wcombo .wsuit.big, .wtable .wcombo .wq { width: 3.4rem; height: 3.4rem; }
+  .wtable .wcombo b { font-size: 1.35rem; }
+}
 .wcombo b { font-size: 1.5rem; }
 .wsuit.big { width: 2.1rem; height: 2.1rem; vertical-align: middle; }
 .wq { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; border: 2px dashed var(--line); color: var(--muted); font-size: 1.1rem; }
@@ -604,3 +610,10 @@ textarea { resize: vertical; font: inherit; }
   .wturn { top: 18px; right: 18px; }
 }
 @media (max-width: 899px) { .wturn { position: static; justify-self: center; font-size: .85rem; padding: 5px 12px; } .wturn.me { font-size: .95rem; padding: 6px 14px; } }
+.wtop { display: contents; }
+@media (max-width: 899px) {
+  .wtop { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .wtop .wcombo { padding: 6px 12px; font-size: 1.2rem; }
+  .wtop .wcombo .wsuit.big, .wtop .wcombo .wq { width: 1.7rem; height: 1.7rem; }
+  .wtop .wcombo b { font-size: 1.15rem; }
+}

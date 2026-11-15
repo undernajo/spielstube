@@ -1517,10 +1517,10 @@
     };
     const tricksDots = (id) => `<span class="wdots">${[0, 1, 2].map((i) => `<i class="${i < st.tricks[id] ? "on" : ""}"></i>`).join("")}</span>`;
     // kompakt: Trumpf-Symbol und daneben der Wert des Schlags
-    const ann = st.schlag || st.trump ? `<div class="wann">
-        <span class="wcombo" title="${st.trump ? "Trumpf " + suitName(st.trump) : "Trumpf noch offen"}${st.schlag ? " · Schlag " + rankName(st.schlag) : ""}">
-          ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b></span>
-        <span class="muted small">Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
+    // Trumpf-Symbol mit Schlagwert sitzt auf dem Spielfeld (rechts, mittig neben dem Stich)
+    const combo = st.schlag || st.trump ? `<div class="wcombo" title="${st.trump ? "Trumpf " + suitName(st.trump) : "Trumpf noch offen"}${st.schlag ? " · Schlag " + rankName(st.schlag) : ""}">
+          ${st.trump ? `<span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span>` : `<span class="wq">?</span>`}<b>${st.schlag ? rankName(st.schlag) : "?"}</b></div>` : "";
+    const ann = st.schlag || st.trump ? `<div class="wann"><span class="muted small">Runde zählt <b>${st.value}</b>${st.vierer ? " (4 gehen)" : ""}</span></div>` : "";
     // Mitte: aktueller Stich, sonst kurz der letzte
     let table;
     const shownTrick = wHold ? wHold.cards : st.trick;
@@ -1588,7 +1588,7 @@
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <div class="wlayout">
           <section class="wtable">
-            ${turnBadge}${pile(opp, "top")}${pile(self, "bottom")}
+            <div class="wtop">${combo}${turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
