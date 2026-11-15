@@ -33,7 +33,10 @@
   const GAMES = [
     { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten" },
     { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!" },
+    { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen" },
   ];
+  const WL = window.S10Wl;
+  let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
   let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
@@ -160,7 +163,10 @@
   }
 
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
-  setInterval(() => { if (isHost && S && S.phase === "slf" && SLF.tick(S, Date.now())) publish(); }, 400);
+  setInterval(() => {
+    if (!isHost || !S) return;
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S))) publish();
+  }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
   setInterval(() => {
@@ -185,9 +191,14 @@
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
     }
+    if (type === "start" && action.game === "wl") {
+      if (!host || S.phase !== "lobby") return false;
+      WL.start(S, action.opts); return true;
+    }
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
+    if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) S.slf = null;
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -195,6 +206,14 @@
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
+    if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
+      // Rekord (nur beim Gastgeber gespeichert)
+      const prevBest = store.get("s10-wl-best");
+      S.wl.best = Math.max(prevBest || 0, S.wl.total);
+      S.wl.newRecord = prevBest == null || S.wl.total > prevBest;
+      store.set("s10-wl-best", S.wl.best);
+    }
+    view.wl = S.phase === "wl" ? WL.publicState(S) : null;
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -286,7 +305,7 @@
 
   function render() {
     if (!view) return renderStart();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -359,10 +378,15 @@
       mustJudge: !!(v.phase === "playing" && v.pending && v.pending.judges.includes(myId) && v.pending.by !== myId),
       mustVote: !!(v.undoReq && v.undoReq.approvers.includes(myId)),
       slfKey: v.slf ? v.slf.round + ":" + v.slf.step : null,
+      wlKey: v.wl ? v.wl.impulse + ":" + v.wl.attempt + ":" + v.wl.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
       if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
+      if (now.wlKey && now.wlKey !== prev.wlKey) {
+        if (v.wl.step === "reveal" && v.wl.result) { if (v.wl.result.hit) { sfx.win(); confetti(); } else sfx.lose(); }
+        if (v.wl.step === "final") confetti();
+      }
       if (now.slfKey && now.slfKey !== prev.slfKey) {
         if (v.slf.step === "writing") sfx.turn();
         if (v.slf.step === "final") { if (v.slf.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
@@ -455,7 +479,8 @@
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
           ${isHost ? gamePickerHtml() : `<p class="muted">Gespielt wird: <b>${esc((GAMES.find((g) => g.key === view.game) || GAMES[0]).name)}</b></p>`}
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
-          ${isHost && chosenGame !== "slf" ? `
+          ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
+          ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
               <button id="resetSeen" class="btn ghost sm">Gespielte Karten vergessen</button></div>` : ""}
@@ -468,7 +493,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${(isHost ? chosenGame : view.game) === "slf" ? slfRulesHtml : rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -495,6 +520,7 @@
     if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); renderLobby(); };
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
+      if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
     app.querySelector("#leave").onclick = leave;
@@ -682,7 +708,32 @@
     if (ro) ro.onchange = () => { slfOpts.rounds = Number(ro.value); saveOpts(); };
     const ti = app.querySelector("#slf-timer");
     if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); };
+    const wp = app.querySelector("#wl-pack");
+    if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); };
+    const wr = app.querySelector("#wl-rounds");
+    if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); };
   }
+  function wlSettingsHtml() {
+    const best = store.get("s10-wl-best");
+    return `<div class="row2">
+        <label class="field"><span>Impulse</span><select id="wl-pack">
+          <option value="mix" ${wlOpts.pack === "mix" ? "selected" : ""}>Alle gemischt</option>
+          ${Object.entries(WL.PACKS).map(([k, p]) => `<option value="${k}" ${wlOpts.pack === k ? "selected" : ""}>${p.name}</option>`).join("")}</select></label>
+        <label class="field"><span>Länge</span><select id="wl-rounds">${WL.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(wlOpts.rounds) === n ? "selected" : ""}>${n} Impulse</option>`).join("")}</select></label>
+      </div>
+      ${best != null ? `<p class="muted small">Euer Rekord: <b>${best} Punkte</b></p>` : ""}
+      <button id="start" class="btn primary big" ${view.players.length < 2 ? "disabled" : ""}>Spiel starten</button>
+      ${view.players.length < 2 ? `<p class="muted small">Für dieses Spiel braucht ihr mindestens zwei Spieler.</p>` : ""}`;
+  }
+  const wlRulesHtml = `
+    <details class="rules"><summary>Regeln: Gleiche Wellenlänge</summary>
+      <ul>
+        <li>Ihr spielt <b>zusammen</b>: Alle sehen denselben Impuls und schreiben geheim ein passendes Wort.</li>
+        <li>Haben mindestens zwei dasselbe Wort, habt ihr die gleiche Wellenlänge 🎉</li>
+        <li>Wenn nicht, werden eure Wörter der neue Impuls („Was verbindet … und …?“). Schon genannte Wörter sind tabu.</li>
+        <li>Punkte fürs Team: 10 im 1. Versuch, dann 8, 6, 4, 2, 1. Nach 8 Versuchen oder beim Aufgeben gibt es 0.</li>
+      </ul>
+    </details>`;
   const slfRulesHtml = `
     <details class="rules"><summary>Regeln: Stadt, Land, Fluss</summary>
       <ul>
@@ -937,6 +988,115 @@
   function slfStopHtml(st, nameOf) {
     if (!st.stoppedBy) return "";
     return `<div class="slf-stopped">⏱ <b>${esc(nameOf(st.stoppedBy))}</b> hat Stopp gerufen!</div>`;
+  }
+
+  // ---------- Gleiche Wellenlänge: Darstellung ----------
+  let wlRendered = null, wlMine = "";
+  function wlChips(v, st) {
+    return v.players.map((p, i) => {
+      const sub = st.submitted.includes(p.id);
+      const badge = st.step === "writing" ? (sub ? "abgegeben ✓" : "denkt …") : "";
+      return `<div class="chip ${sub && st.step === "writing" ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
+          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span></div>
+        <div class="chip-l2">${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
+      </div>`;
+    }).join("");
+  }
+  function wlStatusHtml(st) {
+    if (!st.submitted.includes(myId)) return "Noch kein Wort abgegeben.";
+    const waiting = st.submitted.length;
+    return `Abgegeben: <b>„${esc(wlMine)}“</b> – warte auf die anderen … (${waiting} abgegeben). Ändern? Einfach neu abgeben.`;
+  }
+  function renderWl() {
+    const v = view, st = v.wl;
+    if (!st) return;
+    const key = v.code + ":" + st.impulse + ":" + st.attempt + ":" + st.step;
+    if (st.step === "writing" && wlRendered === key && app.querySelector("#wl-word")) {
+      app.querySelector(".players").innerHTML = wlChips(v, st);
+      app.querySelector("#wl-status").innerHTML = wlStatusHtml(st);
+      return;
+    }
+    if (st.step === "writing" && (!wlRendered || !wlRendered.startsWith(v.code + ":" + st.impulse + ":" + st.attempt + ":"))) wlMine = "";
+    wlRendered = key;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    const chainHtml = st.chain.length ? `<div class="wl-chain"><div class="muted small">Bisher:</div>${st.chain.map((c) => `
+        <div class="wl-chainrow">${Object.entries(c.words).map(([pid, w]) => `<span class="wl-chip" style="--pc:${colorOf(pid)}">${esc(w)}</span>`).join("")}</div>`).join("")}</div>` : "";
+    let main = "";
+    if (st.step === "writing") {
+      main = `
+        <div class="wl-card">
+          <div class="wl-meta">Impuls ${st.impulse}/${st.rounds} · Versuch ${st.attempt}/${st.maxTries} · Treffer bringt +${st.nextPoints}</div>
+          <div class="wl-prompt">${esc(st.prompt)}</div>
+          ${chainHtml}
+        </div>
+        <form class="wl-form" autocomplete="off">
+          <input id="wl-word" maxlength="40" spellcheck="false" autocapitalize="sentences" placeholder="Dein Wort …" value="${esc(wlMine)}">
+          <button class="btn primary" type="submit">Abgeben</button>
+        </form>
+        <p id="wl-warn" class="err small"></p>
+        <p id="wl-status" class="muted small">${wlStatusHtml(st)}</p>
+        ${st.attempt > 1 ? `<div class="slf-actions"><button id="wl-giveup" class="btn ghost sm">Impuls aufgeben (0 Punkte)</button></div>` : ""}`;
+    } else if (st.step === "reveal") {
+      const r = st.result;
+      main = `
+        <div class="wl-card"><div class="wl-meta">Impuls ${st.impulse}/${st.rounds} · Versuch ${st.attempt}</div><div class="wl-prompt small">${esc(st.prompt)}</div></div>
+        <div class="wl-words">${Object.entries(st.words).map(([pid, w]) => `
+          <div class="wl-word ${r.ids.includes(pid) ? "hit" : ""}" style="--pc:${colorOf(pid)}"><span class="wl-who"><i class="pdot"></i>${esc(nameOf(pid))}</span><b>${esc(w)}</b></div>`).join("")}</div>
+        ${r.hit
+          ? `<div class="banner win"><div class="trophy">🎉</div><b>Gleiche Wellenlänge!</b> „${esc(r.word)}“ – +${st.nextPoints} Punkte
+              <div class="banner-actions"><button id="wl-next" class="btn primary">${st.impulse >= st.rounds ? "Zum Ergebnis" : "Nächster Impuls"}</button></div></div>`
+          : `<div class="banner row"><div class="banner-text"><b>Knapp daneben!</b> ${st.attempt >= st.maxTries ? "Das war der letzte Versuch." : "Im nächsten Versuch werden eure Wörter zum Impuls."}</div>
+              <div class="banner-actions"><button id="wl-next" class="btn primary">${st.attempt >= st.maxTries ? "Weiter" : "Nächster Versuch"}</button>
+              ${st.attempt < st.maxTries ? `<button id="wl-giveup" class="btn ghost sm">Aufgeben</button>` : ""}</div></div>`}`;
+    } else if (st.step === "final") {
+      const max = st.rounds * 10;
+      main = `
+        <div class="banner win"><div class="trophy">${st.total >= max * 0.6 ? "🏆" : "🤝"}</div><b>Ihr habt ${st.total} von ${max} Punkten!</b>
+          ${st.newRecord ? " <span class=\"host-tag\">Neuer Rekord!</span>" : st.best != null ? ` Rekord: ${st.best}` : ""}
+          <div class="banner-actions"><button id="wl-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${st.history.map((h) => `
+          <div class="slf-rank"><span class="slf-medal">${h.success ? "✅" : "❌"}</span>
+            <span class="slf-name">${esc(h.base)}${h.word ? ` → <b>„${esc(h.word)}“</b>` : ""}</span>
+            <span class="muted small">${h.attempts} Versuch${h.attempts > 1 ? "e" : ""}</span><b>+${h.points}</b></div>`).join("")}</div>`;
+    }
+    app.innerHTML = `
+      <main class="screen game slf wl">
+        <header class="top">
+          <div class="logo tiny">Schlaue<span>10</span></div>
+          <div class="meta">Gleiche Wellenlänge · ${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Raum <b>${esc(v.code)}</b></div>
+          <div class="top-actions">
+            <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
+            <button id="invite" class="btn sm" title="Link zum Beitreten teilen">＋ Einladen</button>
+            <button id="leave" class="btn ghost sm" title="Verlassen" aria-label="Verlassen"><span class="lbl-long">Verlassen</span><span class="lbl-short">✕</span></button>
+          </div>
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <section class="players">${wlChips(v, st)}</section>
+        <section class="slf-main">${main}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#wl-next", () => send({ type: "wlNext" }));
+    on("#wl-giveup", () => { if (confirm("Diesen Impuls aufgeben? Dafür gibt es 0 Punkte.")) send({ type: "wlGiveUp" }); });
+    on("#wl-restart", () => send({ type: "wlRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    const form = app.querySelector(".wl-form");
+    if (form) {
+      const inp = form.querySelector("#wl-word"), warn = app.querySelector("#wl-warn");
+      if (matchMedia("(pointer: fine)").matches && !st.submitted.includes(myId)) inp.focus();
+      inp.oninput = () => { warn.textContent = ""; };
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const w = inp.value.trim();
+        if (!w) return;
+        if (st.used.some((u) => WL.same(u, w))) { warn.textContent = `„${w}“ wurde schon genannt – such ein anderes Wort.`; return; }
+        wlMine = w; send({ type: "wlWord", word: w });
+        app.querySelector("#wl-status").innerHTML = wlStatusHtml({ ...st, submitted: st.submitted.includes(myId) ? st.submitted : st.submitted.concat(myId) });
+      };
+    }
   }
 
   // ---------- Antwort-Dialog ----------

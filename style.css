@@ -360,3 +360,23 @@ textarea { resize: vertical; font: inherit; }
   .slf-form { grid-template-columns: 1fr; }
   .screen.slf .slf-head { position: sticky; top: 6px; z-index: 5; box-shadow: 0 8px 18px rgba(0, 0, 0, .4); }
 }
+
+/* ======================================================================
+   Gleiche Wellenlänge
+   ====================================================================== */
+.wl-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; text-align: center; display: grid; gap: 8px; }
+.wl-meta { color: var(--muted); font-size: .85rem; }
+.wl-prompt { font-size: clamp(1.5rem, 4.5vw, 2.2rem); font-weight: 700; line-height: 1.2; }
+.wl-prompt.small { font-size: 1.15rem; }
+.wl-chain { display: grid; gap: 6px; margin-top: 4px; }
+.wl-chainrow { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.wl-chip { padding: 3px 10px; border-radius: 99px; background: #15123a; border: 2px solid var(--pc); font-size: .85rem; }
+.wl-form { display: flex; gap: 10px; }
+.wl-form input { flex: 1; min-width: 0; font-size: 1.3rem; text-align: center; }
+.wl-words { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.wl-word { background: var(--panel); border: 3px solid var(--pc); border-radius: var(--radius); padding: 16px; text-align: center; display: grid; gap: 6px;
+  animation: pop .3s; }
+.wl-word b { font-size: 1.6rem; overflow-wrap: anywhere; }
+.wl-word.hit { background: #1c4a33; border-color: var(--ok); box-shadow: 0 0 0 4px rgba(47, 191, 113, .25); }
+.wl-who { color: var(--muted); font-size: .85rem; display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+.wl-who .pdot { width: 8px; height: 8px; }
