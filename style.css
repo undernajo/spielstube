@@ -394,3 +394,10 @@ textarea { resize: vertical; font: inherit; }
 
 /* Logo-Münze mit Würfelaugen */
 .logo span.die svg { width: 64%; height: 64%; display: block; }
+
+/* Gäste: gewähltes Spiel gut sichtbar */
+.game-banner { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius);
+  border: 2px solid var(--accent); background: #2a2350; box-shadow: 0 0 0 4px rgba(255, 200, 61, .12); }
+.game-icon { font-size: 2.4rem; line-height: 1; flex: none; }
+.game-label { font-size: .75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 600; }
+.game-name { font-size: 1.45rem; font-weight: 700; line-height: 1.15; }

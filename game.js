@@ -31,9 +31,9 @@
   let chosenTarget = store.get("s10-target");
   const SLF = window.S10Slf;
   const GAMES = [
-    { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten" },
-    { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!" },
-    { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen" },
+    { key: "zehn", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
+    { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
+    { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
   ];
   const WL = window.S10Wl;
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
@@ -310,8 +310,16 @@
     toast.t = setTimeout(() => { toastEl.className = "toast " + (kind || ""); }, 3800);
   }
 
+  let lastLobbyGame = null;
   function render() {
     if (!view) return renderStart();
+    if (!isHost && view.phase === "lobby") {
+      if (lastLobbyGame && view.game !== lastLobbyGame) {
+        const g = GAMES.find((x) => x.key === view.game);
+        if (g) toast(`Der Gastgeber hat „${g.name}“ gewählt.`, "info");
+      }
+      lastLobbyGame = view.game;
+    }
     if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
@@ -484,7 +492,7 @@
           <h3>Spieler</h3>
           <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
           ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
-          ${isHost ? gamePickerHtml() : `<p class="muted">Gespielt wird: <b>${esc((GAMES.find((g) => g.key === view.game) || GAMES[0]).name)}</b></p>${guestSettingsHtml()}`}
+          ${isHost ? gamePickerHtml() : `${gameBannerHtml()}${guestSettingsHtml()}`}
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
@@ -701,6 +709,12 @@
       </div>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+  }
+  // Für Gäste: gut sichtbar, welches Spiel der Gastgeber gewählt hat
+  function gameBannerHtml() {
+    const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
+    return `<div class="game-banner"><span class="game-icon" aria-hidden="true">${g.icon}</span>
+      <div><div class="game-label">Gespielt wird</div><div class="game-name">${esc(g.name)}</div><div class="muted small">${esc(g.desc)}</div></div></div>`;
   }
   // Für Gäste: Einstellungen des Gastgebers nur anzeigen (ändern kann nur der Gastgeber)
   function guestSettingsHtml() {
