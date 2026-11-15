@@ -1485,6 +1485,19 @@
   const wSuitIcon = (suit) => `<span class="wsuit">${WCARDS.sym(suit, 1)}</span>`;
   // Stich-Animation: fertiger Stich bleibt kurz in der Mitte, dann wandern die Karten zum Stapel des Gewinners
   let wShown = { round: 0, n: 0 }, wHold = null, wFly = null;
+  // Kurzinfo zum Spielmodus im rechten Rand
+  function wattenModeHtml(st) {
+    const tr = st.weliMode === "trumpf";
+    return `<details class="wmode" ${store.get("s10-wmode-open") === false ? "" : "open"}><summary>Spielmodus: Weli ist ${tr ? "kleinster Trumpf" : "kleinste Schelle"} · bis ${st.target}</summary>
+      <ul>
+        <li><b>Rangfolge:</b> Guter → Rechter → andere Schläge → Trümpfe → ausgespielte Farbe.</li>
+        <li><b>Guter:</b> Trumpf einen Rang über dem Schlag. Beim Ass: ${tr ? "die Trumpf-Sieben" : "die Trumpf-Sieben, bei Trumpf Schelle der Weli"}.</li>
+        <li><b>Weli</b> ${tr ? "zählt immer als kleinster Trumpf (muss beim Trumpf zugeben mitgegeben werden)" : "ist eine Schell-Sechs, nur Trumpf wenn Schelle Trumpf ist"}.
+          Als Schlag: ${tr ? "beste Karte, kein Guter" : "der Rechte, Guter ist die Trumpf-Sieben"}.</li>
+        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder stechen.</li>
+        <li><b>Punkte:</b> 2, Bieten +1 (abgelehnt = bisheriger Wert). Gestrichen ab ${st.target - 2}: kein Bieten; bei mind. 4 Rückstand des anderen gehen 4 – halten oder gehen (Gegner +2).</li>
+      </ul></details>`;
+  }
   function renderWatten() {
     const v = view, st = v.watten;
     if (!st) return;
@@ -1629,6 +1642,7 @@
           <aside class="wpanel">
             <div class="geo-bar wblock-wrap">${wattBlock()}${ann}</div>
             <section class="waction">${action}</section>
+            ${wattenModeHtml(st)}
           </aside>
         </div>
       </main>`;
@@ -1639,6 +1653,8 @@
     on("#w-bid", () => send({ type: "wBid" }));
     on("#w-hold", () => send({ type: "wBidAnswer", accept: true }));
     on("#w-fold", () => send({ type: "wBidAnswer", accept: false }));
+    const md = app.querySelector(".wmode");
+    if (md) md.ontoggle = () => store.set("s10-wmode-open", md.open);
     on("#w-hold4", () => send({ type: "wHold" }));
     on("#w-go", () => send({ type: "wGiveUp" }));
     on("#w-giveup", () => { if (confirm("Wirklich aufgeben? Dein Gegner bekommt 2 Punkte.")) send({ type: "wGiveUp" }); });

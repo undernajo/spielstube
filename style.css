@@ -642,3 +642,8 @@ textarea { resize: vertical; font: inherit; }
 .wblock thead th .wtag { font-size: .65rem; font-weight: 500; }
 .wgeber { font-size: .7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); min-height: 1.2em; }
 .wblock tbody td.wdash { color: var(--muted); }
+.wmode { padding: 12px 14px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); font-size: .85rem; }
+.wmode summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.wmode ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 5px; line-height: 1.35; }
+.wmode b { color: var(--ink); font-weight: 600; }
+@media (max-width: 899px) { .wmode { margin-top: 12px; } }
