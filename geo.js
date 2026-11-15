@@ -1,6 +1,7 @@
 // „Wo liegt das?“ – Spiellogik (läuft beim Gastgeber, testbar in Node). Zustand in s.geo.
 (function (root) {
   const ROUND_CHOICES = [5, 10, 15];
+  const LEVELS = { leicht: { name: "Leicht" }, gemischt: { name: "Gemischt" }, profi: { name: "Profi" } };
   const TIMERS = { t30: { name: "30 Sekunden", ms: 30000 }, t60: { name: "60 Sekunden", ms: 60000 }, none: { name: "ohne Zeitlimit", ms: 0 } };
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const data = () => root.SCHLAU10_GEO || {};
@@ -14,16 +15,43 @@
   }
   const pointsFor = (km, scale) => Math.round(1000 * Math.exp(-km / scale));
 
+  // Indizes der Orte, die zur Schwierigkeit passen
+  function poolFor(region, level) {
+    const places = (data()[region] || { places: [] }).places;
+    const idx = places.map((_, i) => i);
+    if (level === "leicht") return idx.filter((i) => places[i][4] !== 1);
+    if (level === "profi") return idx.filter((i) => places[i][4] === 1);
+    return idx;
+  }
+  // Wie viele Orte dieser Auswahl wurden noch nicht gespielt? (seen = { region: [Namen] })
+  function countNew(seen, region, level) {
+    const places = data()[region].places, list = (seen && seen[region]) || [];
+    const pool = poolFor(region, level);
+    return { fresh: pool.filter((i) => !list.includes(places[i][0])).length, total: pool.length };
+  }
+
   function start(s, opts, now) {
     opts = opts || {};
     const region = data()[opts.region] ? opts.region : "europa";
+    const level = LEVELS[opts.level] ? opts.level : "gemischt";
     const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
-    const n = data()[region].places.length;
+    const places = data()[region].places;
+    // Ungespielte Orte zuerst. Reichen sie nicht mehr, beginnt diese Auswahl von vorn.
+    if (!s.geoSeen || typeof s.geoSeen !== "object") s.geoSeen = {};
+    let seen = Array.isArray(s.geoSeen[region]) ? s.geoSeen[region] : [];
+    const pool = poolFor(region, level);
+    let fresh = pool.filter((i) => !seen.includes(places[i][0]));
+    if (fresh.length < Math.min(rounds, pool.length)) {
+      const names = new Set(pool.map((i) => places[i][0]));
+      seen = seen.filter((n) => !names.has(n));
+    }
+    s.geoSeen[region] = seen;
+    const fr = shuffle(fresh), rest = shuffle(pool.filter((i) => !fresh.includes(i)));
     s.game = "geo"; s.phase = "geo";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.geo = { opts: { region, rounds, timer }, region, rounds: Math.min(rounds, n), timer,
-      order: shuffle(Array.from({ length: n }, (_, i) => i)), round: 0, total: {}, history: [] };
+    s.geo = { opts: { region, level, rounds, timer }, region, level, rounds: Math.min(rounds, pool.length), timer,
+      order: fr.concat(rest), round: 0, total: {}, history: [] };
     s.players.forEach((p) => { s.geo.total[p.id] = 0; p.waiting = false; p.status = "active"; });
     nextRound(s, now);
   }
@@ -33,6 +61,9 @@
     st.round++;
     if (st.round > st.rounds) { st.round = st.rounds; st.step = "final"; return; }
     st.place = st.order[st.round - 1];
+    if (!s.geoSeen) s.geoSeen = {};
+    const seen = s.geoSeen[st.region] || (s.geoSeen[st.region] = []), name = data()[st.region].places[st.place][0];
+    if (!seen.includes(name)) seen.push(name);
     st.step = "guess"; st.guesses = {}; st.ready = {}; st.result = null;
     st.deadline = TIMERS[st.timer].ms ? now + TIMERS[st.timer].ms : 0;
   }
@@ -96,7 +127,7 @@
     if (!st) return null;
     const reg = data()[st.region], pl = reg.places[st.place];
     const out = {
-      step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: reg.name, bounds: reg.bounds,
+      step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: reg.name, levelName: LEVELS[st.level || "gemischt"].name, bounds: reg.bounds,
       timerName: TIMERS[st.timer].name, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
       place: pl ? { name: pl[0], kind: pl[1] } : null, submitted: Object.keys(st.guesses || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };
@@ -112,5 +143,5 @@
     return out;
   }
 
-  root.S10Geo = { start, apply, tick, publicState, distanceKm, pointsFor, ROUND_CHOICES, TIMERS };
+  root.S10Geo = { start, apply, tick, publicState, distanceKm, pointsFor, poolFor, countNew, ROUND_CHOICES, TIMERS, LEVELS };
 })(typeof window !== "undefined" ? window : globalThis);

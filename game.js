@@ -37,7 +37,7 @@
     { key: "geo", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
-  let geoOpts = Object.assign({ region: "suedtirol", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
+  let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const WL = window.S10Wl;
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
@@ -114,6 +114,7 @@
     isHost = true; roomCode = genCode();
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
+    S.geoSeen = store.get("s10-geo-seen") || {};
     S.hostId = myId;
     S.game = chosenGame;
     L.addPlayer(S, myId, name);
@@ -122,6 +123,7 @@
 
   function hostResume(saved) {
     isHost = true; roomCode = saved.code; S = saved.state;
+    if (!S.geoSeen) S.geoSeen = store.get("s10-geo-seen") || {};
     if (saved.hostId) { myId = saved.hostId; setTabId(myId); }
     S.hostId = myId;
     S.players.forEach((p) => { if (p.id !== myId) p.connected = false; });
@@ -219,7 +221,7 @@
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
-      geo: { region: geoOpts.region, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
+      geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -235,6 +237,7 @@
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
     if (S.seen) store.set("s10-seen", S.seen);
+    if (S.geoSeen) store.set("s10-geo-seen", S.geoSeen);
     if (mq && roomTopic) sendSealed(T("state"), view, { qos: 1, retain: true });
     render();
   }
@@ -759,9 +762,9 @@
         <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
     }
     if (view.game === "geo" && lb.geo) {
-      const regs = Object.entries(GEODATA).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(r.places.length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
+      const regs = Object.entries(GEODATA).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(GEO.poolFor(k, lb.geo.level).length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
-        <p class="muted small">${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
+        <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -795,12 +798,27 @@
     if (gn) gn.onchange = () => { geoOpts.rounds = Number(gn.value); saveGeo(); };
     const gt = app.querySelector("#geo-timer");
     if (gt) gt.onchange = () => { geoOpts.timer = gt.value; saveGeo(); };
+    const gl = app.querySelector("#geo-level");
+    if (gl) gl.onchange = () => { geoOpts.level = gl.value; saveGeo(); };
+    const gx = app.querySelector("#geo-reset");
+    if (gx) gx.onclick = () => {
+      if (!confirm("Gespielte Orte vergessen? Danach sind in allen Regionen wieder alle Orte neu.")) return;
+      S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
+    };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
   function geoSettingsHtml() {
-    return `<label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).map(([k, r]) =>
-        `<option value="${k}" ${geoOpts.region === k ? "selected" : ""}>${esc(r.name)} (${r.places.length} Orte)</option>`).join("")}</select></label>
+    const level = GEO.LEVELS[geoOpts.level] ? geoOpts.level : "gemischt";
+    const nw = GEODATA[geoOpts.region] ? GEO.countNew(S && S.geoSeen, geoOpts.region, level) : null;
+    return `<div class="row2">
+        <label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).map(([k, r]) =>
+          `<option value="${k}" ${geoOpts.region === k ? "selected" : ""}>${esc(r.name)} (${GEO.poolFor(k, level).length} Orte)</option>`).join("")}</select></label>
+        <label class="field"><span>Schwierigkeit</span><select id="geo-level">${Object.entries(GEO.LEVELS).map(([k, l]) =>
+          `<option value="${k}" ${level === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+      </div>
+      ${nw ? `<p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} Orte sind neu.` : `Noch ${nw.fresh} von ${nw.total} Orten neu – gespielte kommen erst wieder, wenn alle durch sind.`}
+        ${nw.fresh < nw.total ? `<button id="geo-reset" class="btn ghost sm">Gespielte Orte vergessen</button>` : ""}</p>` : ""}
       <div class="row2">
         <label class="field"><span>Runden</span><select id="geo-rounds">${GEO.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(geoOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         <label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
@@ -814,6 +832,8 @@
         <li>Ein Ort wird genannt – tippe auf der Karte (ohne Beschriftungen) dorthin, wo du ihn vermutest, und lege deine Nadel fest.</li>
         <li>Sind alle fertig oder ist die Zeit um, wird aufgelöst: richtige Stelle, alle Nadeln und die Entfernungen.</li>
         <li>Bis zu 1000 Punkte pro Runde – je näher, desto mehr. Die Skala passt sich der Region an.</li>
+        <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Orte, „Profi“ nur schwere, „Gemischt“ alle.</li>
+        <li>Orte wiederholen sich erst, wenn alle der gewählten Auswahl einmal dran waren.</li>
       </ul>
     </details>`;
   function wlSettingsHtml() {

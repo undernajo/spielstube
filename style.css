@@ -440,3 +440,4 @@ textarea { resize: vertical; font: inherit; }
   .geo-bar .btn { width: 100%; }
   .geo-scores { max-width: none; justify-content: flex-start; }
 }
+.geo-new { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -2px 0 10px; }
