@@ -344,7 +344,7 @@ window.SCHLAU10_CARDS.push(
 
   { q: "Wie heißt die Währung?", type: "choice", items: [
     ["Japan", "Yen"], ["Großbritannien", "Pfund", ["Pfund Sterling", "Pound"]], ["Schweiz", "Franken", ["Schweizer Franken"]],
-    ["Polen", "Złoty", ["Zloty"]], ["Russland", "Rubel"], ["Indien", "Rupie", ["Indische Rupie"]], ["China", "Yuan", ["Renminbi"]],
+    ["Polen", "Złoty", ["Zloty"]], ["Russland", "Rubel"], ["Indien", "Rupie", ["Indische Rupie"]], ["China", "Renminbi (Yuan)", ["Renminbi", "Yuan", "RMB", "CNY", "Renminbi Yuan", "Yuan Renminbi", "Chinesischer Yuan"]],
     ["Türkei", "Lira", ["Türkische Lira"]], ["Brasilien", "Real"], ["Südafrika", "Rand"] ] },
 
   { q: "Welche Farbe hat das?", type: "choice", items: [
