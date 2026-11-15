@@ -6,13 +6,37 @@
   const data = () => root.SCHLAU10_HL || {};
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-  // Begriffe so auswählen, dass benachbarte Werte nie gleich sind
+  // Wie schwer ist ein Vergleich? „close“ = sehr knapp, „easy“ = viel zu einseitig (z. B. Blauwal gegen Hausmaus)
+  function pairKind(cat, a, b) {
+    if (a === b) return "same";
+    if (cat.year) { const d = Math.abs(a - b); return d <= 3 ? "close" : d > 80 ? "easy" : "ok"; }
+    const r = Math.max(a, b) / Math.min(a, b);
+    return r < 1.08 ? "close" : r > 15 ? "easy" : "ok";
+  }
+  // Kette von Begriffen ziehen: nie gleiche Werte nebeneinander, keine viel zu einseitigen Paare,
+  // höchstens ein ganz knapper Vergleich pro Kategorie
   function pickItems(cat) {
-    const idx = shuffle(cat.items.map((_, i) => i));
-    const out = [idx.shift()];
-    while (out.length < PER_CAT + 1 && idx.length) {
-      const last = cat.items[out[out.length - 1]][1];
-      const k = idx.findIndex((i) => cat.items[i][1] !== last);
+    const n = Math.min(PER_CAT + 1, cat.items.length), v = (i) => cat.items[i][1];
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const strict = attempt < 300; // zur Not einseitige Paare erlauben
+      const pool = shuffle(cat.items.map((_, i) => i)), out = [pool.shift()];
+      let close = 0;
+      while (out.length < n) {
+        const last = v(out[out.length - 1]);
+        const k = pool.findIndex((i) => {
+          const kind = pairKind(cat, last, v(i));
+          return kind === "ok" || (kind === "close" && close === 0) || (!strict && kind === "easy");
+        });
+        if (k < 0) break;
+        if (pairKind(cat, last, v(pool[k])) === "close") close++;
+        out.push(pool.splice(k, 1)[0]);
+      }
+      if (out.length === n) return out;
+    }
+    // Notlösung: nur gleiche Werte vermeiden
+    const idx = shuffle(cat.items.map((_, i) => i)), out = [idx.shift()];
+    while (out.length < n && idx.length) {
+      const k = idx.findIndex((i) => v(i) !== v(out[out.length - 1]));
       if (k < 0) break;
       out.push(idx.splice(k, 1)[0]);
     }
@@ -124,5 +148,5 @@
     return out;
   }
 
-  root.S10Hl = { start, apply, tick, publicState, fmt, LENGTHS, PER_CAT, REVEAL_MS };
+  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS };
 })(typeof window !== "undefined" ? window : globalThis);
