@@ -1519,7 +1519,12 @@
     const pile = (id, pos) => {
       let groups = (st.won && st.won[id]) || [];
       if (wHold && wHold.winner === id) groups = groups.slice(0, -1);
-      return `<div class="wpile ${pos}" data-pile="${id}">${groups.map((g, i) => `<div class="wpile-g ${i === groups.length - 1 ? "newest" : ""}" style="--i:${i}">${g.map((c) => wCard(c, "xs")).join("")}</div>`).join("")}</div>`;
+      // Nur der zuletzt gemachte Stich bleibt offen – sobald die nächste Karte gespielt ist, wird er umgedreht
+      const openLast = !wHold && st.trick.length === 0 && st.lastTrick && st.lastTrick.winner === id;
+      return `<div class="wpile ${pos}" data-pile="${id}">${groups.map((g, i) => {
+        const open = openLast && i === groups.length - 1;
+        return `<div class="wpile-g ${i === groups.length - 1 ? "newest" : ""}" style="--i:${i}">${g.map((c) => open ? wCard(c, "xs") : `<div class="wcard xs back">${WCARDS.back()}</div>`).join("")}</div>`;
+      }).join("")}</div>`;
     };
     // Aktionen
     let action = "";
