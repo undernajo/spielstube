@@ -1487,9 +1487,11 @@
     if (wShown.round !== st.roundNo) { wShown = { round: st.roundNo, n: nTricks }; wHold = null; }
     if (nTricks > wShown.n && !wHold && st.lastTrick) {
       wHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards };
+      const held = wHold, heldRound = st.roundNo;
       setTimeout(() => {
+        if (wHold !== held || wShown.round !== heldRound) return; // inzwischen neue Runde
         const tr = app.querySelector(".wtrick");
-        wFly = { winner: wHold.winner, from: tr ? tr.getBoundingClientRect() : null };
+        wFly = { winner: held.winner, from: tr ? tr.getBoundingClientRect() : null };
         wShown.n = nTricks; wHold = null; if (view && view.phase === "watten") renderWatten();
       }, 1000);
     }
@@ -1500,6 +1502,26 @@
     const priv = seated && wattenPriv && wattenPriv.roundNo === st.roundNo ? wattenPriv : null;
     const hand = priv ? priv.hand : [], legal = priv ? priv.legal : [];
     const rankName = (r) => WAT.RANK_NAMES[r], suitName = (s) => WAT.SUIT_NAMES[s];
+    // Wattblock: je Spieler eine Spalte, nach jeder gewonnenen Runde wird der neue Stand notiert.
+    // Wer gestrichen ist (2 vor dem Ziel), bekommt einen Strich unter die Zahl. Oben: gewonnene Partien als Kreuzl.
+    const wattBlock = () => {
+      const cols = [self, opp], run = { [self]: 0, [opp]: 0 }, struck = { [self]: false, [opp]: false };
+      const rows = st.history.map((h) => {
+        run[h.winner] += h.points;
+        const strich = !struck[h.winner] && run[h.winner] >= st.target - 2 && run[h.winner] < st.target;
+        if (strich) struck[h.winner] = true;
+        return cols.map((id) => id === h.winner
+          ? `<td class="${strich ? "strich" : ""} ${run[id] >= st.target ? "sieg" : ""}" title="+${h.points}${h.reason === "aufgegeben" ? " (gegangen)" : h.reason === "abgelehnt" ? " (Bieten abgelehnt)" : ""}">${run[id]}</td>`
+          : "<td></td>").join("");
+      });
+      const tally = (n) => n ? "✕".repeat(Math.min(n, 10)) + (n > 10 ? " " + n : "") : "";
+      return `<table class="wblock">
+        <thead><tr>${cols.map((id) => `<th style="--pc:${colorOf(id)}"><span class="pdot"></span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
+          ${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}<div class="wkreuz" title="gewonnene Partien">${tally((st.games || {})[id] || 0)}</div></th>`).join("")}</tr></thead>
+        <tbody>${rows.map((r) => `<tr>${r}</tr>`).join("") || `<tr><td colspan="2" class="muted small">noch keine Punkte</td></tr>`}</tbody>
+        <tfoot><tr>${cols.map((id) => `<td class="${st.turn === id ? "dran" : ""}">${st.scores[id]}${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}</td>`).join("")}</tr>
+          <tr><td colspan="2" class="muted small">bis ${st.target} · gestrichen ab ${st.target - 2}</td></tr></tfoot></table>`;
+    };
     const scorePill = (id) => `<span class="geo-score ${st.turn === id ? "done" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span>
         <span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.scores[id]}</b><span class="geo-mark">/ ${st.target}</span>
         ${st.gestrichen[id] ? `<span class="wtag">gestrichen</span>` : ""}${id === st.dealer ? `<span class="wtag dim">Geber</span>` : ""}</span>`;
@@ -1600,7 +1622,7 @@
             ${myMove ? turnBadge : ""}
           </section>
           <aside class="wpanel">
-            <div class="geo-bar"><div class="geo-scores">${scorePill(self)}${scorePill(opp)}</div>${ann}</div>
+            <div class="geo-bar wblock-wrap">${wattBlock()}${ann}</div>
             <section class="waction">${action}</section>
           </aside>
         </div>

@@ -46,7 +46,7 @@
     s.game = "watten"; s.phase = "watten";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.watten = { opts: { target }, target, seats, scores: { [seats[0]]: 0, [seats[1]]: 0 },
-      dealer: seats[Math.floor(Math.random() * 2)], roundNo: 0, history: [], winners: null };
+      dealer: seats[Math.floor(Math.random() * 2)], roundNo: 0, history: [], winners: null, games: { [seats[0]]: 0, [seats[1]]: 0 } };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
     deal(s.watten, true);
     return true;
@@ -78,7 +78,7 @@
     r.result = { winner, points, reason };
     st.history.push({ round: st.roundNo, winner, points, reason });
     st.step = "roundEnd"; r.ready = {};
-    if (st.scores[winner] >= st.target) { st.step = "final"; st.winners = [winner]; }
+    if (st.scores[winner] >= st.target) { st.step = "final"; st.winners = [winner]; st.games[winner] = (st.games[winner] || 0) + 1; }
   }
 
   // Bei „4 gehen“ muss der Gestrichene vor seiner ersten Karte halten oder gehen
@@ -162,7 +162,7 @@
       mustDecide: r.giveUpBy && needsDecision(r, r.giveUpBy) ? r.giveUpBy : null,
       canBid: Object.fromEntries(st.seats.map((id) => [id, canBid(st, id)])),
       handCount: Object.fromEntries(st.seats.map((id) => [id, r.hands[id].length])),
-      result: r.result, ready: { ...r.ready }, history: st.history.slice(-12),
+      result: r.result, ready: { ...r.ready }, history: st.history.slice(), games: { ...(st.games || {}) },
       // nach der Runde dürfen beide die übrigen Karten sehen
       reveal: st.step === "roundEnd" || st.step === "final" ? { ...r.hands } : null,
     };

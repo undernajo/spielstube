@@ -623,3 +623,20 @@ textarea { resize: vertical; font: inherit; }
 @media (min-width: 900px) {
   .wtable .wturn.me { top: auto; bottom: 18px; }
 }
+/* Wattblock */
+.wblock-wrap { display: block; }
+.wblock { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.wblock th, .wblock td { width: 50%; text-align: center; padding: 3px 6px; }
+.wblock thead th { font-weight: 600; font-size: .9rem; border-bottom: 2px solid var(--ink); padding-bottom: 6px; vertical-align: bottom; }
+.wblock thead th + th, .wblock td + td { border-left: 2px solid var(--ink); }
+.wblock th em { color: var(--muted); font-style: normal; font-weight: 400; font-size: .85em; }
+.wblock th .pdot { background: var(--pc); margin-right: 5px; display: inline-block; }
+.wblock th .wtag { margin-left: 4px; }
+.wkreuz { font-size: .8rem; color: var(--accent); letter-spacing: 2px; min-height: 1.1em; }
+.wblock tbody td { font-size: 1.05rem; height: 1.6em; font-family: "Fredoka", sans-serif; }
+.wblock tbody td.strich { box-shadow: inset 0 -2px 0 var(--bad); }
+.wblock tbody td.sieg { color: var(--accent); font-weight: 700; }
+.wblock tfoot tr:first-child td { border-top: 2px solid var(--ink); font-size: 1.35rem; font-weight: 700; padding-top: 6px; }
+.wblock tfoot tr:first-child td.dran { color: var(--accent); }
+.wblock tfoot td .wtag { display: block; width: fit-content; margin: 2px auto 0; font-size: .65rem; font-weight: 500; }
+.wblock tfoot tr + tr td { border-left: 0; padding-top: 6px; }
