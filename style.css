@@ -441,3 +441,13 @@ textarea { resize: vertical; font: inherit; }
   .geo-scores { max-width: none; justify-content: flex-start; }
 }
 .geo-new { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -2px 0 10px; }
+/* Von oben */
+.oben-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.oben-pic { position: relative; }
+.oben-pic .geo-map { cursor: default; }
+.oben-tag { position: absolute; top: 10px; left: 10px; z-index: 500; background: rgba(20,16,50,.85); color: #fff; font-weight: 600; font-size: .8rem;
+  padding: 3px 10px; border-radius: 999px; pointer-events: none; }
+@media (max-width: 760px) {
+  .oben-grid { grid-template-columns: 1fr; gap: 8px; }
+  .oben-grid .geo-map { height: max(220px, calc((100vh - 300px) / 2)); }
+}

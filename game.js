@@ -35,6 +35,7 @@
     { key: "slf", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
     { key: "wl", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
     { key: "geo", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
+    { key: "oben", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -530,7 +531,7 @@
           ${isHost ? gamePickerHtml() : `${gameBannerHtml()}${guestSettingsHtml()}`}
           ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
-          ${isHost && chosenGame === "geo" ? geoSettingsHtml() : ""}
+          ${isHost && (chosenGame === "geo" || chosenGame === "oben") ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
@@ -544,7 +545,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">Verlassen</button>
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -572,7 +573,8 @@
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
-      if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: geoOpts });
+      if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
+      if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
     app.querySelector("#leave").onclick = leave;
@@ -761,10 +763,10 @@
       return `<div class="field"><span>Kategorien (wählt der Gastgeber)</span><div class="setlist">${presets.join("")}</div></div>
         <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
     }
-    if (view.game === "geo" && lb.geo) {
+    if ((view.game === "geo" || view.game === "oben") && lb.geo) {
       const regs = Object.entries(GEODATA).map(([k, r]) => row(lb.geo.region === k, esc(r.name), esc(GEO.poolFor(k, lb.geo.level).length + " Orte, z. B. " + r.places.slice(0, 3).map((p) => p[0]).join(" · ") + " …")));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
-        <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
+        <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${view.game === "oben" ? GEO.OBEN.steps * GEO.OBEN.stepMs / 1000 + " Sekunden" : esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -808,7 +810,7 @@
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
-  function geoSettingsHtml() {
+  function geoSettingsHtml(oben) {
     const level = GEO.LEVELS[geoOpts.level] ? geoOpts.level : "gemischt";
     const nw = GEODATA[geoOpts.region] ? GEO.countNew(S && S.geoSeen, geoOpts.region, level) : null;
     return `<div class="row2">
@@ -821,11 +823,21 @@
         ${nw.fresh < nw.total ? `<button id="geo-reset" class="btn ghost sm">Gespielte Orte vergessen</button>` : ""}</p>` : ""}
       <div class="row2">
         <label class="field"><span>Runden</span><select id="geo-rounds">${GEO.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(geoOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
-        <label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
+        ${oben ? `<div class="field"><span>Zeit pro Runde</span><p class="muted small">${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden – alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild weiter heraus.</p></div>`
+          : `<label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>`}
       </div>
       <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
       ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  const obenRulesHtml = `
+    <details class="rules"><summary>Regeln: Von oben</summary>
+      <ul>
+        <li>Du siehst einen Ort ganz nah von oben (Satellitenbild) – nur die Art ist verraten, z. B. „See“ oder „Stadt“.</li>
+        <li>Alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild ein Stück heraus. Tippe auf der zweiten Karte, wo das ist, und lege deine Nadel fest.</li>
+        <li>Punkte wie bei „Wo liegt das?“ (bis 1000, je näher, desto mehr), aber mal einem Faktor: früh getippt ×1, dann ×0,85, ×0,7 … bis ×0,4.</li>
+        <li>Regionen, Schwierigkeit und „keine Wiederholungen“ wie bei „Wo liegt das?“.</li>
+      </ul>
+    </details>`;
   const geoRulesHtml = `
     <details class="rules"><summary>Regeln: Wo liegt das?</summary>
       <ul>
@@ -1216,6 +1228,7 @@
 
   // ---------- Wo liegt das?: Darstellung ----------
   let geoMap = null, geoRendered = null, geoMine = null, geoMarker = null, geoDeadline = 0, geoSent = null;
+  let obenMap = null, obenZoom = null, geoStart = 0; // „Von oben“: Bildkarte, aktuelle Zoomstufe, Startzeit der Runde
   // Satellitenbilder ohne Beschriftungen (Esri World Imagery, ohne API-Schlüssel nutzbar)
   const TILE_URL = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
   // Kompakter Punktestand im Kopf-Element (spart Platz für die Karte)
@@ -1236,7 +1249,7 @@
         const r = st.result[p.id];
         return `<div class="geo-res ${st.ready[p.id] ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
           <span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${st.ready[p.id] ? ` <span class="geo-mark">✓</span>` : ""}</span>
-          <span class="muted small">${fmt(r.km)}</span><b>+${r.points}</b><span class="geo-total" title="Gesamt">${(st.total[p.id] || 0).toLocaleString("de-DE")}</span></div>`;
+          <span class="muted small">${fmt(r.km)}${r.factor != null && r.factor !== 1 && r.km != null ? ` · ×${String(r.factor).replace(".", ",")}` : ""}</span><b>+${r.points}</b><span class="geo-total" title="Gesamt">${(st.total[p.id] || 0).toLocaleString("de-DE")}</span></div>`;
       }).join("");
   }
   function geoSubmit() {
@@ -1253,7 +1266,15 @@
     const ms = Math.max(0, geoDeadline - Date.now());
     el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000);
     if (ms <= 300) geoSubmit(); // gesetzte Nadel bei Zeitablauf automatisch abgeben
+    if (st.mode === "oben" && st.pic && obenMap) obenUpdate(st.pic);
   }, 250);
+  function obenUpdate(pic) {
+    const step = Math.max(0, Math.min(pic.steps - 1, Math.floor((Date.now() - geoStart) / pic.stepMs)));
+    const z = pic.zoom - step;
+    if (obenZoom !== z) { obenZoom = z; obenMap.setView([pic.lat, pic.lng], z, { animate: true, duration: 0.8 }); }
+    const f = app.querySelector("#oben-factor");
+    if (f) f.textContent = "Punkte ×" + String(pic.factors[step]).replace(".", ",");
+  }
   function geoMakeMap(el, bounds) {
     if (geoMap) { geoMap.remove(); geoMap = null; }
     const b = LF.latLngBounds(bounds);
@@ -1280,17 +1301,21 @@
     if (st.step === "guess" && (!geoRendered || !geoRendered.startsWith(v.code + ":" + st.round + ":"))) { geoMine = null; geoSent = null; }
     geoRendered = key;
     let main = "";
+    const oben = st.mode === "oben";
+    if (oben && st.step === "guess") geoStart = Date.now() - (st.elapsed || 0);
     if (st.step === "guess") {
       const locked = st.submitted.includes(myId);
       main = `
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
-            <div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div></div>
+            ${oben ? `<div class="geo-name">Was ist das?</div><div class="muted small">Gesucht: ${esc(st.place.kind)} · <span id="oben-factor">Punkte ×1</span></div>`
+              : `<div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div>`}</div>
           <div class="geo-scores">${geoChips(v, st)}</div>
           ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
           <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
         </div>
-        <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
+        ${oben ? `<div class="oben-grid"><div class="geo-wrap oben-pic"><div id="oben-pic" class="geo-map"></div><span class="oben-tag">Von oben</span></div>
+          <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
     } else if (st.step === "reveal") {
       main = `
         <div class="geo-bar">
@@ -1312,11 +1337,12 @@
           <p class="muted small">${esc(st.regionName)} · ${st.rounds} Runden · max. ${(st.rounds * 1000).toLocaleString("de-DE")} Punkte</p></div>`;
     }
     if (geoMap) { geoMap.remove(); geoMap = null; }
+    if (obenMap) { obenMap.remove(); obenMap = null; obenZoom = null; }
     app.innerHTML = `
-      <main class="screen game slf geo">
+      <main class="screen game slf geo ${oben ? "oben" : ""}">
         <header class="top">
           <div class="logo tiny">${LOGO}</div>
-          <div class="meta">Wo liegt das? · ${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
+          <div class="meta">${oben ? "Von oben" : "Wo liegt das?"} · ${esc(st.regionName)} · Raum <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
@@ -1333,6 +1359,15 @@
     const mapEl = app.querySelector("#geo-map");
     if (!mapEl || !LF) return;
     const map = geoMakeMap(mapEl, st.bounds);
+    const picEl = app.querySelector("#oben-pic");
+    if (picEl && st.pic) {
+      obenMap = LF.map(picEl, { zoomControl: false, attributionControl: true, dragging: false, touchZoom: false, scrollWheelZoom: false,
+        doubleClickZoom: false, boxZoom: false, keyboard: false, zoomSnap: 1 });
+      obenMap.attributionControl.setPrefix(false);
+      LF.tileLayer(TILE_URL, { maxZoom: 18, maxNativeZoom: 17, attribution: "© Esri, Maxar, Earthstar Geographics" }).addTo(obenMap);
+      obenZoom = null; obenUpdate(st.pic);
+      setTimeout(() => obenMap && obenMap.invalidateSize(), 50);
+    }
     if (st.step === "guess") {
       const locked = st.submitted.includes(myId);
       if (geoMine) geoMarker = LF.marker([geoMine.lat, geoMine.lng], { icon: pin(colorOf(myId)) }).addTo(map);

@@ -3,6 +3,10 @@
   const ROUND_CHOICES = [5, 10, 15];
   const LEVELS = { leicht: { name: "Leicht" }, gemischt: { name: "Gemischt" }, profi: { name: "Profi" } };
   const TIMERS = { t30: { name: "30 Sekunden", ms: 30000 }, t60: { name: "60 Sekunden", ms: 60000 }, none: { name: "ohne Zeitlimit", ms: 0 } };
+  // „Von oben“: Satellitenbild zoomt in Stufen heraus; wer früher tippt, bekommt mehr Punkte
+  const OBEN = { steps: 6, stepMs: 5000, factors: [1, 0.85, 0.7, 0.6, 0.5, 0.4],
+    zoom: { suedtirol: 16, italien: 15, dach: 15, europa: 14, welt: 13 } };
+  const obenStep = (ms) => Math.max(0, Math.min(OBEN.steps - 1, Math.floor(ms / OBEN.stepMs)));
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const data = () => root.SCHLAU10_GEO || {};
 
@@ -36,6 +40,7 @@
     const level = LEVELS[opts.level] ? opts.level : "gemischt";
     const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
+    const mode = opts.mode === "oben" ? "oben" : "karte";
     const places = data()[region].places;
     // Ungespielte Orte zuerst. Reichen sie nicht mehr, beginnt diese Auswahl von vorn.
     if (!s.geoSeen || typeof s.geoSeen !== "object") s.geoSeen = {};
@@ -48,9 +53,9 @@
     }
     s.geoSeen[region] = seen;
     const fr = shuffle(fresh), rest = shuffle(pool.filter((i) => !fresh.includes(i)));
-    s.game = "geo"; s.phase = "geo";
+    s.game = mode === "oben" ? "oben" : "geo"; s.phase = "geo";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.geo = { opts: { region, level, rounds, timer }, region, level, rounds: Math.min(rounds, pool.length), timer,
+    s.geo = { opts: { region, level, rounds, timer, mode }, mode, region, level, rounds: Math.min(rounds, pool.length), timer,
       order: fr.concat(rest), round: 0, total: {}, history: [] };
     s.players.forEach((p) => { s.geo.total[p.id] = 0; p.waiting = false; p.status = "active"; });
     nextRound(s, now);
@@ -65,7 +70,8 @@
     const seen = s.geoSeen[st.region] || (s.geoSeen[st.region] = []), name = data()[st.region].places[st.place][0];
     if (!seen.includes(name)) seen.push(name);
     st.step = "guess"; st.guesses = {}; st.ready = {}; st.result = null;
-    st.deadline = TIMERS[st.timer].ms ? now + TIMERS[st.timer].ms : 0;
+    st.startedAt = now;
+    st.deadline = st.mode === "oben" ? now + OBEN.steps * OBEN.stepMs : TIMERS[st.timer].ms ? now + TIMERS[st.timer].ms : 0;
   }
 
   const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
@@ -77,7 +83,8 @@
       const g = st.guesses[p.id];
       if (!g) { res[p.id] = { lat: null, lng: null, km: null, points: 0 }; return; }
       const km = distanceKm(target, [g.lat, g.lng]);
-      res[p.id] = { lat: g.lat, lng: g.lng, km: Math.round(km * 10) / 10, points: pointsFor(km, reg.scale) };
+      const factor = st.mode === "oben" ? OBEN.factors[obenStep(g.at || 0)] : 1;
+      res[p.id] = { lat: g.lat, lng: g.lng, km: Math.round(km * 10) / 10, points: Math.round(pointsFor(km, reg.scale) * factor), factor };
     });
     Object.entries(res).forEach(([pid, r]) => { st.total[pid] = (st.total[pid] || 0) + r.points; });
     st.result = res;
@@ -101,7 +108,7 @@
         if (st.step !== "guess" || a.round !== st.round || st.guesses[pid]) return false;
         const lat = Number(a.lat), lng = Number(a.lng);
         if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return false;
-        st.guesses[pid] = { lat, lng };
+        st.guesses[pid] = { lat, lng, at: now - (st.startedAt || now) };
         tick(s, now);
         return true;
       }
@@ -129,8 +136,13 @@
     const out = {
       step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: reg.name, levelName: LEVELS[st.level || "gemischt"].name, bounds: reg.bounds,
       timerName: TIMERS[st.timer].name, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
-      place: pl ? { name: pl[0], kind: pl[1] } : null, submitted: Object.keys(st.guesses || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
+      mode: st.mode || "karte",
+      place: pl ? (st.mode === "oben" && st.step === "guess" ? { name: null, kind: pl[1] } : { name: pl[0], kind: pl[1] }) : null, submitted: Object.keys(st.guesses || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };
+    if (st.mode === "oben" && st.step === "guess" && pl) {
+      out.pic = { lat: pl[2], lng: pl[3], zoom: OBEN.zoom[st.region] || 14, steps: OBEN.steps, stepMs: OBEN.stepMs, factors: OBEN.factors };
+      out.elapsed = Math.max(0, now - (st.startedAt || now));
+    }
     if (st.step === "reveal" || st.step === "final") {
       if (pl) out.answer = { lat: pl[2], lng: pl[3] };
       out.result = st.result;
@@ -143,5 +155,5 @@
     return out;
   }
 
-  root.S10Geo = { start, apply, tick, publicState, distanceKm, pointsFor, poolFor, countNew, ROUND_CHOICES, TIMERS, LEVELS };
+  root.S10Geo = { start, apply, tick, publicState, distanceKm, pointsFor, poolFor, countNew, ROUND_CHOICES, TIMERS, LEVELS, OBEN };
 })(typeof window !== "undefined" ? window : globalThis);
