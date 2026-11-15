@@ -34,6 +34,14 @@
     return 0;
   }
   // Trumpf zugeben: wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen
+  // Was gilt für die zweite Karte? "pflicht" = Trumpf zugeben/stechen, "guter" = Guter ausgespielt (kein Zwang), "frei"
+  function followRule(r) {
+    if (r.trick.length !== 1) return null;
+    const led = r.trick[0].card;
+    const trumpLed = isTrump(led, r.trump, r.weliMode) || (r.schlag === "6" && led === "schelle-6");
+    if (!trumpLed) return "frei";
+    return led === guterOf(r.schlag, r.trump, r.weliMode) ? "guter" : "pflicht";
+  }
   function legalCards(hand, r) {
     if (r.trick.length !== 1) return hand.slice();
     const led = r.trick[0].card;
@@ -165,7 +173,7 @@
     return {
       step: st.step, target: st.target, seats: st.seats.slice(), scores: { ...st.scores }, dealer: st.dealer, roundNo: st.roundNo,
       gestrichen: Object.fromEntries(st.seats.map((id) => [id, gestrichen(st, id)])), winners: st.winners,
-      vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump, r.weliMode) : null, weliMode: st.weliMode,
+      vorhand: r.vorhand, schlag: r.schlag, trump: r.trump, guter: r.schlag && r.trump ? guterOf(r.schlag, r.trump, r.weliMode) : null, weliMode: st.weliMode, follow: st.step === "play" ? followRule(r) : null,
       trick: r.trick.slice(), lastTrick: r.lastTrick, won: { ...r.won }, tricks: { ...r.tricks }, value: r.value, bid: r.bid, vierer: !!r.vierer,
       noBid: r.noBid, giveUpBy: r.giveUpBy && !r.decided && r.hands[r.giveUpBy].length === 5 ? r.giveUpBy : null, turn: currentTurn(st),
       mustDecide: r.giveUpBy && needsDecision(r, r.giveUpBy) ? r.giveUpBy : null,

@@ -647,3 +647,4 @@ textarea { resize: vertical; font: inherit; }
 .wmode ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 5px; line-height: 1.35; }
 .wmode b { color: var(--ink); font-weight: 600; }
 @media (max-width: 899px) { .wmode { margin-top: 12px; } }
+.wrule { font-size: .85rem; padding: 6px 10px; border-radius: 10px; background: rgba(255, 200, 61, .12); border: 1px solid rgba(255, 200, 61, .35); }

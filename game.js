@@ -1503,7 +1503,8 @@
     if (!st) return;
     const nTricks = st.seats.reduce((a, id) => a + st.tricks[id], 0);
     if (wShown.round !== st.roundNo) { wShown = { round: st.roundNo, n: nTricks }; wHold = null; }
-    if (nTricks > wShown.n && !wHold && st.lastTrick) {
+    if (wHold && st.trick.length) { wShown.n = nTricks; wHold = null; } // neue Karte liegt: alten Stich nicht mehr zeigen
+    if (nTricks > wShown.n && !wHold && st.lastTrick && !st.trick.length) {
       wHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards };
       const held = wHold, heldRound = st.roundNo;
       setTimeout(() => {
@@ -1597,7 +1598,9 @@
       else if (st.mustDecide === me) action = `<p><b>Du bist gestrichen – es gehen 4.</b> Hältst du oder gehst du?</p><div class="wbtns">
             <button class="btn primary" id="w-hold4">Halten (um 4)</button>
             <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} bekommt 2)</button></div>`;
-      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? "Spiel eine Karte aus." : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+        ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgespielt:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
+          : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgespielt – kein Trumpf-Zwang.</p>` : ""}
         <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">Bieten (auf ${st.value + 1})</button>` : ""}
         ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
     } else if (st.step === "roundEnd" || st.step === "final") {
