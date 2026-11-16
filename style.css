@@ -1000,3 +1000,7 @@ textarea { resize: vertical; font: inherit; }
 #camdock.stage .camtile.novideo .caminit { font-size: 4rem; }
 #camdock.stage .cambtns button { font-size: 1rem; }
 @media (max-width: 640px) { #camdock.stage .camtile { aspect-ratio: 3 / 4; max-height: 72vh; } #camdock.stage.pip .camtile.self { width: 30% !important; min-width: 90px; } }
+/* Mitspieler-Bild immer gleich groß – egal ob die eigene Kamera an ist (Bild-im-Bild) oder nicht */
+#camdock:not(.pip) .camtile:not(.self) { width: 220px; }
+#camdock.big:not(.pip) .camtile:not(.self) { width: 340px; }
+@media (max-width: 640px) { #camdock:not(.pip) .camtile:not(.self) { width: 150px; } #camdock.big:not(.pip) .camtile:not(.self) { width: 220px; } }
