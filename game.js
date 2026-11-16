@@ -1748,6 +1748,7 @@
     on("#w-fold", () => send({ type: "wBidAnswer", accept: false }));
     const md = app.querySelector(".wmode");
     if (md) md.ontoggle = () => store.set("s10-wmode-open", md.open);
+    stackHands();
     on("#w-hold4", () => send({ type: "wHold" }));
     on("#w-go", () => send({ type: "wGiveUp" }));
     on("#w-giveup", async () => { if (await askConfirm("Wirklich aufgeben?", "Dein Gegner bekommt 2 Punkte.", "Aufgeben")) send({ type: "wGiveUp" }); });
@@ -1774,6 +1775,10 @@
     });
   }
 
+  // Handkarten fest von links nach rechts stapeln (links unten, rechts oben)
+  function stackHands() {
+    app.querySelectorAll(".whand").forEach((h) => [...h.children].forEach((el, i) => { el.style.position = "relative"; el.style.zIndex = String(i + 1); }));
+  }
   // ---------- Schnapsen ----------
   let xShown = { round: 0, n: 0 }, xHold = null;
   // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
@@ -1909,6 +1914,7 @@
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
+    stackHands();
     if (!waitDraw && (xDraw.cards.length || xDraw.opp)) {
       const src = app.querySelector(".xstack .wcard, .xatout .wcard, .xtalon");
       const from = src ? src.getBoundingClientRect() : null;
@@ -1918,8 +1924,10 @@
         if (!from || !el.animate) return;
         const to = el.getBoundingClientRect();
         const dx = from.left + from.width / 2 - (to.left + to.width / 2), dy = from.top + from.height / 2 - (to.top + to.height / 2);
-        el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.55) rotate(-8deg)`, opacity: .6 }, { transform: "translate(0, 0) scale(1) rotate(0)", opacity: 1 }],
+        const z = el.style.zIndex; el.style.zIndex = "50"; // nur während des Flugs ganz oben
+        const an = el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.55) rotate(-8deg)`, opacity: .6 }, { transform: "translate(0, 0) scale(1) rotate(0)", opacity: 1 }],
           { duration: 650, delay: i * 180, easing: "cubic-bezier(.25,.8,.3,1)", fill: "backwards" });
+        an.onfinish = an.oncancel = () => { el.style.zIndex = z; };
       });
       xDraw = { round: st.roundNo, cards: [], opp: 0 };
     }
