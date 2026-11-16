@@ -106,6 +106,17 @@
         <path d="M52 146 V58 Q52 40 68 39 H80 Q96 40 96 58 V146Z" fill="#3a3478"/><path d="M58 142 V60 Q58 46 70 45 H78 Q90 46 90 60 V142" fill="none" stroke="#ffc83d" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="2 3"/>
         <circle cx="74" cy="31" r="4" fill="#ffc83d" stroke="#a37400" stroke-width="1"/>
         <rect x="42" y="124" width="64" height="12" rx="4" fill="#6e4520" stroke="#5a3712" stroke-width="1.2"/>
+        <path d="M28 163.5 L38 149 H100 L106 163.5Z" fill="${c}" stroke="${ink}" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M33 160 L40 152.5 H98 L102 160Z" fill="none" stroke="#ffc83d" stroke-width="1" stroke-opacity=".8"/>
+        <g fill="#ffc83d">${[32, 42, 52, 62, 72, 82, 92, 102].map((fx) => `<rect x="${fx - 1}" y="163" width="2" height="2.4" rx=".6"/>`).join("")}</g>
+        <rect x="29" y="106" width="6" height="44" rx="2" fill="#6b4423" stroke="#3f2610" stroke-width="1.1"/>
+        <path d="M27 104 H52 V111 H27 Q25 107.5 27 104Z" fill="#6b4423" stroke="#3f2610" stroke-width="1.1"/>
+        <path d="M27 105.2 H51" stroke="#a87440" stroke-width="1"/>
+        <circle cx="31" cy="101" r="5" fill="#ffc83d" stroke="#a37400" stroke-width="1"/>
+        <path d="M27.4 98.5 Q31 95.5 34.6 98.5 Q35.8 102 34 104.5 M27.4 98.5 Q26.2 102 28 104.5" fill="none" stroke="#a37400" stroke-width=".8"/>
+        <circle cx="29.6" cy="100.5" r=".7" fill="#5a3712"/><circle cx="32.4" cy="100.5" r=".7" fill="#5a3712"/><path d="M30 103 Q31 103.8 32 103" stroke="#5a3712" stroke-width=".6" fill="none"/>
+        <rect x="99" y="106" width="5" height="44" rx="2" fill="#6b4423" stroke="#3f2610" stroke-width="1.1"/>
+        <path d="M96 104 H105 Q106.5 107.5 105 111 H96Z" fill="#6b4423" stroke="#3f2610" stroke-width="1.1"/>
         <path d="M${x - 19} 128 C${x - 21} 100 ${x - 14} 88 ${x} 86 C${x + 14} 88 ${x + 21} 100 ${x + 19} 128Z" fill="${c}" stroke="${ink}" stroke-width="1.3"/>
         <path d="M${x} 88 V128" stroke="#fff" stroke-opacity=".35" stroke-width="2.4"/>
         <path d="M${x - 19} 124 Q${x} 132 ${x + 19} 124 L${x + 19} 129 Q${x} 137 ${x - 19} 129Z" fill="#f4efe4" stroke="#9a8f78" stroke-width=".8"/>
@@ -117,8 +128,12 @@
         <circle cx="${x + 24}" cy="113" r="3.4" fill="${skin}" stroke="${ink}" stroke-width=".9"/>
         <path d="M${x + 25} 70 V126" stroke="#a37400" stroke-width="2.6" stroke-linecap="round"/>
         <circle cx="${x + 25}" cy="68" r="4.2" fill="#ffc83d" stroke="#a37400" stroke-width="1.1"/>
-        <path d="M${x - 15} 100 Q${x - 20} 108 ${x - 16} 114" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/>
-        <circle cx="${x - 15}" cy="116" r="5.4" fill="#ffc83d" stroke="#a37400" stroke-width="1"/><path d="M${x - 15} 110.6 V107.6 M${x - 16.8} 109 H${x - 13.2}" stroke="#a37400" stroke-width="1.1"/>
+        <path d="M${x - 15} 96 Q${x - 28} 100 ${x - 35} 96" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <path d="M${x - 15} 96 Q${x - 28} 100 ${x - 35} 96" stroke="${ink}" stroke-opacity=".3" stroke-width=".8" fill="none"/>
+        <circle cx="${x - 37}" cy="88" r="6" fill="#ffc83d" stroke="#a37400" stroke-width="1.1"/>
+        <path d="M${x - 43} 88 H${x - 31} M${x - 37} 88 V94" stroke="#a37400" stroke-width=".8"/>
+        <path d="M${x - 37} 82 V78 M${x - 39} 79.8 H${x - 35}" stroke="#a37400" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="${x - 36.5}" cy="95.5" r="3.4" fill="${skin}" stroke="${ink}" stroke-width=".9"/>
         <circle cx="${x}" cy="70" r="13" fill="${skin}" stroke="${ink}" stroke-width="1.3"/>
         <circle cx="${x - 4.5}" cy="68" r="1.5" fill="${ink}"/><circle cx="${x + 4.5}" cy="68" r="1.5" fill="${ink}"/>
         <path d="M${x - 3} 72.5 Q${x} 74 ${x + 3} 72.5" stroke="#c98d6e" stroke-width="1.2" fill="none"/>
