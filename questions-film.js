@@ -99,7 +99,7 @@ window.SCHLAU10_CARDS.push(...[
     ["Spielte Helena in „Troja“", "Diane Kruger"], ["Komponist von „Der König der Löwen“ und „Inception“", "Hans Zimmer"],
     ["Regisseur von „Das Boot“ und „Troja“", "Wolfgang Petersen"], ["Rannte als Lola", "Franka Potente"], ["Hauptrolle in „Good Bye, Lenin!“", "Daniel Brühl"] ] },
 
-  { q: "Film & Serien – schätze!", hint: "Einheit steht dabei", type: "estimate", items: [
+  { q: "Film & Serien – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.1, items: [
     ["Laufzeit von „Titanic“ (Minuten)", 194], ["Laufzeit von „Die Rückkehr des Königs“, Kinofassung (Minuten)", 201], ["Laufzeit von „Oppenheimer“ (Minuten)", 180],
     ["Budget von „Avatar“ (Mio. $)", 237], ["Einspielergebnis von „Avatar“ (Mrd. $)", 2.9], ["Folgen von „Friends“", 236],
     ["Folgen der „Lindenstraße“", 1758], ["Folgen von „Breaking Bad“", 62], ["Höhe einer Oscar-Statue (cm)", 34], ["Gewicht einer Oscar-Statue (kg)", 3.9] ] },

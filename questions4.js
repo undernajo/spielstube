@@ -138,7 +138,7 @@ window.SCHLAU10_CARDS.push(
     ["Lehre vom Wetter", "Meteorologie"], ["Lehre von den Erdbeben", "Seismologie"], ["Lehre von Gesteinen und Erdaufbau", "Geologie"],
     ["Lehre von den Fossilien", "Paläontologie"] ] },
 
-  { q: "Unsere Erde – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", items: [
+  { q: "Unsere Erde – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.15, items: [
     ["Anteil der Erdoberfläche mit Wasser (%)", 71], ["Anteil Salzwasser am Wasser der Erde (%)", 97], ["Tiefe des Marianengrabens (m)", 11000],
     ["Temperatur im Erdkern (°C)", 5500], ["Anteil Stickstoff in der Luft (%)", 78], ["Anteil Sauerstoff in der Luft (%)", 21],
     ["Fläche des Amazonas-Regenwalds (Mio. km²)", 5.5], ["Fläche der Sahara (Mio. km²)", 9.2], ["Mittlere Temperatur der Erde (°C)", 15],
@@ -213,7 +213,7 @@ window.SCHLAU10_CARDS.push(
     ["Bayerischer Camembert-Aufstrich", "Obatzda", ["Obazda", "Obatzter"]], ["Zerrissener Pfannkuchen aus Österreich", "Kaiserschmarrn"],
     ["Kalte spanische Tomatensuppe", "Gazpacho"], ["Kartoffelklöße aus Thüringen", "Thüringer Klöße", ["Klöße", "Knödel", "Thüringer Knödel"]] ] },
 
-  { q: "Essen & Trinken – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", items: [
+  { q: "Essen & Trinken – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
     ["Kalorien in 100 g Zucker", 400], ["Kalorien in einer mittelgroßen Banane", 100], ["Koffein in einem Espresso (mg)", 65],
     ["Kalorien in 100 g Butter", 740], ["Kalorien in 1 Liter Cola", 420], ["Zuckerwürfel in einer 0,33-l-Dose Cola", 12],
     ["Liter Bier pro Kopf und Jahr in Deutschland", 88], ["Liter Kaffee pro Kopf und Jahr in Deutschland", 165],
@@ -240,7 +240,7 @@ window.SCHLAU10_CARDS.push(
     ["Grand Canyon", "USA", ["Vereinigte Staaten", "Amerika"]], ["Angkor Wat", "Kambodscha"], ["Chichén Itzá", "Mexiko"], ["Ha-Long-Bucht", "Vietnam"],
     ["Fuji", "Japan"], ["Iguazú-Wasserfälle", "Argentinien", ["Brasilien"]] ] },
 
-  { q: "Wie weit ist es (Luftlinie)?", type: "estimate", unit: "km", items: [
+  { q: "Wie weit ist es (Luftlinie)?", type: "estimate", tol: 0.1, unit: "km", items: [
     ["Berlin – Paris", 880], ["Berlin – Rom", 1180], ["München – Wien", 355], ["Hamburg – München", 612], ["London – Paris", 340],
     ["Madrid – Lissabon", 500], ["Wien – Zürich", 600], ["Berlin – Moskau", 1610], ["Frankfurt – New York", 6200], ["Berlin – Peking", 7360] ] },
 
@@ -256,7 +256,7 @@ window.SCHLAU10_CARDS.push(
     ["Schalke 04", "Gelsenkirchen"], ["Werder", "Bremen"], ["Bayer 04", "Leverkusen"], ["FC St. Pauli", "Hamburg"], ["Juventus", "Turin", ["Torino"]],
     ["Ajax", "Amsterdam"], ["Benfica", "Lissabon"], ["Celtic", "Glasgow"], ["Galatasaray", "Istanbul"], ["Rapid", "Wien"] ] },
 
-  { q: "Sport – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", items: [
+  { q: "Sport – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.15, items: [
     ["Länge der Tour de France (km)", 3400], ["Höhe eines Basketballkorbs (m)", 3.05], ["Gewicht eines Fußballs (g)", 430],
     ["Länge eines Fußballfelds bei WM-Spielen (m)", 105], ["Durchmesser eines Golflochs (cm)", 10.8], ["Höhe des Tennisnetzes in der Mitte (cm)", 91.4],
     ["Gewicht der Kugel beim Kugelstoßen der Männer (kg)", 7.26], ["Länge eines olympischen Schwimmbeckens (m)", 50],

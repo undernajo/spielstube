@@ -253,11 +253,19 @@
       p.roundPts = 0; p.status = "out";
       event(s, "bad", (card.type === "tf"
         ? `${p.name}: „${item[0]}“ trifft NICHT zu ✗`
-        : `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ richtig wäre ${fmt(card, item[1])}${note}`) + (lost ? ` – ${lost} Punkt${lost > 1 ? "e" : ""} verloren` : ""));
+        : card.type === "estimate"
+          ? `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ gezählt hätte ${estRange(card, item[1])} (genau: ${fmt(card, item[1])})${note}`
+          : `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ richtig wäre ${fmt(card, item[1])}${note}`) + (lost ? ` – ${lost} Punkt${lost > 1 ? "e" : ""} verloren` : ""));
     }
     advance(s, cards);
   }
 
+  // Bereich, der bei einer Schätzfrage noch gezählt hätte (z. B. „97.200 bis 118.800“)
+  function estRange(card, val) {
+    const tol = (card.tol != null ? card.tol : 0.1) * Math.abs(val);
+    const r = (x) => Number(x.toPrecision(4));
+    return `${fmt(card, r(val - tol)).replace(unitStr(card), "")} bis ${fmt(card, r(val + tol))}`;
+  }
   function pass(s, cards, skipped) {
     const p = s.players[s.turn];
     p.status = "passed";

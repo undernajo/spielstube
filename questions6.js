@@ -87,7 +87,7 @@ window.SCHLAU10_CARDS.push(
     ["Wir nutzen nur 10 % unseres Gehirns.", false], ["Blut in den Venen ist blau.", false], ["Rasierte Haare wachsen dicker nach.", false],
     ["Der Magen liegt unterhalb des Bauchnabels.", false] ] },
 
-  { q: "Körper – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", items: [
+  { q: "Körper – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
     ["Hautfläche eines Erwachsenen (m²)", 1.8], ["Herzschläge pro Tag", 100000], ["Liter Blut, die das Herz pro Tag pumpt", 7000],
     ["Haarwachstum pro Monat (cm)", 1], ["Nervenzellen im Gehirn (Mrd.)", 86], ["Gewicht der Leber (kg)", 1.5], ["Länge des Dünndarms (m)", 6],
     ["Atemzüge pro Tag", 20000], ["Lidschläge pro Minute", 15], ["Fingernagelwachstum pro Monat (mm)", 3] ] },
@@ -128,7 +128,7 @@ window.SCHLAU10_CARDS.push(
     ["Plant Häuser", "Architekt", ["Architektin"]], ["Leitet ein Orchester", "Dirigent", ["Dirigentin"]], ["Stellt Fässer her", "Böttcher", ["Küfer", "Fassbinder"]],
     ["Bindet Bücher", "Buchbinder"] ] },
 
-  { q: "Deutschland – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", items: [
+  { q: "Deutschland – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.1, items: [
     ["Haushalte (Mio.)", 41], ["Anteil der Einpersonenhaushalte (%)", 41], ["Durchschnittsalter der Bevölkerung (Jahre)", 44.6],
     ["Lebenserwartung von Frauen (Jahre)", 83], ["Lebenserwartung von Männern (Jahre)", 78.5], ["Geburten pro Jahr", 680000],
     ["Hunde (Mio.)", 10.5], ["Katzen (Mio.)", 15.7], ["Gesetzlicher Mindesturlaub bei 5-Tage-Woche (Tage)", 20], ["Höhe eines Stockwerks (m)", 3] ] },
