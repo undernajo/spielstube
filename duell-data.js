@@ -338,4 +338,14 @@ window.SCHLAU10_DUELL = [
     ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"]] },
   { cat: "Südtirol", q: "Die 5 Landeshauptleute Südtirols", note: "seit 1948, Stand 2026 · Nachname reicht", names: true, items: [
     ["Karl Erckert"], ["Alois Pupp"], ["Silvius Magnago"], ["Luis Durnwalder", ["Alois Durnwalder"]], ["Arno Kompatscher"]] },
+  { cat: "Geschichte", q: "Die 18 österreichischen Bundeskanzler seit 1945", note: "jede Person einmal, Stand 2026 · Nachname reicht", names: true, items: [
+    ["Karl Renner"], ["Leopold Figl"], ["Julius Raab"], ["Alfons Gorbach"], ["Josef Klaus"], ["Bruno Kreisky"], ["Fred Sinowatz"], ["Franz Vranitzky"],
+    ["Viktor Klima"], ["Wolfgang Schüssel", ["Schuessel"]], ["Alfred Gusenbauer"], ["Werner Faymann"], ["Christian Kern"], ["Sebastian Kurz"],
+    ["Brigitte Bierlein"], ["Alexander Schallenberg"], ["Karl Nehammer"], ["Christian Stocker"]] },
+  { cat: "Geschichte", q: "Die 12 italienischen Staatspräsidenten", note: "seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
+    ["Enrico De Nicola", ["De Nicola"]], ["Luigi Einaudi"], ["Giovanni Gronchi"], ["Antonio Segni"], ["Giuseppe Saragat"], ["Giovanni Leone"],
+    ["Sandro Pertini"], ["Francesco Cossiga"], ["Oscar Luigi Scalfaro", ["Oscar Scalfaro"]], ["Carlo Azeglio Ciampi", ["Carlo Ciampi"]],
+    ["Giorgio Napolitano"], ["Sergio Mattarella"]] },
+  { cat: "Länder", q: "Die 7 Provinzen Venetiens", items: [
+    ["Belluno"], ["Padua", ["Padova"]], ["Rovigo"], ["Treviso"], ["Venedig", ["Venezia"]], ["Verona"], ["Vicenza"]] },
 ];
