@@ -571,8 +571,18 @@
     if (isHost) {
       mq.publish(T("state"), "", { qos: 1, retain: true });
       mq.publish(T("host"), "", { qos: 1, retain: true });
-    } else { sendUp({ type: "leave" }); await outChain; }
-    setTimeout(() => { try { mq.end(); } catch {} go(); }, 400);
+      setTimeout(() => { try { mq.end(); } catch {} go(); }, 400);
+      return;
+    }
+    // Gast: Abmeldung wirklich zustellen (auf Bestätigung des Servers warten), erst dann die Seite verlassen
+    const c = mq;
+    let done = false; const finish = () => { if (done) return; done = true; try { c.end(true); } catch {} go(); };
+    setTimeout(finish, 1500);
+    try {
+      await outChain;
+      const payload = await seal({ type: "leave", clientId: myId });
+      c.publish(T("up"), payload, { qos: 1 }, () => finish());
+    } catch { finish(); }
   }
 
   // ---------- Darstellung ----------
