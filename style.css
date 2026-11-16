@@ -787,3 +787,5 @@ textarea { resize: vertical; font: inherit; }
   .lobby .code { font-size: 2.1rem; letter-spacing: 8px; }
   .lobby-col .rules { margin: 0; }
 }
+/* Gastgeber-Lobby: gewählte Fragen-Sets ohne goldenen Rahmen (Häkchen genügt) */
+.setopt.on:not(.ro) { border-color: var(--line); background: #2a2350; }
