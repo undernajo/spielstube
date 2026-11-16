@@ -1845,8 +1845,9 @@
         ${st.closedBy ? `<span class="wcall">zugedreht</span>` : !st.talon ? `<span class="wcall">Stapel leer</span>` : ""}</div>`;
     const myTurn = st.turn === me;
     // gemütlich: Augen und bereits angesagte 20er/40er direkt beim Spieler
-    const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]} noch offen)` : ""}</span>`
-      + st.calls.filter((c) => c.pid === id).map((c) => `<span class="wcall xcallchip" title="${c.pts}er in ${sn(c.suit)}${c.pts === 40 ? " (Trumpf)" : ""}">${c.pts}er <span class="wsuit">${WCARDS.sym(c.suit, 1)}</span></span>`).join("") : "";
+    // Augen nur im gemütlichen Modus; angesagte 20er/40er sieht jeder (sie werden ja laut angesagt)
+    const augen = (id) => (st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]} noch offen)` : ""}</span>` : "")
+      + st.calls.filter((c) => c.pid === id).map((c) => `<span class="wcall xcallchip" title="${c.pts}er in ${sn(c.suit)}${c.pts === 40 ? " (Trumpf)" : ""}">${c.pts}er <span class="wsuit">${WCARDS.sym(c.suit, 1)}</span></span>`).join("");
     const combo = `<div class="wcombo" title="Trumpf ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Trumpf</b>
         <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Werfen"}</span></div>`;
     const turnBadge = myTurn ? `<div class="wturn me">Du bist dran!</div>`
@@ -1860,11 +1861,11 @@
       if (opt.aus) btns.push(`<button class="btn ${priv && priv.myPoints >= 66 ? "primary" : "ghost"}" id="x-aus">Aus! (66)</button>`);
     }
     const decide = btns.length ? `<div class="wdecide wbidbox">${btns.join("")}</div>` : "";
-    let action = "";
+    let action = "", hint = "";
+    // Hinweise kommen aufs Spielfeld; der rechte Rand zeigt während des Spiels nur Punkte und Hilfe
     if (st.step === "play") {
-      action = `<p class="muted small">${myTurn ? (st.mustLead ? `Wirf König oder Ober in ${sn(st.mustLead)} aus.` : st.trick.length ? "Wirf eine Karte." : "Wirf eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
-        ${myTurn && st.strict && st.trick.length ? `<p class="wrule"><b>Farbzwang:</b> Farbe bedienen und wenn möglich höher stechen, sonst trumpfen.</p>` : ""}
-        ${st.calls.length ? `<p class="muted small">Angesagt: ${st.calls.map((c) => `${esc(nameOf(c.pid))} ${c.pts} (${sn(c.suit)})`).join(", ")}</p>` : ""}`;
+      if (myTurn && st.mustLead) hint = `Wirf König oder Ober in ${sn(st.mustLead)} aus.`;
+      else if (myTurn && st.strict && st.trick.length) hint = "<b>Farbzwang:</b> Farbe werfen und wenn möglich höher stechen, sonst trumpfen.";
     } else if (st.result) {
       const r = st.result, why = { aus: "mit 66 Augen", "letzter-stich": "mit dem letzten Stich", zugedreht: "nach dem Zudrehen", "zudrehen-misslungen": "– Zudrehen misslungen", "falsches-aus": "– falsches „Aus“" }[r.reason] || "";
       action = `<div class="banner ${r.winner === me ? "win" : ""}"><b>${esc(nameOf(r.winner))} gewinnt die Runde ${why}: +${r.points}</b>
@@ -1916,7 +1917,7 @@
             <div class="wtop">${combo}${myTurn ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}${talon}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${augen(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
-            ${myTurn ? turnBadge : ""}${decide}
+            ${myTurn ? turnBadge : ""}${hint ? `<p class="whint">${hint}</p>` : ""}${decide}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${augen(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
