@@ -826,3 +826,29 @@ textarea { resize: vertical; font: inherit; }
   background: rgba(0, 0, 0, .28); color: #e8f3ec; }
 .whint b { color: var(--accent); }
 .wpanel .waction:empty { display: none; }
+/* Stadt, Land, Fluss: Buchstabe und Zeit groß und zentriert, gut sichtbarer Countdown, größere Felder */
+.slf-head { flex-direction: column; justify-content: center; text-align: center; gap: 6px; padding: 14px 18px 12px; }
+.slf-headrow { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.slf-head .slf-info { flex: none; justify-items: center; }
+.slf-head .slf-timer { font-size: 3rem; line-height: 1; min-width: 3.2em; text-align: left; }
+.slf-timer.urgent { color: var(--bad); animation: pulse-t2 .8s ease-in-out infinite; }
+@keyframes pulse-t2 { 50% { transform: scale(1.12); opacity: .75; } }
+.slf-head:has(.slf-timer.urgent) { border-color: var(--bad); box-shadow: 0 0 0 3px rgba(239, 75, 90, .25); }
+@media (min-width: 900px) {
+  .slf-form { gap: 12px; }
+  .slf-field { padding: 12px 14px; }
+  .slf-field span { font-size: .95rem; }
+  .slf-field input { font-size: 1.35rem; padding: 14px 14px; }
+}
+@media (max-width: 640px) {
+  .screen.slf .slf-head { position: sticky; top: 4px; z-index: 5; padding: 8px 10px; gap: 2px; }
+  .slf-headrow { gap: 14px; }
+  .slf-head .slf-letter { width: 56px; height: 56px; font-size: 2.2rem; border-radius: 14px; box-shadow: 0 4px 0 #c48f0a; }
+  .slf-head .slf-timer { font-size: 2.2rem; }
+  .slf-head .slf-info .muted { display: none; }
+}
+/* Auswertung: Zusatz „doppelt“ bleibt in der Zeile; am Handy bleibt „Passt“ unten sichtbar */
+.slf-ans em { white-space: nowrap; }
+@media (max-width: 640px) {
+  .screen.slf .slf-actions { position: sticky; bottom: 8px; z-index: 5; padding: 8px; border-radius: 16px; background: rgba(20, 16, 50, .92); box-shadow: 0 -6px 18px rgba(0, 0, 0, .35); }
+}

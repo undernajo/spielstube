@@ -1240,9 +1240,11 @@
     if (st.step === "writing") {
       main = `
         <div class="slf-head">
-          <div class="slf-letter" aria-label="Buchstabe ${st.letter}">${st.letter}</div>
-          <div class="slf-info"><div class="muted small">Alles mit <b>${st.letter}</b> · ${esc(st.timerName)}</div>
-            <div id="slf-timer" class="slf-timer">${fmtClock(st.endsIn)}</div><div id="slf-stop">${slfStopHtml(st, nameOf)}</div></div>
+          <div class="slf-headrow">
+            <div class="slf-letter" aria-label="Buchstabe ${st.letter}">${st.letter}</div>
+            <div id="slf-timer" class="slf-timer">${fmtClock(st.endsIn)}</div>
+          </div>
+          <div class="slf-info"><div class="muted small">${esc(st.timerName)}</div><div id="slf-stop">${slfStopHtml(st, nameOf)}</div></div>
         </div>
         <form class="slf-form" autocomplete="off" onsubmit="return false">
           ${st.cats.map((c, i) => `<label class="slf-field"><span>${esc(c)}</span>
