@@ -2061,6 +2061,7 @@
     }).join("");
     if (fqRendered === key && app.querySelector(".fq-main")) { const sc = app.querySelector(".fq-players"); if (sc) sc.innerHTML = players(); return; }
     fqRendered = key;
+    if (st.step === "reveal" || st.step === "final") fqSent = null; // Schutz gegen doppeltes Abschicken gilt nur innerhalb einer Runde
     const fmtLeft = (ms) => ms >= 60000 ? Math.floor(ms / 60000) + ":" + String(Math.floor(ms / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(ms / 1000) + " s";
     const time = () => st.timerMs && st.deadlineIn ? `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${fmtLeft(st.deadlineIn)}</b></div>` : "";
     const stepNo = st.step === "write" ? 0 : st.step === "answer" || st.step === "judge" ? 1 : 2;
@@ -2143,13 +2144,16 @@
     const qf = app.querySelector(".fq-form");
     if (qf) {
       const ta = qf.querySelector("#fq-q");
-      try { const draft = sessionStorage.getItem("s10-fq-draft:" + st.round); if (draft) ta.value = draft; } catch (e) {} // Entwurf bleibt bei Neuzeichnen erhalten
-      ta.oninput = () => { try { sessionStorage.setItem("s10-fq-draft:" + st.round, ta.value); } catch (e) {} };
+      // Entwurf bleibt nur innerhalb derselben Runde erhalten (z. B. beim Neuzeichnen), danach ist das Feld leer
+      const dKey = "s10-fq-draft", dId = [v.code, st.round, st.li, st.asker].join(":");
+      try { const d = JSON.parse(sessionStorage.getItem(dKey) || "null"); if (d && d.id === dId) ta.value = d.text; else sessionStorage.removeItem(dKey); } catch (e) {}
+      ta.oninput = () => { try { sessionStorage.setItem(dKey, JSON.stringify({ id: dId, text: ta.value })); } catch (e) {} };
       ta.focus();
       ta.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); qf.requestSubmit(); } };
       qf.onsubmit = (e) => {
         e.preventDefault(); const t = ta.value.trim(); if (!t) return;
         const k = "q" + st.round; if (fqSent === k) return; fqSent = k;
+        try { sessionStorage.removeItem("s10-fq-draft"); } catch (e) {}
         send({ type: "fqQuestion", round: st.round, text: t });
       };
     }
