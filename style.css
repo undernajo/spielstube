@@ -972,3 +972,7 @@ textarea { resize: vertical; font: inherit; }
 #camslot:empty { display: none; }
 #camdock.docked .camtile { aspect-ratio: 16 / 10; }
 .lobby-col .row2 [data-cam], .lobby-col .row2 [data-mic] { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+/* Lobby: Code antippbar, ein Einladen-Knopf */
+.code-copy { display: block; width: 100%; background: none; border: 0; font-family: inherit; cursor: pointer; padding: 2px 0; border-radius: 12px; }
+.code-copy:hover { background: rgba(255, 200, 61, .08); }
+#lobbyInvite { width: 100%; }

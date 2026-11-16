@@ -810,10 +810,9 @@
         <div class="lobby-cols">
           <div class="panel lobby-col">
             <p class="muted">Stuben-Code</p>
-            <div class="code">${esc(view.code)}</div>
-            ${isHost ? `
-              ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>` : `
-              <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>`}` : ""}
+            <button type="button" class="code code-copy" id="copycode" title="Code kopieren">${esc(view.code)}</button>
+            ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
+              : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             <h3>Spieler</h3>
             <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
@@ -837,12 +836,11 @@
       if (b.dataset.wish === view.game) return toast("Das wird gerade gespielt.", "info");
       send({ type: "wish", game: b.dataset.wish });
     });
-    const copy = app.querySelector("#copy");
-    if (copy) copy.onclick = () => {
-      const t = app.querySelector("#link");
-      (navigator.clipboard ? navigator.clipboard.writeText(t.value) : Promise.reject()).then(
-        () => toast("Link kopiert!", "ok"), () => { t.select(); document.execCommand("copy"); toast("Link kopiert!", "ok"); });
-    };
+    const li = app.querySelector("#lobbyInvite");
+    if (li) li.onclick = invite;
+    const cc = app.querySelector("#copycode");
+    if (cc) cc.onclick = () => (navigator.clipboard ? navigator.clipboard.writeText(view.code) : Promise.reject()).then(
+      () => toast("Code kopiert ✓", "ok"), () => toast("Code: " + view.code, "info"));
     const start = app.querySelector("#start");
     const tsel = app.querySelector("#target");
     if (tsel) tsel.onchange = () => { chosenTarget = Number(tsel.value); store.set("s10-target", chosenTarget); publish(); };
