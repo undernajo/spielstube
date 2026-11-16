@@ -809,8 +809,7 @@
         <h1 class="logo small">${LOGO}</h1>
         <div class="lobby-cols">
           <div class="panel lobby-col">
-            <p class="muted">Stuben-Code</p>
-            <button type="button" class="code code-copy" id="copycode" title="Code kopieren">${esc(view.code)}</button>
+            <button type="button" class="code code-copy" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             <h3>Spieler</h3>
