@@ -985,7 +985,7 @@
       <ul>
         <li>20 Karten: Ass (11 Augen), Zehner (10), König (4), Ober (3), Unter (2) in vier Farben. Jeder hat 5 Karten, die aufgedeckte Karte unter dem Stapel ist Trumpf.</li>
         <li>Solange der Stapel offen ist, darf man jede Karte werfen. Nach jedem Stich ziehen beide nach – der Gewinner zuerst.</li>
-        <li><b>20 / 40 ansagen:</b> Wer am Ausspielen ist und König und Ober einer Farbe hat, sagt 20 an (in Trumpf 40) und spielt eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
+        <li><b>20 / 40 ansagen:</b> Wer auswirft und König und Ober einer Farbe hat, sagt 20 an (in Trumpf 40) und wirft eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
         <li><b>Tauschen:</b> Mit dem Trumpf-Unter darf man die aufgedeckte Trumpfkarte holen. <b>Zudrehen:</b> Stapel schließen – ab dann muss man Farbe bedienen, höher stechen oder trumpfen.</li>
         <li>Wer zuerst <b>66 Augen</b> hat, gewinnt die Runde: 3 Punkte, wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Wer zuerst 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.</li>
         <li>Gemütlich: die Augen werden angezeigt und „Aus“ geht automatisch. Klassisch: selbst mitzählen und „Aus!“ sagen – zu früh kostet die Runde.</li>
