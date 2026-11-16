@@ -95,6 +95,15 @@
     <path d="M34 26 h22 a5 5 0 0 1 5 5 v12 a5 5 0 0 1 -5 5 h-2 v6 l-6 -6 h-14 a5 5 0 0 1 -5 -5 v-12 a5 5 0 0 1 5 -5Z" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.3"/>
     <path d="M9 25 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>
     <path d="M35 37 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
+  // Zehner-Duell: Liste mit nummerierten Zeilen, zwei Spielerfarben haken ab
+  function duellIcon() {
+    const rows = [0, 1, 2, 3, 4].map((r) => {
+      const y = 16 + r * 8.2, done = r < 3, col = r % 2 ? "#4fc3f7" : "#ffc83d";
+      return `<circle cx="20" cy="${y}" r="2.6" fill="${done ? col : "#d6cfb8"}"/><path d="M26 ${y} H${done ? 44 - r * 3 : 38}" stroke="${done ? "#5a4a2a" : "#cbbf9f"}" stroke-width="2.2" stroke-linecap="round"/>`;
+    }).join("");
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="8" width="40" height="48" rx="5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>${rows}
+      <circle cx="47" cy="47" r="11" fill="#ef4b5a" stroke="#a32f3b" stroke-width="1.4"/><text x="47" y="51.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12.5" fill="#fff">10</text></svg>`;
+  }
   // Symbol für „Höher oder tiefer“: zwei Karten, grüner Pfeil nach oben, roter nach unten
   function hlIcon() {
     const card = (x, rot, up) => `<g transform="rotate(${rot} ${x + 11} 50)"><rect x="${x}" y="14" width="22" height="34" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
@@ -105,6 +114,7 @@
   const GAMES = [
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
+    { key: "duell", color: "#3ccf8e", name: "Zehner-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
     { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
@@ -117,6 +127,8 @@
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
   let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
+  const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
+  let duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
   const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
   let wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
   const SCH = window.S10Schnapsen;
@@ -263,7 +275,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -324,11 +336,16 @@
       HL.start(S, action.opts, now); return true;
     }
     if (type.startsWith("hl")) return S.phase === "hl" && HL.apply(S, pid, action, host, now);
+    if (type === "start" && action.game === "duell") {
+      if (!host || S.phase !== "lobby") return false;
+      return DU.start(S, { ...action.opts, avoid: store.get("s10-du-seen") || [] }, now);
+    }
+    if (type.startsWith("du")) return S.phase === "duell" && DU.apply(S, pid, action, host, now);
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.watten = null; S.schnapsen = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.watten = null; S.schnapsen = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -345,6 +362,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
+      duell: { target: Number(duOpts.target), timer: duOpts.timer },
       watten: { target: Number(wattenOpts.target), weli: wattenOpts.weli },
       schnapsen: { mode: schOpts.mode },
     };
@@ -359,6 +377,11 @@
     view.wl = S.phase === "wl" ? WL.publicState(S) : null;
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
+    view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
+    if (view.duell) { // gespielte Themen merken, damit beim nächsten Mal zuerst neue kommen
+      const seen = store.get("s10-du-seen") || [];
+      if (!seen.includes(view.duell.list.q)) store.set("s10-du-seen", seen.concat(view.duell.list.q).slice(-500));
+    }
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
     const CARD_GAMES = { watten: WAT, schnapsen: SCH };
@@ -713,7 +736,7 @@
       }
       lastLobbyGame = view.game;
     }
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
     camDockPlace();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
@@ -896,12 +919,13 @@
 
   function renderLobby() {
     const isFile = location.protocol === "file:";
-    const rules = ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml;
+    const rules = ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, duell: duRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml;
     const settings = !isHost ? "" : `
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "hl" ? hlSettingsHtml() : ""}
+          ${chosenGame === "duell" ? duSettingsHtml() : ""}
           ${chosenGame === "watten" ? wattenSettingsHtml() : ""}
           ${chosenGame === "schnapsen" ? schSettingsHtml() : ""}
           ${chosenGame === "zehn" ? `
@@ -969,6 +993,7 @@
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
+      if (chosenGame === "duell") return send({ type: "start", game: "duell", opts: duOpts });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
       if (chosenGame === "schnapsen") return send({ type: "start", game: "schnapsen", opts: schOpts });
       if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
@@ -1215,6 +1240,9 @@
     if (view.game === "watten" && lb.watten) {
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
+    if (view.game === "duell" && lb.duell) {
+      return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
+    }
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${Object.keys(HLDATA).length} Kategorien (z. B. Berge, Flüsse, Tiere, Filme, Lieder) · je ${HL.PER_CAT} Vergleiche</p>`;
     }
@@ -1263,6 +1291,9 @@
     if (wT) wT.onchange = () => { wattenOpts.target = Number(wT.value); store.set("s10-watten", wattenOpts); publish(); };
     const wW = app.querySelector("#watten-weli");
     if (wW) wW.onchange = () => { wattenOpts.weli = wW.value; store.set("s10-watten", wattenOpts); publish(); };
+    const duT = app.querySelector("#du-target"), duZ = app.querySelector("#du-timer");
+    if (duT) duT.onchange = () => { duOpts.target = Number(duT.value); store.set("s10-du", duOpts); publish(); };
+    if (duZ) duZ.onchange = () => { duOpts.timer = duZ.value; store.set("s10-du", duOpts); publish(); };
     const hlL = app.querySelector("#hl-length");
     if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
@@ -1295,6 +1326,27 @@
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  function duSettingsHtml() {
+    const n = view.players.filter((p) => p.connected).length;
+    return `<label class="field"><span>Spielen bis</span><select id="du-target">${DU.TARGETS.map((t) =>
+        `<option value="${t}" ${Number(duOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
+      <label class="field"><span>Zeit pro Antwort</span><select id="du-timer">${Object.entries(DU.TIMERS).map(([k, t]) =>
+        `<option value="${k}" ${String(duOpts.timer) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+      <p class="muted small">${DUDATA.length} Themen, z. B. „Die 10 größten Städte Österreichs“ oder „Die 10 höchsten Berge der Welt“.</p>
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      <p class="muted small">${n < 2 ? "Das Zehner-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Zehner-Duell zu zweit."}</p>`;
+  }
+  const duRulesHtml = `
+    <details class="rules"><summary>Regeln: Zehner-Duell</summary>
+      <ul>
+        <li>Es erscheint ein Thema mit genau <b>zehn Antworten</b>, z. B. „Die 10 größten Städte Österreichs“. Die Reihenfolge ist egal.</li>
+        <li>Ihr nennt <b>abwechselnd</b> je eine Antwort. Richtige Antworten werden in der Liste aufgedeckt.</li>
+        <li>Wer eine <b>falsche</b> oder eine <b>schon genannte</b> Antwort gibt oder die <b>Zeit</b> überzieht, verliert die Runde – der andere bekommt den Punkt.</li>
+        <li>Sind alle zehn gefunden, bekommt den Punkt, wer die <b>zehnte</b> genannt hat.</li>
+        <li>Kleine Tippfehler zählen. Ist eine Antwort nur ähnlich, entscheidet der Gegner, ob sie gilt.</li>
+        <li>Wer anfängt, wechselt jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
+      </ul>
+    </details>`;
   function schSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
     return `<label class="field"><span>Spielweise</span><select id="sch-mode">${Object.entries(SCH.MODES).map(([k, m]) =>
@@ -1913,6 +1965,100 @@
   }
   let hlPick = null; // eigene Wahl (sofort anzeigen, bevor der Gastgeber bestätigt)
   const hlMine = (st) => hlPick && hlPick.key === st.ci + ":" + st.pos ? hlPick.dir : null;
+
+  // ---------- Zehner-Duell ----------
+  let duRendered = null, duSent = null, duTimer = null;
+  function renderDuell() {
+    const v = view, st = v.duell;
+    if (!st) return;
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const seated = st.seats.includes(myId), opp = (id) => st.seats.find((x) => x !== id);
+    const myTurn = st.step === "turn" && st.turn === myId;
+    // Zeit: lokal weiterzählen
+    const endAt = st.deadlineIn ? Date.now() + st.deadlineIn : 0;
+    clearInterval(duTimer);
+    if (endAt) duTimer = setInterval(() => {
+      const bar = app.querySelector(".du-time i"), txt = app.querySelector(".du-time b");
+      if (!bar || view.phase !== "duell") return clearInterval(duTimer);
+      const left = Math.max(0, endAt - Date.now());
+      bar.style.width = (100 * left / st.timerMs) + "%"; txt.textContent = Math.ceil(left / 1000) + " s";
+      bar.parentNode.classList.toggle("urgent", left < 6000);
+    }, 200);
+    const key = [v.code, st.round, st.step, st.turn, st.moves.length, st.judge ? st.judge.text : ""].join(":");
+    const pills = () => st.seats.map((id) => `<div class="du-pill ${st.step === "turn" && st.turn === id ? "on" : ""}" style="--pc:${colorOf(id)}">
+        <i class="pdot"></i><span>${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.score[id]}</b><small>/${st.target}</small></div>`).join("");
+    if (duRendered === key && app.querySelector(".du-main")) { const sc = app.querySelector(".du-pills"); if (sc) sc.innerHTML = pills(); return; }
+    duRendered = key;
+    const rows = st.items.map((it, i) => {
+      const found = it.by != null;
+      return `<li class="du-row ${found ? "found" : it.t ? "missed" : ""} ${st.judge && it.t === st.judge.t && !found ? "" : ""}" style="${found ? `--pc:${colorOf(it.by)}` : ""}">
+        <span class="du-no">${i + 1}</span><span class="du-t">${it.t ? esc(it.t) : "?"}</span>${found ? `<span class="du-by">${esc(nameOf(it.by))}</span>` : ""}</li>`;
+    }).join("");
+    const last = st.moves.slice(-1)[0];
+    const why = { wrong: "gehört nicht dazu", dup: "wurde schon genannt", time: "", full: "" };
+    let action = "";
+    if (st.step === "turn") {
+      action = myTurn
+        ? `<form class="du-form" autocomplete="off"><input id="du-in" maxlength="60" placeholder="Deine Antwort …" enterkeyhint="send" autocapitalize="sentences"><button class="btn primary">Nennen</button></form>`
+        : `<p class="du-wait"><b style="color:${colorOf(st.turn)}">${esc(nameOf(st.turn))}</b> ist dran …</p>`;
+      if (st.timerMs) action = `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${Math.ceil(st.deadlineIn / 1000)} s</b></div>` + action;
+    } else if (st.step === "judge") {
+      const j = st.judge, judge = opp(j.by) === myId;
+      action = `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(j.by))}</b> sagt: „${esc(j.text)}“</div>
+        ${judge ? `<div class="judge-ask">Meint ${esc(nameOf(j.by))} damit <b>${esc(j.t)}</b>? Zählt das?</div>
+          <div class="banner-actions"><button class="btn primary" data-dujudge="1">✓ Zählt</button><button class="btn ghost" data-dujudge="0">✗ Zählt nicht</button></div>`
+          : `<div class="muted small">Ähnlich wie eine Antwort auf der Liste – ${esc(nameOf(opp(j.by)))} entscheidet, ob es zählt …</div>`}</div>`;
+    } else {
+      const r = st.result, iWon = r.winner === myId;
+      const reason = r.why === "full" ? `Alle zehn gefunden – ${esc(nameOf(r.winner))} hat die zehnte genannt.`
+        : r.why === "time" ? `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`
+        : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
+      if (st.step === "roundEnd") action = `<div class="banner ${iWon ? "win" : seated ? "lose" : ""}"><b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>
+          <div class="small">${reason}</div>
+          <div class="banner-actions">${seated || isHost ? `<button id="du-next" class="btn primary">Nächste Runde</button>` : ""}</div></div>`;
+      else action = `<div class="banner win"><div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[opp(r.winner)]}!</b>
+          <div class="small">${reason}</div>
+          <div class="banner-actions"><button id="du-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>`;
+    }
+    const log = st.moves.slice().reverse().slice(0, 4).map((m) => `<li style="--pc:${colorOf(m.by)}"><i class="pdot"></i>${esc(nameOf(m.by))}: ${m.text ? `„${esc(m.text)}“` : "keine Antwort"} ${m.ok ? "✓" : "✗"}</li>`).join("");
+    app.innerHTML = `
+      <main class="screen game slf du">
+        <header class="top topbar">
+          ${headBrandHtml("duell")}
+          <div class="meta">Runde ${st.round} · bis ${st.target} · Stube <b>${esc(v.code)}</b></div>
+          ${topActionsHtml()}
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <section class="du-main">
+          <div class="du-pills">${pills()}</div>
+          <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
+          <div class="du-action">${action}</div>
+          <ol class="du-list">${rows}</ol>
+          ${log ? `<ul class="du-log">${log}</ul>` : ""}
+          ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
+        </section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#du-next", () => send({ type: "duNext" }));
+    on("#du-restart", () => send({ type: "duRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    app.querySelectorAll("[data-dujudge]").forEach((b) => b.onclick = () => send({ type: "duJudge", ok: b.dataset.dujudge === "1" }));
+    const form = app.querySelector(".du-form");
+    if (form) {
+      const inp = form.querySelector("#du-in");
+      inp.focus();
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const t = inp.value.trim(); if (!t) return;
+        const k = st.round + ":" + st.moves.length; if (duSent === k) return; duSent = k; // nicht doppelt schicken
+        inp.disabled = true; form.querySelector("button").disabled = true;
+        send({ type: "duAnswer", round: st.round, text: t });
+      };
+    }
+  }
 
   // ---------- Watten ----------
   const wCard = (id, extra = "", attrs = "") => `<div class="wcard ${extra}" ${attrs}>${WCARDS.svg(id)}</div>`;
