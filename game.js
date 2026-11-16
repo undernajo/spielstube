@@ -597,7 +597,10 @@
     const pos = store.get("s10-cam-pos");
     if (pos && pos.rx != null && camDock.classList.contains("show") && !camDock.classList.contains("docked")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
     // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
-    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null) ? camDock.offsetHeight + 16 + "px" : "0px");
+    // (am Computer stehen sie links neben dem Kamerafenster, damit sie nicht über die rechte Spalte rutschen, z. B. „Zählt das?“)
+    const camCorner = camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null);
+    document.body.style.setProperty("--cam-h", camCorner ? camDock.offsetHeight + 16 + "px" : "0px");
+    document.body.style.setProperty("--cam-w", camCorner ? camDock.offsetWidth + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
   }
@@ -613,7 +616,7 @@
     }
     camDock.classList.toggle("docked", dock);
     if (!dock) renderCamDock();
-    else document.body.style.setProperty("--cam-h", "0px"); // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
+    else { document.body.style.setProperty("--cam-h", "0px"); document.body.style.setProperty("--cam-w", "0px"); } // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
   }
   addEventListener("resize", () => camDockPlace());
   // Browser blockieren Ton manchmal, bis man einmal tippt

@@ -940,7 +940,9 @@ textarea { resize: vertical; font: inherit; }
 #camdock.big .camtile { width: 200px; }
 #camdock[style*="top"] { right: auto; }
 @media (max-width: 640px) { #camdock { right: 8px; } .camtile { width: 84px; } #camdock.big .camtile { width: 140px; } }
-@media (min-width: 900px) { .toast { bottom: calc(20px + var(--cam-h, 0px)); } }
+/* am Computer: Hinweise unten links neben dem Kamerafenster statt darüber (sonst verdecken sie die rechte Spalte) */
+@media (min-width: 900px) { .toast { right: calc(20px + var(--cam-w, 0px)); } }
+.toast { pointer-events: none; }
 /* Kamera als Bild-im-Bild */
 .camtiles { position: relative; }
 #camdock.pip .camtile { width: 220px; }
