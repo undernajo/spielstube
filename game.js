@@ -1781,7 +1781,7 @@
   // ---------- Schnapsen ----------
   let xShown = { round: 0, n: 0 }, xHold = null, xFly = null;
   // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
-  let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 };
+  let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 }, xPrevAtout = null;
   // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
   function schHelpHtml(st, opt, myTurn) {
     const sn = (su) => SCH.SUIT_NAMES[su];
@@ -1892,6 +1892,14 @@
     const myCards = !seated ? Array.from({ length: st.handCount[self] || 0 }, wBack).join("")
       : hand.map((c) => { const ok = myTurn && legal.includes(c); const d = xDraw.cards.includes(c);
           return wCard(c, (ok ? "play" : myTurn ? "dim" : "") + (d ? " drawn" : "") + (d && waitDraw ? " pre-draw" : ""), (ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(SCH.cardName(c))} spielen"` : "") + ` data-cid="${c}"`); }).join("");
+    // Trumpf-Unter getauscht? Alte Position der Karte merken, damit sie sichtbar zum Trumpfplatz fliegen kann
+    let xSwapFrom = null, xSwapBy = null;
+    if (xPrevAtout && xPrevAtout.round === st.roundNo && st.atout && xPrevAtout.card && st.atout !== xPrevAtout.card) {
+      const mineEl = app.querySelector(`.whand.mine [data-cid="${st.atout}"]`), oppEl = app.querySelector(".whand.opp");
+      xSwapBy = mineEl ? me : opp;
+      xSwapFrom = (mineEl || oppEl) ? (mineEl || oppEl).getBoundingClientRect() : null;
+    }
+    xPrevAtout = { round: st.roundNo, card: st.atout };
     app.innerHTML = `
       <main class="screen game slf geo watten">
         <header class="top topbar">
@@ -1920,6 +1928,16 @@
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
     stackHands();
+    if (xSwapFrom) { // Trumpf-Unter fliegt aus der Hand an den Trumpfplatz unter dem Stapel
+      const el = app.querySelector(".xatout .wcard");
+      if (el && el.animate) {
+        const t = el.getBoundingClientRect();
+        const dx = xSwapFrom.left + xSwapFrom.width / 2 - (t.left + t.width / 2), dy = xSwapFrom.top + xSwapFrom.height / 2 - (t.top + t.height / 2);
+        el.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(-90deg) scale(1.3)` }, { transform: "translate(0, 0) rotate(0) scale(1)" }],
+          { duration: 700, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
+      }
+      toast(xSwapBy === me ? "Getauscht: Dein Trumpf-Unter liegt jetzt unter dem Stapel." : `${nameOf(xSwapBy)} hat mit dem Trumpf-Unter getauscht.`, "info");
+    }
     if (xFly) { // Stichkarten von der Mitte zum Stapel fliegen lassen
       const cards = [...app.querySelectorAll(`[data-pile="${xFly.winner}"] .wpile-g.newest .wcard`)];
       cards.forEach((el, i) => {
