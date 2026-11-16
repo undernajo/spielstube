@@ -223,7 +223,7 @@
     let ok = true, given = v;
     if (card.type === "tf") ok = item[1] === true;
     else if (Array.isArray(v)) { // num / rank / estimate
-      const tol = card.type === "estimate" ? (card.tol != null ? card.tol : 0.1) * Math.abs(item[1]) : 0;
+      const tol = card.type === "estimate" ? itemTol(card, item) * Math.abs(item[1]) : 0;
       const hit = v.find((x) => Math.abs(x - item[1]) <= tol + 1e-9);
       ok = hit !== undefined; given = ok ? hit : v[0];
     } else if (card.type === "decade") ok = decadeMatches(item[1], parseDecade(v));
@@ -254,15 +254,17 @@
       event(s, "bad", (card.type === "tf"
         ? `${p.name}: „${item[0]}“ trifft NICHT zu ✗`
         : card.type === "estimate"
-          ? `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ gezählt hätte ${estRange(card, item[1])} (genau: ${fmt(card, item[1])})${note}`
+          ? `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ gezählt hätte ${estRange(card, item[1], itemTol(card, item))} (genau: ${fmt(card, item[1])})${note}`
           : `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✗ richtig wäre ${fmt(card, item[1])}${note}`) + (lost ? ` – ${lost} Punkt${lost > 1 ? "e" : ""} verloren` : ""));
     }
     advance(s, cards);
   }
 
   // Bereich, der bei einer Schätzfrage noch gezählt hätte (z. B. „97.200 bis 118.800“)
-  function estRange(card, val) {
-    const tol = (card.tol != null ? card.tol : 0.1) * Math.abs(val);
+  // Toleranz einer Schätzung: eigene beim Begriff (3. Feld), sonst die der Karte, sonst 10 %
+  function itemTol(card, item) { return typeof item[2] === "number" ? item[2] : card.tol != null ? card.tol : 0.1; }
+  function estRange(card, val, t) {
+    const tol = t * Math.abs(val);
     const r = (x) => Number(x.toPrecision(4));
     return `${fmt(card, r(val - tol)).replace(unitStr(card), "")} bis ${fmt(card, r(val + tol))}`;
   }
@@ -415,7 +417,7 @@
         items: s.perm.map((oi, pos) => {
           const it = c.items[oi], r = s.revealed[pos];
           const pend = out.pending && out.pending.pos === pos ? { by: out.pending.by, ok: null, pending: true, given: out.pending.given, a: it[1] } : null;
-          return { t: it[0], r: r ? { by: r.by, ok: r.ok, given: r.given, a: it[1] } : pend || (showAll ? { by: null, ok: null, a: it[1] } : null) };
+          return { t: it[0], tol: c.type === "estimate" ? itemTol(c, it) : undefined, r: r ? { by: r.by, ok: r.ok, given: r.given, a: it[1] } : pend || (showAll ? { by: null, ok: null, a: it[1] } : null) };
         }),
       };
     }

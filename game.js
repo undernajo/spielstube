@@ -779,7 +779,7 @@
             <div class="ring ${myTurn && v.phase === "playing" ? "myturn" : ""} ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
               <div class="center">
                 ${myTurn && v.phase === "playing" ? `<div class="zturn">Du bist dran!</div>` : ""}
-                <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
+                <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: new Set(card.items.map((x) => x.tol)).size > 1 ? "Schätzen · Toleranz je nach Begriff" : `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
                 <div class="q">${esc(card.q)}</div>
                 ${card.hint ? `<div class="hint">${esc(card.hint)}</div>` : ""}
                 <div class="progress">${card.items.filter((it) => it.r && !it.r.pending && it.r.by).length} von 10 aufgedeckt</div>
@@ -2151,7 +2151,7 @@
     } else {
       const est = card.type === "estimate";
       controls = `<form class="numform"><input id="num" type="text" inputmode="${est ? "text" : "decimal"}" autocomplete="off" placeholder="${est ? "z. B. 1.500 oder 1,5 Mio" : "Zahl"}">${card.unit ? `<span class="unit">${esc(card.unit)}</span>` : ""}<button class="btn primary" type="submit">OK</button></form>
-        ${est ? `<p class="muted small">Zählt, wenn du höchstens ${Math.round((card.tol || 0.1) * 100)} % danebenliegst.</p>` : ""}`;
+        ${est ? `<p class="muted small">Zählt, wenn du höchstens ${Math.round(((it.tol != null ? it.tol : card.tol) || 0.1) * 100)} % danebenliegst.</p>` : ""}`;
     }
     modalEl.innerHTML = `
       <div class="modal-back">
