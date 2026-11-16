@@ -1332,9 +1332,8 @@
     }).join("");
   }
   function wlStatusHtml(st) {
-    if (!st.submitted.includes(myId)) return "Noch kein Wort abgegeben.";
-    const waiting = st.submitted.length;
-    return `Abgegeben: <b>„${esc(wlMine)}“</b> – warte auf die anderen … (${waiting} abgegeben). Ändern? Einfach neu abgeben.`;
+    if (!st.submitted.includes(myId)) return "";
+    return `Dein Wort: <b>„${esc(wlMine)}“</b> – warte auf die anderen … <span class="muted">(zum Ändern einfach neu abgeben)</span>`;
   }
   function renderWl() {
     const v = view, st = v.wl;
@@ -1349,28 +1348,32 @@
     wlRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
-    const chainHtml = st.chain.length ? `<div class="wl-chain"><div class="muted small">Bisher:</div>${st.chain.map((c) => `
-        <div class="wl-chainrow">${Object.entries(c.words).map(([pid, w]) => `<span class="wl-chip" style="--pc:${colorOf(pid)}">${esc(w)}</span>`).join("")}</div>`).join("")}</div>` : "";
+    // Gedankenkette: jeder Versuch als Reihe farbiger Wort-Kärtchen, verbunden mit „+“, Pfeil zum nächsten Versuch
+    const chainHtml = st.chain.length ? `<div class="wl-chain">${st.chain.map((c, i) => `
+        <div class="wl-chainrow"><span class="wl-step">${i + 1}.</span>${Object.entries(c.words).map(([pid, w]) => `<span class="wl-chip" style="--pc:${colorOf(pid)}">${esc(w)}</span>`).join(`<span class="wl-plus">+</span>`)}</div>`).join(`<div class="wl-arrow">↓</div>`)}
+        <div class="wl-arrow">↓</div></div>` : "";
+    const teamBar = `<div class="wl-team"><span>Teampunkte <b>${st.total}</b></span><span>Impuls <b>${st.impulse}/${st.rounds}</b></span>${st.step !== "final" ? `<span>Versuch <b>${st.attempt}/${st.maxTries}</b> · Treffer bringt <b>+${st.nextPoints}</b></span>` : ""}</div>`;
     let main = "";
     if (st.step === "writing") {
       main = `
+        ${teamBar}
         <div class="wl-card">
-          <div class="wl-meta">Impuls ${st.impulse}/${st.rounds} · Versuch ${st.attempt}/${st.maxTries} · Treffer bringt +${st.nextPoints}</div>
-          <div class="wl-prompt">${esc(st.prompt)}</div>
           ${chainHtml}
+          <div class="wl-prompt">${esc(st.prompt)}</div>
         </div>
         <form class="wl-form" autocomplete="off">
           <input id="wl-word" maxlength="40" spellcheck="false" autocapitalize="sentences" placeholder="Dein Wort …" value="${esc(wlMine)}">
           <button class="btn primary" type="submit">Abgeben</button>
         </form>
         <p id="wl-warn" class="err small"></p>
-        <p id="wl-status" class="muted small">${wlStatusHtml(st)}</p>
+        <p id="wl-status" class="wl-status">${wlStatusHtml(st)}</p>
         ${st.attempt > 1 ? `<div class="slf-actions"><button id="wl-giveup" class="btn ghost sm">Impuls aufgeben (0 Punkte)</button></div>` : ""}`;
     } else if (st.step === "reveal") {
       const r = st.result;
       main = `
-        <div class="wl-card"><div class="wl-meta">Impuls ${st.impulse}/${st.rounds} · Versuch ${st.attempt}</div><div class="wl-prompt small">${esc(st.prompt)}</div></div>
-        <div class="wl-words">${Object.entries(st.words).map(([pid, w]) => `
+        ${teamBar}
+        <div class="wl-card"><div class="wl-prompt small">${esc(st.prompt)}</div></div>
+        <div class="wl-words ${r.hit ? "has-hit" : ""}">${Object.entries(st.words).map(([pid, w]) => `
           <div class="wl-word ${r.ids.includes(pid) ? "hit" : ""}" style="--pc:${colorOf(pid)}"><span class="wl-who"><i class="pdot"></i>${esc(nameOf(pid))}</span><b>${esc(w)}</b></div>`).join("")}</div>
         ${r.hit
           ? `<div class="banner win"><div class="trophy">🎉</div><b>Gleiche Wellenlänge!</b> „${esc(r.word)}“ – +${st.nextPoints} Punkte
@@ -1393,13 +1396,25 @@
       <main class="screen game slf wl">
         <header class="top topbar">
           ${headBrandHtml("wl")}
-          <div class="meta">Teampunkte <b>${st.total}</b> · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="players">${wlChips(v, st)}</section>
         <section class="slf-main">${main}</section>
       </main>`;
+    // Treffer: die gleichen Wörter fliegen aufeinander zu
+    if (st.step === "reveal" && st.result && st.result.hit) {
+      const hits = [...app.querySelectorAll(".wl-word.hit")];
+      if (hits.length >= 2 && hits[0].animate) {
+        const rs = hits.map((h) => h.getBoundingClientRect()), cx = rs.reduce((a, r) => a + r.left + r.width / 2, 0) / rs.length;
+        hits.forEach((h, i) => {
+          const dx = cx - (rs[i].left + rs[i].width / 2);
+          h.animate([{ transform: "translateX(0) scale(1)" }, { transform: `translateX(${dx * .55}px) scale(1.12)`, offset: .45 }, { transform: "translateX(0) scale(1)" }],
+            { duration: 1100, easing: "cubic-bezier(.3,.7,.3,1)" });
+        });
+      }
+    }
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
