@@ -1590,9 +1590,9 @@
       setTimeout(() => {
         if (wHold !== held || wShown.round !== heldRound) return; // inzwischen neue Runde
         const tr = app.querySelector(".wtrick");
-        wFly = { winner: held.winner, from: tr ? tr.getBoundingClientRect() : null };
+        wFly = { winner: held.winner, from: tr ? [...tr.querySelectorAll(".wcard")].map((c) => c.getBoundingClientRect()) : [] };
         wShown.n = nTricks; wHold = null; if (view && view.phase === "watten") renderWatten();
-      }, 1000);
+      }, 1800); // wie beim Schnapsen: Stich in Ruhe zeigen
     }
     const me = myId, seated = st.seats.includes(me), opp = seated ? st.seats.find((x) => x !== me) : st.seats[1];
     const self = seated ? me : st.seats[0];
@@ -1759,14 +1759,13 @@
     const key = (el, fn) => { el.onclick = fn; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }; };
     app.querySelectorAll("[data-schlag]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wSchlag", rank: b.dataset.schlag }); }));
     app.querySelectorAll("[data-trumpf]").forEach((b) => key(b, () => { b.classList.add("going"); send({ type: "wTrumpf", suit: b.dataset.trumpf }); }));
-    if (wFly) {
-      const g = app.querySelector(`[data-pile="${wFly.winner}"] .wpile-g.newest`);
-      if (g && wFly.from && g.animate) {
-        const to = g.getBoundingClientRect(), f = wFly.from;
-        const dx = f.left + f.width / 2 - (to.left + to.width / 2), dy = f.top + f.height / 2 - (to.top + to.height / 2);
-        g.animate([{ transform: `translate(${dx}px, ${dy}px) scale(2.2)`, opacity: .9 }, { transform: "translate(0, 0) scale(1)", opacity: 1 }],
-          { duration: 550, easing: "cubic-bezier(.3,.7,.3,1)" });
-      }
+    if (wFly) { // jede Stichkarte fliegt von ihrem Platz in der Mitte zum Stapel
+      [...app.querySelectorAll(`[data-pile="${wFly.winner}"] .wpile-g.newest .wcard`)].forEach((el, i) => {
+        const f = wFly.from[i]; if (!f || !el.animate) return;
+        const t = el.getBoundingClientRect();
+        el.animate([{ transform: `translate(${f.left - t.left}px, ${f.top - t.top}px) scale(${f.width / t.width})`, transformOrigin: "top left" },
+          { transform: "translate(0, 0) scale(1)", transformOrigin: "top left" }], { duration: 600, delay: i * 80, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
+      });
       wFly = null;
     }
     app.querySelectorAll("[data-card]").forEach((el) => {
