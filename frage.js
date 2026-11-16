@@ -102,6 +102,9 @@
         st.question = q; st.step = "answer"; setDeadline(st, now, "answer");
         return true;
       }
+      case "fqPass": // dem Fragensteller fällt keine Frage ein – Punkt für den anderen
+        if (st.step !== "write" || pid !== st.asker || a.round !== st.round) return false;
+        finish(s, guesser, "pass"); return true;
       case "fqGuess": {
         if (st.step !== "answer" || pid !== guesser || a.round !== st.round) return false;
         const g = String(a.text || "").trim().slice(0, 80);

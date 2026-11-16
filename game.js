@@ -1384,7 +1384,7 @@
         <li>Er denkt sich eine <b>Frage</b> aus, die in die Kategorie passt und genau diese Antwort hat – z. B. „Wie viele Weise kamen zur Krippe?“.</li>
         <li>Der andere sieht die Frage und tippt seine <b>Antwort</b>. Stimmt sie, bekommt <b>er</b> den Punkt – sonst der <b>Fragensteller</b>.</li>
         <li>Ist die Antwort nicht wörtlich gleich (z. B. „die drei Könige“), entscheidet der Fragensteller ehrlich, ob sie zählt.</li>
-        <li>Fällt dem Fragensteller in der Zeit keine Frage ein, bekommt der andere den Punkt; antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
+        <li>Fällt dem Fragensteller keine Frage ein, kann er <b>passen</b> – dann bekommt der andere den Punkt (ebenso, wenn die Zeit abläuft); antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
         <li><b>Beschwerde:</b> Hat der Antwortende den Punkt verloren und findet die Frage danach unpassend (passt nicht zur Antwort oder Kategorie, nicht eindeutig), kann er sich beschweren. Gibt der Fragensteller ihm recht, zählt die Runde nicht.</li>
         <li>Die Rollen wechseln jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
       </ul>
@@ -2062,7 +2062,7 @@
       if (iAsk) body = `${priv ? ansCard(priv.answer, "Gesuchte Antwort") : `<p class="muted">Antwort wird geladen …</p>`}
         ${time()}
         <form class="fq-form" autocomplete="off"><textarea id="fq-q" rows="3" maxlength="300" placeholder="Deine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …"></textarea>
-          <div class="fq-row"><button class="btn primary">Frage stellen</button></div></form>
+          <div class="fq-row"><button type="button" id="fq-pass" class="btn ghost">Passen</button><button class="btn primary">Frage stellen</button></div></form>
         <p class="muted small">Nur du siehst die Antwort. Die Frage soll in die Kategorie passen und eindeutig sein.</p>`;
       else body = `${time()}<p class="du-wait"><b style="color:${colorOf(st.asker)}">${esc(nameOf(st.asker))}</b> denkt sich eine Frage aus …</p>`;
     } else if (st.step === "answer") {
@@ -2077,7 +2077,7 @@
     } else {
       const r = st.result, iWon = !r.voided && r.winner === myId, cp = st.complaint;
       const reason = { right: `${esc(nameOf(st.guesser))} wusste die Antwort.`, wrong: `${esc(nameOf(st.guesser))} lag daneben.`,
-        time: `${esc(nameOf(st.guesser))} hat nicht rechtzeitig geantwortet.`, noq: `${esc(nameOf(st.asker))} ist keine Frage eingefallen.` }[r.why];
+        time: `${esc(nameOf(st.guesser))} hat nicht rechtzeitig geantwortet.`, noq: `${esc(nameOf(st.asker))} ist keine Frage eingefallen.`, pass: `${esc(nameOf(st.asker))} hat gepasst.` }[r.why];
       body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, esc(nameOf(st.guesser)) + " sagte") : ""}</div>
         ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> findet die Frage unpassend.</div>
           ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
@@ -2113,6 +2113,10 @@
     on("#toLobby", () => send({ type: "lobby" }));
     app.querySelectorAll("[data-fqjudge]").forEach((b) => b.onclick = () => send({ type: "fqJudge", ok: b.dataset.fqjudge === "1" }));
     on("#fq-complain", () => send({ type: "fqComplain" }));
+    on("#fq-pass", async () => {
+      if (!(await askConfirm("Passen?", `Dann bekommt ${nameOf(st.guesser)} den Punkt.`, "Passen"))) return;
+      send({ type: "fqPass", round: st.round });
+    });
     app.querySelectorAll("[data-fqcomplaint]").forEach((b) => b.onclick = () => send({ type: "fqComplaint", ok: b.dataset.fqcomplaint === "1" }));
     const qf = app.querySelector(".fq-form");
     if (qf) {
