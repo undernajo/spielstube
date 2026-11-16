@@ -803,3 +803,5 @@ textarea { resize: vertical; font: inherit; }
   .lobby-host .rules-desk { display: block; }
   .lobby-host .rules-mob { display: none; }
 }
+.wcard.pre-draw { opacity: 0; }
+.whand .wcard.drawn { position: relative; z-index: 3; }

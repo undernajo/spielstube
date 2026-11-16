@@ -1776,6 +1776,8 @@
 
   // ---------- Schnapsen ----------
   let xShown = { round: 0, n: 0 }, xHold = null;
+  // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
+  let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 };
   // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
   function schHelpHtml(st, opt, myTurn) {
     const sn = (su) => SCH.SUIT_NAMES[su];
@@ -1869,8 +1871,17 @@
         <tbody>${rows.map((r) => `<tr>${r}</tr>`).join("") || `<tr><td colspan="2" class="muted small">noch keine Punkte</td></tr>`}</tbody>
         <tfoot><tr><td colspan="2" class="muted small">bis ${st.target} Punkte · ✕ = Bummerl</td></tr></tfoot></table>`;
     const oppCards = st.reveal && st.reveal[opp] ? st.reveal[opp].map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
+    // neu gezogene Karten merken (eigene und Anzahl beim Gegner)
+    if (xDraw.round !== st.roundNo) xDraw = { round: st.roundNo, cards: [], opp: 0 };
+    if (xPrev && xPrev.round === st.roundNo) {
+      hand.filter((c) => !xPrev.cards.includes(c)).forEach((c) => { if (!xDraw.cards.includes(c)) xDraw.cards.push(c); });
+      const oc = st.handCount[opp] || 0; if (oc > xPrev.opp) xDraw.opp += oc - xPrev.opp;
+    }
+    xPrev = { round: st.roundNo, cards: hand.slice(), opp: st.handCount[opp] || 0 };
+    const waitDraw = !!xHold; // während der Stich noch in der Mitte liegt, bleiben neue Karten unsichtbar
     const myCards = !seated ? Array.from({ length: st.handCount[self] || 0 }, wBack).join("")
-      : hand.map((c) => { const ok = myTurn && legal.includes(c); return wCard(c, ok ? "play" : myTurn ? "dim" : "", ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(SCH.cardName(c))} spielen"` : ""); }).join("");
+      : hand.map((c) => { const ok = myTurn && legal.includes(c); const d = xDraw.cards.includes(c);
+          return wCard(c, (ok ? "play" : myTurn ? "dim" : "") + (d ? " drawn" : "") + (d && waitDraw ? " pre-draw" : ""), (ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(SCH.cardName(c))} spielen"` : "") + ` data-cid="${c}"`); }).join("");
     app.innerHTML = `
       <main class="screen game slf geo watten">
         <header class="top topbar">
@@ -1898,6 +1909,20 @@
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
+    if (!waitDraw && (xDraw.cards.length || xDraw.opp)) {
+      const src = app.querySelector(".xstack .wcard, .xatout .wcard, .xtalon");
+      const from = src ? src.getBoundingClientRect() : null;
+      const targets = [...xDraw.cards.map((c) => app.querySelector(`.whand.mine [data-cid="${c}"]`)),
+        ...[...app.querySelectorAll(".whand.opp .wcard")].slice(-xDraw.opp)].filter(Boolean);
+      targets.forEach((el, i) => {
+        if (!from || !el.animate) return;
+        const to = el.getBoundingClientRect();
+        const dx = from.left + from.width / 2 - (to.left + to.width / 2), dy = from.top + from.height / 2 - (to.top + to.height / 2);
+        el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.55) rotate(-8deg)`, opacity: .6 }, { transform: "translate(0, 0) scale(1) rotate(0)", opacity: 1 }],
+          { duration: 650, delay: i * 180, easing: "cubic-bezier(.25,.8,.3,1)", fill: "backwards" });
+      });
+      xDraw = { round: st.roundNo, cards: [], opp: 0 };
+    }
     const hd = app.querySelector(".xhelp details");
     if (hd) hd.ontoggle = () => store.set("s10-xhelp-open", hd.open);
     on("#x-tausch", () => send({ type: "xTausch" }));
