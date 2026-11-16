@@ -1968,6 +1968,8 @@
 
   // ---------- Listen-Duell ----------
   let duRendered = null, duSent = null, duTimer = null;
+  // Spalten am Computer: bis 10 Antworten zwei, dann mehr – alle Felder gleich groß
+  const duCols = (n) => n <= 10 ? 2 : n <= 15 ? 3 : n <= 20 ? 4 : 5;
   function renderDuell() {
     const v = view, st = v.duell;
     if (!st) return;
@@ -2034,7 +2036,7 @@
           <div class="du-pills">${pills()}</div>
           <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
           <div class="du-action">${action}</div>
-          <ol class="du-list ${st.items.length > 12 ? "many" : ""}">${rows}</ol>
+          <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil(st.items.length / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil(st.items.length / (st.items.length > 10 ? 2 : 1))}">${rows}</ol>
           ${log ? `<ul class="du-log">${log}</ul>` : ""}
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
         </section>

@@ -1038,11 +1038,13 @@ textarea { resize: vertical; font: inherit; }
 .du-log .pdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--pc); margin-right: 6px; }
 .du-judge { margin: 0; }
 .du-watch { text-align: center; }
-@media (min-width: 700px) { .du-list { grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(5, auto); } }
 .du-count { font-size: .85rem; color: var(--muted); margin-top: 2px; }
 /* lange Listen: kleinere Felder, mehrere Spalten, Zeile für Zeile */
-.du-list.many { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-flow: row; grid-template-rows: none; gap: 5px; }
 .du-list.many .du-row { padding: 6px 10px; gap: 8px; font-size: .9rem; }
 .du-list.many .du-no { width: 22px; height: 22px; font-size: .72rem; }
 .du-list.many .du-by { display: none; }
-@media (max-width: 640px) { .du-list.many { grid-template-columns: 1fr 1fr; } }
+/* Listen-Duell: alle Felder einer Frage gleich groß – Spalten und Zeilen je nach Anzahl der Antworten */
+.du-list { grid-template-columns: repeat(var(--mcols, 1), minmax(0, 1fr)); grid-template-rows: repeat(var(--mrows, 10), auto); grid-auto-flow: column; }
+.du-list.many { gap: 5px; }
+@media (min-width: 700px) { .du-list { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 5), auto); } }
+.du-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
