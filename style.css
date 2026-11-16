@@ -763,3 +763,27 @@ textarea { resize: vertical; font: inherit; }
 .xhelp ol { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 6px; line-height: 1.35; font-size: .84rem; }
 .xhelp ol b { color: var(--ink); }
 @media (min-width: 900px) { .xhelp ol { max-height: calc(100vh - 470px); min-height: 120px; overflow: auto; padding-right: 4px; } }
+/* Lobby: am Handy untereinander, am Computer in Spalten ohne Seiten-Scrollen */
+.lobby-cols { display: grid; gap: 14px; }
+.lobby-col { display: grid; gap: 14px; align-content: start; }
+.lobby-col.panel { align-content: start; }
+.lobby-settings > .panel { align-content: start; }
+@media (min-width: 1100px) {
+  .screen.lobby.lobby-host { max-width: 1320px; }
+  .screen.lobby.lobby-guest { max-width: 980px; }
+  .screen.lobby .logo.small { margin: 4px 0 14px; font-size: 1.8rem; }
+  .lobby-host .lobby-cols { grid-template-columns: 300px minmax(0, 1fr) 380px; align-items: start; }
+  .lobby-guest .lobby-cols { grid-template-columns: 340px minmax(0, 1fr); align-items: start; }
+  .lobby-col { max-height: calc(100vh - 90px); overflow: auto; }
+  .lobby-col.panel, .lobby-settings > .panel { padding: 16px; gap: 12px; }
+  .lobby-host .gamegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .lobby-host .gametile { padding: 10px 8px 9px; }
+  .lobby-host .gt-icon { width: 36px; height: 36px; font-size: 1.15rem; margin-bottom: 2px; }
+  .lobby-host .setlist { gap: 5px; }
+  .lobby-host .setopt { padding: 7px 10px; }
+  .lobby-host .setopt .setcount { white-space: nowrap; font-size: .78rem; }
+  .lobby-guest .setlist { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .lobby-guest .setopt.ro { padding: 8px 10px; }
+  .lobby .code { font-size: 2.1rem; letter-spacing: 8px; }
+  .lobby-col .rules { margin: 0; }
+}

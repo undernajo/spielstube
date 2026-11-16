@@ -603,27 +603,15 @@
 
   function renderLobby() {
     const isFile = location.protocol === "file:";
-    app.innerHTML = `
-      <main class="screen lobby">
-        <h1 class="logo small">${LOGO}</h1>
-        <div class="panel">
-          <p class="muted">Stuben-Code</p>
-          <div class="code">${esc(view.code)}</div>
-          ${isHost ? `
-            ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>` : `
-            <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>
-            <p class="muted small">Schick deinen Mitspielern den Link oder den Code.</p>`}` : ""}
-          <h3>Spieler</h3>
-          <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
-          ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
-          ${isHost ? gamePickerHtml() : `${gameBannerHtml()}${guestSettingsHtml()}`}
-          ${isHost && chosenGame === "slf" ? slfSettingsHtml() : ""}
-          ${isHost && chosenGame === "wl" ? wlSettingsHtml() : ""}
-          ${isHost && (chosenGame === "geo" || chosenGame === "oben") ? geoSettingsHtml(chosenGame === "oben") : ""}
-          ${isHost && chosenGame === "hl" ? hlSettingsHtml() : ""}
-          ${isHost && chosenGame === "watten" ? wattenSettingsHtml() : ""}
-          ${isHost && chosenGame === "schnapsen" ? schSettingsHtml() : ""}
-          ${isHost && chosenGame === "zehn" ? `
+    const rules = ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml;
+    const settings = !isHost ? "" : `
+          ${chosenGame === "slf" ? slfSettingsHtml() : ""}
+          ${chosenGame === "wl" ? wlSettingsHtml() : ""}
+          ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
+          ${chosenGame === "hl" ? hlSettingsHtml() : ""}
+          ${chosenGame === "watten" ? wattenSettingsHtml() : ""}
+          ${chosenGame === "schnapsen" ? schSettingsHtml() : ""}
+          ${chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
               <button id="resetSeen" class="btn ghost sm">Gespielte Karten vergessen</button></div>` : ""}
@@ -631,13 +619,31 @@
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
             <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
             ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}
-          ` : ""}
-          ${!isHost ? `<p class="muted">Warte, bis der Gastgeber das Spiel startet …</p>` : ""}
-          <p class="err">${esc(status)}</p>
-          <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
+          ` : ""}`;
+    // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
+    app.innerHTML = `
+      <main class="screen lobby ${isHost ? "lobby-host" : "lobby-guest"}">
+        <h1 class="logo small">${LOGO}</h1>
+        <div class="lobby-cols">
+          <div class="panel lobby-col">
+            <p class="muted">Stuben-Code</p>
+            <div class="code">${esc(view.code)}</div>
+            ${isHost ? `
+              ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>` : `
+              <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>
+              <p class="muted small">Schick deinen Mitspielern den Link oder den Code.</p>`}` : ""}
+            <h3>Spieler</h3>
+            <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
+            ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
+            <p class="err">${esc(status)}</p>
+            <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
+            ${reportsHtml()}
+          </div>
+          ${isHost ? `<div class="panel lobby-col">${gamePickerHtml()}</div>
+          <div class="lobby-col lobby-settings"><div class="panel">${settings}</div>${rules}</div>`
+          : `<div class="lobby-col lobby-settings"><div class="panel">${gameBannerHtml()}${guestSettingsHtml()}
+              <p class="muted">Warte, bis der Gastgeber das Spiel startet …</p></div>${rules}</div>`}
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
-        ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
     bindGamePicker();
