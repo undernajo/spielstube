@@ -1103,7 +1103,7 @@
     }
     const sets = L.SET_KEYS.map((k) => row(lb.sets.includes(k), esc(SET_NAMES[k]), `${CARDS.filter((c) => (c.set || "standard") === k).length} Karten`));
     const total = CARDS.filter((c) => lb.sets.includes(c.set || "standard")).length;
-    return `<div class="field"><span>Fragen-Sets (wählt der Gastgeber)</span><div class="setlist">${sets.join("")}</div></div>
+    return `<div class="field"><span>Fragen-Sets (wählt der Gastgeber)</span><div class="setlist inline-count">${sets.join("")}</div></div>
       <p class="muted small">Zusammen ${total} Karten · Spielen bis ${lb.target} Punkte</p>`;
   }
   function bindGamePicker() {
