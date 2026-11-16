@@ -977,10 +977,10 @@
   const schRulesHtml = `
     <details class="rules"><summary>Regeln: Schnapsen</summary>
       <ul>
-        <li>20 Karten: Ass (11 Augen), Zehner (10), König (4), Ober (3), Unter (2) in vier Farben. Jeder hat 5 Karten, die aufgedeckte Karte unter dem Stapel ist Atout (Trumpf).</li>
+        <li>20 Karten: Ass (11 Augen), Zehner (10), König (4), Ober (3), Unter (2) in vier Farben. Jeder hat 5 Karten, die aufgedeckte Karte unter dem Stapel ist Trumpf.</li>
         <li>Solange der Stapel offen ist, darf man jede Karte zugeben. Nach jedem Stich ziehen beide nach – der Gewinner zuerst.</li>
-        <li><b>20 / 40 ansagen:</b> Wer am Ausspielen ist und König und Ober einer Farbe hat, sagt 20 an (in Atout 40) und spielt eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
-        <li><b>Tauschen:</b> Mit dem Atout-Unter darf man die aufgedeckte Atoutkarte holen. <b>Zudrehen:</b> Stapel schließen – ab dann muss man Farbe bedienen, höher stechen oder trumpfen.</li>
+        <li><b>20 / 40 ansagen:</b> Wer am Ausspielen ist und König und Ober einer Farbe hat, sagt 20 an (in Trumpf 40) und spielt eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
+        <li><b>Tauschen:</b> Mit dem Trumpf-Unter darf man die aufgedeckte Trumpfkarte holen. <b>Zudrehen:</b> Stapel schließen – ab dann muss man Farbe bedienen, höher stechen oder trumpfen.</li>
         <li>Wer zuerst <b>66 Augen</b> hat, gewinnt die Runde: 3 Punkte, wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Wer zuerst 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.</li>
         <li>Gemütlich: die Augen werden angezeigt und „Aus“ geht automatisch. Klassisch: selbst mitzählen und „Aus!“ sagen – zu früh kostet die Runde.</li>
       </ul>
@@ -1777,18 +1777,18 @@
     if (st.step !== "play") tip = "Die Runde ist vorbei. Wer 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.";
     else if (!myTurn) tip = st.trick.length ? "Dein Gegner überlegt, was er zugibt." : "Dein Gegner spielt aus.";
     else if (st.mustLead) tip = `Du hast angesagt – spiel jetzt König oder Ober in ${sn(st.mustLead)} aus.`;
-    else if (st.trick.length) tip = st.strict ? "Farbzwang: gleiche Farbe zugeben und wenn möglich höher, sonst mit Atout stechen." : "Freies Zugeben: du darfst jede Karte legen. Willst du den Stich, leg eine höhere Karte derselben Farbe oder ein Atout.";
+    else if (st.trick.length) tip = st.strict ? "Farbzwang: gleiche Farbe zugeben und wenn möglich höher, sonst mit Trumpf stechen." : "Freies Zugeben: du darfst jede Karte legen. Willst du den Stich, leg eine höhere Karte derselben Farbe oder ein Trumpf.";
     else tip = (opt.ansage.length ? `Du hast König und Ober in ${opt.ansage.map(sn).join(" und ")} – sag ${opt.ansage.map((su) => su === st.trump ? 40 : 20).join(" bzw. ")} an! ` : "")
-      + (opt.tausch ? "Mit dem Atout-Unter kannst du die aufgedeckte Atoutkarte holen. " : "")
-      + "Spiel eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Atout sticht alles andere.";
+      + (opt.tausch ? "Mit dem Trumpf-Unter kannst du die aufgedeckte Trumpfkarte holen. " : "")
+      + "Spiel eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Trumpf sticht alles andere.";
     return `<div class="wmode xhelp"><div class="xtip"><b>Was jetzt?</b> ${esc(tip)}</div>
       <details ${store.get("s10-xhelp-open") === false ? "" : "open"}><summary>So geht Schnapsen</summary>
       <ol>
         <li><b>Ziel:</b> Als Erster <b>66 Augen</b> sammeln. Augen bringen die Karten in deinen Stichen: Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2.</li>
-        <li><b>Stich:</b> Einer spielt aus, der andere gibt eine Karte zu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Atout</b> (Trumpf, ${esc(sn(st.trump))}). Der Gewinner spielt als Nächster aus.</li>
+        <li><b>Stich:</b> Einer spielt aus, der andere gibt eine Karte zu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Trumpf</b> (${esc(sn(st.trump))}). Der Gewinner spielt als Nächster aus.</li>
         <li><b>Nachziehen:</b> Nach jedem Stich ziehen beide eine Karte vom Stapel, der Gewinner zuerst. Solange der Stapel offen ist, darfst du <b>jede Karte</b> zugeben.</li>
-        <li><b>20 und 40:</b> Hast du König und Ober einer Farbe, sag sie beim Ausspielen an: 20 Augen, in Atout 40. Sie zählen ab deinem ersten Stich.</li>
-        <li><b>Tauschen:</b> Mit dem Atout-Unter holst du dir die aufgedeckte Atoutkarte.</li>
+        <li><b>20 und 40:</b> Hast du König und Ober einer Farbe, sag sie beim Ausspielen an: 20 Augen, in Trumpf 40. Sie zählen ab deinem ersten Stich.</li>
+        <li><b>Tauschen:</b> Mit dem Trumpf-Unter holst du dir die aufgedeckte Trumpfkarte.</li>
         <li><b>Zudrehen:</b> Du schließt den Stapel, wenn du glaubst, mit deinen Karten auf 66 zu kommen. Dann gilt – wie bei leerem Stapel – <b>Farbzwang</b>: Farbe bedienen und höher stechen, sonst trumpfen.</li>
         <li><b>Punkte:</b> 3 wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Bei 7 Punkten ist die Partie aus – der Verlierer bekommt ein <b>Bummerl</b> (✕).</li>
         <li><b>Spielweise:</b> ${st.mode === "klassisch" ? "Klassisch – die Augen sind versteckt. Zähl mit und drück „Aus!“, sobald du 66 hast. Zu früh kostet die Runde." : "Gemütlich – die Augen stehen bei den Namen, bei 66 endet die Runde von selbst."}</li>
@@ -1820,13 +1820,13 @@
       const openLast = !xHold && st.trick.length === 0 && st.lastTrick && st.lastTrick.winner === id;
       return `<div class="wpile ${pos}">${g.map((cs, i) => `<div class="wpile-g" style="--i:${i}">${cs.map((c) => openLast && i === g.length - 1 ? wCard(c, "xs") : `<div class="wcard xs back">${WCARDS.back()}</div>`).join("")}</div>`).join("")}</div>`;
     };
-    // Talon mit Atout-Karte (links in der Mitte)
+    // Talon mit Trumpf-Karte (links in der Mitte)
     const talon = `<div class="xtalon">${st.atout ? `<div class="xatout">${wCard(st.atout, "sm")}</div>` : ""}
         ${st.talon > (st.atout ? 1 : 0) ? `<div class="xstack ${st.closedBy ? "closed" : ""}">${wBack()}<span class="xcount">${st.talon - (st.atout ? 1 : 0)}</span></div>` : ""}
         ${st.closedBy ? `<span class="wcall">zugedreht</span>` : !st.talon ? `<span class="wcall">Stapel leer</span>` : ""}</div>`;
     const myTurn = st.turn === me;
     const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]})` : ""}</span>` : "";
-    const combo = `<div class="wcombo" title="Atout ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Atout</b>
+    const combo = `<div class="wcombo" title="Trumpf ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Trumpf</b>
         <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Zugeben"}</span></div>`;
     const turnBadge = myTurn ? `<div class="wturn me">${st.trick.length ? "Gib eine Karte zu!" : "Spiel aus!"}</div>`
       : st.turn ? `<div class="wturn other">${esc(nameOf(st.turn))} ist dran …</div>` : "";
@@ -1834,7 +1834,7 @@
     const btns = [];
     if (seated && st.step === "play") {
       opt.ansage.forEach((su) => btns.push(`<button class="btn primary" data-ansage="${su}">${su === st.trump ? 40 : 20} ansagen (${sn(su)})</button>`));
-      if (opt.tausch) btns.push(`<button class="btn ghost" id="x-tausch">Atout-Unter tauschen</button>`);
+      if (opt.tausch) btns.push(`<button class="btn ghost" id="x-tausch">Trumpf-Unter tauschen</button>`);
       if (opt.zudrehen) btns.push(`<button class="btn ghost" id="x-zu">Zudrehen</button>`);
       if (opt.aus) btns.push(`<button class="btn ${priv && priv.myPoints >= 66 ? "primary" : "ghost"}" id="x-aus">Aus! (66)</button>`);
     }
