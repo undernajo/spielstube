@@ -37,6 +37,16 @@
       ${C ? `<svg x="20.5" y="12" width="14" height="14" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : ""}</g>`;
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(-22, suits[0])}${card(0, suits[1])}${card(22, suits[2])}</svg>`;
   }
+  // Symbol für „Schlaue Zehn“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld)
+  function zehnIcon() {
+    const tiles = Array.from({ length: 10 }, (_, i) => {
+      const a = (-90 + i * 36) * Math.PI / 180, x = 32 + 23 * Math.cos(a), y = 32 + 23 * Math.sin(a);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" fill="${i < 3 ? "#2fbf71" : "#fbf6ea"}" stroke="#2a2170" stroke-width="1"/>`;
+    }).join("");
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${tiles}
+      <circle cx="32" cy="32" r="14.5" fill="#170f4d" stroke="#ffc83d" stroke-width="2"/>
+      <text x="32" y="38.3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#ffc83d">10</text></svg>`;
+  }
   // Symbol für „Höher oder tiefer“: zwei Karten, grüner Pfeil nach oben, roter nach unten
   function hlIcon() {
     const card = (x, rot, up) => `<g transform="rotate(${rot} ${x + 11} 50)"><rect x="${x}" y="14" width="22" height="34" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
@@ -45,7 +55,7 @@
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(9, -10, true)}${card(33, 10, false)}</svg>`;
   }
   const GAMES = [
-    { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
+    { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
