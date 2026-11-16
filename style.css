@@ -814,3 +814,8 @@ textarea { resize: vertical; font: inherit; }
 .log.compact summary { cursor: pointer; font-size: .78rem; color: var(--muted); }
 .log.compact details ul { margin-top: 4px; max-height: 180px; overflow: auto; }
 @media (min-width: 900px) { .game-grid > .log.compact { min-height: 0; } }
+/* Schlaue Zehn am Computer: „Letzte Züge“ unten in der Seitenleiste, über „Karte melden“ */
+@media (min-width: 900px) {
+  .game-grid { grid-template-areas: "board players" "board action" "board ." "board log" "board tools"; grid-template-rows: auto auto 1fr auto auto; }
+  .game-grid > .log.compact { align-self: end; }
+}
