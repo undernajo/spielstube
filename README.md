@@ -32,7 +32,7 @@ Der Gastgeber wählt in der Lobby das Spiel:
 
 ## Extras
 
-- **Kamera (nur Bild):** Über 📷 kann jeder seine Kamera einschalten. Das Bild geht per WebRTC verschlüsselt direkt von Gerät zu Gerät, der Verbindungsaufbau läuft über den verschlüsselten Kanal der Stube (STUN: Cloudflare/Google, kein eigener Server). In manchen Mobilfunk- oder Firmennetzen kommt keine direkte Verbindung zustande – dann erscheint ein Hinweis.
+- **Kamera & Mikrofon:** Über 📷 und 🎤 kann jeder Kamera und Mikrofon getrennt einschalten (Bild-im-Bild, Ton der anderen mit 🔊/🔇 stummschaltbar; am besten mit Kopfhörern). Bild und Ton gehen per WebRTC verschlüsselt direkt von Gerät zu Gerät, der Verbindungsaufbau läuft über den verschlüsselten Kanal der Stube (STUN: Cloudflare/Google, kein eigener Server). In manchen Mobilfunk- oder Firmennetzen kommt keine direkte Verbindung zustande – dann erscheint ein Hinweis.
 
 - **Töne & Effekte:** Ein dezenter Hinweiston (und auf Android eine Vibration), wenn man dran ist oder entscheiden soll, Konfetti am Spielende. Ist der Tab im Hintergrund, zeigt der Titel „● Du bist dran!“. Der 🔊-Knopf oben schaltet den Ton stumm.
 - **Fragen-Sets kombinieren:** In der Lobby wählt der Gastgeber per Häkchen beliebige Sets (Standard 300, Südtirol 50, Wirtschaft 50, Emoji & Flaggen 30, Weihnachten & Winter 20, Film & Serien 20, Kindheit der 2000er 30 Karten – insgesamt 500) oder mit „Alle auswählen“ alles. Die Auswahl wird gemerkt.

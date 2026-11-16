@@ -950,3 +950,9 @@ textarea { resize: vertical; font: inherit; }
 #camdock.pip .camtile.self .camname { display: none; }
 #camdock.pip .camtile:not(.self) .camname { top: 5px; bottom: auto; }
 @media (max-width: 640px) { #camdock.pip .camtile { width: 150px; } #camdock.pip.big .camtile { width: 220px; } #camdock.pip .camtile.self { max-width: 64px; } }
+/* Audio: Kachel ohne Bild zeigt Anfangsbuchstaben */
+.caminit { display: none; }
+.camtile.novideo { display: grid; place-items: center; background: #2a2366; }
+.camtile.novideo video { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.camtile.novideo .caminit { display: block; font: 700 2rem Fredoka, sans-serif; color: var(--ink); }
+.camtap { margin-top: 6px; width: 100%; }

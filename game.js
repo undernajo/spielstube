@@ -393,21 +393,27 @@
   // Verbindungsaufbau über den verschlüsselten Kanal der Stube (rtc/<id>), das Bild selbst geht direkt zwischen den Geräten.
   const RTC_CFG = { iceServers: [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }] };
   const camOK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection);
-  let camStream = null, camOpen = true;
+  let camStream = null, camOpen = true, camOn = false, micOn = false, camMuteAll = false;
   const pcOut = new Map(), pcIn = new Map(), remoteCams = new Map(), iceWait = new Map();
   function rtcSend(to, msg) { if (mq && roomTopic) sendSealed(T("rtc/" + to), { ...msg, from: myId }, { qos: 1 }); }
-  async function camToggle() {
-    if (camStream) return camStop();
-    try { camStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" }, audio: false }); }
-    catch (e) { toast("Kamera nicht verfügbar oder nicht erlaubt.", "bad"); return; }
-    camOpen = true; camSync(); renderCamDock(); render();
-  }
-  function camStop() {
+  // Kamera und Mikrofon getrennt schaltbar; bei jeder Änderung wird die Verbindung zu allen neu aufgebaut
+  async function mediaSet(wantCam, wantMic) {
+    let next = null;
+    if (wantCam || wantMic) {
+      try {
+        next = await navigator.mediaDevices.getUserMedia({
+          video: wantCam ? { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" } : false,
+          audio: wantMic ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false });
+      } catch (e) { toast(wantMic && !wantCam ? "Mikrofon nicht verfügbar oder nicht erlaubt." : "Kamera/Mikrofon nicht verfügbar oder nicht erlaubt.", "bad"); return; }
+    }
     if (camStream) camStream.getTracks().forEach((t) => t.stop());
-    camStream = null;
+    camStream = next; camOn = !!wantCam; micOn = !!wantMic;
     for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
-    pcOut.clear(); renderCamDock(); render();
+    pcOut.clear(); camOpen = true;
+    camSync(); renderCamDock(); render();
   }
+  const camToggle = () => mediaSet(!camOn, micOn);
+  const micToggle = () => mediaSet(camOn, !micOn);
   const camPeers = () => (view && view.players ? view.players.filter((p) => p.id !== myId && p.connected).map((p) => p.id) : []);
   async function camSync() {
     const ps = camPeers();
@@ -465,30 +471,39 @@
     let tile = camVideos.get(id);
     if (!tile) {
       tile = document.createElement("div"); tile.className = "camtile";
-      tile.innerHTML = `<video autoplay playsinline muted></video><span class="camname"></span>`;
+      tile.innerHTML = `<video autoplay playsinline></video><span class="caminit"></span><span class="camname"></span>`;
       camVideos.set(id, tile);
     }
     const vid = tile.querySelector("video");
+    vid.muted = id === "me" || camMuteAll; // eigenes Mikrofon nie selbst hören
     if (stream === "failed") { tile.classList.add("failed"); vid.srcObject = null; }
-    else { tile.classList.remove("failed"); if (vid.srcObject !== stream) vid.srcObject = stream; }
+    else {
+      tile.classList.remove("failed");
+      if (vid.srcObject !== stream) { vid.srcObject = stream; const pl = vid.play(); if (pl && pl.catch) pl.catch(() => camNeedTap(true)); }
+    }
+    const hasVideo = stream && stream !== "failed" && stream.getVideoTracks().some((t) => t.readyState === "live");
+    const hasAudio = stream && stream !== "failed" && stream.getAudioTracks().length > 0;
+    tile.classList.toggle("novideo", !hasVideo && stream !== "failed");
+    tile.querySelector(".caminit").textContent = (label || "?").charAt(0).toUpperCase();
     vid.classList.toggle("mirror", !!mirror);
-    tile.querySelector(".camname").textContent = stream === "failed" ? label + " – keine Verbindung" : label;
+    tile.querySelector(".camname").textContent = stream === "failed" ? label + " – keine Verbindung" : label + (hasAudio ? " 🎤" : "");
     return tile;
   }
   function renderCamDock() {
     const nameOf = (id) => (view && view.players ? (view.players.find((p) => p.id === id) || {}).name : "") || "?";
     const items = [];
-    if (camStream) items.push(["me", camStream, "Du", true]);
+    if (camStream && camOn) items.push(["me", camStream, "Du", true]);
     for (const [id, st] of remoteCams) items.push([id, st, nameOf(id), false]);
     for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); }
     camDock.classList.toggle("show", items.length > 0);
     // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
-    camDock.classList.toggle("pip", !!camStream && remoteCams.size > 0);
+    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0);
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
-          <span class="cambtns"><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button></span></div><div class="camtiles"></div>`;
+          <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button></span></div><div class="camtiles"></div>`;
       camDock.querySelector(".camtoggle").onclick = () => { camOpen = !camOpen; renderCamDock(); };
+      camDock.querySelector(".camaud").onclick = () => { camMuteAll = !camMuteAll; camNeedTap(false); renderCamDock(); camDock.querySelectorAll("video").forEach((v) => v.play && v.play().catch(() => {})); };
       camDock.querySelector(".camsize").onclick = () => { camBig = !camBig; store.set("s10-cam-big", camBig); renderCamDock(); };
       // verschieben per Maus oder Finger; Position wird pro Gerät gemerkt
       const grip = camDock.querySelector(".camhead");
@@ -501,6 +516,8 @@
       };
     }
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
+    const anyAudio = [...remoteCams.values()].some((st) => st && st !== "failed" && st.getAudioTracks().length);
+    const ab = camDock.querySelector(".camaud"); ab.style.display = anyAudio ? "" : "none"; ab.textContent = camMuteAll ? "🔇" : "🔊";
     camDock.classList.toggle("big", camBig);
     // Position merkt sich die Ecke rechts unten – beim Vergrößern/Verkleinern bleibt sie stehen
     const pos = store.get("s10-cam-pos");
@@ -510,7 +527,18 @@
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
   }
-  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-cam]")) camToggle(); });
+  // Browser blockieren Ton manchmal, bis man einmal tippt
+  function camNeedTap(on) {
+    let b = camDock.querySelector(".camtap");
+    if (on && !b) { b = document.createElement("button"); b.className = "camtap btn primary sm"; b.textContent = "🔊 Ton aktivieren"; camDock.appendChild(b);
+      b.onclick = () => { camDock.querySelectorAll("video").forEach((v) => v.play().catch(() => {})); camNeedTap(false); }; }
+    if (!on && b) b.remove();
+  }
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest) return;
+    if (e.target.closest("[data-cam]")) camToggle();
+    else if (e.target.closest("[data-mic]")) micToggle();
+  });
 
   async function leave() {
     if (isHost && !(await askConfirm("Spielstube schließen?", "Alle Mitspieler fliegen dann raus.", "Stube schließen", "Abbrechen", true))) return;
@@ -535,7 +563,8 @@
   // Kopfzeilen-Knöpfe aller Spiele; der Gastgeber kann jederzeit alle zurück in die Lobby holen
   function topActionsHtml() {
     return `<div class="top-actions">
-      ${camOK ? `<button class="btn ghost sm ${camStream ? "cam-on" : ""}" data-cam title="${camStream ? "Kamera aus" : "Kamera an"}" aria-label="Kamera an/aus">📷</button>` : ""}
+      ${camOK ? `<button class="btn ghost sm ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera aus" : "Kamera an"}" aria-label="Kamera an/aus">📷</button>
+        <button class="btn ghost sm ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon aus" : "Mikrofon an"}" aria-label="Mikrofon an/aus">🎤</button>` : ""}
       <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
       <button id="invite" class="btn sm" title="Link zum Beitreten teilen" aria-label="Einladen"><span class="lbl-long">＋ Einladen</span><span class="lbl-short">＋</span></button>
       ${isHost ? `<button id="hostLobby" class="btn ghost sm" title="Spiel beenden – alle zurück in die Lobby" aria-label="Zur Lobby"><span class="lbl-long">Zur Lobby</span><span class="lbl-short">⌂</span></button>` : ""}
@@ -775,7 +804,8 @@
             <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
-            ${camOK ? `<button class="btn ghost ${camStream ? "cam-on" : ""}" data-cam>${camStream ? "📷 Kamera aus" : "📷 Kamera an"}</button>` : ""}
+            ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
+              <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button></div>` : ""}
             <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
             ${reportsHtml()}
           </div>
