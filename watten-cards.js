@@ -82,7 +82,7 @@
     // Laub und Eichel: alle Stiele laufen in der Mitte zu einem Ast zusammen, der nach unten weggeht
     let branch = "";
     if (suit === "laub" || suit === "eichel") {
-      const col = suit === "laub" ? "#1f5e2a" : "#5a3712", top = Math.max(n === 10 ? 46 : 0, Math.min(...pips.map(([, y]) => y)));
+      const col = suit === "laub" ? "#1f5e2a" : "#5a3712", top = Math.min(...pips.map(([, y]) => y)) + (n === 10 ? 6 : 0);
       branch = `<path d="M60 ${top} V182" stroke="${col}" stroke-width="2.8" stroke-linecap="round"/>` +
         pips.filter(([x]) => x !== 60).map(([x, y]) => `<path d="M${x} ${y} Q${(x + 60) / 2} ${y + 2} 60 ${y + 6}" stroke="${col}" stroke-width="1.6" fill="none"/>`).join("");
     }
