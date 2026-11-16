@@ -1969,7 +1969,7 @@
   // ---------- Listen-Duell ----------
   let duRendered = null, duSent = null, duTimer = null;
   // Spalten am Computer: bis 16 Antworten zwei (große Felder), dann mehr – alle Felder gleich groß
-  const duCols = (n) => n <= 16 ? 2 : n <= 21 ? 3 : 4;
+  const duCols = (n) => n <= 16 ? 2 : n <= 24 ? 3 : 4;
   function renderDuell() {
     const v = view, st = v.duell;
     if (!st) return;
