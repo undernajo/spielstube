@@ -1511,23 +1511,22 @@
       const whoPicked = (dir) => st.step === "reveal" ? Object.entries(st.picks).filter(([, d]) => d === dir).map(([pid]) => `<i class="pdot" style="--pc:${colorOf(pid)}"></i>`).join("") : "";
       const btn = (dir, label, icon) => `<button class="hl-btn ${mine === dir ? "on" : ""} ${right && (right === dir || right === "both") ? "right" : ""}" data-dir="${dir}" ${st.step !== "guess" ? "disabled" : ""}>
           <span class="hl-ico">${icon}</span><span>${label}</span><span class="hl-who">${whoPicked(dir)}</span></button>`;
+      const okMe = st.step === "reveal" && st.result ? st.result.ok[myId] : undefined;
       main = `
-        <div class="geo-bar">
-          <div class="geo-target"><span class="game-label">Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps}</span>
-            <div class="geo-name">${esc(st.cat.name)}</div><div class="muted small">${esc(st.cat.q)}${st.cat.approx ? " · Werte ca." : ""}${st.cat.note ? " · " + esc(st.cat.note) : ""}</div></div>
-          <div class="geo-scores">${hlChips(v, st)}</div>
-        </div>
+        <div class="geo-scores hl-pills">${hlChips(v, st)}</div>
+        <div class="hl-title"><div class="hl-catname">${esc(st.cat.name)}</div>
+          <div class="muted small">${esc(st.cat.q)}${st.cat.approx ? " · Werte ca." : ""}${st.cat.note ? " · " + esc(st.cat.note) : ""}</div></div>
         <div class="hl-main">
           <div class="hl-cards">
             <div class="hl-card known"><div class="hl-name">${esc(st.prev.name)}</div><div class="hl-val">${esc(st.prev.value)}</div></div>
-            <div class="hl-vs">${st.step === "reveal" ? (right === "up" ? "▲" : right === "down" ? "▼" : "=") : "?"}</div>
-            <div class="hl-card ${st.step === "reveal" ? "shown" : "unknown"}"><div class="hl-name">${esc(st.cur.name)}</div>
-              <div class="hl-val">${st.step === "reveal" ? esc(st.cur.value) : "?"}</div></div>
+            <div class="hl-vs ${st.step === "reveal" ? "res" : ""}">${st.step === "reveal" ? (right === "up" ? "▲" : right === "down" ? "▼" : "=") : "VS"}</div>
+            <div class="hl-card ${st.step === "reveal" ? "shown" + (okMe === true ? " good" : okMe === false ? " badres" : "") : "unknown"}"><div class="hl-name">${esc(st.cur.name)}</div>
+              <div class="hl-val" ${st.step === "reveal" ? `data-count="${esc(st.cur.value)}"` : ""}>${st.step === "reveal" ? esc(st.cur.value) : "?"}</div></div>
           </div>
           <div class="hl-btns">${btn("up", up, "▲")}${btn("down", down, "▼")}</div>
           <p class="muted small hl-status">${st.step === "guess"
-            ? (mine ? `Du hast „${mine === "up" ? up : down}“ gewählt – du kannst noch umentscheiden. Warte auf die anderen …` : `Ist der Wert von „${esc(st.cur.name)}“ ${up} oder ${down}?`)
-            : st.result.ok[myId] === true ? "✓ Richtig! Gleich geht es weiter …" : st.result.ok[myId] === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
+            ? (mine ? `Du hast „${mine === "up" ? up : down}“ gewählt – warte auf die anderen … (du kannst noch umentscheiden)` : "")
+            : okMe === true ? "✓ Richtig! Gleich geht es weiter …" : okMe === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
           ${st.chain.length ? `<div class="hl-chain"><span class="hl-link">${esc(st.start.name)} <b>${esc(st.start.value)}</b></span>${st.chain.map((c) =>
             `<span class="hl-arrow">${c.right === "up" ? "▲" : c.right === "down" ? "▼" : "="}</span><span class="hl-link">${esc(c.name)} <b>${esc(c.value)}</b></span>`).join("")}</div>` : ""}
         </div>`;
@@ -1546,12 +1545,29 @@
       <main class="screen game slf geo hl">
         <header class="top topbar">
           ${headBrandHtml("hl")}
-          <div class="meta">Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${st.step !== "final" ? `Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps} · ` : ""}Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="slf-main">${main}</section>
       </main>`;
+    // Auflösung: Wert zählt hoch
+    const cnt = app.querySelector(".hl-val[data-count]");
+    if (cnt) {
+      const full = cnt.dataset.count, m = /^([\d.,]+)(.*)$/.exec(full);
+      if (m) {
+        const raw = m[1], dec = raw.includes(",") ? raw.split(",")[1].length : 0, target = Number(raw.replace(/\./g, "").replace(",", "."));
+        const year = st.cat.year, t0 = performance.now(), dur = 900;
+        const fmtN = (x) => year ? String(Math.round(x)) : x.toLocaleString("de-DE", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        const stepF = (now) => {
+          const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+          const from = year ? Math.max(0, target - 120) : 0;
+          cnt.textContent = (k < 1 ? fmtN(from + (target - from) * e) : raw) + m[2];
+          if (k < 1 && cnt.isConnected) requestAnimationFrame(stepF);
+        };
+        requestAnimationFrame(stepF);
+      }
+    }
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });

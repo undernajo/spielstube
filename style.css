@@ -855,3 +855,24 @@ textarea { resize: vertical; font: inherit; }
 .slf-clock { display: grid; justify-items: start; gap: 2px; }
 .slf-head .slf-info:has(#slf-stop:empty) { display: none; }
 @media (max-width: 640px) { .slf-rule { font-size: .72rem; } }
+/* Höher oder tiefer: größer, Duell-Look, Auflösung mit Farbe */
+.hl-pills { justify-content: center; margin-bottom: 4px; }
+.hl-title { text-align: center; margin: 6px 0 2px; }
+.hl-catname { font-size: clamp(1.5rem, 3.4vw, 2.2rem); font-weight: 700; line-height: 1.1; }
+.screen.hl .hl-main { gap: 16px; margin-top: 10px; }
+.hl-card { min-height: clamp(150px, 34vh, 300px); gap: 14px; transition: border-color .3s, box-shadow .3s; }
+.hl-name { font-size: clamp(1.2rem, 3vw, 2.1rem); }
+.hl-val { font-size: clamp(1.6rem, 5vw, 3.4rem); }
+.hl-vs { width: 64px; height: 64px; align-self: center; border-radius: 50%; background: #2a2366; border: 2px solid var(--line); font-size: 1.15rem; font-weight: 800; color: var(--muted); letter-spacing: 1px; }
+.hl-vs.res { background: var(--ok); border-color: var(--ok); color: #fff; font-size: 1.7rem; animation: hlPop .35s ease-out; }
+.hl-card.good { border-color: var(--ok); box-shadow: 0 0 0 4px rgba(47, 191, 113, .25), 0 0 30px rgba(47, 191, 113, .2); }
+.hl-card.badres { border-color: var(--bad); box-shadow: 0 0 0 4px rgba(239, 75, 90, .25), 0 0 30px rgba(239, 75, 90, .2); }
+.hl-btn { padding: 22px 12px; font-size: 1.4rem; }
+.hl-status:empty { display: none; }
+@media (max-width: 640px) {
+  .hl-card { min-height: 0; }
+  .hl-vs { width: 44px; height: 44px; justify-self: center; font-size: .9rem; }
+  .hl-vs.res { font-size: 1.3rem; }
+  .hl-btn { padding: 16px 10px; font-size: 1.2rem; }
+}
+.geo-scores.hl-pills { max-width: none; justify-content: center; flex: none; }
