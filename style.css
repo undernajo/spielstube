@@ -715,7 +715,7 @@ textarea { resize: vertical; font: inherit; }
 .setopt.ro.radio .ro-mark { border-radius: 50%; }
 .setopt.ro.radio.on .ro-mark { background: transparent; border-color: var(--accent); box-shadow: inset 0 0 0 4px #221d4b, inset 0 0 0 10px var(--accent); }
 /* Sicherheitsfrage im Seitenstil */
-.confirm-back { z-index: 40; }
+.confirm-back { z-index: 5000; } /* über der Leaflet-Karte (die nutzt z-index bis 1000) */
 .modal.confirm { width: min(400px, 100%); border-width: 1px; border-color: var(--line); gap: 10px; text-align: center; }
 .modal.confirm h3 { margin: 4px 0 0; font-size: 1.25rem; }
 .modal.confirm p { margin: 0; line-height: 1.4; }
@@ -723,3 +723,4 @@ textarea { resize: vertical; font: inherit; }
 .confirm-actions .btn { flex: 1 1 140px; }
 .btn.danger { background: var(--bad); color: #fff; box-shadow: 0 4px 0 #a32f3b; }
 .geo-kind { font-size: .9rem; font-weight: 500; color: var(--muted); margin-left: 6px; white-space: nowrap; vertical-align: middle; }
+.toast { z-index: 5100; }
