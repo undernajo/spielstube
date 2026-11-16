@@ -1584,7 +1584,8 @@
       (st.step === "play" && (st.bid ? st.bid.by !== me && seated : st.turn === me));
     const whoMoves = st.step === "schlag" ? st.vorhand : st.step === "trumpf" ? st.dealer : st.step === "play" ? (st.bid ? st.seats.find((x) => x !== st.bid.by) : st.turn) : null;
     // „Du bist dran“ unten rechts (bei den eigenen Karten), „… ist dran“ oben rechts (beim Gegner)
-    const turnBadge = myMove ? `<div class="wturn me">Du bist dran!</div>`
+    const myLabel = st.step === "schlag" ? "Sag den Schlag an!" : st.step === "trumpf" ? "Sag den Trumpf an!" : st.mustDecide === me ? "Halten oder gehen?" : st.bid && st.bid.by !== me ? "Halten oder gehen?" : "Du bist dran!";
+    const turnBadge = myMove ? `<div class="wturn me">${myLabel}</div>`
       : whoMoves ? `<div class="wturn other">${esc(nameOf(whoMoves))} ist dran …</div>` : "";
     const callTag = (id) => {
       if (id === st.vorhand && st.schlag) return `<span class="wcall">Schlag: <b>${rankName(st.schlag)}</b></span>`;
