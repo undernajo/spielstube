@@ -1337,7 +1337,8 @@
         `<option value="${t}" ${Number(duOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit pro Antwort</span><select id="du-timer">${Object.entries(DU.TIMERS).map(([k, t]) =>
         `<option value="${k}" ${String(duOpts.timer) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
-      <p class="muted small">${DUDATA.length} Themen, z. B. „Die 10 größten Städte Österreichs“ oder „Die 27 EU-Länder“.</p>
+      <p class="muted small">${(() => { const seen = store.get("s10-du-seen") || [], fresh = DUDATA.filter((l) => !seen.includes(l.q)).length;
+        return `<b>${fresh} von ${DUDATA.length} Themen noch neu</b> – gespielte kommen erst wieder, wenn alle durch sind.`; })()}</p>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       <p class="muted small">${n < 2 ? "Das Listen-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Listen-Duell zu zweit."}</p>`;
   }

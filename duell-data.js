@@ -170,16 +170,8 @@ window.SCHLAU10_DUELL = [
     ["gennaio"], ["febbraio"], ["marzo"], ["aprile"], ["maggio"], ["giugno"], ["luglio"], ["agosto"], ["settembre"], ["ottobre"], ["novembre"], ["dicembre"]] },
   { cat: "Sprache", q: "Die 7 Wochentage auf Italienisch", items: [
     ["lunedì", ["lunedi"]], ["martedì", ["martedi"]], ["mercoledì", ["mercoledi"]], ["giovedì", ["giovedi"]], ["venerdì", ["venerdi"]], ["sabato"], ["domenica"]] },
-  { cat: "Sprache", q: "Die Zahlen von 1 bis 10 auf Italienisch", items: [
-    ["uno"], ["due"], ["tre"], ["quattro"], ["cinque"], ["sei"], ["sette"], ["otto"], ["nove"], ["dieci"]] },
 
   // ---------- Erweiterung: feste Mengen ----------
-  { cat: "Sprache", q: "Die Zahlen von 11 bis 20 auf Italienisch", items: [
-    ["undici"], ["dodici"], ["tredici"], ["quattordici"], ["quindici"], ["sedici"], ["diciassette"], ["diciotto"], ["diciannove"], ["venti"]] },
-  { cat: "Sprache", q: "Die 7 Wochentage auf Englisch", items: [
-    ["Monday"], ["Tuesday"], ["Wednesday"], ["Thursday"], ["Friday"], ["Saturday"], ["Sunday"]] },
-  { cat: "Sprache", q: "Die 12 Monate auf Englisch", items: [
-    ["January"], ["February"], ["March"], ["April"], ["May"], ["June"], ["July"], ["August"], ["September"], ["October"], ["November"], ["December"]] },
   { cat: "Sprache", q: "Die 26 Wörter des NATO-Buchstabieralphabets", items: [
     ["Alfa", ["Alpha"]], ["Bravo"], ["Charlie"], ["Delta"], ["Echo"], ["Foxtrot"], ["Golf"], ["Hotel"], ["India"], ["Juliett", ["Juliet"]],
     ["Kilo"], ["Lima"], ["Mike"], ["November"], ["Oscar"], ["Papa"], ["Quebec"], ["Romeo"], ["Sierra"], ["Tango"], ["Uniform"], ["Victor"],
@@ -243,8 +235,6 @@ window.SCHLAU10_DUELL = [
   { cat: "Südtirol", q: "Die 6 Nachbarn Südtirols", note: "Bundesländer, Kanton und Provinzen, an die Südtirol grenzt", items: [
     ["Tirol", ["Nordtirol", "Osttirol"]], ["Salzburg"], ["Graubünden", ["Graubuenden"]], ["Sondrio", ["Provinz Sondrio"]], ["Trentino", ["Trient", "Provinz Trient"]],
     ["Belluno", ["Provinz Belluno"]]] },
-  { cat: "Südtirol", q: "Die 8 Kartenwerte beim Watten", note: "ohne den Weli", items: [
-    ["Sieben", ["7"]], ["Acht", ["8"]], ["Neun", ["9"]], ["Zehn", ["10", "Zehner"]], ["Unter"], ["Ober"], ["König", ["Koenig"]], ["Ass", ["Sau", "Daus"]]] },
 
   { cat: "Sport", q: "Die 9 Olympia-Winterorte in den Alpenländern", note: "Gastgeber in Frankreich, Schweiz, Deutschland, Österreich und Italien, bis 2026", items: [
     ["Chamonix"], ["St. Moritz", ["Sankt Moritz", "St Moritz"]], ["Garmisch-Partenkirchen", ["Garmisch"]], ["Cortina d'Ampezzo", ["Cortina"]], ["Innsbruck"],
@@ -267,4 +257,45 @@ window.SCHLAU10_DUELL = [
   { cat: "Unterhaltung", q: "Die 5 Spice Girls", note: "Vor-/Nachname oder Spitzname", items: [
     ["Victoria Beckham", ["Victoria Adams", "Posh Spice", "Posh"]], ["Melanie Brown", ["Mel B", "Scary Spice", "Scary"]], ["Emma Bunton", ["Baby Spice", "Baby"]],
     ["Melanie Chisholm", ["Mel C", "Sporty Spice", "Sporty"]], ["Geri Halliwell", ["Ginger Spice", "Ginger"]]], names: true },
+
+  // ---------- Erweiterung 2 ----------
+  { cat: "Länder", q: "Die 7 Nachbarländer der Ukraine", items: [
+    ["Polen"], ["Slowakei"], ["Ungarn"], ["Rumänien", ["Rumaenien"]], ["Moldau", ["Moldawien", "Republik Moldau"]], ["Belarus", ["Weißrussland", "Weissrussland"]], ["Russland"]] },
+  { cat: "Länder", q: "Die 7 Nachbarländer Ungarns", items: [
+    ["Österreich", ["Oesterreich"]], ["Slowakei"], ["Ukraine"], ["Rumänien", ["Rumaenien"]], ["Serbien"], ["Kroatien"], ["Slowenien"]] },
+  { cat: "Länder", q: "Die 10 Nachbarn Brasiliens", note: "9 Länder und Französisch-Guayana", items: [
+    ["Argentinien"], ["Bolivien"], ["Kolumbien"], ["Französisch-Guayana", ["Franzoesisch-Guayana", "Guayana", "Frankreich"]], ["Guyana"], ["Paraguay"],
+    ["Peru"], ["Suriname", ["Surinam"]], ["Uruguay"], ["Venezuela"]] },
+  { cat: "Länder", q: "Die 12 unabhängigen Länder Südamerikas", items: [
+    ["Argentinien"], ["Bolivien"], ["Brasilien"], ["Chile"], ["Ecuador"], ["Guyana"], ["Kolumbien"], ["Paraguay"], ["Peru"], ["Suriname", ["Surinam"]],
+    ["Uruguay"], ["Venezuela"]] },
+  { cat: "Länder", q: "Die 5 ständigen Mitglieder im UN-Sicherheitsrat", items: [
+    ["USA", ["Vereinigte Staaten", "Amerika"]], ["Russland"], ["China"], ["Frankreich"], ["Großbritannien", ["Grossbritannien", "Vereinigtes Königreich", "UK", "England"]]] },
+  { cat: "Natur", q: "Die 5 Großen Seen Nordamerikas", items: [
+    ["Oberer See", ["Lake Superior"]], ["Michigansee", ["Lake Michigan"]], ["Huronsee", ["Lake Huron"]], ["Eriesee", ["Lake Erie"]], ["Ontariosee", ["Lake Ontario"]]] },
+  { cat: "Städte", q: "Die 23 Bezirke Wiens", items: [
+    ["Innere Stadt"], ["Leopoldstadt"], ["Landstraße", ["Landstrasse"]], ["Wieden"], ["Margareten"], ["Mariahilf"], ["Neubau"], ["Josefstadt"],
+    ["Alsergrund"], ["Favoriten"], ["Simmering"], ["Meidling"], ["Hietzing"], ["Penzing"], ["Rudolfsheim-Fünfhaus", ["Rudolfsheim", "Fünfhaus"]],
+    ["Ottakring"], ["Hernals"], ["Währing", ["Waehring"]], ["Döbling", ["Doebling"]], ["Brigittenau"], ["Floridsdorf"], ["Donaustadt"], ["Liesing"]] },
+  { cat: "Städte", q: "Die 12 Bezirke Berlins", items: [
+    ["Mitte"], ["Friedrichshain-Kreuzberg", ["Friedrichshain", "Kreuzberg"]], ["Pankow"], ["Charlottenburg-Wilmersdorf", ["Charlottenburg", "Wilmersdorf"]],
+    ["Spandau"], ["Steglitz-Zehlendorf", ["Steglitz", "Zehlendorf"]], ["Tempelhof-Schöneberg", ["Tempelhof", "Schöneberg"]], ["Neukölln", ["Neukoelln"]],
+    ["Treptow-Köpenick", ["Treptow", "Köpenick"]], ["Marzahn-Hellersdorf", ["Marzahn", "Hellersdorf"]], ["Lichtenberg"], ["Reinickendorf"]] },
+  { cat: "Geschichte", q: "Die 12 deutschen Bundespräsidenten", note: "Stand 2026", names: true, items: [
+    ["Theodor Heuss"], ["Heinrich Lübke", ["Luebke"]], ["Gustav Heinemann"], ["Walter Scheel"], ["Karl Carstens"], ["Richard von Weizsäcker", ["Weizsäcker", "Weizsaecker"]],
+    ["Roman Herzog"], ["Johannes Rau"], ["Horst Köhler", ["Koehler"]], ["Christian Wulff"], ["Joachim Gauck"], ["Frank-Walter Steinmeier", ["Steinmeier"]]] },
+  { cat: "Geschichte", q: "Die 9 österreichischen Bundespräsidenten seit 1945", note: "Stand 2026", names: true, items: [
+    ["Karl Renner"], ["Theodor Körner", ["Koerner"]], ["Adolf Schärf", ["Schaerf"]], ["Franz Jonas"], ["Rudolf Kirchschläger", ["Kirchschlaeger"]],
+    ["Kurt Waldheim"], ["Thomas Klestil"], ["Heinz Fischer"], ["Alexander Van der Bellen", ["Van der Bellen", "VdB"]]] },
+  { cat: "Geschichte", q: "Die 6 Ehefrauen Heinrichs VIII.", note: "Nachname reicht", items: [
+    ["Katharina von Aragon", ["Aragon", "Aragón"]], ["Anne Boleyn", ["Boleyn", "Anna Boleyn"]], ["Jane Seymour", ["Seymour"]], ["Anna von Kleve", ["Kleve", "Anne of Cleves"]],
+    ["Catherine Howard", ["Howard"]], ["Catherine Parr", ["Parr"]]] },
+  { cat: "Geschichte", q: "Die 7 Hügel Roms", items: [
+    ["Aventin", ["Aventinus"]], ["Caelius", ["Celio"]], ["Esquilin", ["Esquilinus"]], ["Kapitol", ["Capitol", "Kapitolinischer Hügel"]], ["Palatin", ["Palatinus"]],
+    ["Quirinal", ["Quirinalis"]], ["Viminal", ["Viminalis"]]] },
+  { cat: "Wissen", q: "Die 7 Sakramente der katholischen Kirche", items: [
+    ["Taufe"], ["Firmung"], ["Eucharistie", ["Kommunion", "Abendmahl"]], ["Buße", ["Busse", "Beichte", "Bußsakrament"]], ["Krankensalbung", ["letzte Ölung"]],
+    ["Weihe", ["Priesterweihe", "Weihesakrament"]], ["Ehe", ["Hochzeit", "Trauung"]]] },
+  { cat: "Unterhaltung", q: "Die 6 Hauptfiguren aus „Friends“", items: [
+    ["Rachel"], ["Monica"], ["Phoebe"], ["Joey"], ["Chandler"], ["Ross"]] },
 ];
