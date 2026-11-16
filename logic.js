@@ -287,12 +287,8 @@
 
   function advance(s, cards) {
     if (s.revealed.every(Boolean)) return endRound(s);
-    // Ja/Nein-Karte: sind alle zutreffenden Antworten gefunden, ist die Runde vorbei
-    const card = cards && cards[s.cardIdx];
-    if (card && card.type === "tf" && s.perm.every((oi, pos) => !card.items[oi][1] || s.revealed[pos])) {
-      event(s, "info", "Alle zutreffenden Antworten sind gefunden!");
-      return endRound(s);
-    }
+    // Ja/Nein-Karte: die Runde geht weiter, auch wenn alle zutreffenden Antworten gefunden sind –
+    // wer nicht weiß, ob noch etwas zutrifft, muss selbst passen (wie beim Original)
     const n = s.players.length;
     for (let k = 1; k <= n; k++) {
       const i = (s.turn + k) % n;
