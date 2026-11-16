@@ -748,3 +748,13 @@ textarea { resize: vertical; font: inherit; }
 /* Stadt, Land, Fluss & Wellenlänge: Spieler als kompakte Pillen statt großer Kästen */
 .screen.slf:not(.geo) > .players { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 12px; }
 .pill-rp { color: var(--ok); font-weight: 700; font-size: .85em; }
+/* Schnapsen: Talon mit Atout links in der Mitte */
+.xtalon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: grid; justify-items: center; gap: 6px; z-index: 2; }
+.xatout { transform: rotate(90deg) translateX(10px); }
+.xatout .wcard.sm { width: clamp(46px, 5vw, 64px); }
+.xstack { position: relative; margin-top: -48px; }
+.xstack .wcard { width: clamp(46px, 5vw, 64px); }
+.xstack.closed { transform: rotate(-12deg); }
+.xcount { position: absolute; right: -6px; bottom: -6px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: .75rem; border-radius: 99px; padding: 1px 7px; }
+@media (max-width: 899px) { .xtalon { position: static; transform: none; grid-auto-flow: column; align-items: center; justify-content: center; } .xatout { transform: rotate(90deg); } .xstack { margin-top: 0; } }
+@media (min-width: 900px) { .xtalon { left: 46px; } .xatout { transform: rotate(90deg) translateX(14px); } }

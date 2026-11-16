@@ -31,11 +31,11 @@
   let chosenTarget = store.get("s10-target");
   const SLF = window.S10Slf;
   // Symbol für Watten: drei aufgefächerte Wattkarten (Herz, Laub, Eichel aus dem eigenen Blatt)
-  function wattenIcon() {
+  function wattenIcon(suits = ["laub", "eichel", "herz"]) {
     const C = window.S10WattenCards;
     const card = (rot, suit) => `<g transform="rotate(${rot} 32 58)"><rect x="20" y="10" width="24" height="36" rx="3.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
       ${C ? `<svg x="20.5" y="12" width="14" height="14" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : ""}</g>`;
-    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(-22, "laub")}${card(0, "eichel")}${card(22, "herz")}</svg>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(-22, suits[0])}${card(0, suits[1])}${card(22, suits[2])}</svg>`;
   }
   const GAMES = [
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: "🧠" },
@@ -45,6 +45,7 @@
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
     { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
+    { key: "schnapsen", color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: wattenIcon(["schelle", "herz", "eichel"]) },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -53,6 +54,8 @@
   let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
   const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
   let wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
+  const SCH = window.S10Schnapsen;
+  let schOpts = Object.assign({ mode: "gemuetlich" }, store.get("s10-schnapsen") || {});
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game")) ? store.get("s10-game") : "zehn";
@@ -228,6 +231,11 @@
       return WAT.start(S, action.opts);
     }
     if (/^w[A-Z]/.test(type)) return S.phase === "watten" && WAT.apply(S, pid, action, host);
+    if (type === "start" && action.game === "schnapsen") {
+      if (!host || S.phase !== "lobby") return false;
+      return SCH.start(S, action.opts);
+    }
+    if (/^x[A-Z]/.test(type)) return S.phase === "schnapsen" && SCH.apply(S, pid, action, host);
     if (type === "start" && action.game === "hl") {
       if (!host || S.phase !== "lobby") return false;
       HL.start(S, action.opts, now); return true;
@@ -237,7 +245,7 @@
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.watten = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.watten = null; S.schnapsen = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -251,6 +259,7 @@
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
       watten: { target: Number(wattenOpts.target), weli: wattenOpts.weli },
+      schnapsen: { mode: schOpts.mode },
     };
     view.slf = S.phase === "slf" ? SLF.publicState(S, Date.now()) : null;
     if (S.phase === "wl" && S.wl && S.wl.step === "final" && S.wl.best == null) {
@@ -264,11 +273,14 @@
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
-    if (S.phase === "watten") {
+    view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
+    const CARD_GAMES = { watten: WAT, schnapsen: SCH };
+    if (CARD_GAMES[S.phase]) {
       // Hände nur privat verteilen: eigene direkt, Gäste über ihren eigenen Kanal
-      wattenPriv = WAT.privateState(S, myId);
-      if (mq && roomTopic) S.watten.seats.filter((id) => id !== myId).forEach((id) =>
-        sendSealed(T("hand/" + id), { seq: Date.now(), priv: WAT.privateState(S, id) }, { qos: 1, retain: true }));
+      const M = CARD_GAMES[S.phase];
+      wattenPriv = M.privateState(S, myId);
+      if (mq && roomTopic) S[S.phase].seats.filter((id) => id !== myId).forEach((id) =>
+        sendSealed(T("hand/" + id), { seq: Date.now(), priv: M.privateState(S, id) }, { qos: 1, retain: true }));
     }
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
@@ -409,7 +421,7 @@
       }
       lastLobbyGame = view.game;
     }
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "watten") renderWatten(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -488,6 +500,8 @@
       wMine: !!(v.watten && ((v.watten.turn === myId) || (v.watten.step === "schlag" && v.watten.vorhand === myId) ||
         (v.watten.step === "trumpf" && v.watten.dealer === myId) || (v.watten.bid && v.watten.bid.by !== myId))),
       wStep: v.watten ? v.watten.step : null,
+      xMine: !!(v.schnapsen && v.schnapsen.turn === myId),
+      xStep: v.schnapsen ? v.schnapsen.step : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
@@ -497,6 +511,8 @@
         if (v.geo.step === "final") { if (v.geo.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.wMine && !prev.wMine) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(80); } catch {} }
+      if (now.xMine && !prev.xMine) sfx.turn();
+      if (now.xStep === "final" && prev.xStep !== "final") { if ((v.schnapsen.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       if (now.wStep === "final" && prev.wStep !== "final") { if ((v.watten.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       if (now.hlKey && now.hlKey !== prev.hlKey) {
         if (v.hl.step === "reveal" && v.hl.result && myId in v.hl.result.ok) { if (v.hl.result.ok[myId]) sfx.turn(); }
@@ -606,6 +622,7 @@
           ${isHost && (chosenGame === "geo" || chosenGame === "oben") ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${isHost && chosenGame === "hl" ? hlSettingsHtml() : ""}
           ${isHost && chosenGame === "watten" ? wattenSettingsHtml() : ""}
+          ${isHost && chosenGame === "schnapsen" ? schSettingsHtml() : ""}
           ${isHost && chosenGame === "zehn" ? `
             ${setPickerHtml()}
             ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
@@ -619,7 +636,7 @@
           <p class="err">${esc(status)}</p>
           <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
         </div>
-        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
+        ${({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, hl: hlRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml}
         ${reportsHtml()}
       </main>`;
     bindReports(renderLobby);
@@ -650,6 +667,7 @@
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
+      if (chosenGame === "schnapsen") return send({ type: "start", game: "schnapsen", opts: schOpts });
       if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
       if (currentSets().length) send({ type: "start", target: Number(tsel.value), set: currentSets() });
     };
@@ -863,6 +881,9 @@
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
+    if (view.game === "schnapsen" && lb.schnapsen) {
+      return `<p class="muted small">Zu zweit · ${esc(SCH.MODES[lb.schnapsen.mode] || SCH.MODES.gemuetlich)} · ${SCH.TARGET} Punkte pro Bummerl</p>`;
+    }
     if (view.game === "watten" && lb.watten) {
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
@@ -908,6 +929,8 @@
       if (!(await askConfirm("Gespielte Orte vergessen?", "Danach sind in allen Regionen wieder alle Orte neu.", "Vergessen"))) return;
       S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
     };
+    const xM = app.querySelector("#sch-mode");
+    if (xM) xM.onchange = () => { schOpts.mode = xM.value; store.set("s10-schnapsen", schOpts); publish(); };
     const wT = app.querySelector("#watten-target");
     if (wT) wT.onchange = () => { wattenOpts.target = Number(wT.value); store.set("s10-watten", wattenOpts); publish(); };
     const wW = app.querySelector("#watten-weli");
@@ -944,6 +967,24 @@
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
   }
+  function schSettingsHtml() {
+    const n = view.players.filter((p) => p.connected).length;
+    return `<label class="field"><span>Spielweise</span><select id="sch-mode">${Object.entries(SCH.MODES).map(([k, m]) =>
+        `<option value="${k}" ${schOpts.mode === k ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></label>
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      <p class="muted small">${n < 2 ? "Schnapsen braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : `Schnapsen zu zweit, ${SCH.TARGET} Punkte pro Bummerl.`}</p>`;
+  }
+  const schRulesHtml = `
+    <details class="rules"><summary>Regeln: Schnapsen</summary>
+      <ul>
+        <li>20 Karten: Ass (11 Augen), Zehner (10), König (4), Ober (3), Unter (2) in vier Farben. Jeder hat 5 Karten, die aufgedeckte Karte unter dem Stapel ist Atout (Trumpf).</li>
+        <li>Solange der Stapel offen ist, darf man jede Karte zugeben. Nach jedem Stich ziehen beide nach – der Gewinner zuerst.</li>
+        <li><b>20 / 40 ansagen:</b> Wer am Ausspielen ist und König und Ober einer Farbe hat, sagt 20 an (in Atout 40) und spielt eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
+        <li><b>Tauschen:</b> Mit dem Atout-Unter darf man die aufgedeckte Atoutkarte holen. <b>Zudrehen:</b> Stapel schließen – ab dann muss man Farbe bedienen, höher stechen oder trumpfen.</li>
+        <li>Wer zuerst <b>66 Augen</b> hat, gewinnt die Runde: 3 Punkte, wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Wer zuerst 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.</li>
+        <li>Gemütlich: die Augen werden angezeigt und „Aus“ geht automatisch. Klassisch: selbst mitzählen und „Aus!“ sagen – zu früh kostet die Runde.</li>
+      </ul>
+    </details>`;
   function wattenSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
     return `<label class="field"><span>Spielen bis</span><select id="watten-target">${WAT.TARGETS.map((t) =>
@@ -1723,6 +1764,124 @@
     }
     app.querySelectorAll("[data-card]").forEach((el) => {
       const go = () => { el.classList.add("going"); send({ type: "wPlay", card: el.dataset.card }); };
+      el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+    });
+  }
+
+  // ---------- Schnapsen ----------
+  let xShown = { round: 0, n: 0 }, xHold = null;
+  function renderSchnapsen() {
+    const v = view, st = v.schnapsen;
+    if (!st) return;
+    const me = myId, seated = st.seats.includes(me), opp = seated ? st.seats.find((x) => x !== me) : st.seats[1];
+    const self = seated ? me : st.seats[0];
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    const priv = seated && wattenPriv && wattenPriv.roundNo === st.roundNo ? wattenPriv : null;
+    const hand = priv ? priv.hand : [], legal = priv ? priv.legal : [], opt = priv ? priv.options : { ansage: [] };
+    const sn = (su) => SCH.SUIT_NAMES[su];
+    // fertigen Stich kurz in der Mitte zeigen
+    const nTricks = st.seats.reduce((a, id) => a + st.tricks[id], 0);
+    if (xShown.round !== st.roundNo) { xShown = { round: st.roundNo, n: nTricks }; xHold = null; }
+    if (xHold && st.trick.length) { xShown.n = nTricks; xHold = null; }
+    if (nTricks > xShown.n && !xHold && st.lastTrick && !st.trick.length) {
+      const held = xHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards }, hr = st.roundNo;
+      setTimeout(() => { if (xHold !== held || xShown.round !== hr) return; xShown.n = nTricks; xHold = null; if (view && view.phase === "schnapsen") renderSchnapsen(); }, 1000);
+    }
+    const shown = xHold ? xHold.cards : st.trick;
+    const table = shown.length ? `<div class="wtrick">${shown.map((t) => `<div class="wplayed"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}
+        ${xHold ? `<p class="muted small wlast">Stich für ${xHold.winner === me ? "dich" : esc(nameOf(xHold.winner))}</p>` : ""}</div>`
+      : `<div class="wtrick empty"><span class="muted">${st.step === "play" ? "Noch keine Karte gespielt" : ""}</span></div>`;
+    const pile = (id, pos) => {
+      let g = (st.won && st.won[id]) || []; if (xHold && xHold.winner === id) g = g.slice(0, -1);
+      const openLast = !xHold && st.trick.length === 0 && st.lastTrick && st.lastTrick.winner === id;
+      return `<div class="wpile ${pos}">${g.map((cs, i) => `<div class="wpile-g" style="--i:${i}">${cs.map((c) => openLast && i === g.length - 1 ? wCard(c, "xs") : `<div class="wcard xs back">${WCARDS.back()}</div>`).join("")}</div>`).join("")}</div>`;
+    };
+    // Talon mit Atout-Karte (links in der Mitte)
+    const talon = `<div class="xtalon">${st.atout ? `<div class="xatout">${wCard(st.atout, "sm")}</div>` : ""}
+        ${st.talon > (st.atout ? 1 : 0) ? `<div class="xstack ${st.closedBy ? "closed" : ""}">${wBack()}<span class="xcount">${st.talon - (st.atout ? 1 : 0)}</span></div>` : ""}
+        ${st.closedBy ? `<span class="wcall">zugedreht</span>` : !st.talon ? `<span class="wcall">Stapel leer</span>` : ""}</div>`;
+    const myTurn = st.turn === me;
+    const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]})` : ""}</span>` : "";
+    const combo = `<div class="wcombo" title="Atout ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Atout</b>
+        <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Zugeben"}</span></div>`;
+    const turnBadge = myTurn ? `<div class="wturn me">${st.trick.length ? "Gib eine Karte zu!" : "Spiel aus!"}</div>`
+      : st.turn ? `<div class="wturn other">${esc(nameOf(st.turn))} ist dran …</div>` : "";
+    // Knöpfe auf dem Spielfeld
+    const btns = [];
+    if (seated && st.step === "play") {
+      opt.ansage.forEach((su) => btns.push(`<button class="btn primary" data-ansage="${su}">${su === st.trump ? 40 : 20} ansagen (${sn(su)})</button>`));
+      if (opt.tausch) btns.push(`<button class="btn ghost" id="x-tausch">Atout-Unter tauschen</button>`);
+      if (opt.zudrehen) btns.push(`<button class="btn ghost" id="x-zu">Zudrehen</button>`);
+      if (opt.aus) btns.push(`<button class="btn ${priv && priv.myPoints >= 66 ? "primary" : "ghost"}" id="x-aus">Aus! (66)</button>`);
+    }
+    const decide = btns.length ? `<div class="wdecide wbidbox">${btns.join("")}</div>` : "";
+    let action = "";
+    if (st.step === "play") {
+      action = `<p class="muted small">${myTurn ? (st.mustLead ? `Spiel König oder Ober in ${sn(st.mustLead)} aus.` : st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+        ${myTurn && st.strict && st.trick.length ? `<p class="wrule"><b>Farbzwang:</b> Farbe bedienen und wenn möglich höher stechen, sonst trumpfen.</p>` : ""}
+        ${st.calls.length ? `<p class="muted small">Angesagt: ${st.calls.map((c) => `${esc(nameOf(c.pid))} ${c.pts} (${sn(c.suit)})`).join(", ")}</p>` : ""}`;
+    } else if (st.result) {
+      const r = st.result, why = { aus: "mit 66 Augen", "letzter-stich": "mit dem letzten Stich", zugedreht: "nach dem Zudrehen", "zudrehen-misslungen": "– Zudrehen misslungen", "falsches-aus": "– falsches „Aus“" }[r.reason] || "";
+      action = `<div class="banner ${r.winner === me ? "win" : ""}"><b>${esc(nameOf(r.winner))} gewinnt die Runde ${why}: +${r.points}</b>
+        <div class="muted small">Augen: ${st.seats.map((id) => `${esc(nameOf(id))} ${r.augen[id]}`).join(" · ")}</div>
+        ${st.step === "final" ? `<div style="margin-top:6px">🏆 <b>${esc(nameOf(st.winners[0]))} gewinnt – ${esc(nameOf(st.seats.find((x) => x !== st.winners[0])))} bekommt ein Bummerl!</b></div>` : ""}
+        ${seated && st.handCount[me] ? `<div class="wshow">${st.shown[me] ? `<span class="muted small">Deine Karten sind aufgedeckt.</span>` : `<button id="x-show" class="btn ghost sm">Meine Karten zeigen</button>`}</div>` : ""}
+        <div class="banner-actions">${st.step === "final"
+          ? `<button id="x-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
+          : seated ? `<button id="x-next" class="btn primary">${st.ready[me] ? "Warte auf den anderen … (zurücknehmen)" : "Nächste Runde"}</button>${isHost ? `<button id="x-force" class="btn ghost sm">Sofort weiter</button>` : ""}` : ""}</div></div>`;
+    }
+    // Punkteblock: Punkte je Runde, Summe oben, Bummerl als Kreuzl
+    const cols = [self, opp];
+    const rows = st.history.map((h) => cols.map((id) => id === h.winner ? `<td>${h.points}</td>` : `<td class="wdash">–</td>`).join(""));
+    const block = `<table class="wblock"><thead><tr>${cols.map((id) => `<th><div class="wgeber">${id === st.dealer ? "Geber" : ""}</div>
+        <span class="wsum ${st.turn === id ? "dran" : ""}">${st.score[id]}</span>${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}
+        <div class="wkreuz" title="Bummerl">${st.bummerl[id] ? "✕".repeat(Math.min(st.bummerl[id], 10)) : ""}</div></th>`).join("")}</tr></thead>
+        <tbody>${rows.map((r) => `<tr>${r}</tr>`).join("") || `<tr><td colspan="2" class="muted small">noch keine Punkte</td></tr>`}</tbody>
+        <tfoot><tr><td colspan="2" class="muted small">bis ${st.target} Punkte · ✕ = Bummerl</td></tr></tfoot></table>`;
+    const oppCards = st.reveal && st.reveal[opp] ? st.reveal[opp].map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
+    const myCards = !seated ? Array.from({ length: st.handCount[self] || 0 }, wBack).join("")
+      : hand.map((c) => { const ok = myTurn && legal.includes(c); return wCard(c, ok ? "play" : myTurn ? "dim" : "", ok ? `data-card="${c}" role="button" tabindex="0" aria-label="${esc(SCH.cardName(c))} spielen"` : ""); }).join("");
+    app.innerHTML = `
+      <main class="screen game slf geo watten">
+        <header class="top topbar">
+          ${headBrandHtml("schnapsen")}
+          <div class="meta">Runde ${st.roundNo} · Stube <b>${esc(v.code)}</b></div>
+          ${topActionsHtml()}
+        </header>
+        ${status ? `<div class="status">${esc(status)}</div>` : ""}
+        <div class="wlayout">
+          <section class="wtable">
+            <div class="wtop">${combo}${myTurn ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}${talon}
+            <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${augen(opp)}</span><div class="whand opp">${oppCards}</div></div>
+            ${table}
+            ${myTurn ? turnBadge : ""}${decide}
+            <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${augen(self)}</span><div class="whand mine">${myCards}</div></div>
+          </section>
+          <aside class="wpanel">
+            <div class="geo-bar wblock-wrap">${block}</div>
+            <section class="waction">${action}</section>
+            <details class="wmode"><summary>Spielweise: ${esc(st.modeName)}</summary><ul>
+              <li><b>Augen:</b> Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2. Wer 66 hat, gewinnt die Runde.</li>
+              <li><b>Offener Stapel:</b> jede Karte erlaubt. <b>Zugedreht oder leer:</b> Farbe bedienen, höher stechen, sonst trumpfen.</li>
+              <li><b>20/40:</b> König + Ober ansagen, wenn du ausspielst; zählt ab dem ersten Stich.</li>
+              <li><b>Punkte:</b> 3 wenn der andere keinen Stich hat, 2 unter 33 Augen, sonst 1. ${st.target} Punkte = Bummerl für den anderen.</li></ul></details>
+          </aside>
+        </div>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#toLobby", () => send({ type: "lobby" }));
+    on("#x-tausch", () => send({ type: "xTausch" }));
+    on("#x-zu", async () => { if (await askConfirm("Zudrehen?", "Ab jetzt gilt Farbzwang. Schaffst du keine 66 Augen, bekommt dein Gegner die Punkte.", "Zudrehen")) send({ type: "xZudrehen" }); });
+    on("#x-aus", async () => { if (await askConfirm("„Aus!“ sagen?", "Hast du schon 66 Augen? Wenn nicht, verlierst du die Runde.", "Aus!")) send({ type: "xAus" }); });
+    on("#x-show", () => send({ type: "xShow" }));
+    on("#x-next", () => send({ type: "xNext" }));
+    on("#x-force", () => send({ type: "xNext", force: true }));
+    on("#x-restart", () => send({ type: "xRestart" }));
+    app.querySelectorAll("[data-ansage]").forEach((b) => b.onclick = () => send({ type: "xAnsage", suit: b.dataset.ansage }));
+    app.querySelectorAll("[data-card]").forEach((el) => {
+      const go = () => { el.classList.add("going"); send({ type: "xPlay", card: el.dataset.card }); };
       el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
     });
   }
