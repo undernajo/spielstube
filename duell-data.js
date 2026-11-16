@@ -298,4 +298,42 @@ window.SCHLAU10_DUELL = [
     ["Weihe", ["Priesterweihe", "Weihesakrament"]], ["Ehe", ["Hochzeit", "Trauung"]]] },
   { cat: "Unterhaltung", q: "Die 6 Hauptfiguren aus „Friends“", items: [
     ["Rachel"], ["Monica"], ["Phoebe"], ["Joey"], ["Chandler"], ["Ross"]] },
+
+  // ---------- Erweiterung 3 ----------
+  { cat: "Geschichte", q: "Die 45 US-Präsidenten", note: "jede Person einmal, Stand 2026 · Nachname reicht (bei Adams, Bush usw. je einmal)", items: [
+    ["George Washington", ["Washington"]], ["John Adams", ["Adams"]], ["Thomas Jefferson", ["Jefferson"]], ["James Madison", ["Madison"]],
+    ["James Monroe", ["Monroe"]], ["John Quincy Adams", ["Adams", "JQA"]], ["Andrew Jackson", ["Jackson"]], ["Martin Van Buren", ["Buren", "Van Buren"]],
+    ["William Henry Harrison", ["Harrison"]], ["John Tyler", ["Tyler"]], ["James K. Polk", ["Polk", "James Polk"]], ["Zachary Taylor", ["Taylor"]],
+    ["Millard Fillmore", ["Fillmore"]], ["Franklin Pierce", ["Pierce"]], ["James Buchanan", ["Buchanan"]], ["Abraham Lincoln", ["Lincoln"]],
+    ["Andrew Johnson", ["Johnson"]], ["Ulysses S. Grant", ["Grant", "Ulysses Grant"]], ["Rutherford B. Hayes", ["Hayes", "Rutherford Hayes"]], ["James A. Garfield", ["Garfield", "James Garfield"]],
+    ["Chester A. Arthur", ["Arthur", "Chester Arthur"]], ["Grover Cleveland", ["Cleveland"]], ["Benjamin Harrison", ["Harrison"]], ["William McKinley", ["McKinley"]],
+    ["Theodore Roosevelt", ["Roosevelt", "Teddy Roosevelt"]], ["William Howard Taft", ["Taft", "William Taft"]], ["Woodrow Wilson", ["Wilson"]], ["Warren G. Harding", ["Harding", "Warren Harding"]],
+    ["Calvin Coolidge", ["Coolidge"]], ["Herbert Hoover", ["Hoover"]], ["Franklin D. Roosevelt", ["Roosevelt", "FDR", "Franklin Roosevelt"]], ["Harry S. Truman", ["Truman", "Harry Truman"]],
+    ["Dwight D. Eisenhower", ["Eisenhower", "Dwight Eisenhower", "Ike"]], ["John F. Kennedy", ["Kennedy", "JFK", "John Kennedy"]], ["Lyndon B. Johnson", ["Johnson", "LBJ", "Lyndon Johnson"]], ["Richard Nixon", ["Nixon"]],
+    ["Gerald Ford", ["Ford"]], ["Jimmy Carter", ["Carter"]], ["Ronald Reagan", ["Reagan"]], ["George H. W. Bush", ["Bush", "Bush senior", "Bush sen.", "George Bush senior"]],
+    ["Bill Clinton", ["Clinton"]], ["George W. Bush", ["Bush", "Bush junior", "Bush jr.", "George Bush junior"]], ["Barack Obama", ["Obama"]], ["Donald Trump", ["Trump"]],
+    ["Joe Biden", ["Biden"]]] },
+  { cat: "Geschichte", q: "Die 14 US-Präsidenten seit 1945", note: "jede Person einmal, Stand 2026", items: [
+    ["Harry S. Truman", ["Truman", "Harry Truman"]], ["Dwight D. Eisenhower", ["Eisenhower", "Dwight Eisenhower", "Ike"]], ["John F. Kennedy", ["Kennedy", "JFK", "John Kennedy"]], ["Lyndon B. Johnson", ["Johnson", "LBJ", "Lyndon Johnson"]],
+    ["Richard Nixon", ["Nixon"]], ["Gerald Ford", ["Ford"]], ["Jimmy Carter", ["Carter"]], ["Ronald Reagan", ["Reagan"]],
+    ["George H. W. Bush", ["Bush", "Bush senior", "Bush sen.", "George Bush senior"]], ["Bill Clinton", ["Clinton"]], ["George W. Bush", ["Bush", "Bush junior", "Bush jr.", "George Bush junior"]], ["Barack Obama", ["Obama"]],
+    ["Donald Trump", ["Trump"]], ["Joe Biden", ["Biden"]]] },
+  { cat: "Geschichte", q: "Die 31 italienischen Ministerpräsidenten der Republik", note: "jede Person einmal, seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
+    ["Alcide De Gasperi", ["De Gasperi"]], ["Giuseppe Pella"], ["Amintore Fanfani"], ["Mario Scelba"],
+    ["Antonio Segni"], ["Adone Zoli"], ["Fernando Tambroni"], ["Giovanni Leone"],
+    ["Aldo Moro"], ["Mariano Rumor"], ["Emilio Colombo"], ["Giulio Andreotti"],
+    ["Francesco Cossiga"], ["Arnaldo Forlani"], ["Giovanni Spadolini"], ["Bettino Craxi"],
+    ["Giovanni Goria"], ["Ciriaco De Mita", ["De Mita"]], ["Giuliano Amato"], ["Carlo Azeglio Ciampi", ["Ciampi", "Carlo Ciampi"]],
+    ["Silvio Berlusconi"], ["Lamberto Dini"], ["Romano Prodi"], ["Massimo D'Alema", ["D'Alema", "Dalema"]],
+    ["Mario Monti"], ["Enrico Letta"], ["Matteo Renzi"], ["Paolo Gentiloni"],
+    ["Giuseppe Conte"], ["Mario Draghi"], ["Giorgia Meloni"]] },
+  { cat: "Unterhaltung", q: "Die 5 Freunde aus „How I Met Your Mother“", note: "Vorname reicht", items: [
+    ["Ted Mosby", ["Ted", "Mosby"]], ["Marshall Eriksen", ["Marshall", "Eriksen"]], ["Lily Aldrin", ["Lily", "Aldrin"]], ["Robin Scherbatsky", ["Robin", "Scherbatsky"]],
+    ["Barney Stinson", ["Barney", "Stinson"]]] },
+  { cat: "Südtirol", q: "Die 5 Stadtviertel von Bozen", note: "ein Teil des Namens reicht", items: [
+    ["Zentrum-Bozner Boden-Rentsch", ["Zentrum", "Bozner Boden", "Rentsch", "Altstadt"]], ["Oberau-Haslach", ["Oberau", "Haslach"]],
+    ["Europa-Neustift", ["Europa", "Neustift"]], ["Don Bosco"], ["Gries-Quirein", ["Gries", "Quirein"]]] },
+  { cat: "Südtirol", q: "Südtiroler Olympiasieger", note: "Goldmedaillen bis einschließlich 2022, Einzel und Team · Nachname reicht", names: true, items: [
+    ["Gustav Thöni", ["Thoeni"]], ["Paul Hildgartner"], ["Walter Plaikner"], ["Erika Lechner"], ["Armin Zöggeler", ["Zoeggeler"]], ["Gerda Weissensteiner", ["Weißensteiner"]],
+    ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"]] },
 ];

@@ -37,6 +37,17 @@
     if (i < 0) i = it.findIndex((item, k) => ok(k) && matches(list, item, text));
     return i;
   }
+  // Eingabe einordnen: genau geschrieben hat Vorrang (neu > schon genannt), erst dann Tippfehler (neu > schon genannt),
+  // zuletzt „ähnlich“. So wird z. B. „Bayern“ nach Bayern München als doppelt erkannt und nicht als Tippfehler für „Bayer“.
+  function classify(list, found, text) {
+    const it = list.items, open = (k) => !found[k], done = (k) => !!found[k];
+    let i = it.findIndex((item, k) => open(k) && exact(list, item, text)); if (i >= 0) return { kind: "hit", i };
+    i = it.findIndex((item, k) => done(k) && exact(list, item, text)); if (i >= 0) return { kind: "dup", i };
+    i = it.findIndex((item, k) => open(k) && matches(list, item, text)); if (i >= 0) return { kind: "hit", i };
+    i = it.findIndex((item, k) => done(k) && matches(list, item, text)); if (i >= 0) return { kind: "dup", i };
+    i = it.findIndex((item, k) => open(k) && near(list, item, text)); if (i >= 0) return { kind: "near", i };
+    return { kind: "wrong", i: -1 };
+  }
   // „ähnlich“ – dann entscheidet der Gegner, ob es zählt
   function near(list, item, text) {
     const g = norm(text);
@@ -110,12 +121,10 @@
     text = String(text || "").trim().slice(0, 60);
     if (!text) return false;
     const it = li.items;
-    const hit = find(li, text, (i) => !st.found[i]);
-    const already = hit < 0 ? find(li, text, (i) => !!st.found[i]) : -1;
-    if (already >= 0) { fail(s, pid, "dup", text, already, now); return true; }
-    if (hit >= 0) { reveal(s, pid, hit, text, now); return true; }
-    const cand = it.findIndex((item, i) => !st.found[i] && near(li, item, text));
-    if (cand >= 0) { st.step = "judge"; st.judge = { by: pid, text, item: cand }; st.deadline = 0; return true; }
+    const c = classify(li, st.found, text);
+    if (c.kind === "hit") { reveal(s, pid, c.i, text, now); return true; }
+    if (c.kind === "dup") { fail(s, pid, "dup", text, c.i, now); return true; }
+    if (c.kind === "near") { st.step = "judge"; st.judge = { by: pid, text, item: c.i }; st.deadline = 0; return true; }
     fail(s, pid, "wrong", text, null, now); return true;
   }
 
@@ -171,5 +180,5 @@
     };
   }
 
-  root.S10Duell = { start, apply, tick, publicState, matches, exact, near, find, TARGETS, TIMERS };
+  root.S10Duell = { start, apply, tick, publicState, matches, exact, near, find, classify, TARGETS, TIMERS };
 })(typeof window !== "undefined" ? window : globalThis);
