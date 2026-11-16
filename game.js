@@ -95,14 +95,14 @@
     <path d="M34 26 h22 a5 5 0 0 1 5 5 v12 a5 5 0 0 1 -5 5 h-2 v6 l-6 -6 h-14 a5 5 0 0 1 -5 -5 v-12 a5 5 0 0 1 5 -5Z" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.3"/>
     <path d="M9 25 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>
     <path d="M35 37 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
-  // Zehner-Duell: Liste mit nummerierten Zeilen, zwei Spielerfarben haken ab
+  // Listen-Duell: Liste mit nummerierten Zeilen, zwei Spielerfarben haken ab
   function duellIcon() {
     const rows = [0, 1, 2, 3, 4].map((r) => {
       const y = 16 + r * 8.2, done = r < 3, col = r % 2 ? "#4fc3f7" : "#ffc83d";
       return `<circle cx="20" cy="${y}" r="2.6" fill="${done ? col : "#d6cfb8"}"/><path d="M26 ${y} H${done ? 44 - r * 3 : 38}" stroke="${done ? "#5a4a2a" : "#cbbf9f"}" stroke-width="2.2" stroke-linecap="round"/>`;
     }).join("");
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="8" width="40" height="48" rx="5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>${rows}
-      <circle cx="47" cy="47" r="11" fill="#ef4b5a" stroke="#a32f3b" stroke-width="1.4"/><text x="47" y="51.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12.5" fill="#fff">10</text></svg>`;
+      <circle cx="47" cy="47" r="11" fill="#ef4b5a" stroke="#a32f3b" stroke-width="1.4"/><text x="47" y="51.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#fff">?</text></svg>`;
   }
   // Symbol für „Höher oder tiefer“: zwei Karten, grüner Pfeil nach oben, roter nach unten
   function hlIcon() {
@@ -114,7 +114,7 @@
   const GAMES = [
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
-    { key: "duell", color: "#3ccf8e", name: "Zehner-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
+    { key: "duell", color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
     { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
@@ -1332,17 +1332,17 @@
         `<option value="${t}" ${Number(duOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit pro Antwort</span><select id="du-timer">${Object.entries(DU.TIMERS).map(([k, t]) =>
         `<option value="${k}" ${String(duOpts.timer) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
-      <p class="muted small">${DUDATA.length} Themen, z. B. „Die 10 größten Städte Österreichs“ oder „Die 10 höchsten Berge der Welt“.</p>
+      <p class="muted small">${DUDATA.length} Themen, z. B. „Die 10 größten Städte Österreichs“ oder „Die 27 EU-Länder“.</p>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
-      <p class="muted small">${n < 2 ? "Das Zehner-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Zehner-Duell zu zweit."}</p>`;
+      <p class="muted small">${n < 2 ? "Das Listen-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Listen-Duell zu zweit."}</p>`;
   }
   const duRulesHtml = `
-    <details class="rules"><summary>Regeln: Zehner-Duell</summary>
+    <details class="rules"><summary>Regeln: Listen-Duell</summary>
       <ul>
-        <li>Es erscheint ein Thema mit genau <b>zehn Antworten</b>, z. B. „Die 10 größten Städte Österreichs“. Die Reihenfolge ist egal.</li>
-        <li>Ihr nennt <b>abwechselnd</b> je eine Antwort. Richtige Antworten werden in der Liste aufgedeckt.</li>
+        <li>Es erscheint ein Thema mit einer festen Zahl von Antworten – meist zehn (z. B. „Die 10 größten Städte Österreichs“), manchmal mehr (z. B. „Die 27 EU-Länder“). Die Reihenfolge ist egal.</li>
+        <li>Ihr nennt <b>abwechselnd</b> je eine Antwort. Für jede Antwort gibt es ein Feld mit „?“ – richtige Antworten werden dort aufgedeckt.</li>
         <li>Wer eine <b>falsche</b> oder eine <b>schon genannte</b> Antwort gibt oder die <b>Zeit</b> überzieht, verliert die Runde – der andere bekommt den Punkt.</li>
-        <li>Sind alle zehn gefunden, bekommt den Punkt, wer die <b>zehnte</b> genannt hat.</li>
+        <li>Sind alle gefunden, bekommt den Punkt, wer die <b>letzte</b> genannt hat.</li>
         <li>Kleine Tippfehler zählen. Ist eine Antwort nur ähnlich, entscheidet der Gegner, ob sie gilt.</li>
         <li>Wer anfängt, wechselt jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
       </ul>
@@ -1966,7 +1966,7 @@
   let hlPick = null; // eigene Wahl (sofort anzeigen, bevor der Gastgeber bestätigt)
   const hlMine = (st) => hlPick && hlPick.key === st.ci + ":" + st.pos ? hlPick.dir : null;
 
-  // ---------- Zehner-Duell ----------
+  // ---------- Listen-Duell ----------
   let duRendered = null, duSent = null, duTimer = null;
   function renderDuell() {
     const v = view, st = v.duell;
@@ -2011,7 +2011,7 @@
           : `<div class="muted small">Ähnlich wie eine Antwort auf der Liste – ${esc(nameOf(opp(j.by)))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
       const r = st.result, iWon = r.winner === myId;
-      const reason = r.why === "full" ? `Alle zehn gefunden – ${esc(nameOf(r.winner))} hat die zehnte genannt.`
+      const reason = r.why === "full" ? `Alle ${st.items.length} gefunden – ${esc(nameOf(r.winner))} hat die letzte genannt.`
         : r.why === "time" ? `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`
         : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
       if (st.step === "roundEnd") action = `<div class="banner ${iWon ? "win" : seated ? "lose" : ""}"><b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>
@@ -2032,9 +2032,9 @@
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
         <section class="du-main">
           <div class="du-pills">${pills()}</div>
-          <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
+          <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
           <div class="du-action">${action}</div>
-          <ol class="du-list">${rows}</ol>
+          <ol class="du-list ${st.items.length > 12 ? "many" : ""}">${rows}</ol>
           ${log ? `<ul class="du-log">${log}</ul>` : ""}
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
         </section>

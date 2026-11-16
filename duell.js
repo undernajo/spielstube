@@ -1,7 +1,7 @@
-// „Zehner-Duell“ – Spiellogik (läuft beim Gastgeber, testbar in Node). Zustand in s.duell.
-// Zwei Spieler, ein Thema mit genau zehn Antworten. Abwechselnd eine Antwort nennen – wer falsch liegt,
+// „Listen-Duell“ – Spiellogik (läuft beim Gastgeber, testbar in Node). Zustand in s.duell.
+// Zwei Spieler, ein Thema mit einer festen Liste von Antworten (meist zehn, manchmal mehr oder weniger). Abwechselnd eine Antwort nennen – wer falsch liegt,
 // eine schon genannte Antwort wiederholt oder die Zeit überzieht, verliert die Runde (der andere bekommt den Punkt).
-// Sind alle zehn gefunden, bekommt den Punkt, wer die zehnte genannt hat.
+// Sind alle gefunden, bekommt den Punkt, wer die letzte genannt hat.
 (function (root) {
   const TARGETS = [3, 5, 7];
   const TIMERS = { "20": { name: "20 Sekunden", ms: 20000 }, "30": { name: "30 Sekunden", ms: 30000 }, "45": { name: "45 Sekunden", ms: 45000 }, "0": { name: "ohne Zeitlimit", ms: 0 } };
@@ -27,6 +27,15 @@
   // sicher richtig (wie bei Schlaue Zehn: kleine Tippfehler werden verziehen)
   function matches(list, item, text) {
     return L().textMatches(item[0], text, variants(list, item).slice(1), false);
+  }
+  // genau gleich geschrieben (hat Vorrang vor Tippfehlern, z. B. „Neon“ nicht als „Xenon“ werten)
+  const exact = (list, item, text) => { const g = norm(text); return !!g && variants(list, item).some((v) => norm(v) === g); };
+  // erst exakte Treffer, dann mit Tippfehler-Toleranz
+  function find(list, text, ok) {
+    const it = list.items;
+    let i = it.findIndex((item, k) => ok(k) && exact(list, item, text));
+    if (i < 0) i = it.findIndex((item, k) => ok(k) && matches(list, item, text));
+    return i;
   }
   // „ähnlich“ – dann entscheidet der Gegner, ob es zählt
   function near(list, item, text) {
@@ -64,7 +73,7 @@
     st.round++;
     if (st.round > 1) st.starter = st.seats.find((id) => id !== st.starter); // Anfang wechselt jede Runde
     st.turn = st.starter;
-    st.found = Array(10).fill(null); // { by }
+    st.found = Array(list(st).items.length).fill(null); // { by }
     st.moves = []; // { by, text, ok, item, why }
     st.judge = null; st.result = null;
     st.step = "turn";
@@ -101,9 +110,9 @@
     text = String(text || "").trim().slice(0, 60);
     if (!text) return false;
     const it = li.items;
-    const already = it.findIndex((item, i) => st.found[i] && matches(li, item, text));
+    const hit = find(li, text, (i) => !st.found[i]);
+    const already = hit < 0 ? find(li, text, (i) => !!st.found[i]) : -1;
     if (already >= 0) { fail(s, pid, "dup", text, already, now); return true; }
-    const hit = it.findIndex((item, i) => !st.found[i] && matches(li, item, text));
     if (hit >= 0) { reveal(s, pid, hit, text, now); return true; }
     const cand = it.findIndex((item, i) => !st.found[i] && near(li, item, text));
     if (cand >= 0) { st.step = "judge"; st.judge = { by: pid, text, item: cand }; st.deadline = 0; return true; }
@@ -162,5 +171,5 @@
     };
   }
 
-  root.S10Duell = { start, apply, tick, publicState, matches, near, TARGETS, TIMERS };
+  root.S10Duell = { start, apply, tick, publicState, matches, exact, near, find, TARGETS, TIMERS };
 })(typeof window !== "undefined" ? window : globalThis);
