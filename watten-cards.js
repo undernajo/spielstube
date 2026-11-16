@@ -86,7 +86,20 @@
       branch = `<path d="M60 ${top} V182" stroke="${col}" stroke-width="2.8" stroke-linecap="round"/>` +
         pips.filter(([x]) => x !== 60).map(([x, y]) => `<path d="M${x} ${y} Q${(x + 60) / 2} ${y + 2} 60 ${y + 6}" stroke="${col}" stroke-width="1.6" fill="none"/>`).join("");
     }
-    return frame(mark + branch + pips.map(([x, y]) => sym(suit, x, y, PIP, inward(x), !!branch)).join(""));
+    // Schelle: die Schellen hängen an Lederriemen mit Schnalle; Herz: die Herzen hängen an einem roten Band mit Masche
+    if (suit === "schelle" || suit === "herz") {
+      const d = PIP_H[suit] * PIP, cols = {};
+      pips.forEach(([x, y]) => (cols[x] = cols[x] || []).push(y));
+      branch = Object.entries(cols).map(([xs, ys]) => {
+        const x = Number(xs), top = Math.min(...ys) - d / 2 - 7, bot = Math.max(...ys) + d / 2 + (suit === "schelle" ? 3 : -4);
+        if (suit === "schelle") return `<rect x="${x - 3.2}" y="${top}" width="6.4" height="${bot - top}" rx="2" fill="#8a5a2b" stroke="#4a2e12" stroke-width=".8"/>
+          <path d="M${x} ${top + 2} V${bot - 2}" stroke="#c9955a" stroke-width=".7" stroke-dasharray="2 2"/>
+          <rect x="${x - 4.8}" y="${top - 3}" width="9.6" height="6" rx="1.4" fill="none" stroke="#d9a520" stroke-width="1.6"/><path d="M${x} ${top - 3} V${top + 3}" stroke="#d9a520" stroke-width="1.2"/>`;
+        return `<path d="M${x} ${top} V${bot}" stroke="#b5303a" stroke-width="1.3"/>
+          <path d="M${x} ${top} q-6 -5 -7 -1 q0 4 7 1 q6 -5 7 -1 q0 4 -7 1 M${x} ${top} l-3 6 M${x} ${top} l3 6" stroke="#b5303a" stroke-width="1.3" fill="#e05a64" stroke-linejoin="round" stroke-linecap="round"/>`;
+      }).join("");
+    }
+    return frame(mark + branch + pips.map(([x, y]) => sym(suit, x, y, PIP, inward(x), !!branch && (suit === "laub" || suit === "eichel"))).join(""));
   }
   // Bildkarten: König sitzt auf dem Thron, Ober und Unter stehen.
   // Großes Farbsymbol: König und Ober links oben, Unter links unten.
