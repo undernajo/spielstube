@@ -165,7 +165,7 @@
     }, 9000);
     c.on("connect", () => {
       opened = true; clearTimeout(fail); status = "";
-      c.subscribe(T("up"), { qos: 1 });
+      c.subscribe([T("up"), T("rtc/" + myId)], { qos: 1 });
       sendSealed(T("host"), "online", { qos: 1, retain: true });
       publish();
     });
@@ -173,6 +173,7 @@
     c.on("message", async (topic, buf) => {
       const m = await unseal(buf);
       if (!m || typeof m !== "object") return;
+      if (topic === T("rtc/" + myId)) { onRtc(m); return; }
       const cid = String(m.clientId || "").slice(0, 40);
       if (!cid || cid === myId) return;
       lastSeen.set(cid, Date.now());
@@ -325,7 +326,7 @@
     c.on("connect", () => {
       if (mq !== c) return;
       status = view ? "" : `Suche Stube ${code} …`; render();
-      c.subscribe([T("state"), T("host"), T("hand/" + myId)], { qos: 1 });
+      c.subscribe([T("state"), T("host"), T("hand/" + myId), T("rtc/" + myId)], { qos: 1 });
       sendUp({ type: "join", name: myName });
     });
     c.on("reconnect", () => { if (mq === c) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
@@ -337,6 +338,7 @@
       }
       const m = await unseal(buf);
       if (m === undefined || mq !== c) return;
+      if (topic === T("rtc/" + myId)) { onRtc(m); return; }
       if (topic === T("hand/" + myId)) {
         if (m && (!wattenPriv || !wattenPriv._seq || m.seq >= wattenPriv._seq)) { wattenPriv = m.priv ? { ...m.priv, _seq: m.seq } : null; render(); }
         return;
@@ -387,6 +389,102 @@
     });
   }
 
+  // ---------- Kamera (nur Video, direkt von Gerät zu Gerät per WebRTC) ----------
+  // Verbindungsaufbau über den verschlüsselten Kanal der Stube (rtc/<id>), das Bild selbst geht direkt zwischen den Geräten.
+  const RTC_CFG = { iceServers: [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }] };
+  const camOK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection);
+  let camStream = null, camOpen = true;
+  const pcOut = new Map(), pcIn = new Map(), remoteCams = new Map(), iceWait = new Map();
+  function rtcSend(to, msg) { if (mq && roomTopic) sendSealed(T("rtc/" + to), { ...msg, from: myId }, { qos: 1 }); }
+  async function camToggle() {
+    if (camStream) return camStop();
+    try { camStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" }, audio: false }); }
+    catch (e) { toast("Kamera nicht verfügbar oder nicht erlaubt.", "bad"); return; }
+    camOpen = true; camSync(); renderCamDock(); render();
+  }
+  function camStop() {
+    if (camStream) camStream.getTracks().forEach((t) => t.stop());
+    camStream = null;
+    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
+    pcOut.clear(); renderCamDock(); render();
+  }
+  const camPeers = () => (view && view.players ? view.players.filter((p) => p.id !== myId && p.connected).map((p) => p.id) : []);
+  async function camSync() {
+    const ps = camPeers();
+    for (const id of [...remoteCams.keys()]) if (!ps.includes(id)) { const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); renderCamDock(); }
+    if (!camStream || !mq || !roomTopic) return;
+    for (const [id, pc] of pcOut) if (!ps.includes(id) || pc.connectionState === "failed" || pc.connectionState === "closed") { pc.close(); pcOut.delete(id); }
+    for (const id of ps) if (!pcOut.has(id)) {
+      const pc = new RTCPeerConnection(RTC_CFG); pcOut.set(id, pc);
+      camStream.getTracks().forEach((t) => pc.addTrack(t, camStream));
+      pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "out", c: e.candidate.toJSON() }); };
+      try { await pc.setLocalDescription(await pc.createOffer()); rtcSend(id, { t: "offer", sdp: pc.localDescription.sdp }); } catch { pcOut.delete(id); }
+    }
+  }
+  setInterval(camSync, 4000);
+  async function addIce(key, pc, c) {
+    if (pc && pc.remoteDescription) { try { await pc.addIceCandidate(c); } catch {} }
+    else { if (!iceWait.has(key)) iceWait.set(key, []); iceWait.get(key).push(c); }
+  }
+  async function flushIce(key, pc) { for (const c of iceWait.get(key) || []) { try { await pc.addIceCandidate(c); } catch {} } iceWait.delete(key); }
+  async function onRtc(m) {
+    if (!m || typeof m !== "object" || !m.from || m.from === myId) return;
+    const id = String(m.from).slice(0, 40);
+    try {
+      if (m.t === "offer") { // jemand schickt mir sein Kamerabild
+        const old = pcIn.get(id); if (old) old.close();
+        const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc);
+        pc.ontrack = (e) => { remoteCams.set(id, e.streams[0] || new MediaStream([e.track])); renderCamDock(); };
+        pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "in", c: e.candidate.toJSON() }); };
+        pc.onconnectionstatechange = () => { if (pc.connectionState === "failed" && pcIn.get(id) === pc) { remoteCams.set(id, "failed"); renderCamDock(); } };
+        await pc.setRemoteDescription({ type: "offer", sdp: m.sdp }); await flushIce("in:" + id, pc);
+        await pc.setLocalDescription(await pc.createAnswer());
+        rtcSend(id, { t: "answer", sdp: pc.localDescription.sdp });
+      } else if (m.t === "answer") {
+        const pc = pcOut.get(id);
+        if (pc && pc.signalingState === "have-local-offer") { await pc.setRemoteDescription({ type: "answer", sdp: m.sdp }); await flushIce("out:" + id, pc); }
+      } else if (m.t === "ice" && m.c) {
+        if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c); else await addIce("out:" + id, pcOut.get(id), m.c);
+      } else if (m.t === "bye") {
+        const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); renderCamDock();
+      }
+    } catch (e) { /* einzelne Fehler beim Verbindungsaufbau ignorieren – camSync versucht es erneut */ }
+  }
+  // Kamera-Leiste: liegt außerhalb von #app, damit die Bilder beim Neuzeichnen nicht flackern
+  const camDock = document.createElement("div"); camDock.id = "camdock"; document.body.appendChild(camDock);
+  const camVideos = new Map();
+  function camTile(id, stream, label, mirror) {
+    let tile = camVideos.get(id);
+    if (!tile) {
+      tile = document.createElement("div"); tile.className = "camtile";
+      tile.innerHTML = `<video autoplay playsinline muted></video><span class="camname"></span>`;
+      camVideos.set(id, tile);
+    }
+    const vid = tile.querySelector("video");
+    if (stream === "failed") { tile.classList.add("failed"); vid.srcObject = null; }
+    else { tile.classList.remove("failed"); if (vid.srcObject !== stream) vid.srcObject = stream; }
+    vid.classList.toggle("mirror", !!mirror);
+    tile.querySelector(".camname").textContent = stream === "failed" ? label + " – keine Verbindung" : label;
+    return tile;
+  }
+  function renderCamDock() {
+    const nameOf = (id) => (view && view.players ? (view.players.find((p) => p.id === id) || {}).name : "") || "?";
+    const items = [];
+    if (camStream) items.push(["me", camStream, "Du", true]);
+    for (const [id, st] of remoteCams) items.push([id, st, nameOf(id), false]);
+    for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); }
+    camDock.classList.toggle("show", items.length > 0);
+    camDock.classList.toggle("closed", !camOpen);
+    if (!camDock.querySelector(".camhead")) {
+      camDock.innerHTML = `<button class="camhead" type="button"><span>📷 Kamera</span><span class="camtoggle"></span></button><div class="camtiles"></div>`;
+      camDock.querySelector(".camhead").onclick = () => { camOpen = !camOpen; renderCamDock(); };
+    }
+    camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
+    const box = camDock.querySelector(".camtiles");
+    items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); if (t.parentNode !== box) box.appendChild(t); });
+  }
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-cam]")) camToggle(); });
+
   async function leave() {
     if (isHost && !(await askConfirm("Spielstube schließen?", "Alle Mitspieler fliegen dann raus.", "Stube schließen", "Abbrechen", true))) return;
     store.del(isHost ? "s10-host" : "s10-guest");
@@ -410,6 +508,7 @@
   // Kopfzeilen-Knöpfe aller Spiele; der Gastgeber kann jederzeit alle zurück in die Lobby holen
   function topActionsHtml() {
     return `<div class="top-actions">
+      ${camOK ? `<button class="btn ghost sm ${camStream ? "cam-on" : ""}" data-cam title="${camStream ? "Kamera aus" : "Kamera an"}" aria-label="Kamera an/aus">📷</button>` : ""}
       <button id="mute" class="btn ghost sm" title="Ton an/aus" aria-label="Ton an/aus">${sfx.muted ? "🔇" : "🔊"}</button>
       <button id="invite" class="btn sm" title="Link zum Beitreten teilen" aria-label="Einladen"><span class="lbl-long">＋ Einladen</span><span class="lbl-short">＋</span></button>
       ${isHost ? `<button id="hostLobby" class="btn ghost sm" title="Spiel beenden – alle zurück in die Lobby" aria-label="Zur Lobby"><span class="lbl-long">Zur Lobby</span><span class="lbl-short">⌂</span></button>` : ""}
@@ -649,6 +748,7 @@
             <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
+            ${camOK ? `<button class="btn ghost ${camStream ? "cam-on" : ""}" data-cam>${camStream ? "📷 Kamera aus" : "📷 Kamera an"}</button>` : ""}
             <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
             ${reportsHtml()}
           </div>

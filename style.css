@@ -911,3 +911,21 @@ textarea { resize: vertical; font: inherit; }
   .lobby-guest .gt-icon { width: 36px; height: 36px; font-size: 1.15rem; margin-bottom: 2px; }
   .lobby-guest .setlist { grid-template-columns: 1fr; }
 }
+/* Kamera-Leiste */
+#camdock { position: fixed; left: 12px; bottom: 12px; z-index: 4000; display: none; background: rgba(20, 16, 50, .92); border: 1px solid var(--line);
+  border-radius: 14px; padding: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); max-width: calc(100vw - 24px); }
+#camdock.show { display: block; }
+.camhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; background: none; border: 0; color: var(--muted);
+  font: 600 .78rem Fredoka, sans-serif; padding: 2px 6px 6px; cursor: pointer; }
+#camdock.closed .camtiles { display: none; }
+#camdock.closed .camhead { padding-bottom: 2px; }
+.camtiles { display: flex; gap: 6px; flex-wrap: wrap; }
+.camtile { position: relative; width: 160px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0d0a24; }
+.camtile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.camtile video.mirror { transform: scaleX(-1); }
+.camname { position: absolute; left: 6px; bottom: 5px; font-size: .72rem; font-weight: 600; color: #fff; background: rgba(0, 0, 0, .5); padding: 1px 7px; border-radius: 99px; }
+.camtile.failed { display: grid; place-items: center; }
+.camtile.failed video { display: none; }
+.camtile.failed .camname { position: static; background: none; color: var(--muted); text-align: center; padding: 6px; }
+.cam-on { border-color: var(--ok) !important; color: var(--ok) !important; }
+@media (max-width: 640px) { #camdock { left: 8px; bottom: 8px; } .camtile { width: 96px; } }
