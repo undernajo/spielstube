@@ -102,8 +102,8 @@
       // Sitzender König auf dem Thron – direkt in Kartenmaßen gezeichnet (nicht verzerrt), links oben bleibt Platz für das Farbsymbol
       const x = 74;
       fig = `
-        <path d="M46 150 V54 Q46 34 66 32 H82 Q102 34 102 54 V150Z" fill="#8a5a2b" stroke="#5a3712" stroke-width="1.4"/>
-        <path d="M52 146 V58 Q52 40 68 39 H80 Q96 40 96 58 V146Z" fill="${c}" fill-opacity=".35"/>
+        <path d="M46 150 V54 Q46 34 66 32 H82 Q102 34 102 54 V150Z" fill="#6b4423" stroke="#3f2610" stroke-width="1.4"/>
+        <path d="M52 146 V58 Q52 40 68 39 H80 Q96 40 96 58 V146Z" fill="#3a3478"/><path d="M58 142 V60 Q58 46 70 45 H78 Q90 46 90 60 V142" fill="none" stroke="#ffc83d" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="2 3"/>
         <circle cx="74" cy="31" r="4" fill="#ffc83d" stroke="#a37400" stroke-width="1"/>
         <rect x="42" y="124" width="64" height="12" rx="4" fill="#6e4520" stroke="#5a3712" stroke-width="1.2"/>
         <path d="M${x - 19} 128 C${x - 21} 100 ${x - 14} 88 ${x} 86 C${x + 14} 88 ${x + 21} 100 ${x + 19} 128Z" fill="${c}" stroke="${ink}" stroke-width="1.3"/>
