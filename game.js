@@ -2050,28 +2050,44 @@
       bar.parentNode.classList.toggle("urgent", left < 10000);
     }, 250);
     const key = [v.code, st.round, st.step, st.li, priv ? priv.answer : "", st.question, st.guess, st.complaint ? st.complaint.state : "", st.result && st.result.voided].join(":");
-    const pills = () => st.seats.map((id) => `<div class="du-pill ${(st.step === "write" && st.asker === id) || (st.step === "answer" && st.guesser === id) || (st.step === "judge" && st.asker === id) ? "on" : ""}" style="--pc:${colorOf(id)}">
-        <i class="pdot"></i><span>${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""} <small class="fq-role">${id === st.asker ? "fragt" : "antwortet"}</small></span><b>${st.score[id]}</b><small>/${st.target}</small></div>`).join("");
-    if (fqRendered === key && app.querySelector(".fq-main")) { const sc = app.querySelector(".du-pills"); if (sc) sc.innerHTML = pills(); return; }
+    const activeId = st.step === "write" || st.step === "judge" ? st.asker : st.step === "answer" ? st.guesser : null;
+    const players = () => st.seats.map((id) => {
+      const ask = id === st.asker, dots = Array.from({ length: st.target }, (_, k) => `<i class="${k < st.score[id] ? "on" : ""}"></i>`).join("");
+      return `<div class="fq-player ${activeId === id ? "active" : ""}" style="--pc:${colorOf(id)}">
+        <div class="fq-ava">${esc((nameOf(id) || "?").charAt(0).toUpperCase())}</div>
+        <div class="fq-pinfo"><div class="fq-pname">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</div>
+          <div class="fq-badge ${ask ? "ask" : "guess"}">${ask ? "✍️ fragt" : "💡 antwortet"}</div></div>
+        <div class="fq-score"><b>${st.score[id]}</b><div class="fq-dots">${dots}</div></div></div>`;
+    }).join("");
+    if (fqRendered === key && app.querySelector(".fq-main")) { const sc = app.querySelector(".fq-players"); if (sc) sc.innerHTML = players(); return; }
     fqRendered = key;
-    const time = () => st.timerMs ? `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${st.deadlineIn >= 60000 ? Math.floor(st.deadlineIn / 60000) + ":" + String(Math.floor(st.deadlineIn / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(st.deadlineIn / 1000) + " s"}</b></div>` : "";
-    const ansCard = (a, label) => `<div class="fq-answer"><span>${label}</span><b>${esc(a)}</b></div>`;
-    const qBox = st.question ? `<div class="fq-question" style="--pc:${colorOf(st.asker)}"><span>${iAsk ? "Deine Frage:" : esc(nameOf(st.asker)) + " fragt:"}</span><b>${esc(st.question)}</b></div>` : "";
+    const fmtLeft = (ms) => ms >= 60000 ? Math.floor(ms / 60000) + ":" + String(Math.floor(ms / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(ms / 1000) + " s";
+    const time = () => st.timerMs && st.deadlineIn ? `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${fmtLeft(st.deadlineIn)}</b></div>` : "";
+    const stepNo = st.step === "write" ? 0 : st.step === "answer" || st.step === "judge" ? 1 : 2;
+    const steps = `<ol class="fq-steps">${["Frage ausdenken", "Antworten", "Auflösung"].map((t, k) =>
+      `<li class="${k < stepNo ? "done" : k === stepNo ? "on" : ""}"><span>${k < stepNo ? "✓" : k + 1}</span>${t}</li>`).join("")}</ol>`;
+    const catTile = `<div class="fq-tile cat"><span>Kategorie</span><b>${esc(st.cat)}</b></div>`;
+    const secret = (a) => `<div class="fq-tile secret"><span>Gesuchte Antwort</span><b>${esc(a)}</b>${iAsk && stepNo < 2 ? `<small>🤫 nur du siehst sie</small>` : ""}</div>`;
+    const bubble = st.question ? `<div class="fq-bubble ${stepNo === 2 ? "small" : ""}" style="--pc:${colorOf(st.asker)}">
+        <div class="fq-bubble-who"><i class="fq-mini" style="--pc:${colorOf(st.asker)}">${esc(nameOf(st.asker).charAt(0).toUpperCase())}</i>${iAsk ? "Deine Frage" : esc(nameOf(st.asker)) + " fragt"}</div>
+        <div class="fq-bubble-q">${esc(st.question)}</div></div>` : "";
+    const waiting = (id, text, icon) => `<div class="fq-wait"><div class="fq-wait-ico">${icon}</div><div><b style="color:${colorOf(id)}">${esc(nameOf(id))}</b> ${text}<span class="fq-dotsanim"><i></i><i></i><i></i></span></div></div>`;
     let body = "";
     if (st.step === "write") {
-      if (iAsk) body = `${priv ? ansCard(priv.answer, "Gesuchte Antwort") : `<p class="muted">Antwort wird geladen …</p>`}
+      if (iAsk) body = `<div class="fq-task">${catTile}${priv ? secret(priv.answer) : `<div class="fq-tile secret"><span>Gesuchte Antwort</span><b>…</b></div>`}</div>
         ${time()}
-        <form class="fq-form" autocomplete="off"><textarea id="fq-q" rows="3" maxlength="300" placeholder="Deine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …"></textarea>
+        <form class="fq-form" autocomplete="off"><label for="fq-q">Deine Frage</label>
+          <textarea id="fq-q" rows="3" maxlength="300" placeholder="Eine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …"></textarea>
           <div class="fq-row"><button type="button" id="fq-pass" class="btn ghost">Passen</button><button class="btn primary">Frage stellen</button></div></form>
-        <p class="muted small">Nur du siehst die Antwort. Die Frage soll in die Kategorie passen und eindeutig sein.</p>`;
-      else body = `${time()}<p class="du-wait"><b style="color:${colorOf(st.asker)}">${esc(nameOf(st.asker))}</b> denkt sich eine Frage aus …</p>`;
+        <p class="muted small fq-hint">Die Frage soll in die Kategorie passen und eindeutig sein.<span class="fq-keys"> Enter schickt ab, Umschalt+Enter macht eine neue Zeile.</span></p>`;
+      else body = `<div class="fq-task one">${catTile}</div>${time()}${waiting(st.asker, "denkt sich eine Frage aus", "✍️")}`;
     } else if (st.step === "answer") {
-      body = `${qBox}${time()}` + (iGuess
-        ? `<form class="du-form" autocomplete="off"><input id="fq-a" maxlength="80" placeholder="Deine Antwort …" enterkeyhint="send"><button class="btn primary">Antworten</button></form>`
-        : `${iAsk && priv ? ansCard(priv.answer, "Gesuchte Antwort") : ""}<p class="du-wait"><b style="color:${colorOf(st.guesser)}">${esc(nameOf(st.guesser))}</b> überlegt …</p>`);
+      body = `${bubble}${time()}` + (iGuess
+        ? `<form class="du-form fq-aform" autocomplete="off"><input id="fq-a" maxlength="80" placeholder="Deine Antwort …" enterkeyhint="send"><button class="btn primary">Antworten</button></form>`
+        : `${iAsk && priv ? `<div class="fq-task one">${secret(priv.answer)}</div>` : ""}${waiting(st.guesser, "überlegt", "💡")}`);
     } else if (st.step === "judge") {
-      body = `${qBox}<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> antwortet: „${esc(st.guess)}“</div>
-        ${iAsk ? `<div class="judge-ask">Gesuchte Antwort: <b>${priv ? esc(priv.answer) : "…"}</b> – zählt das?</div>
+      body = `${bubble}<div class="fq-said"><span>${iGuess ? "Deine Antwort" : esc(nameOf(st.guesser)) + " antwortet"}</span><b>${esc(st.guess)}</b></div>
+        <div class="banner judge du-judge">${iAsk ? `<div class="judge-ask">Gesuchte Antwort: <b>${priv ? esc(priv.answer) : "…"}</b> – zählt das?</div>
           <div class="banner-actions"><button class="btn primary" data-fqjudge="1">✓ Zählt</button><button class="btn ghost" data-fqjudge="0">✗ Zählt nicht</button></div>`
           : `<div class="muted small">Nicht wörtlich gleich – ${esc(nameOf(st.asker))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
@@ -2080,12 +2096,16 @@
       const reason = { right: G ? `${G} wusste die Antwort.` : "Du wusstest die Antwort.", wrong: G ? `${G} lag daneben.` : "Du lagst daneben.",
         time: G ? `${G} hat nicht rechtzeitig geantwortet.` : "Du hast nicht rechtzeitig geantwortet.",
         noq: A ? `${A} ist keine Frage eingefallen.` : "Dir ist keine Frage eingefallen.", pass: A ? `${A} hat gepasst.` : "Du hast gepasst." }[r.why];
-      body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, iGuess ? "Deine Antwort" : esc(nameOf(st.guesser)) + " sagte") : ""}</div>
-        ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> findet die Frage unpassend.</div>
+      const ok = r.why === "right";
+      body = `${bubble}<div class="fq-compare">
+          <div class="fq-tile secret"><span>🎯 Gesuchte Antwort</span><b>${esc(st.answer)}</b></div>
+          ${st.guess ? `<div class="fq-tile given ${ok ? "ok" : "bad"}"><span>💬 ${iGuess ? "Deine Antwort" : esc(nameOf(st.guesser)) + " sagte"}</span><b>${esc(st.guess)}</b><i class="fq-mark">${ok ? "✓" : "✗"}</i></div>`
+            : `<div class="fq-tile given none"><span>💬 Antwort</span><b>—</b></div>`}</div>
+        ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q">${iGuess ? "Du findest" : `<b>${esc(nameOf(st.guesser))}</b> findet`} die Frage unpassend.</div>
           ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
             <div class="banner-actions"><button class="btn primary" data-fqcomplaint="1">Stimmt – Runde zählt nicht</button><button class="btn ghost" data-fqcomplaint="0">Nein, die Frage war fair</button></div>`
             : `<div class="muted small">${esc(nameOf(st.asker))} entscheidet …</div>`}</div>` : ""}
-        <div class="banner ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
+        <div class="banner fq-result ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
           : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>${iWon ? "Punkt für dich!" : "Punkt für " + esc(nameOf(r.winner))}</b>`}
           <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>
           <div class="banner-actions">${iGuess && r.winner === st.asker && !r.voided && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}
@@ -2100,10 +2120,10 @@
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
-        <section class="du-main fq-main">
-          <div class="du-pills">${pills()}</div>
-          <div class="du-title"><div class="du-cat">Kategorie</div><h2>${esc(st.cat)}</h2></div>
-          ${body}
+        <section class="fq-main">
+          <div class="fq-players">${players()}</div>
+          ${steps}
+          <div class="fq-stage">${st.step !== "write" ? `<div class="fq-catchip"><span>Kategorie</span>${esc(st.cat)}</div>` : ""}${body}</div>
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
         </section>
       </main>`;
@@ -2123,7 +2143,7 @@
     const qf = app.querySelector(".fq-form");
     if (qf) {
       const ta = qf.querySelector("#fq-q");
-      const draft = sessionStorage.getItem("s10-fq-draft:" + st.round); if (draft) ta.value = draft; // Entwurf bleibt bei Neuzeichnen erhalten
+      try { const draft = sessionStorage.getItem("s10-fq-draft:" + st.round); if (draft) ta.value = draft; } catch (e) {} // Entwurf bleibt bei Neuzeichnen erhalten
       ta.oninput = () => { try { sessionStorage.setItem("s10-fq-draft:" + st.round, ta.value); } catch (e) {} };
       ta.focus();
       ta.onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); qf.requestSubmit(); } };
