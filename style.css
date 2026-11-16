@@ -789,3 +789,9 @@ textarea { resize: vertical; font: inherit; }
 }
 /* Gastgeber-Lobby: gewählte Fragen-Sets ohne goldenen Rahmen (Häkchen genügt) */
 .setopt.on:not(.ro) { border-color: var(--line); background: #2a2350; }
+/* Gastgeber: Regeln am Computer unter „Spiel wählen“, am Handy ganz unten */
+.lobby-host .rules-desk { display: none; }
+@media (min-width: 1100px) {
+  .lobby-host .rules-desk { display: block; }
+  .lobby-host .rules-mob { display: none; }
+}

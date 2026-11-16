@@ -639,8 +639,8 @@
             <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
             ${reportsHtml()}
           </div>
-          ${isHost ? `<div class="panel lobby-col">${gamePickerHtml()}</div>
-          <div class="lobby-col lobby-settings"><div class="panel">${settings}</div>${rules}</div>`
+          ${isHost ? `<div class="lobby-col lobby-games"><div class="panel">${gamePickerHtml()}</div><div class="rules-desk">${rules}</div></div>
+          <div class="lobby-col lobby-settings"><div class="panel">${settings}</div><div class="rules-mob">${rules}</div></div>`
           : `<div class="lobby-col lobby-settings"><div class="panel">${gameBannerHtml()}${guestSettingsHtml()}
               <p class="muted">Warte, bis der Gastgeber das Spiel startet …</p></div>${rules}</div>`}
         </div>
