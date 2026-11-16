@@ -1153,3 +1153,8 @@ textarea { resize: vertical; font: inherit; }
 .fq-catchip { justify-self: center; display: inline-flex; align-items: baseline; gap: 8px; padding: 5px 14px; border-radius: 99px;
   background: linear-gradient(135deg, #7e3fb8, #c084fc); color: #fff; font-weight: 700; margin-bottom: -2px; }
 .fq-catchip span { font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; opacity: .8; font-weight: 600; }
+/* gesuchte Antwort: warmes Gold auf dunklem Grund statt Weiß (angenehmer für die Augen) */
+.fq-tile.secret { background: linear-gradient(135deg, #3b2f17, #2c2414); border: 2px solid rgba(255, 200, 61, .55); color: #ffd36b; }
+.fq-tile.secret span, .fq-tile.secret small { color: rgba(255, 211, 107, .7); }
+.fq-tile.given span { padding: 0 16px; }
+.fq-mark { top: 6px; right: 8px; font-size: .95rem; }
