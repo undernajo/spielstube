@@ -224,20 +224,10 @@
     const big = kind === "U" ? sym(suit, 22, 166, 1.15, er) : sym(suit, 22, 26, 1.15, er);
     return frame(corner(kind, suit, c, false, false) + `<g transform="${tf}">${fig}</g>` + big);
   }
-  // Ass: zwei Farbsymbole, umrankt von goldenen Ranken, Schriftband und kleines Bergpanorama mit dem Spielstube-Haus
+  // Ass: zwei große Farbsymbole, Schriftband und kleines Bergpanorama mit dem Spielstube-Haus
   const HOUSE = `<path d="M20.5 5.5 V0.5 h5.5 V9.8Z" fill="#c48f0a" stroke="#8a5f00" stroke-width=".9" stroke-linejoin="round"/><rect x="19.8" y="-0.3" width="6.9" height="1.8" rx=".6" fill="#a87400" stroke="#8a5f00" stroke-width=".6"/><circle cx="24.5" cy="-2.3" r="1.5" fill="#e6e2f5" opacity=".85"/><circle cx="26.6" cy="-3.6" r="1.1" fill="#e6e2f5" opacity=".6"/><path d="M16 2.6 30 13.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V13.4Z" fill="#c48f0a"/><path d="M16 1.6 30 12.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V12.4Z" fill="#ffc83d" stroke="#8a5f00" stroke-width="1" stroke-linejoin="round"/><path d="M16 1.6 30 12.4v1.6L16 3.2 2 14v-1.6Z" fill="#fff" opacity=".35"/><g fill="#2a1d00"><circle cx="9.5" cy="16" r="2"/><circle cx="22.5" cy="16" r="2"/><circle cx="16" cy="20.3" r="2"/><circle cx="9.5" cy="24.6" r="2"/><circle cx="22.5" cy="24.6" r="2"/></g>`;
   function sau(suit) {
-    const c = SUITS[suit].color, er = suit === "eichel" ? 180 : 0, gold = "#d9a520";
-    const vine = (d) => `<path d="${d}" stroke="${gold}" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
-    const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="4.2" ry="2" transform="rotate(${r} ${x} ${y})" fill="#e8b93a" stroke="#a37400" stroke-width=".6"/>`;
-    const vines = [
-      "M60 65 C40 70 18 58 21 40 C23 29 29 22 36 20",
-      "M60 65 C80 70 102 58 99 40 C97 29 91 22 84 20",
-      "M60 65 C40 60 18 72 21 90 C23 101 29 108 36 110",
-      "M60 65 C80 60 102 72 99 90 C97 101 91 108 84 110",
-    ].map(vine).join("") + leaf(22.5, 52, 70) + leaf(97.5, 52, -70) + leaf(22.5, 78, -70) + leaf(97.5, 78, 70) + leaf(33, 66, 15) + leaf(87, 66, -15)
-      + [[36, 20], [84, 20], [36, 110], [84, 110]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="#ffc83d" stroke="#a37400" stroke-width=".6"/>`).join("")
-      + `<circle cx="60" cy="65" r="2.4" fill="#ffc83d" stroke="#a37400" stroke-width=".7"/>`;
+    const c = SUITS[suit].color, er = suit === "eichel" ? 180 : 0;
     const ribbon = `
       <path d="M27 127 L15 128 L20 133.5 L15 140 L29 139Z" fill="${c}" stroke="#3a2a10" stroke-opacity=".5" stroke-width=".8"/>
       <path d="M93 127 L105 128 L100 133.5 L105 140 L91 139Z" fill="${c}" stroke="#3a2a10" stroke-opacity=".5" stroke-width=".8"/>
@@ -252,7 +242,7 @@
       <path d="M13 168 L28 162 L40 166 L56 158 L72 165 L88 160 L107 170 V176 H13Z" fill="#9fb0c8"/>
       <path d="M13 177 Q40 166 60 168 Q82 166 107 175 V178 H13Z" fill="#8fbf74"/>
       <g transform="translate(53 156.5) scale(.44)">${HOUSE}</g>`;
-    return frame(corner("A", suit, c) + vines + sym(suit, 60, 38, 1.75, er) + sym(suit, 60, 92, 1.75, er) + ribbon + alps);
+    return frame(corner("A", suit, c) + sym(suit, 60, 38, 1.9, er) + sym(suit, 60, 91, 1.9, er) + ribbon + alps);
   }
   function weli() {
     return frame(corner("6", "schelle", "#b07d00", false, false) + PIPS[6].map(([x, y]) => sym("schelle", x, y, PIP_SCALE[6])).join("") + `
