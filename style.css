@@ -735,3 +735,13 @@ textarea { resize: vertical; font: inherit; }
   .wtable .wdecide p { font-size: .8rem; }
 }
 .wdecide.wbidbox { border-color: rgba(255, 255, 255, .15); background: rgba(20, 16, 50, .75); }
+/* Einheitliche Breite: Kopfleiste überall gleich breit, Inhalt darf schmaler bleiben */
+.screen.game { max-width: 1240px; }
+.screen.slf:not(.geo) > :not(.top), .screen.slf:not(.geo) > .slf-main { max-width: 900px; margin-left: auto; margin-right: auto; }
+.screen.slf.geo:not(.watten) > :not(.top) { max-width: 1100px; margin-left: auto; margin-right: auto; }
+/* Kopfleiste: Titel nie umbrechen, Infos in einer Zeile */
+.top.topbar .gtitle b { white-space: nowrap; }
+.top.topbar .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+@media (max-width: 640px) { .top.topbar .meta { white-space: normal; } }
+/* Lobby: einzelne letzte Spielkachel über die ganze Breite */
+.gamegrid .gametile:last-child:nth-child(odd) { grid-column: 1 / -1; }

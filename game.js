@@ -1341,7 +1341,7 @@
       <main class="screen game slf wl">
         <header class="top topbar">
           ${headBrandHtml("wl")}
-          <div class="meta">${esc(st.packName)} · Teampunkte <b>${st.total}</b> · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Teampunkte <b>${st.total}</b> · Stube <b>${esc(v.code)}</b></div>
           ${topActionsHtml()}
         </header>
         ${status ? `<div class="status">${esc(status)}</div>` : ""}
