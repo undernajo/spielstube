@@ -839,7 +839,6 @@
     }
     if ((view.game === "geo" || view.game === "oben") && lb.geo) {
       if (view.game === "oben") {
-        const r = GEODATA.oben;
         return `<p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
       }
       const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), "", true));
