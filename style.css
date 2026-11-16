@@ -1048,3 +1048,23 @@ textarea { resize: vertical; font: inherit; }
 .du-list.many { gap: 5px; }
 @media (min-width: 700px) { .du-list { grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); grid-template-rows: repeat(var(--rows, 5), auto); } }
 .du-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ---------- Antwort sucht Frage ---------- */
+.fq-role { font-size: .7rem; font-weight: 600; color: var(--muted); margin-left: 4px; text-transform: uppercase; letter-spacing: .06em; }
+.fq-answer { display: grid; gap: 2px; justify-items: center; padding: 14px; border-radius: 16px; background: #fbf6ea; color: #2a1d00; text-align: center; }
+.fq-answer span { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: #8a7a5a; }
+.fq-answer b { font: 700 2.2rem/1.1 Fredoka, sans-serif; word-break: break-word; }
+.fq-form { display: grid; gap: 8px; }
+.fq-form textarea { font: inherit; font-size: 1.05rem; padding: 12px 14px; border-radius: 12px; resize: vertical; min-height: 84px; }
+.fq-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.fq-question { display: grid; gap: 4px; padding: 16px 18px; border-radius: 16px; border: 2px solid var(--pc); background: color-mix(in srgb, var(--pc) 12%, transparent); }
+.fq-question span { font-size: .8rem; color: var(--muted); }
+.fq-question b { font-size: 1.3rem; line-height: 1.3; }
+.fq-reveal { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fq-reveal .fq-answer b { font-size: 1.5rem; }
+.fq-reveal .fq-answer:nth-child(2) { background: rgba(255, 255, 255, .08); color: var(--ink); }
+.fq-reveal .fq-answer:nth-child(2) span { color: var(--muted); }
+/* nichts darf die Seite am Handy seitlich verbreitern */
+.du-pills, .fq-reveal { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.du-pill { min-width: 0; }
+.fq-question b, .fq-answer b { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .fq-role { display: block; margin-left: 0; } .du-pill { padding: 8px 12px; } }
