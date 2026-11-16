@@ -2056,7 +2056,7 @@
     fqRendered = key;
     const time = () => st.timerMs ? `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${st.deadlineIn >= 60000 ? Math.floor(st.deadlineIn / 60000) + ":" + String(Math.floor(st.deadlineIn / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(st.deadlineIn / 1000) + " s"}</b></div>` : "";
     const ansCard = (a, label) => `<div class="fq-answer"><span>${label}</span><b>${esc(a)}</b></div>`;
-    const qBox = st.question ? `<div class="fq-question" style="--pc:${colorOf(st.asker)}"><span>${esc(nameOf(st.asker))} fragt:</span><b>${esc(st.question)}</b></div>` : "";
+    const qBox = st.question ? `<div class="fq-question" style="--pc:${colorOf(st.asker)}"><span>${iAsk ? "Deine Frage:" : esc(nameOf(st.asker)) + " fragt:"}</span><b>${esc(st.question)}</b></div>` : "";
     let body = "";
     if (st.step === "write") {
       if (iAsk) body = `${priv ? ansCard(priv.answer, "Gesuchte Antwort") : `<p class="muted">Antwort wird geladen …</p>`}
@@ -2068,7 +2068,7 @@
     } else if (st.step === "answer") {
       body = `${qBox}${time()}` + (iGuess
         ? `<form class="du-form" autocomplete="off"><input id="fq-a" maxlength="80" placeholder="Deine Antwort …" enterkeyhint="send"><button class="btn primary">Antworten</button></form>`
-        : `${iAsk && priv ? ansCard(priv.answer, "Deine Antwort") : ""}<p class="du-wait"><b style="color:${colorOf(st.guesser)}">${esc(nameOf(st.guesser))}</b> überlegt …</p>`);
+        : `${iAsk && priv ? ansCard(priv.answer, "Gesuchte Antwort") : ""}<p class="du-wait"><b style="color:${colorOf(st.guesser)}">${esc(nameOf(st.guesser))}</b> überlegt …</p>`);
     } else if (st.step === "judge") {
       body = `${qBox}<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> antwortet: „${esc(st.guess)}“</div>
         ${iAsk ? `<div class="judge-ask">Gesuchte Antwort: <b>${priv ? esc(priv.answer) : "…"}</b> – zählt das?</div>
@@ -2078,13 +2078,13 @@
       const r = st.result, iWon = !r.voided && r.winner === myId, cp = st.complaint;
       const reason = { right: `${esc(nameOf(st.guesser))} wusste die Antwort.`, wrong: `${esc(nameOf(st.guesser))} lag daneben.`,
         time: `${esc(nameOf(st.guesser))} hat nicht rechtzeitig geantwortet.`, noq: `${esc(nameOf(st.asker))} ist keine Frage eingefallen.`, pass: `${esc(nameOf(st.asker))} hat gepasst.` }[r.why];
-      body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, esc(nameOf(st.guesser)) + " sagte") : ""}</div>
+      body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, iGuess ? "Deine Antwort" : esc(nameOf(st.guesser)) + " sagte") : ""}</div>
         ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> findet die Frage unpassend.</div>
           ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
             <div class="banner-actions"><button class="btn primary" data-fqcomplaint="1">Stimmt – Runde zählt nicht</button><button class="btn ghost" data-fqcomplaint="0">Nein, die Frage war fair</button></div>`
             : `<div class="muted small">${esc(nameOf(st.asker))} entscheidet …</div>`}</div>` : ""}
-        <div class="banner ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
-          : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>`}
+        <div class="banner ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
+          : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>${iWon ? "Punkt für dich!" : "Punkt für " + esc(nameOf(r.winner))}</b>`}
           <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>
           <div class="banner-actions">${iGuess && r.winner === st.asker && !r.voided && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}
             ${cp && cp.state === "open" ? "" : st.step === "final" ? `<button id="fq-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
