@@ -805,3 +805,12 @@ textarea { resize: vertical; font: inherit; }
 }
 .wcard.pre-draw { opacity: 0; }
 .xcallchip { background: rgba(255, 200, 61, .2); color: #ffe3a0; }
+/* Schlaue Zehn: kompakter Verlauf */
+.log.compact { padding: 10px 14px; }
+.log.compact h3 { font-size: .8rem; margin-bottom: 4px; }
+.log.compact ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; font-size: .84rem; color: #c9c3ea; }
+.log.compact > ul li:first-child { color: var(--ink); }
+.log.compact details { margin-top: 6px; }
+.log.compact summary { cursor: pointer; font-size: .78rem; color: var(--muted); }
+.log.compact details ul { margin-top: 4px; max-height: 180px; overflow: auto; }
+@media (min-width: 900px) { .game-grid > .log.compact { min-height: 0; } }

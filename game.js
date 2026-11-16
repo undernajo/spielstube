@@ -686,6 +686,14 @@
   const PLAYER_COLORS = ["#ffc83d", "#4fc3f7", "#f472b6", "#a3e635", "#fb923c", "#c084fc", "#2dd4bf", "#f87171"];
   const statusLabel = { active: "spielt", passed: "gepasst", out: "raus" };
 
+  // Verlauf kompakt: nur echte Spielzüge, die letzten 3 sichtbar, der Rest zum Aufklappen
+  function zehnLogHtml(v) {
+    const moves = v.log.filter((l) => !/ist beigetreten|hat den Raum verlassen|hat die Stube verlassen|beginnt\.$|^Runde \d+ beendet\.$/.test(l));
+    if (!moves.length) return "";
+    const last = moves.slice(0, 3), older = moves.slice(3); // neueste zuerst
+    return `<section class="log compact"><h3>Letzte Züge</h3><ul>${last.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
+      ${older.length ? `<details><summary>Ganzer Verlauf (${moves.length})</summary><ul>${older.map((l) => `<li>${esc(l)}</li>`).join("")}</ul></details>` : ""}</section>`;
+  }
   function renderGame() {
     const v = view, card = v.card;
     const cur = v.players[v.turn];
@@ -782,7 +790,7 @@
             </div>
           </section>
           <div class="card-tools"><button id="report" class="btn ghost sm">⚑ Karte melden</button></div>
-          <section class="log"><h3>Verlauf</h3><ol>${v.log.filter((l) => !/ist beigetreten|hat den Raum verlassen|hat die Stube verlassen/.test(l)).map((l) => `<li>${esc(l)}</li>`).join("") || `<li class="muted">Noch keine Züge.</li>`}</ol></section>
+          ${zehnLogHtml(v)}
         </div>
       </main>`;
 
