@@ -1643,8 +1643,11 @@
       else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgespielt:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
           : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgespielt – kein Trumpf-Zwang.</p>` : ""}
-        <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">${st.value + 1} bieten</button>` : ""}
-        ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
+`;
+      // Bieten (und ggf. Aufgeben) als Knöpfe auf dem Spielfeld rechts unten
+      if (!decide && (st.canBid[me] || st.giveUpBy === me)) decide = `<div class="wdecide wbidbox">
+          ${st.canBid[me] ? `<button class="btn primary" id="w-bid">${st.value + 1} bieten</button>` : ""}
+          ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
     } else if (st.step === "roundEnd" || st.step === "final") {
       const r = st.result, why = { stiche: "mit 3 Stichen", abgelehnt: "– Bieten abgelehnt", aufgegeben: "– der andere hat aufgegeben" }[r.reason] || "";
       action = `<div class="banner ${r.winner === me ? "win" : ""}"><b>${esc(nameOf(r.winner))} gewinnt die Runde ${why}: +${r.points}</b>

@@ -734,3 +734,4 @@ textarea { resize: vertical; font: inherit; }
   .wtable .wdecide .btn { padding: 8px 6px; font-size: .85rem; }
   .wtable .wdecide p { font-size: .8rem; }
 }
+.wdecide.wbidbox { border-color: rgba(255, 255, 255, .15); background: rgba(20, 16, 50, .75); }
