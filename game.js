@@ -314,8 +314,9 @@
   }
 
   // ---------- Mitspieler ----------
+  let leaving = false; // nach „Verlassen“ nichts mehr senden (sonst meldet sich der Gast automatisch wieder an)
   function sendUp(msg) {
-    if (!mq || !roomTopic) return false;
+    if (!mq || !roomTopic || leaving) return false;
     sendSealed(T("up"), { ...msg, clientId: myId }, { qos: 1 });
     return mq.connected;
   }
@@ -575,6 +576,7 @@
       return;
     }
     // Gast: Abmeldung wirklich zustellen (auf Bestätigung des Servers warten), erst dann die Seite verlassen
+    leaving = true;
     const c = mq;
     let done = false; const finish = () => { if (done) return; done = true; try { c.end(true); } catch {} go(); };
     setTimeout(finish, 1500);
