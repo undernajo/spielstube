@@ -1770,6 +1770,30 @@
 
   // ---------- Schnapsen ----------
   let xShown = { round: 0, n: 0 }, xHold = null;
+  // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
+  function schHelpHtml(st, opt, myTurn) {
+    const sn = (su) => SCH.SUIT_NAMES[su];
+    let tip;
+    if (st.step !== "play") tip = "Die Runde ist vorbei. Wer 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.";
+    else if (!myTurn) tip = st.trick.length ? "Dein Gegner überlegt, was er zugibt." : "Dein Gegner spielt aus.";
+    else if (st.mustLead) tip = `Du hast angesagt – spiel jetzt König oder Ober in ${sn(st.mustLead)} aus.`;
+    else if (st.trick.length) tip = st.strict ? "Farbzwang: gleiche Farbe zugeben und wenn möglich höher, sonst mit Atout stechen." : "Freies Zugeben: du darfst jede Karte legen. Willst du den Stich, leg eine höhere Karte derselben Farbe oder ein Atout.";
+    else tip = (opt.ansage.length ? `Du hast König und Ober in ${opt.ansage.map(sn).join(" und ")} – sag ${opt.ansage.map((su) => su === st.trump ? 40 : 20).join(" bzw. ")} an! ` : "")
+      + (opt.tausch ? "Mit dem Atout-Unter kannst du die aufgedeckte Atoutkarte holen. " : "")
+      + "Spiel eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Atout sticht alles andere.";
+    return `<div class="wmode xhelp"><div class="xtip"><b>Was jetzt?</b> ${esc(tip)}</div>
+      <details ${store.get("s10-xhelp-open") === false ? "" : "open"}><summary>So geht Schnapsen</summary>
+      <ol>
+        <li><b>Ziel:</b> Als Erster <b>66 Augen</b> sammeln. Augen bringen die Karten in deinen Stichen: Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2.</li>
+        <li><b>Stich:</b> Einer spielt aus, der andere gibt eine Karte zu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Atout</b> (Trumpf, ${esc(sn(st.trump))}). Der Gewinner spielt als Nächster aus.</li>
+        <li><b>Nachziehen:</b> Nach jedem Stich ziehen beide eine Karte vom Stapel, der Gewinner zuerst. Solange der Stapel offen ist, darfst du <b>jede Karte</b> zugeben.</li>
+        <li><b>20 und 40:</b> Hast du König und Ober einer Farbe, sag sie beim Ausspielen an: 20 Augen, in Atout 40. Sie zählen ab deinem ersten Stich.</li>
+        <li><b>Tauschen:</b> Mit dem Atout-Unter holst du dir die aufgedeckte Atoutkarte.</li>
+        <li><b>Zudrehen:</b> Du schließt den Stapel, wenn du glaubst, mit deinen Karten auf 66 zu kommen. Dann gilt – wie bei leerem Stapel – <b>Farbzwang</b>: Farbe bedienen und höher stechen, sonst trumpfen.</li>
+        <li><b>Punkte:</b> 3 wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Bei 7 Punkten ist die Partie aus – der Verlierer bekommt ein <b>Bummerl</b> (✕).</li>
+        <li><b>Spielweise:</b> ${st.mode === "klassisch" ? "Klassisch – die Augen sind versteckt. Zähl mit und drück „Aus!“, sobald du 66 hast. Zu früh kostet die Runde." : "Gemütlich – die Augen stehen bei den Namen, bei 66 endet die Runde von selbst."}</li>
+      </ol></details></div>`;
+  }
   function renderSchnapsen() {
     const v = view, st = v.schnapsen;
     if (!st) return;
@@ -1860,11 +1884,7 @@
           <aside class="wpanel">
             <div class="geo-bar wblock-wrap">${block}</div>
             <section class="waction">${action}</section>
-            <details class="wmode"><summary>Spielweise: ${esc(st.modeName)}</summary><ul>
-              <li><b>Augen:</b> Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2. Wer 66 hat, gewinnt die Runde.</li>
-              <li><b>Offener Stapel:</b> jede Karte erlaubt. <b>Zugedreht oder leer:</b> Farbe bedienen, höher stechen, sonst trumpfen.</li>
-              <li><b>20/40:</b> König + Ober ansagen, wenn du ausspielst; zählt ab dem ersten Stich.</li>
-              <li><b>Punkte:</b> 3 wenn der andere keinen Stich hat, 2 unter 33 Augen, sonst 1. ${st.target} Punkte = Bummerl für den anderen.</li></ul></details>
+            ${schHelpHtml(st, opt, myTurn)}
           </aside>
         </div>
       </main>`;
@@ -1872,6 +1892,8 @@
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
+    const hd = app.querySelector(".xhelp details");
+    if (hd) hd.ontoggle = () => store.set("s10-xhelp-open", hd.open);
     on("#x-tausch", () => send({ type: "xTausch" }));
     on("#x-zu", async () => { if (await askConfirm("Zudrehen?", "Ab jetzt gilt Farbzwang. Schaffst du keine 66 Augen, bekommt dein Gegner die Punkte.", "Zudrehen")) send({ type: "xZudrehen" }); });
     on("#x-aus", async () => { if (await askConfirm("„Aus!“ sagen?", "Hast du schon 66 Augen? Wenn nicht, verlierst du die Runde.", "Aus!")) send({ type: "xAus" }); });

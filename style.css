@@ -758,3 +758,8 @@ textarea { resize: vertical; font: inherit; }
 .xcount { position: absolute; right: -6px; bottom: -6px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: .75rem; border-radius: 99px; padding: 1px 7px; }
 @media (max-width: 899px) { .xtalon { position: static; transform: none; grid-auto-flow: column; align-items: center; justify-content: center; } .xatout { transform: rotate(90deg); } .xstack { margin-top: 0; } }
 @media (min-width: 900px) { .xtalon { left: 46px; } .xatout { transform: rotate(90deg) translateX(14px); } }
+.xhelp { display: grid; gap: 10px; }
+.xtip { font-size: .88rem; line-height: 1.4; padding: 8px 10px; border-radius: 10px; background: rgba(255, 200, 61, .1); border: 1px solid rgba(255, 200, 61, .3); color: var(--ink); }
+.xhelp ol { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 6px; line-height: 1.35; font-size: .84rem; }
+.xhelp ol b { color: var(--ink); }
+@media (min-width: 900px) { .xhelp ol { max-height: calc(100vh - 470px); min-height: 120px; overflow: auto; padding-right: 4px; } }
