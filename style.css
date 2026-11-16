@@ -956,3 +956,4 @@ textarea { resize: vertical; font: inherit; }
 .camtile.novideo video { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .camtile.novideo .caminit { display: block; font: 700 2rem Fredoka, sans-serif; color: var(--ink); }
 .camtap { margin-top: 6px; width: 100%; }
+#camdock { opacity: 1; background: #1b1640; } /* nicht durchsichtig */
