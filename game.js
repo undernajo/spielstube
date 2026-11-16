@@ -1156,13 +1156,12 @@
       let badge = "";
       if (st.step === "writing") badge = st.done[p.id] ? "fertig ✓" : "schreibt …";
       else if (st.step === "review") badge = st.ready && st.ready[p.id] ? "bereit ✓" : "prüft …";
-      const rp = st.roundPoints && st.roundPoints[p.id] != null && st.step === "review" ? `Runde: +${st.roundPoints[p.id]}` : "";
-      return `<div class="chip ${st.done[p.id] || (st.ready && st.ready[p.id]) ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
-        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
-          <span class="chip-score"><b>${st.total[p.id] || 0}</b></span></div>
-        <div class="chip-l2"><span class="rpts pos">${rp}</span>${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
-      </div>`;
+      const rp = st.roundPoints && st.roundPoints[p.id] != null && st.step === "review" ? ` <span class="pill-rp">+${st.roundPoints[p.id]}</span>` : "";
+      const done = st.done[p.id] || (st.ready && st.ready[p.id]);
+      // kompakte Pille wie bei „Wo liegt das?“ und „Höher oder tiefer“
+      return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}" title="${esc(badge)}">
+        <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+        <b>${st.total[p.id] || 0}</b>${rp}${badge ? `<span class="geo-mark">${done ? "✓" : "…"}</span>` : ""}</span>`;
     }).join("");
   }
 
@@ -1272,11 +1271,9 @@
     return v.players.map((p, i) => {
       const sub = st.submitted.includes(p.id);
       const badge = st.step === "writing" ? (sub ? "abgegeben ✓" : "denkt …") : "";
-      return `<div class="chip ${sub && st.step === "writing" ? "turn" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
-        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span></div>
-        <div class="chip-l2">${p.id === v.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${badge ? `<span class="badge">${badge}</span>` : ""}</div>
-      </div>`;
+      return `<span class="geo-score ${sub && st.step === "writing" ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}" title="${esc(badge)}">
+        <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+        ${badge ? `<span class="geo-mark">${sub ? "✓" : "…"}</span>` : ""}</span>`;
     }).join("");
   }
   function wlStatusHtml(st) {

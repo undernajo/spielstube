@@ -745,3 +745,6 @@ textarea { resize: vertical; font: inherit; }
 @media (max-width: 640px) { .top.topbar .meta { white-space: normal; } }
 /* Lobby: einzelne letzte Spielkachel über die ganze Breite */
 .gamegrid .gametile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* Stadt, Land, Fluss & Wellenlänge: Spieler als kompakte Pillen statt großer Kästen */
+.screen.slf:not(.geo) > .players { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 12px; }
+.pill-rp { color: var(--ok); font-weight: 700; font-size: .85em; }
