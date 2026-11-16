@@ -895,3 +895,19 @@ textarea { resize: vertical; font: inherit; }
 .screen.wl .wl-chip { font-size: .95rem; padding: 4px 12px; }
 .wl-words.has-hit .wl-word:not(.hit) { opacity: .6; }
 .screen.wl .wl-word b { font-size: clamp(1.4rem, 3.5vw, 2rem); }
+/* Wünsche in der Lobby */
+.gt-wish { margin-top: 4px; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: rgba(255, 200, 61, .16); color: #ffe3a0; }
+.gt-wish.now { background: rgba(255, 255, 255, .08); color: var(--muted); }
+.wishtile { font: inherit; color: inherit; }
+.wishtile.wished { border-color: rgba(255, 200, 61, .6); }
+.wishtile.wished .gt-check { opacity: 1; background: none; font-size: .9rem; }
+.lobby-guest .wishtile.on { border-color: var(--line); background: #221d4b; }
+.lobby-guest .wishtile.on .gt-check { opacity: 0; }
+@media (min-width: 1100px) {
+  .screen.lobby.lobby-guest { max-width: 1320px; }
+  .lobby-guest .lobby-cols { grid-template-columns: 300px minmax(0, 1fr) 380px; }
+  .lobby-guest .gamegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .lobby-guest .gametile { padding: 10px 8px 9px; }
+  .lobby-guest .gt-icon { width: 36px; height: 36px; font-size: 1.15rem; margin-bottom: 2px; }
+  .lobby-guest .setlist { grid-template-columns: 1fr; }
+}

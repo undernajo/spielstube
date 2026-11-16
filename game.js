@@ -214,6 +214,18 @@
       if (!host || S.phase !== "lobby" || !GAMES.some((g) => g.key === action.game)) return false;
       S.game = action.game; return true;
     }
+    if (type === "wish") { // Gast wünscht sich ein Spiel (nochmal tippen = zurücknehmen)
+      if (S.phase !== "lobby" || (action.game && !GAMES.some((g) => g.key === action.game))) return false;
+      S.wishes = S.wishes || {};
+      if (!action.game || S.wishes[pid] === action.game) delete S.wishes[pid];
+      else {
+        S.wishes[pid] = action.game;
+        const p = S.players.find((x) => x.id === pid), g = GAMES.find((x) => x.key === action.game);
+        if (!host && p && g) toast(`${p.name} wünscht sich ${g.name}${/[?!]$/.test(g.name) ? "" : "."}`, "info");
+      }
+      return true;
+    }
+    if (type === "start" && host && S.phase === "lobby") S.wishes = {}; // Wünsche gelten bis zum Spielstart
     if (type === "start" && action.game === "slf") {
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
@@ -253,6 +265,7 @@
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
     if (S.phase === "lobby") view.lobby = {
+      wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
@@ -641,12 +654,17 @@
           </div>
           ${isHost ? `<div class="lobby-col lobby-games"><div class="panel">${gamePickerHtml()}</div><div class="rules-desk">${rules}</div></div>
           <div class="lobby-col lobby-settings"><div class="panel">${settings}</div><div class="rules-mob">${rules}</div></div>`
-          : `<div class="lobby-col lobby-settings"><div class="panel">${gameBannerHtml()}${guestSettingsHtml()}
+          : `<div class="lobby-col lobby-games"><div class="panel">${guestGamesHtml()}</div></div>
+          <div class="lobby-col lobby-settings"><div class="panel">${gameBannerHtml()}${guestSettingsHtml()}
               <p class="muted">Warte, bis der Gastgeber das Spiel startet …</p></div>${rules}</div>`}
         </div>
       </main>`;
     bindReports(renderLobby);
     bindGamePicker();
+    app.querySelectorAll("[data-wish]").forEach((b) => b.onclick = () => {
+      if (b.dataset.wish === view.game) return toast("Das wird gerade gespielt.", "info");
+      send({ type: "wish", game: b.dataset.wish });
+    });
     const copy = app.querySelector("#copy");
     if (copy) copy.onclick = () => {
       const t = app.querySelector("#link");
@@ -838,7 +856,26 @@
         <input type="radio" name="game" value="${g.key}" ${chosenGame === g.key ? "checked" : ""}>
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
+        ${wishTagHtml(g.key)}
         <span class="gt-check" aria-hidden="true">✓</span></label>`).join("")}</div></div>`;
+  }
+  // Wer wünscht sich dieses Spiel? (kleines Abzeichen auf der Kachel)
+  function wishTagHtml(key) {
+    const w = (view.lobby && view.lobby.wishes) || {};
+    const ids = Object.entries(w).filter(([, k]) => k === key).map(([id]) => id);
+    const names = ids.map((id) => id === myId ? "Dein Wunsch" : esc((view.players.find((p) => p.id === id) || { name: "?" }).name));
+    return names.length ? `<span class="gt-wish">💡 ${names.join(", ")}</span>` : "";
+  }
+  // Gäste: alle Spiele sehen und sich eines wünschen
+  function guestGamesHtml() {
+    const myWish = view.lobby && view.lobby.wishes && view.lobby.wishes[myId];
+    return `<div class="field"><span>Alle Spiele – tippe, um dir eines zu wünschen</span><div class="gamegrid">${GAMES.map((g) => `
+      <button type="button" class="gametile wishtile ${view.game === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""}" style="--gc:${g.color}" data-wish="${g.key}"
+        title="${view.game === g.key ? "Wird gerade gespielt" : myWish === g.key ? "Wunsch zurücknehmen" : "Wünsch dir " + esc(g.name)}">
+        <span class="gt-icon" aria-hidden="true">${g.icon}</span>
+        <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
+        ${view.game === g.key ? `<span class="gt-wish now">wird gespielt</span>` : wishTagHtml(g.key)}
+        <span class="gt-check" aria-hidden="true">${myWish === g.key ? "💡" : "✓"}</span></button>`).join("")}</div></div>`;
   }
   function slfSettingsHtml() {
     const presetCats = slfOpts.preset !== "eigene" && SLF.PRESETS[slfOpts.preset] ? SLF.PRESETS[slfOpts.preset].cats : null;
