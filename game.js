@@ -1746,7 +1746,7 @@
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
             ${oben ? `<div class="geo-name">Was ist das?</div><div class="muted small">Gesucht: ${esc(st.place.kind)} · <span id="oben-factor">Punkte ×1</span></div>`
-              : `<div class="geo-name">${esc(st.place.name)}</div><div class="muted small">${esc(st.place.kind)}</div>`}</div>
+              : `<div class="geo-name">${esc(st.place.name)} <span class="geo-kind">${esc(st.place.kind)}</span></div>`}</div>
           <div class="geo-scores">${geoChips(v, st)}</div>
           ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
           <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
