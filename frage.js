@@ -63,7 +63,6 @@
     const st = s.frage;
     st.round++;
     if (st.round > 1) st.asker = other(st, st.asker); // abwechselnd fragen
-    st.rerolled = false;
     pick(st);
     st.question = ""; st.guess = ""; st.result = null; st.step = "write";
     setDeadline(st, now, "write");
@@ -103,10 +102,6 @@
         st.question = q; st.step = "answer"; setDeadline(st, now, "answer");
         return true;
       }
-      case "fqReroll": // einmal pro Runde eine andere Antwort (gleiche Regeln, keine Strafe)
-        if (st.step !== "write" || pid !== st.asker || st.rerolled) return false;
-        st.rerolled = true; pick(st); setDeadline(st, now, "write");
-        return true;
       case "fqGuess": {
         if (st.step !== "answer" || pid !== guesser || a.round !== st.round) return false;
         const g = String(a.text || "").trim().slice(0, 80);
@@ -154,7 +149,7 @@
     const c = cur(st), open = st.step === "reveal" || st.step === "final";
     return {
       step: st.step, round: st.round, seats: st.seats.slice(), score: { ...st.score }, target: st.opts.target, asker: st.asker, guesser: other(st, st.asker),
-      cat: c.cat, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || open ? st.guess : "", rerolled: st.rerolled, li: st.li,
+      cat: c.cat, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || open ? st.guess : "", li: st.li,
       deadlineIn: st.deadline ? Math.max(0, st.deadline - now) : 0,
       timerMs: (st.step === "write" ? WRITE[st.opts.write] : ANSWER[st.opts.answer]).ms,
       writeName: WRITE[st.opts.write].name, answerName: ANSWER[st.opts.answer].name,

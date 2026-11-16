@@ -1381,7 +1381,7 @@
     <details class="rules"><summary>Regeln: Antwort sucht Frage</summary>
       <ul>
         <li>Einer ist <b>Fragensteller</b>: Er bekommt eine <b>Kategorie</b> und eine <b>Antwort</b>, z. B. „Religion“ und „3“. Die Antwort sieht nur er.</li>
-        <li>Er denkt sich eine <b>Frage</b> aus, die in die Kategorie passt und genau diese Antwort hat – z. B. „Wie viele Weise kamen zur Krippe?“. Einmal pro Runde darf er eine andere Antwort ziehen.</li>
+        <li>Er denkt sich eine <b>Frage</b> aus, die in die Kategorie passt und genau diese Antwort hat – z. B. „Wie viele Weise kamen zur Krippe?“.</li>
         <li>Der andere sieht die Frage und tippt seine <b>Antwort</b>. Stimmt sie, bekommt <b>er</b> den Punkt – sonst der <b>Fragensteller</b>.</li>
         <li>Ist die Antwort nicht wörtlich gleich (z. B. „die drei Könige“), entscheidet der Fragensteller ehrlich, ob sie zählt.</li>
         <li>Fällt dem Fragensteller in der Zeit keine Frage ein, bekommt der andere den Punkt; antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
@@ -2062,7 +2062,7 @@
       if (iAsk) body = `${priv ? ansCard(priv.answer, "Gesuchte Antwort") : `<p class="muted">Antwort wird geladen …</p>`}
         ${time()}
         <form class="fq-form" autocomplete="off"><textarea id="fq-q" rows="3" maxlength="300" placeholder="Deine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …"></textarea>
-          <div class="fq-row">${st.rerolled ? "" : `<button type="button" id="fq-reroll" class="btn ghost">🎲 Andere Antwort</button>`}<button class="btn primary">Frage stellen</button></div></form>
+          <div class="fq-row"><button class="btn primary">Frage stellen</button></div></form>
         <p class="muted small">Nur du siehst die Antwort. Die Frage soll in die Kategorie passen und eindeutig sein.</p>`;
       else body = `${time()}<p class="du-wait"><b style="color:${colorOf(st.asker)}">${esc(nameOf(st.asker))}</b> denkt sich eine Frage aus …</p>`;
     } else if (st.step === "answer") {
@@ -2111,7 +2111,6 @@
     on("#fq-next", () => send({ type: "fqNext" }));
     on("#fq-restart", () => send({ type: "fqRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
-    on("#fq-reroll", () => send({ type: "fqReroll" }));
     app.querySelectorAll("[data-fqjudge]").forEach((b) => b.onclick = () => send({ type: "fqJudge", ok: b.dataset.fqjudge === "1" }));
     on("#fq-complain", () => send({ type: "fqComplain" }));
     app.querySelectorAll("[data-fqcomplaint]").forEach((b) => b.onclick = () => send({ type: "fqComplaint", ok: b.dataset.fqcomplaint === "1" }));
