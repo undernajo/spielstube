@@ -118,7 +118,17 @@
       // stehende Figur: Ober mit Federhut, Unter mit Kappe
       const x = 68;
       const hat = kind === "O"
-        ? `<path d="M${x - 12} 60 Q${x} 46 ${x + 12} 60Z" fill="${c}" stroke="${ink}" stroke-width="1"/><path d="M${x + 7} 53 Q${x + 16} 50 ${x + 19} 46 Q${x + 13} 50 ${x + 5} 51" fill="#fff" stroke="#c9bfa5" stroke-width="1"/>`
+        // Ober: Tiroler Filzhut – hohe, eingedellte Krone, breite Krempe, Hutband in der Kartenfarbe, Gamsbart und Feder
+        ? `<path d="M${x + 5} 55.5 Q${x + 13} 50 ${x + 19} 46 Q${x + 15} 52 ${x + 7.5} 56.5Z" fill="#fff" stroke="#b9ad92" stroke-width=".8"/>
+           <path d="M${x + 7} 55.6 Q${x + 13} 51.2 ${x + 17.5} 47.4" stroke="#b9ad92" stroke-width=".5" fill="none"/>
+           <path d="M${x - 7.5} 58.5 L${x - 6.5} 49.5 Q${x - 6} 46.6 ${x - 2.5} 47 Q${x} 49.4 ${x + 2.5} 47 Q${x + 6} 46.6 ${x + 6.5} 49.5 L${x + 7.5} 58.5Z" fill="#33402b" stroke="${ink}" stroke-width="1"/>
+           <path d="M${x - 2.6} 47.4 Q${x} 50 ${x + 2.6} 47.4" stroke="#1d2618" stroke-width=".9" fill="none"/>
+           <path d="M${x - 5.5} 50.5 L${x - 5} 55" stroke="#4d5c40" stroke-width="1.2" stroke-linecap="round"/>
+           <rect x="${x - 7.3}" y="54.6" width="14.6" height="2.8" fill="${c}" stroke="${ink}" stroke-width=".5"/>
+           <ellipse cx="${x}" cy="59" rx="15.5" ry="2.8" fill="#3b4a31" stroke="${ink}" stroke-width="1"/>
+           <path d="M${x - 9} 56 Q${x - 13} 50 ${x - 11.5} 46 Q${x - 9.5} 49 ${x - 8.5} 47 Q${x - 7.5} 49.5 ${x - 6} 46.5 Q${x - 5} 50 ${x - 6.5} 56Z" fill="#cfc2a6" stroke="#6e6048" stroke-width=".7"/>
+           <path d="M${x - 11.3} 46.4 Q${x - 9.5} 49 ${x - 8.5} 47.3 Q${x - 7.5} 49.6 ${x - 6.1} 46.8" stroke="#3a2f22" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+           <rect x="${x - 9.2}" y="54.4" width="3.6" height="2.2" rx=".6" fill="#b08a3e" stroke="${ink}" stroke-width=".4"/>`
         : `<path d="M${x - 9} 59 Q${x} 50 ${x + 9} 59 L${x + 13} 61 L${x - 9} 61Z" fill="${c}" stroke="${ink}" stroke-width="1"/>`;
       fig = `
         <path d="M${x - 12} 106 C${x - 12} 84 ${x - 8} 78 ${x} 77 C${x + 8} 78 ${x + 12} 84 ${x + 12} 106Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
