@@ -482,6 +482,8 @@
     for (const [id, st] of remoteCams) items.push([id, st, nameOf(id), false]);
     for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); }
     camDock.classList.toggle("show", items.length > 0);
+    // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
+    camDock.classList.toggle("pip", !!camStream && remoteCams.size > 0);
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
@@ -505,7 +507,7 @@
     // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
     document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !pos ? camDock.offsetHeight + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
-    items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); if (t.parentNode !== box) box.appendChild(t); });
+    items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
   }
   document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest("[data-cam]")) camToggle(); });
 
