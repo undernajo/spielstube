@@ -66,7 +66,7 @@
   function numberCard(suit, n) {
     const c = SUITS[suit].color;
     // Zehner: kein Eckzeichen, dafür ein großes schwarzes X oben in der Mitte
-    const mark = n === 10 ? `<text x="60" y="40" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="32" fill="#1d1a14">X</text>` : corner(String(n), suit, c, false, false);
+    const mark = n === 10 ? `<text x="60" y="40" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="32" fill="#1d1a14" stroke="#fbf6ea" stroke-width="4" paint-order="stroke" stroke-linejoin="round">X</text>` : corner(String(n), suit, c, false, false);
     // Laub und Eichel: Neuner wie der Siebener (oben eins in der Mitte), aber zwei Spalten mit je vier
     const nineLE = n === 9 && (suit === "laub" || suit === "eichel");
     // Laub und Eichel: Zehner wie der Achter, aber zwei Spalten mit je fünf
@@ -99,7 +99,7 @@
           <path d="M${x} ${top} q-6 -5 -7 -1 q0 4 7 1 q6 -5 7 -1 q0 4 -7 1 M${x} ${top} l-3 6 M${x} ${top} l3 6" stroke="#b5303a" stroke-width="1.3" fill="#e05a64" stroke-linejoin="round" stroke-linecap="round"/>`;
       }).join("");
     }
-    return frame(mark + branch + pips.map(([x, y]) => sym(suit, x, y, PIP, inward(x), !!branch && (suit === "laub" || suit === "eichel"))).join(""));
+    return frame(branch + pips.map(([x, y]) => sym(suit, x, y, PIP, inward(x), !!branch && (suit === "laub" || suit === "eichel"))).join("") + mark);
   }
   // Bildkarten: König sitzt auf dem Thron, Ober und Unter stehen.
   // Großes Farbsymbol: König und Ober links oben, Unter links unten.
