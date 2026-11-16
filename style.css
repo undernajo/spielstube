@@ -762,7 +762,15 @@ textarea { resize: vertical; font: inherit; }
 .xtip { font-size: .88rem; line-height: 1.4; padding: 8px 10px; border-radius: 10px; background: rgba(255, 200, 61, .1); border: 1px solid rgba(255, 200, 61, .3); color: var(--ink); }
 .xhelp ol { margin: 8px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 6px; line-height: 1.35; font-size: .84rem; }
 .xhelp ol b { color: var(--ink); }
-@media (min-width: 900px) { .xhelp ol { max-height: calc(100vh - 470px); min-height: 120px; overflow: auto; padding-right: 4px; } }
+/* Kartenspiele am Computer: rechter Rand nie höher als das Spielfeld – Hilfe scrollt innen statt die Seite */
+@media (min-width: 900px) {
+  .wlayout { align-items: start; }
+  .wlayout .wtable { height: calc(100vh - 116px); min-height: 0; }
+  .wpanel { max-height: calc(100vh - 116px); overflow: hidden; }
+  .wpanel > * { flex: none; }
+  .wpanel > .wmode { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  .xhelp ol { padding-right: 4px; }
+}
 /* Lobby: am Handy untereinander, am Computer in Spalten ohne Seiten-Scrollen */
 .lobby-cols { display: grid; gap: 14px; }
 .lobby-col { display: grid; gap: 14px; align-content: start; }
