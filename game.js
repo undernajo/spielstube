@@ -537,7 +537,7 @@
   document.addEventListener("visibilitychange", () => { if (!document.hidden) document.title = BASE_TITLE; else if (view) reactToChanges(view); });
 
   const rulesHtml = `
-    <details class="rules"><summary>Spielregeln</summary>
+    <details class="rules"><summary>Regeln: Schlaue Zehn</summary>
       <ul>
         <li>Jede Karte hat eine Frage und <b>10 Antworten</b>.</li>
         <li>Wer dran ist, wählt eine noch offene Antwort und beantwortet sie – oder <b>passt</b>.</li>
