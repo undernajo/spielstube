@@ -961,3 +961,14 @@ textarea { resize: vertical; font: inherit; }
 .setlist.inline-count .setopt.ro { grid-template-columns: auto minmax(0, 1fr) auto; }
 .setlist.inline-count .setopt.ro .setcount { grid-column: 3; text-align: right; white-space: nowrap; }
 @media (min-width: 1100px) { .lobby-guest .setlist.inline-count { grid-template-columns: 1fr; } }
+/* Lobby am Computer: Kamera fest in der linken Spalte */
+#camdock.docked { position: static; left: auto !important; top: auto !important; right: auto; bottom: auto; width: 100%; max-width: none; box-shadow: none;
+  background: #15123a; }
+#camdock.docked .camsize { display: none; }
+#camdock.docked .camhead { cursor: default; }
+#camdock.docked .camtile { width: 100% !important; }
+#camdock.docked:not(.pip) .camtiles { display: grid; grid-template-columns: 1fr; }
+#camdock.docked.closed .camtiles { display: none; }
+#camslot:empty { display: none; }
+#camdock.docked .camtile { aspect-ratio: 16 / 10; }
+.lobby-col .row2 [data-cam], .lobby-col .row2 [data-mic] { white-space: nowrap; padding-left: 8px; padding-right: 8px; }

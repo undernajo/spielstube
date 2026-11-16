@@ -521,12 +521,24 @@
     camDock.classList.toggle("big", camBig);
     // Position merkt sich die Ecke rechts unten – beim Vergrößern/Verkleinern bleibt sie stehen
     const pos = store.get("s10-cam-pos");
-    if (pos && pos.rx != null && camDock.classList.contains("show")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
+    if (pos && pos.rx != null && camDock.classList.contains("show") && !camDock.classList.contains("docked")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
     // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
-    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !(pos && pos.rx != null) ? camDock.offsetHeight + 16 + "px" : "0px");
+    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null) ? camDock.offsetHeight + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
   }
+  // In der Lobby (am Computer) sitzt das Kamerafenster fest in der linken Spalte statt über den Einstellungen zu schweben
+  function camDockPlace() {
+    const slot = app.querySelector("#camslot"), dock = !!slot && innerWidth >= 1100;
+    const target = dock ? slot : document.body;
+    if (camDock.parentNode !== target) {
+      target.appendChild(camDock);
+      camDock.querySelectorAll("video").forEach((v) => { if (v.srcObject) v.play().catch(() => {}); });
+    }
+    camDock.classList.toggle("docked", dock);
+    if (!dock) renderCamDock();
+  }
+  addEventListener("resize", () => camDockPlace());
   // Browser blockieren Ton manchmal, bis man einmal tippt
   function camNeedTap(on) {
     let b = camDock.querySelector(".camtap");
@@ -590,6 +602,7 @@
       lastLobbyGame = view.game;
     }
     if (view.phase === "lobby") renderLobby(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "hl") renderHl(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
+    camDockPlace();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
         toast(view.lastEvent.text, view.lastEvent.kind);
@@ -805,7 +818,8 @@
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
             ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
-              <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button></div>` : ""}
+              <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button></div>
+              <div id="camslot"></div>` : ""}
             <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
             ${reportsHtml()}
           </div>
