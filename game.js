@@ -984,7 +984,7 @@
     <details class="rules"><summary>Regeln: Schnapsen</summary>
       <ul>
         <li>20 Karten: Ass (11 Augen), Zehner (10), König (4), Ober (3), Unter (2) in vier Farben. Jeder hat 5 Karten, die aufgedeckte Karte unter dem Stapel ist Trumpf.</li>
-        <li>Solange der Stapel offen ist, darf man jede Karte zugeben. Nach jedem Stich ziehen beide nach – der Gewinner zuerst.</li>
+        <li>Solange der Stapel offen ist, darf man jede Karte werfen. Nach jedem Stich ziehen beide nach – der Gewinner zuerst.</li>
         <li><b>20 / 40 ansagen:</b> Wer am Ausspielen ist und König und Ober einer Farbe hat, sagt 20 an (in Trumpf 40) und spielt eine der beiden aus. Die Augen zählen ab dem ersten eigenen Stich.</li>
         <li><b>Tauschen:</b> Mit dem Trumpf-Unter darf man die aufgedeckte Trumpfkarte holen. <b>Zudrehen:</b> Stapel schließen – ab dann muss man Farbe bedienen, höher stechen oder trumpfen.</li>
         <li>Wer zuerst <b>66 Augen</b> hat, gewinnt die Runde: 3 Punkte, wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Wer zuerst 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.</li>
@@ -1006,8 +1006,8 @@
       <ul>
         <li>33 Karten (7 bis Ass in Herz, Schelle, Laub, Eichel und der Weli – je nach Einstellung kleinste Schelle oder kleinster Trumpf). Jeder bekommt 5 Karten, der Geber wechselt.</li>
         <li>Der Nicht-Geber sagt den <b>Schlag</b> an, indem er auf eine seiner Karten tippt (deren Wert zählt). Ist der Weli Schlag, ist er der einzige Schlag: als kleinste Schelle ist er der Rechte und die Trumpf-Sieben der Gute, als kleinster Trumpf ist er die beste Karte (kein Guter). Dann tippt der Geber auf eine seiner Karten – deren Farbe wird <b>Trumpf</b>.</li>
-        <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben; ist der Weli die kleinste Schelle, ist beim Schell-Ass der Weli der Gute) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgespielte Farbe.</li>
-        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte spielen.</li>
+        <li>Rangfolge: <b>Guter</b> (Trumpf einen Rang über dem Schlag, beim Ass die Trumpf-Sieben; ist der Weli die kleinste Schelle, ist beim Schell-Ass der Weli der Gute) · <b>Rechter</b> (Schlag in Trumpf) · andere Schläge (der erste gewinnt) · Trümpfe · ausgeworfene Farbe.</li>
+        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgeworfen (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen, falls möglich. Sonst darf man jede Karte werfen.</li>
         <li>Wer zuerst 3 Stiche hat, gewinnt die Runde: 2 Punkte. <b>Bieten</b> erhöht um 1; lehnt der andere ab, bekommt der Bieter den bisherigen Wert.</li>
         <li><b>Gestrichen</b> ist man 2 Punkte vor dem Ziel: dann darf man nicht mehr bieten, aber vor der ersten eigenen Karte aufgeben (Gegner +2). Liegt der andere mindestens 4 zurück, gehen 4: Der Gestrichene muss vor seiner ersten Karte <b>halten</b> (um 4) oder <b>gehen</b> (Gegner +2). Sind beide gestrichen, wird nicht geboten.</li>
       </ul>
@@ -1570,11 +1570,11 @@
     const tr = st.weliMode === "trumpf";
     return `<details class="wmode" ${store.get("s10-wmode-open") === false ? "" : "open"}><summary>Spielmodus: Weli ist ${tr ? "kleinster Trumpf" : "kleinste Schelle"} · bis ${st.target}</summary>
       <ul>
-        <li><b>Rangfolge:</b> Guter → Rechter → andere Schläge → Trümpfe → ausgespielte Farbe.</li>
+        <li><b>Rangfolge:</b> Guter → Rechter → andere Schläge → Trümpfe → ausgeworfene Farbe.</li>
         <li><b>Guter:</b> Trumpf einen Rang über dem Schlag. Beim Ass: ${tr ? "die Trumpf-Sieben" : "die Trumpf-Sieben, bei Trumpf Schelle der Weli"}.</li>
         <li><b>Weli</b> ${tr ? "zählt immer als kleinster Trumpf (muss beim Trumpf zugeben mitgegeben werden)" : "ist eine Schell-Sechs, nur Trumpf wenn Schelle Trumpf ist"}.
           Als Schlag: ${tr ? "beste Karte, kein Guter" : "der Rechte, Guter ist die Trumpf-Sieben"}.</li>
-        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder stechen.</li>
+        <li><b>Trumpf zugeben:</b> Wird Trumpf ausgeworfen (nicht der Gute), muss man Trumpf geben oder stechen.</li>
         <li><b>Punkte:</b> 2, Bieten +1 (abgelehnt = bisheriger Wert). Gestrichen ab ${st.target - 2}: kein Bieten; bei mind. 4 Rückstand des anderen gehen 4 – halten oder gehen (Gegner +2).</li>
       </ul></details>`;
   }
@@ -1684,9 +1684,9 @@
             <button class="btn primary" id="w-hold4">Halten (um 4)</button>
             <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} +2)</button></div>`;
       }
-      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
-        ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgespielt:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
-          : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgespielt – kein Trumpf-Zwang.</p>` : ""}
+      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Wirf eine Karte." : "Wirf eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+        ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgeworfen:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
+          : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgeworfen – kein Trumpf-Zwang.</p>` : ""}
 `;
       // Bieten (und ggf. Aufgeben) als Knöpfe auf dem Spielfeld rechts unten
       if (!decide && (st.canBid[me] || st.giveUpBy === me)) decide = `<div class="wdecide wbidbox">
@@ -1787,19 +1787,19 @@
     const sn = (su) => SCH.SUIT_NAMES[su];
     let tip;
     if (st.step !== "play") tip = "Die Runde ist vorbei. Wer 7 Punkte hat, gewinnt – der andere bekommt ein Bummerl.";
-    else if (!myTurn) tip = st.trick.length ? "Dein Gegner überlegt, was er zugibt." : "Dein Gegner spielt aus.";
-    else if (st.mustLead) tip = `Du hast angesagt – spiel jetzt König oder Ober in ${sn(st.mustLead)} aus.`;
-    else if (st.trick.length) tip = st.strict ? "Farbzwang: gleiche Farbe zugeben und wenn möglich höher, sonst mit Trumpf stechen." : "Freies Zugeben: du darfst jede Karte legen. Willst du den Stich, leg eine höhere Karte derselben Farbe oder ein Trumpf.";
+    else if (!myTurn) tip = st.trick.length ? "Dein Gegner überlegt, welche Karte er wirft." : "Dein Gegner wirft aus.";
+    else if (st.mustLead) tip = `Du hast angesagt – wirf jetzt König oder Ober in ${sn(st.mustLead)} aus.`;
+    else if (st.trick.length) tip = st.strict ? "Farbzwang: gleiche Farbe werfen und wenn möglich höher, sonst mit Trumpf stechen." : "Freies Werfen: du darfst jede Karte werfen. Willst du den Stich, wirf eine höhere Karte derselben Farbe oder einen Trumpf.";
     else tip = (opt.ansage.length ? `Du hast König und Ober in ${opt.ansage.map(sn).join(" und ")} – sag ${opt.ansage.map((su) => su === st.trump ? 40 : 20).join(" bzw. ")} an! ` : "")
       + (opt.tausch ? "Mit dem Trumpf-Unter kannst du die aufgedeckte Trumpfkarte holen. " : "")
-      + "Spiel eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Trumpf sticht alles andere.";
+      + "Wirf eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Trumpf sticht alles andere.";
     return `<div class="wmode xhelp"><div class="xtip"><b>Was jetzt?</b> ${esc(tip)}</div>
       <details ${store.get("s10-xhelp-open") === false ? "" : "open"}><summary>So geht Schnapsen</summary>
       <ol>
         <li><b>Ziel:</b> Als Erster <b>66 Augen</b> sammeln. Augen bringen die Karten in deinen Stichen: Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2.</li>
-        <li><b>Stich:</b> Einer spielt aus, der andere gibt eine Karte zu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Trumpf</b> (${esc(sn(st.trump))}). Der Gewinner spielt als Nächster aus.</li>
-        <li><b>Nachziehen:</b> Nach jedem Stich ziehen beide eine Karte vom Stapel, der Gewinner zuerst. Solange der Stapel offen ist, darfst du <b>jede Karte</b> zugeben.</li>
-        <li><b>20 und 40:</b> Hast du König und Ober einer Farbe, sag sie beim Ausspielen an: 20 Augen, in Trumpf 40. Sie zählen ab deinem ersten Stich.</li>
+        <li><b>Stich:</b> Einer wirft aus, der andere wirft eine Karte dazu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Trumpf</b> (${esc(sn(st.trump))}). Der Gewinner wirft als Nächster aus.</li>
+        <li><b>Nachziehen:</b> Nach jedem Stich ziehen beide eine Karte vom Stapel, der Gewinner zuerst. Solange der Stapel offen ist, darfst du <b>jede Karte</b> werfen.</li>
+        <li><b>20 und 40:</b> Hast du König und Ober einer Farbe, sag sie beim Auswerfen an: 20 Augen, in Trumpf 40. Sie zählen ab deinem ersten Stich.</li>
         <li><b>Tauschen:</b> Mit dem Trumpf-Unter holst du dir die aufgedeckte Trumpfkarte.</li>
         <li><b>Zudrehen:</b> Du schließt den Stapel, wenn du glaubst, mit deinen Karten auf 66 zu kommen. Dann gilt – wie bei leerem Stapel – <b>Farbzwang</b>: Farbe bedienen und höher stechen, sonst trumpfen.</li>
         <li><b>Punkte:</b> 3 wenn der andere keinen Stich hat, 2 wenn er unter 33 Augen hat, sonst 1. Bei 7 Punkten ist die Partie aus – der Verlierer bekommt ein <b>Bummerl</b> (✕).</li>
@@ -1845,7 +1845,7 @@
     const myTurn = st.turn === me;
     const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]})` : ""}</span>` : "";
     const combo = `<div class="wcombo" title="Trumpf ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Trumpf</b>
-        <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Zugeben"}</span></div>`;
+        <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Werfen"}</span></div>`;
     const turnBadge = myTurn ? `<div class="wturn me">Du bist dran!</div>`
       : st.turn ? `<div class="wturn other">${esc(nameOf(st.turn))} ist dran …</div>` : "";
     // Knöpfe auf dem Spielfeld
@@ -1859,7 +1859,7 @@
     const decide = btns.length ? `<div class="wdecide wbidbox">${btns.join("")}</div>` : "";
     let action = "";
     if (st.step === "play") {
-      action = `<p class="muted small">${myTurn ? (st.mustLead ? `Spiel König oder Ober in ${sn(st.mustLead)} aus.` : st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
+      action = `<p class="muted small">${myTurn ? (st.mustLead ? `Wirf König oder Ober in ${sn(st.mustLead)} aus.` : st.trick.length ? "Wirf eine Karte." : "Wirf eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         ${myTurn && st.strict && st.trick.length ? `<p class="wrule"><b>Farbzwang:</b> Farbe bedienen und wenn möglich höher stechen, sonst trumpfen.</p>` : ""}
         ${st.calls.length ? `<p class="muted small">Angesagt: ${st.calls.map((c) => `${esc(nameOf(c.pid))} ${c.pts} (${sn(c.suit)})`).join(", ")}</p>` : ""}`;
     } else if (st.result) {
