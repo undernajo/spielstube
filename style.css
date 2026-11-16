@@ -804,3 +804,4 @@ textarea { resize: vertical; font: inherit; }
   .lobby-host .rules-mob { display: none; }
 }
 .wcard.pre-draw { opacity: 0; }
+.xcallchip { background: rgba(255, 200, 61, .2); color: #ffe3a0; }

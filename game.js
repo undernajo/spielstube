@@ -1843,7 +1843,9 @@
         ${st.talon > (st.atout ? 1 : 0) ? `<div class="xstack ${st.closedBy ? "closed" : ""}">${wBack()}<span class="xcount">${st.talon - (st.atout ? 1 : 0)}</span></div>` : ""}
         ${st.closedBy ? `<span class="wcall">zugedreht</span>` : !st.talon ? `<span class="wcall">Stapel leer</span>` : ""}</div>`;
     const myTurn = st.turn === me;
-    const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]})` : ""}</span>` : "";
+    // gemütlich: Augen und bereits angesagte 20er/40er direkt beim Spieler
+    const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]} noch offen)` : ""}</span>`
+      + st.calls.filter((c) => c.pid === id).map((c) => `<span class="wcall xcallchip" title="${c.pts}er in ${sn(c.suit)}${c.pts === 40 ? " (Trumpf)" : ""}">${c.pts}er <span class="wsuit">${WCARDS.sym(c.suit, 1)}</span></span>`).join("") : "";
     const combo = `<div class="wcombo" title="Trumpf ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Trumpf</b>
         <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Werfen"}</span></div>`;
     const turnBadge = myTurn ? `<div class="wturn me">Du bist dran!</div>`
