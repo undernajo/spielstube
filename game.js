@@ -344,8 +344,26 @@
     if (!sendUp({ type: "action", action })) toast("Verbindung wackelt – Zug wird nachgeschickt …", "bad");
   }
 
+  // Sicherheitsfrage im Stil der Seite (statt des Browser-Dialogs). Liefert ein Promise<boolean>.
+  function askConfirm(title, text, okLabel = "Ja", cancelLabel = "Abbrechen", danger = false) {
+    return new Promise((resolve) => {
+      const box = document.createElement("div");
+      box.className = "modal-back confirm-back";
+      box.innerHTML = `<div class="modal confirm" role="alertdialog" aria-modal="true" aria-labelledby="cf-title">
+          <h3 id="cf-title">${esc(title)}</h3>${text ? `<p class="muted">${esc(text)}</p>` : ""}
+          <div class="confirm-actions"><button class="btn ghost" data-v="0">${esc(cancelLabel)}</button>
+            <button class="btn ${danger ? "danger" : "primary"}" data-v="1">${esc(okLabel)}</button></div></div>`;
+      const done = (v) => { document.removeEventListener("keydown", onKey, true); box.remove(); resolve(v); };
+      const onKey = (e) => { if (e.key === "Escape") { e.preventDefault(); done(false); } };
+      box.addEventListener("click", (e) => { if (e.target === box) done(false); const b = e.target.closest("[data-v]"); if (b) done(b.dataset.v === "1"); });
+      document.addEventListener("keydown", onKey, true);
+      document.body.appendChild(box);
+      box.querySelector('[data-v="1"]').focus();
+    });
+  }
+
   async function leave() {
-    if (isHost && !confirm("Spielstube wirklich schließen? Alle Mitspieler fliegen dann raus.")) return;
+    if (isHost && !(await askConfirm("Spielstube schließen?", "Alle Mitspieler fliegen dann raus.", "Stube schließen", "Abbrechen", true))) return;
     store.del(isHost ? "s10-host" : "s10-guest");
     const go = () => { location.href = location.pathname; };
     if (!mq || !roomTopic) return go();
@@ -373,9 +391,9 @@
       <button id="leave" class="btn ghost sm" title="${isHost ? "Stube schließen" : "Verlassen"}" aria-label="${isHost ? "Stube schließen" : "Verlassen"}"><span class="lbl-long">${isHost ? "Stube schließen" : "Verlassen"}</span><span class="lbl-short">✕</span></button>
     </div>`;
   }
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
     if (!e.target.closest || !e.target.closest("#hostLobby") || !isHost) return;
-    if (confirm("Spiel beenden und alle zurück in die Lobby holen? Der aktuelle Spielstand geht verloren.")) {
+    if (await askConfirm("Zurück in die Lobby?", "Das Spiel wird für alle beendet, der aktuelle Spielstand geht verloren.", "Zur Lobby")) {
       selected = null; send({ type: "lobby" });
     }
   });
@@ -616,8 +634,8 @@
     const tsel = app.querySelector("#target");
     if (tsel) tsel.onchange = () => { chosenTarget = Number(tsel.value); store.set("s10-target", chosenTarget); publish(); };
     const reset = app.querySelector("#resetSeen");
-    if (reset) reset.onclick = () => {
-      if (!confirm("Alle gespielten Karten vergessen? Danach kann jede Karte wieder vorkommen.")) return;
+    if (reset) reset.onclick = async () => {
+      if (!(await askConfirm("Gespielte Karten vergessen?", "Danach kann jede Karte wieder vorkommen.", "Vergessen"))) return;
       S.seen = []; store.set("s10-seen", []); publish(); toast("Speicher gelöscht – alle Karten sind wieder neu.", "ok");
     };
     app.querySelectorAll('.setopt input[type="checkbox"]').forEach((cb) => cb.onchange = () => {
@@ -886,8 +904,8 @@
     const gl = app.querySelector("#geo-level");
     if (gl) gl.onchange = () => { geoOpts.level = gl.value; saveGeo(); };
     const gx = app.querySelector("#geo-reset");
-    if (gx) gx.onclick = () => {
-      if (!confirm("Gespielte Orte vergessen? Danach sind in allen Regionen wieder alle Orte neu.")) return;
+    if (gx) gx.onclick = async () => {
+      if (!(await askConfirm("Gespielte Orte vergessen?", "Danach sind in allen Regionen wieder alle Orte neu.", "Vergessen"))) return;
       S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
     };
     const wT = app.querySelector("#watten-target");
@@ -1067,7 +1085,7 @@
       const t = reportText(store.get("s10-reports") || []);
       try { await navigator.clipboard.writeText(t); toast("Liste kopiert!", "ok"); } catch { prompt("Liste kopieren:", t); }
     };
-    if (x) x.onclick = () => { if (confirm("Alle Meldungen löschen?")) { store.del("s10-reports"); rerender(); } };
+    if (x) x.onclick = async () => { if (await askConfirm("Alle Meldungen löschen?", "", "Löschen", "Abbrechen", true)) { store.del("s10-reports"); rerender(); } };
   }
   function renderReport() {
     const m = document.getElementById("modal2");
@@ -1334,7 +1352,7 @@
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#wl-next", () => send({ type: "wlNext" }));
-    on("#wl-giveup", () => { if (confirm("Diesen Impuls aufgeben? Dafür gibt es 0 Punkte.")) send({ type: "wlGiveUp" }); });
+    on("#wl-giveup", async () => { if (await askConfirm("Impuls aufgeben?", "Dafür gibt es 0 Punkte.", "Aufgeben")) send({ type: "wlGiveUp" }); });
     on("#wl-restart", () => send({ type: "wlRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
     const form = app.querySelector(".wl-form");
@@ -1679,7 +1697,7 @@
     if (md) md.ontoggle = () => store.set("s10-wmode-open", md.open);
     on("#w-hold4", () => send({ type: "wHold" }));
     on("#w-go", () => send({ type: "wGiveUp" }));
-    on("#w-giveup", () => { if (confirm("Wirklich aufgeben? Dein Gegner bekommt 2 Punkte.")) send({ type: "wGiveUp" }); });
+    on("#w-giveup", async () => { if (await askConfirm("Wirklich aufgeben?", "Dein Gegner bekommt 2 Punkte.", "Aufgeben")) send({ type: "wGiveUp" }); });
     on("#w-show", () => send({ type: "wShow" }));
     on("#w-next", () => send({ type: "wNext" }));
     on("#w-force", () => send({ type: "wNext", force: true }));
