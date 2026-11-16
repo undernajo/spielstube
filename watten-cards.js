@@ -99,21 +99,34 @@
       <path d="M${cx - 3.5} ${cy + 4} Q${cx} ${cy + 6.5} ${cx + 3.5} ${cy + 4}" stroke="${ink}" stroke-width="1" fill="none"/>`;
     let fig = "";
     if (kind === "K") {
-      // Thron, sitzender König mit Krone, Bart und Zepter
-      const x = 68;
+      // Sitzender König auf dem Thron – direkt in Kartenmaßen gezeichnet (nicht verzerrt), links oben bleibt Platz für das Farbsymbol
+      const x = 74;
       fig = `
-        <rect x="${x - 21}" y="62" width="42" height="74" rx="7" fill="#8a5a2b" stroke="#5a3712" stroke-width="1.2"/>
-        <rect x="${x - 17}" y="66" width="34" height="40" rx="5" fill="${c}" fill-opacity=".55"/>
-        <circle cx="${x - 21}" cy="62" r="3" fill="#ffc83d" stroke="#a37400"/><circle cx="${x + 21}" cy="62" r="3" fill="#ffc83d" stroke="#a37400"/>
-        <path d="M${x - 13} 112 C${x - 13} 92 ${x - 8} 86 ${x} 85 C${x + 8} 86 ${x + 13} 92 ${x + 13} 112Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
-        <rect x="${x - 17}" y="110" width="34" height="9" rx="4" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
-        <rect x="${x - 11}" y="119" width="7" height="17" rx="2" fill="${pants}"/><rect x="${x + 4}" y="119" width="7" height="17" rx="2" fill="${pants}"/>
-        <rect x="${x - 13}" y="135" width="10" height="4" rx="2" fill="#2a1d10"/><rect x="${x + 3}" y="135" width="10" height="4" rx="2" fill="#2a1d10"/>
-        <path d="M${x + 12} 96 L${x + 19} 104" stroke="${skin}" stroke-width="4" stroke-linecap="round"/>
-        <path d="M${x + 21} 80 V112" stroke="#a37400" stroke-width="2"/><circle cx="${x + 21}" cy="79" r="3" fill="#ffc83d" stroke="#a37400"/>
-        ${face(x, 75)}
-        <path d="M${x - 7} 78 Q${x} 92 ${x + 7} 78 Q${x + 4} 86 ${x} 87 Q${x - 4} 86 ${x - 7} 78Z" fill="#e8e0d0" stroke="#9a8f78" stroke-width=".8"/>
-        <path d="M${x - 9} 68 L${x - 7} 58 L${x - 3} 63 L${x} 55 L${x + 3} 63 L${x + 7} 58 L${x + 9} 68Z" fill="#ffc83d" stroke="#a37400" stroke-width="1.1"/>`;
+        <path d="M46 150 V54 Q46 34 66 32 H82 Q102 34 102 54 V150Z" fill="#8a5a2b" stroke="#5a3712" stroke-width="1.4"/>
+        <path d="M52 146 V58 Q52 40 68 39 H80 Q96 40 96 58 V146Z" fill="${c}" fill-opacity=".35"/>
+        <circle cx="74" cy="31" r="4" fill="#ffc83d" stroke="#a37400" stroke-width="1"/>
+        <rect x="42" y="124" width="64" height="12" rx="4" fill="#6e4520" stroke="#5a3712" stroke-width="1.2"/>
+        <path d="M${x - 19} 128 C${x - 21} 100 ${x - 14} 88 ${x} 86 C${x + 14} 88 ${x + 21} 100 ${x + 19} 128Z" fill="${c}" stroke="${ink}" stroke-width="1.3"/>
+        <path d="M${x} 88 V128" stroke="#fff" stroke-opacity=".35" stroke-width="2.4"/>
+        <path d="M${x - 19} 124 Q${x} 132 ${x + 19} 124 L${x + 19} 129 Q${x} 137 ${x - 19} 129Z" fill="#f4efe4" stroke="#9a8f78" stroke-width=".8"/>
+        <g fill="#2a1d10">${[-13, -5, 3, 11].map((d) => `<circle cx="${x + d}" cy="${130 + (Math.abs(d) < 6 ? 2 : 0)}" r="1"/>`).join("")}</g>
+        <path d="M${x - 12} 89 Q${x} 98 ${x + 12} 89" fill="none" stroke="#f4efe4" stroke-width="4" stroke-linecap="round"/>
+        <rect x="${x - 12}" y="134" width="9" height="26" rx="3" fill="${pants}"/><rect x="${x + 3}" y="134" width="9" height="26" rx="3" fill="${pants}"/>
+        <rect x="${x - 15}" y="159" width="13" height="6" rx="3" fill="#2a1d10"/><rect x="${x + 2}" y="159" width="13" height="6" rx="3" fill="#2a1d10"/>
+        <path d="M${x + 15} 100 Q${x + 22} 106 ${x + 24} 112" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <circle cx="${x + 24}" cy="113" r="3.4" fill="${skin}" stroke="${ink}" stroke-width=".9"/>
+        <path d="M${x + 25} 70 V126" stroke="#a37400" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="${x + 25}" cy="68" r="4.2" fill="#ffc83d" stroke="#a37400" stroke-width="1.1"/>
+        <path d="M${x - 15} 100 Q${x - 20} 108 ${x - 16} 114" stroke="${c}" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <circle cx="${x - 15}" cy="116" r="5.4" fill="#ffc83d" stroke="#a37400" stroke-width="1"/><path d="M${x - 15} 110.6 V107.6 M${x - 16.8} 109 H${x - 13.2}" stroke="#a37400" stroke-width="1.1"/>
+        <circle cx="${x}" cy="70" r="13" fill="${skin}" stroke="${ink}" stroke-width="1.3"/>
+        <circle cx="${x - 4.5}" cy="68" r="1.5" fill="${ink}"/><circle cx="${x + 4.5}" cy="68" r="1.5" fill="${ink}"/>
+        <path d="M${x - 3} 72.5 Q${x} 74 ${x + 3} 72.5" stroke="#c98d6e" stroke-width="1.2" fill="none"/>
+        <path d="M${x - 10} 73 Q${x - 9} 90 ${x} 92 Q${x + 9} 90 ${x + 10} 73 Q${x + 6} 79 ${x} 79 Q${x - 6} 79 ${x - 10} 73Z" fill="#ece5d6" stroke="#9a8f78" stroke-width=".9"/>
+        <path d="M${x - 4} 76.5 Q${x} 75 ${x + 4} 76.5" stroke="#9a8f78" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+        <path d="M${x - 13} 60 L${x - 11} 46 L${x - 5} 53 L${x} 43 L${x + 5} 53 L${x + 11} 46 L${x + 13} 60Z" fill="#ffc83d" stroke="#a37400" stroke-width="1.2" stroke-linejoin="round"/>
+        <rect x="${x - 13}" y="57" width="26" height="4.5" rx="1.5" fill="#e0a417" stroke="#a37400" stroke-width=".9"/>
+        <circle cx="${x}" cy="59.3" r="1.6" fill="${c}"/><circle cx="${x - 7}" cy="59.3" r="1.2" fill="#fff"/><circle cx="${x + 7}" cy="59.3" r="1.2" fill="#fff"/>`;
     } else {
       // stehende Figur: Ober mit Federhut, Unter mit Kappe
       const x = 68;
@@ -143,7 +156,7 @@
     // Figur auf die ganze Karte vergrößern (Ecken und großes Farbsymbol bleiben frei)
     // ohne gespiegeltes Eckzeichen: Figur nutzt die ganze Karte
     // Figuren reichen vom oberen bis zum unteren Kartenrand
-    const tf = kind === "K" ? "translate(-49.6 -102) scale(1.75 2.04)" : "translate(-60.2 -77) scale(1.9 1.85)";
+    const tf = kind === "K" ? "" : "translate(-60.2 -77) scale(1.9 1.85)";
     const er = suit === "eichel" ? 180 : 0; // Eichel bei Figuren mit Stiel nach unten
     const big = kind === "U" ? sym(suit, 22, 166, 1.15, er) : sym(suit, 22, 26, 1.15, er);
     return frame(corner(kind, suit, c, false, false) + `<g transform="${tf}">${fig}</g>` + big);
