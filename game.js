@@ -813,8 +813,7 @@
             <div class="code">${esc(view.code)}</div>
             ${isHost ? `
               ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>` : `
-              <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>
-              <p class="muted small">Schick deinen Mitspielern den Link oder den Code.</p>`}` : ""}
+              <div class="row"><input id="link" readonly value="${esc(shareLink())}"><button id="copy" class="btn">Link kopieren</button></div>`}` : ""}
             <h3>Spieler</h3>
             <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
