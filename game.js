@@ -31,11 +31,27 @@
   let chosenTarget = store.get("s10-target");
   const SLF = window.S10Slf;
   // Symbol für Watten: drei aufgefächerte Wattkarten (Herz, Laub, Eichel aus dem eigenen Blatt)
-  function wattenIcon(suits = ["laub", "eichel", "herz"]) {
+  // Watten: drei aufgefächerte Karten, vorne der Weli mit lila Band
+  function wattenIcon() {
     const C = window.S10WattenCards;
-    const card = (rot, suit) => `<g transform="rotate(${rot} 32 58)"><rect x="20" y="10" width="24" height="36" rx="3.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
-      ${C ? `<svg x="20.5" y="12" width="14" height="14" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : ""}</g>`;
-    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(-22, suits[0])}${card(0, suits[1])}${card(22, suits[2])}</svg>`;
+    const sym = (suit, x, y, w) => C ? `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : "";
+    const card = (rot, inner) => `<g transform="rotate(${rot} 32 58)"><rect x="20" y="10" width="24" height="36" rx="3.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>${inner}</g>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      ${card(-22, sym("laub", 20.5, 12, 14))}${card(-6, sym("herz", 20.5, 12, 14))}
+      ${card(14, `${sym("schelle", 23, 12, 8)}${sym("schelle", 33, 12, 8)}${sym("schelle", 23, 36, 8)}${sym("schelle", 33, 36, 8)}
+        <path d="M18.5 24 H45.5 L43.5 31 H20.5Z" fill="#7b2fb5"/><text x="32" y="29.8" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="5.6" fill="#fff" letter-spacing=".6">WELI</text>`)}</svg>`;
+  }
+  // Schnapsen: Ass und König mit goldener „66“-Plakette
+  function schnapsenIcon() {
+    const C = window.S10WattenCards;
+    const sym = (suit, x, y, w) => C ? `<svg x="${x}" y="${y}" width="${w}" height="${w}" viewBox="-16 -16 32 32">${C.sym(suit, 1).replace(/^<svg[^>]*>|<\/svg>$/g, "")}</svg>` : "";
+    const card = (rot, inner) => `<g transform="rotate(${rot} 32 58)"><rect x="20" y="10" width="24" height="36" rx="3.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>${inner}</g>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      ${card(-14, `${sym("herz", 24, 13, 16)}${sym("herz", 24, 28, 16)}`)}
+      ${card(10, `${sym("eichel", 20.5, 12, 12)}<path d="M26 26 L28 20 L31 24 L32 18 L33 24 L36 20 L38 26Z" fill="#ffc83d" stroke="#a37400" stroke-width=".8"/>
+        <circle cx="32" cy="31" r="4.2" fill="#f3d2b0" stroke="#3a2a10" stroke-width=".8"/><path d="M27 44 C27 38 29 36 32 36 C35 36 37 38 37 44Z" fill="#c9883a" stroke="#3a2a10" stroke-width=".8"/>`)}
+      <circle cx="47" cy="47" r="12" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/>
+      <text x="47" y="52.2" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#2a1d00">66</text></svg>`;
   }
   // Symbol für „Schlaue Zehn“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld)
   function zehnIcon() {
@@ -92,7 +108,7 @@
     { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
     { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
-    { key: "schnapsen", color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: wattenIcon(["schelle", "herz", "eichel"]) },
+    { key: "schnapsen", color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
   ];
