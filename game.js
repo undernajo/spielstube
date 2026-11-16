@@ -840,8 +840,7 @@
     if ((view.game === "geo" || view.game === "oben") && lb.geo) {
       if (view.game === "oben") {
         const r = GEODATA.oben;
-        return `<div class="field"><span>Orte</span><div class="setlist">${row(true, esc(r.name), esc(r.places.length + " Orte, z. B. Bozen · Venedig · München …"))}</div></div>
-        <p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
+        return `<p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
       }
       const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), "", true));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
