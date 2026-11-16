@@ -178,7 +178,12 @@
       if (!cid || cid === myId) return;
       lastSeen.set(cid, Date.now());
       const p = S.players.find((x) => x.id === cid);
-      if (m.type === "join") { L.addPlayer(S, cid, cleanName(m.name)); publish(); }
+      if (m.type === "join") {
+        const nm = cleanName(m.name);
+        // Gleicher Name, alter Eintrag getrennt (z. B. neuer Tab): in der Lobby den alten Eintrag entfernen
+        if (S.phase === "lobby") S.players = S.players.filter((x) => x.id === cid || x.connected || x.name.toLowerCase() !== nm.toLowerCase());
+        L.addPlayer(S, cid, nm); publish();
+      }
       else if (m.type === "report" && m.report && typeof m.report === "object") { addReport(m.report); toast(`${cleanName(m.report.by)} hat eine Karte gemeldet.`, "info"); }
       else if (m.type === "leave") { if (p) { L.setConnected(S, cid, false); publish(); } }
       else if (m.type === "action" || m.type === "ping") {
@@ -263,6 +268,9 @@
   }
 
   function publish() {
+    // In der Lobby keine „Geister“: getrennte Spieler entfernen (z. B. nach einem Spiel oder Neustart des Gastgebers).
+    // Wer noch da ist, meldet sich automatisch wieder an.
+    if (S.phase === "lobby") S.players = S.players.filter((p) => p.connected || p.id === myId);
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
     if (S.phase === "lobby") view.lobby = {
