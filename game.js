@@ -47,6 +47,38 @@
       <circle cx="32" cy="32" r="14.5" fill="#170f4d" stroke="#ffc83d" stroke-width="2"/>
       <text x="32" y="38.3" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#ffc83d">10</text></svg>`;
   }
+  // Weitere gezeichnete Spielsymbole im gleichen Stil
+  const svgIcon = (inner) => `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+  // Wo liegt das?: gefaltete Landkarte mit roter Stecknadel
+  const geoIcon = () => svgIcon(`
+    <path d="M10 18 L24 13 L40 18 L54 13 V47 L40 52 L24 47 L10 52Z" fill="#e8f1dc" stroke="#5b6e4a" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M24 13 V47 M40 18 V52" stroke="#5b6e4a" stroke-width="1" opacity=".6"/>
+    <path d="M10 36 C18 32 22 40 30 36 S44 30 54 34" stroke="#4aa8ff" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M14 24 L20 22 M44 24 L50 22" stroke="#7ba05b" stroke-width="3" stroke-linecap="round"/>
+    <path d="M36 8 C30 8 26 12.5 26 18 C26 25 36 33 36 33 C36 33 46 25 46 18 C46 12.5 42 8 36 8Z" fill="#ef4b5a" stroke="#a32f3b" stroke-width="1.2"/>
+    <circle cx="36" cy="18" r="3.6" fill="#fff"/>`);
+  // Von oben: Satellitenbild im Sucher
+  const obenIcon = () => svgIcon(`
+    <rect x="12" y="12" width="40" height="40" rx="6" fill="#3d7a4a"/>
+    <path d="M12 38 C22 34 26 44 36 40 S48 30 52 32 V46 a6 6 0 0 1 -6 6 H18 a6 6 0 0 1 -6 -6Z" fill="#3b7fbf"/>
+    <path d="M18 18 h9 v7 h-9Z M31 20 h6 v5 h-6Z M20 28 h5 v4 h-5Z" fill="#d9c8a2"/>
+    <path d="M12 30 L52 22" stroke="#e8e0c8" stroke-width="2" opacity=".8"/>
+    <path d="M8 18 V8 H18 M46 8 H56 V18 M56 46 V56 H46 M18 56 H8 V46" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="3" fill="none" stroke="#ffc83d" stroke-width="1.6"/>`);
+  // Stadt, Land, Fluss: Notizblock mit Buchstaben-Würfel
+  const slfIcon = () => svgIcon(`
+    <rect x="12" y="10" width="34" height="44" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
+    <path d="M17 10 V7 M24 10 V7 M31 10 V7 M38 10 V7" stroke="#8a7a5a" stroke-width="2" stroke-linecap="round"/>
+    <path d="M17 22 H40 M17 30 H40 M17 38 H40 M17 46 H32" stroke="#b9ad92" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M17 22 H29 M17 30 H33" stroke="#3ccf8e" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="34" y="34" width="22" height="22" rx="5" fill="#ffc83d" stroke="#c48f0a" stroke-width="1.4"/>
+    <text x="45" y="51" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="16" fill="#2a1d00">A</text>`);
+  // Gleiche Wellenlänge: zwei Sprechblasen mit derselben Welle
+  const wlIcon = () => svgIcon(`
+    <path d="M8 14 h22 a5 5 0 0 1 5 5 v12 a5 5 0 0 1 -5 5 h-14 l-6 6 v-6 h-2 a5 5 0 0 1 -5 -5 v-12 a5 5 0 0 1 5 -5Z" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.3"/>
+    <path d="M34 26 h22 a5 5 0 0 1 5 5 v12 a5 5 0 0 1 -5 5 h-2 v6 l-6 -6 h-14 a5 5 0 0 1 -5 -5 v-12 a5 5 0 0 1 5 -5Z" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.3"/>
+    <path d="M9 25 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M35 37 q3.5 -6 7 0 t7 0 t7 0" stroke="#ff6fae" stroke-width="2.6" fill="none" stroke-linecap="round"/>`);
   // Symbol für „Höher oder tiefer“: zwei Karten, grüner Pfeil nach oben, roter nach unten
   function hlIcon() {
     const card = (x, rot, up) => `<g transform="rotate(${rot} ${x + 11} 50)"><rect x="${x}" y="14" width="22" height="34" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
@@ -57,12 +89,12 @@
   const GAMES = [
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
-    { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: "🗺️" },
-    { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: "🛰️" },
+    { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
+    { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
     { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
     { key: "schnapsen", color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: wattenIcon(["schelle", "herz", "eichel"]) },
-    { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: "✏️" },
-    { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: "🤝" },
+    { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
+    { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
