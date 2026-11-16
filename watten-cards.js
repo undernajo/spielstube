@@ -182,11 +182,16 @@
           <circle cx="${x}" cy="90" r="1.3" fill="#f4efe4"/>
           <path d="M${x - 13} 77 Q${x - 18} 88 ${x - 18} 100" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
           <circle cx="${x - 18}" cy="102" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
-          <path d="M${x + 13} 77 Q${x + 20} 86 ${x + 19} 94" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <rect x="${x + 15}" y="80" width="11" height="15" rx="2" fill="#e8c35a" stroke="#8a6a12" stroke-width="1"/>
-          <path d="M${x + 26} 84 q5 0 5 4.5 q0 4.5 -5 4.5" stroke="#8a6a12" stroke-width="1.6" fill="none"/>
-          <path d="M${x + 14.5} 81 q1 -4 4 -3 q2 -3 5 -1 q3 -1 3 3 Z" fill="#fff" stroke="#c9c2b0" stroke-width=".6"/>
-          <circle cx="${x + 18.5}" cy="95" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <path d="M${x + 13} 77 Q${x + 23} 74 ${x + 22} 60" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <path d="M${x + 13} 77 Q${x + 23} 74 ${x + 22} 60" stroke="${ink}" stroke-opacity=".3" stroke-width=".8" fill="none"/>
+          <g transform="rotate(-14 ${x + 21} 57)">
+            <rect x="${x + 15}" y="40" width="12" height="16" rx="2" fill="#e8c35a" stroke="#8a6a12" stroke-width="1"/>
+            <path d="M${x + 18} 43 V53 M${x + 22} 43 V53" stroke="#fff" stroke-opacity=".45" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M${x + 27} 44 q5.5 0 5.5 4.5 q0 4.5 -5.5 4.5" stroke="#8a6a12" stroke-width="1.6" fill="none"/>
+            <path d="M${x + 14.4} 41.5 q0.5 -4.5 4 -3.5 q2 -3.5 5.5 -1.2 q3.5 -1 4.2 3.2 q1.2 1.5 -0.5 2.5 Z" fill="#fff" stroke="#c9c2b0" stroke-width=".6"/>
+            <circle cx="${x + 13.5}" cy="37" r="1.1" fill="#fff" stroke="#c9c2b0" stroke-width=".4"/><circle cx="${x + 11.8}" cy="34.2" r=".8" fill="#fff" stroke="#c9c2b0" stroke-width=".4"/>
+          </g>
+          <circle cx="${x + 21.5}" cy="57.5" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
           <circle cx="${x}" cy="61" r="10.5" fill="${skin}" stroke="${ink}" stroke-width="1.1"/>
           <path d="M${x - 9} 56 q-1 5 1 7 M${x + 9} 56 q1 5 -1 7" stroke="#7a4a1e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
           <circle cx="${x - 3.6}" cy="60" r="1.3" fill="${ink}"/><circle cx="${x + 3.6}" cy="60" r="1.3" fill="${ink}"/>
