@@ -1574,7 +1574,7 @@
   // Kurzinfo zum Spielmodus im rechten Rand
   function wattenModeHtml(st) {
     const tr = st.weliMode === "trumpf";
-    return `<details class="wmode" ${store.get("s10-wmode-open") === false ? "" : "open"}><summary>Spielmodus: Weli ist ${tr ? "kleinster Trumpf" : "kleinste Schelle"} · bis ${st.target}</summary>
+    return `<details class="wmode" ${store.get("s10-wmode-open") === true ? "open" : ""}><summary>Spielmodus: Weli ist ${tr ? "kleinster Trumpf" : "kleinste Schelle"} · bis ${st.target}</summary>
       <ul>
         <li><b>Rangfolge:</b> Guter → Rechter → andere Schläge → Trümpfe → ausgeworfene Farbe.</li>
         <li><b>Guter:</b> Trumpf einen Rang über dem Schlag. Beim Ass: ${tr ? "die Trumpf-Sieben" : "die Trumpf-Sieben, bei Trumpf Schelle der Weli"}.</li>
@@ -1670,30 +1670,25 @@
     };
     // Aktionen
     let action = "", decide = "";
-    if (st.step === "schlag") action = st.vorhand === me
-      ? `<p><b>Sag den Schlag an:</b> Tippe auf eine deiner Karten – ihr Wert wird der Schlag. Beim Weli ist der Weli der einzige Schlag.</p>`
-      : `<p class="muted">${esc(nameOf(st.vorhand))} sagt den Schlag an …</p>`;
-    else if (st.step === "trumpf") action = st.dealer === me
-      ? `<p><b>Sag den Trumpf an:</b> Tippe auf eine deiner Karten – ihre Farbe wird Trumpf. (Schlag ist ${rankName(st.schlag)}.)</p>`
-      : `<p class="muted">${esc(nameOf(st.dealer))} sagt den Trumpf an …</p>`;
-    else if (st.step === "play") {
+    // Hinweise fürs Spielfeld (über den eigenen Karten); der rechte Rand bleibt während des Spiels frei
+    let hint = "";
+    if (st.step === "schlag" && st.vorhand === me) hint = "Tippe auf eine deiner Karten – ihr Wert wird der Schlag.";
+    if (st.step === "trumpf" && st.dealer === me) hint = `Tippe auf eine deiner Karten – ihre Farbe wird Trumpf (Schlag: ${rankName(st.schlag)}).`;
+    if (st.step === "play") {
       // Halten-oder-gehen-Entscheidung kommt aufs Spielfeld (rechts unten)
       if (st.bid) {
-        action = st.bid.by === me ? `<p class="muted">Du hast ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
-          : `<p class="muted small">${esc(nameOf(st.bid.by))} bietet ${st.bid.to} – entscheide auf dem Spielfeld.</p>`;
+        if (st.bid.by === me) hint = `Du hast ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …`;
         if (seated && st.bid.by !== me) decide = `<div class="wdecide"><p><b>${esc(nameOf(st.bid.by))} bietet ${st.bid.to}.</b></p>
             <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
             <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} +${st.value})</button></div>`;
       } else if (st.mustDecide === me) {
-        action = `<p class="muted small">Du bist gestrichen – entscheide auf dem Spielfeld.</p>`;
         decide = `<div class="wdecide"><p><b>Du bist gestrichen – es gehen 4.</b></p>
             <button class="btn primary" id="w-hold4">Halten (um 4)</button>
             <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} +2)</button></div>`;
       }
-      else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Wirf eine Karte." : "Wirf eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
-        ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgeworfen:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
-          : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgeworfen – kein Trumpf-Zwang.</p>` : ""}
-`;
+      else if (st.turn === me && st.follow === "pflicht") hint = `<b>Trumpf ausgeworfen:</b> Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.`;
+      else if (st.turn === me && st.follow === "guter") hint = "Der <b>Gute</b> wurde ausgeworfen – kein Trumpf-Zwang.";
+      else if (st.mustDecide && st.mustDecide !== me) hint = `${esc(nameOf(st.mustDecide))} entscheidet: halten oder gehen …`;
       // Bieten (und ggf. Aufgeben) als Knöpfe auf dem Spielfeld rechts unten
       if (!decide && (st.canBid[me] || st.giveUpBy === me)) decide = `<div class="wdecide wbidbox">
           ${st.canBid[me] ? `<button class="btn primary" id="w-bid">${st.value + 1} bieten</button>` : ""}
@@ -1735,7 +1730,7 @@
             <div class="wtop">${combo}${myMove ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
-            ${myMove ? turnBadge : ""}${decide}
+            ${myMove ? turnBadge : ""}${hint ? `<p class="whint">${hint}</p>` : ""}${decide}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">

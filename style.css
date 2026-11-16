@@ -821,3 +821,8 @@ textarea { resize: vertical; font: inherit; }
 }
 .pass-btn { width: 100%; padding: 12px; font-size: 1rem; }
 .chip-l2 .rpts:empty { display: none; }
+/* Watten: Hinweis auf dem Spielfeld über den eigenen Karten */
+.whint { justify-self: center; margin: 0; max-width: 520px; text-align: center; font-size: .85rem; line-height: 1.35; padding: 6px 12px; border-radius: 12px;
+  background: rgba(0, 0, 0, .28); color: #e8f3ec; }
+.whint b { color: var(--accent); }
+.wpanel .waction:empty { display: none; }
