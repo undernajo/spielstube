@@ -453,6 +453,14 @@
   // Kamera-Leiste: liegt außerhalb von #app, damit die Bilder beim Neuzeichnen nicht flackern
   const camDock = document.createElement("div"); camDock.id = "camdock"; document.body.appendChild(camDock);
   const camVideos = new Map();
+  let camBig = store.get("s10-cam-big") === true;
+  function camPlace(x, y) { // im sichtbaren Bereich halten
+    const w = camDock.offsetWidth, h = camDock.offsetHeight;
+    camDock.style.left = Math.max(4, Math.min(innerWidth - w - 4, x)) + "px";
+    camDock.style.top = Math.max(4, Math.min(innerHeight - h - 4, y)) + "px";
+    camDock.style.bottom = "auto";
+  }
+  addEventListener("resize", () => { const p = store.get("s10-cam-pos"); if (p && camDock.classList.contains("show")) camPlace(p.x * innerWidth, p.y * innerHeight); });
   function camTile(id, stream, label, mirror) {
     let tile = camVideos.get(id);
     if (!tile) {
@@ -476,10 +484,26 @@
     camDock.classList.toggle("show", items.length > 0);
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
-      camDock.innerHTML = `<button class="camhead" type="button"><span>📷 Kamera</span><span class="camtoggle"></span></button><div class="camtiles"></div>`;
-      camDock.querySelector(".camhead").onclick = () => { camOpen = !camOpen; renderCamDock(); };
+      camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
+          <span class="cambtns"><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button></span></div><div class="camtiles"></div>`;
+      camDock.querySelector(".camtoggle").onclick = () => { camOpen = !camOpen; renderCamDock(); };
+      camDock.querySelector(".camsize").onclick = () => { camBig = !camBig; store.set("s10-cam-big", camBig); renderCamDock(); };
+      // verschieben per Maus oder Finger; Position wird pro Gerät gemerkt
+      const grip = camDock.querySelector(".camhead");
+      grip.onpointerdown = (e) => {
+        if (e.target.closest("button")) return;
+        const r = camDock.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+        grip.setPointerCapture(e.pointerId);
+        grip.onpointermove = (ev) => camPlace(ev.clientX - dx, ev.clientY - dy);
+        grip.onpointerup = () => { grip.onpointermove = null; const q = camDock.getBoundingClientRect(); store.set("s10-cam-pos", { x: q.left / innerWidth, y: q.top / innerHeight }); };
+      };
     }
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
+    camDock.classList.toggle("big", camBig);
+    const pos = store.get("s10-cam-pos");
+    if (pos && camDock.classList.contains("show")) camPlace(pos.x * innerWidth, pos.y * innerHeight);
+    // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
+    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !pos ? camDock.offsetHeight + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); if (t.parentNode !== box) box.appendChild(t); });
   }

@@ -929,3 +929,15 @@ textarea { resize: vertical; font: inherit; }
 .camtile.failed .camname { position: static; background: none; color: var(--muted); text-align: center; padding: 6px; }
 .cam-on { border-color: var(--ok) !important; color: var(--ok) !important; }
 @media (max-width: 640px) { #camdock { left: 8px; bottom: 8px; } .camtile { width: 96px; } }
+/* Kamera: kleiner, verschiebbar, standardmäßig unten rechts im Eck */
+#camdock { left: auto; right: 12px; padding: 4px; opacity: .95; }
+.camhead { cursor: grab; user-select: none; touch-action: none; padding: 1px 4px 4px; }
+.camhead:active { cursor: grabbing; }
+.cambtns { display: inline-flex; gap: 2px; }
+.cambtns button { background: none; border: 0; color: var(--muted); font: 600 .9rem Fredoka, sans-serif; cursor: pointer; padding: 0 5px; line-height: 1; }
+.cambtns button:hover { color: var(--ink); }
+.camtile { width: 112px; }
+#camdock.big .camtile { width: 200px; }
+#camdock[style*="top"] { right: auto; }
+@media (max-width: 640px) { #camdock { right: 8px; } .camtile { width: 84px; } #camdock.big .camtile { width: 140px; } }
+@media (min-width: 900px) { .toast { bottom: calc(20px + var(--cam-h, 0px)); } }
