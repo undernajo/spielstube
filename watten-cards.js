@@ -156,7 +156,7 @@
     // Figur auf die ganze Karte vergrößern (Ecken und großes Farbsymbol bleiben frei)
     // ohne gespiegeltes Eckzeichen: Figur nutzt die ganze Karte
     // Figuren reichen vom oberen bis zum unteren Kartenrand
-    const tf = kind === "K" ? "" : "translate(-60.2 -77) scale(1.9 1.85)";
+    const tf = kind === "K" ? "translate(-15.4 -24) scale(1.2)" : "translate(-60.2 -77) scale(1.9 1.85)";
     const er = suit === "eichel" ? 180 : 0; // Eichel bei Figuren mit Stiel nach unten
     const big = kind === "U" ? sym(suit, 22, 166, 1.15, er) : sym(suit, 22, 26, 1.15, er);
     return frame(corner(kind, suit, c, false, false) + `<g transform="${tf}">${fig}</g>` + big);
