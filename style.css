@@ -1158,3 +1158,18 @@ textarea { resize: vertical; font: inherit; }
 .fq-tile.secret span, .fq-tile.secret small { color: rgba(255, 211, 107, .7); }
 .fq-tile.given span { padding: 0 16px; }
 .fq-mark { top: 6px; right: 8px; font-size: .95rem; }
+/* Antwort sucht Frage: Farben aufeinander abgestimmt
+   Lila = Spiel (Kategorie, Schritte, Entscheidungen) · Gold = nur die gesuchte Antwort · Grün/Rot = Ergebnis · Spielerfarbe nur als Akzent */
+.fq-bubble { background: #262056; border: 1px solid var(--line); border-left: 5px solid var(--pc); }
+.fq-bubble::after { background: #262056; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); left: 30px; }
+.fq-stage .banner.judge { background: rgba(192, 132, 252, .12); border-color: rgba(192, 132, 252, .55); }
+.fq-stage .banner.judge b { color: #e2c6ff; }
+.fq-stage .fq-result { background: rgba(255, 255, 255, .04); border-color: var(--line); font-size: 1rem; }
+.fq-stage .fq-result.win { background: rgba(60, 207, 142, .12); border-color: rgba(60, 207, 142, .6); }
+.fq-stage .fq-result.lose { background: rgba(239, 75, 90, .08); border-color: rgba(239, 75, 90, .45); }
+.fq-stage .fq-result > b { font-size: 1.15rem; }
+.fq-tile.given { background: rgba(255, 255, 255, .04); }
+.fq-tile.given.ok { background: rgba(60, 207, 142, .1); }
+.fq-tile.given.bad { background: rgba(239, 75, 90, .08); }
+.fq-said { background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.fq-player.active { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 18%, transparent); }
