@@ -1629,9 +1629,9 @@
     else if (st.step === "play") {
       // Halten-oder-gehen-Entscheidung kommt aufs Spielfeld (rechts unten)
       if (st.bid) {
-        action = st.bid.by === me ? `<p class="muted">Du hast auf ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
-          : `<p class="muted small">${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} – entscheide auf dem Spielfeld.</p>`;
-        if (seated && st.bid.by !== me) decide = `<div class="wdecide"><p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to}.</b></p>
+        action = st.bid.by === me ? `<p class="muted">Du hast ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
+          : `<p class="muted small">${esc(nameOf(st.bid.by))} bietet ${st.bid.to} – entscheide auf dem Spielfeld.</p>`;
+        if (seated && st.bid.by !== me) decide = `<div class="wdecide"><p><b>${esc(nameOf(st.bid.by))} bietet ${st.bid.to}.</b></p>
             <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
             <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} +${st.value})</button></div>`;
       } else if (st.mustDecide === me) {
@@ -1643,7 +1643,7 @@
       else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgespielt:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
           : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgespielt – kein Trumpf-Zwang.</p>` : ""}
-        <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">Bieten (auf ${st.value + 1})</button>` : ""}
+        <div class="wbtns">${st.canBid[me] ? `<button class="btn ghost" id="w-bid">${st.value + 1} bieten</button>` : ""}
         ${st.giveUpBy === me ? `<button class="btn ghost" id="w-giveup">Aufgeben (${esc(nameOf(opp))} +2)</button>` : ""}</div>`;
     } else if (st.step === "roundEnd" || st.step === "final") {
       const r = st.result, why = { stiche: "mit 3 Stichen", abgelehnt: "– Bieten abgelehnt", aufgegeben: "– der andere hat aufgegeben" }[r.reason] || "";
