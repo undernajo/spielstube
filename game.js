@@ -340,6 +340,8 @@
       if (!host || S.phase !== "lobby") return false;
       return DU.start(S, { ...action.opts, avoid: store.get("s10-du-seen") || [] }, now);
     }
+    if (type === "duRestart" && S.phase === "duell" && S.duell && S.duell.step === "final")
+      return DU.start(S, { ...S.duell.opts, avoid: store.get("s10-du-seen") || [] }, now);
     if (type.startsWith("du")) return S.phase === "duell" && DU.apply(S, pid, action, host, now);
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
@@ -378,9 +380,12 @@
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
-    if (view.duell) { // gespielte Themen merken, damit beim nächsten Mal zuerst neue kommen
-      const seen = store.get("s10-du-seen") || [];
-      if (!seen.includes(view.duell.list.q)) store.set("s10-du-seen", seen.concat(view.duell.list.q).slice(-500));
+    if (view.duell) { // gespielte Themen merken: sie kommen erst wieder, wenn alle einmal dran waren (wie bei Schlaue Zehn)
+      const q = view.duell.list.q, seen = store.get("s10-du-seen") || [];
+      if (!seen.includes(q)) {
+        const next = seen.concat(q).filter((x) => DUDATA.some((l) => l.q === x));
+        store.set("s10-du-seen", DUDATA.every((l) => next.includes(l.q)) ? [q] : next); // alles durch: von vorn
+      }
     }
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;

@@ -172,4 +172,99 @@ window.SCHLAU10_DUELL = [
     ["lunedì", ["lunedi"]], ["martedì", ["martedi"]], ["mercoledì", ["mercoledi"]], ["giovedì", ["giovedi"]], ["venerdì", ["venerdi"]], ["sabato"], ["domenica"]] },
   { cat: "Sprache", q: "Die Zahlen von 1 bis 10 auf Italienisch", items: [
     ["uno"], ["due"], ["tre"], ["quattro"], ["cinque"], ["sei"], ["sette"], ["otto"], ["nove"], ["dieci"]] },
+
+  // ---------- Erweiterung: feste Mengen ----------
+  { cat: "Sprache", q: "Die Zahlen von 11 bis 20 auf Italienisch", items: [
+    ["undici"], ["dodici"], ["tredici"], ["quattordici"], ["quindici"], ["sedici"], ["diciassette"], ["diciotto"], ["diciannove"], ["venti"]] },
+  { cat: "Sprache", q: "Die 7 Wochentage auf Englisch", items: [
+    ["Monday"], ["Tuesday"], ["Wednesday"], ["Thursday"], ["Friday"], ["Saturday"], ["Sunday"]] },
+  { cat: "Sprache", q: "Die 12 Monate auf Englisch", items: [
+    ["January"], ["February"], ["March"], ["April"], ["May"], ["June"], ["July"], ["August"], ["September"], ["October"], ["November"], ["December"]] },
+  { cat: "Sprache", q: "Die 26 Wörter des NATO-Buchstabieralphabets", items: [
+    ["Alfa", ["Alpha"]], ["Bravo"], ["Charlie"], ["Delta"], ["Echo"], ["Foxtrot"], ["Golf"], ["Hotel"], ["India"], ["Juliett", ["Juliet"]],
+    ["Kilo"], ["Lima"], ["Mike"], ["November"], ["Oscar"], ["Papa"], ["Quebec"], ["Romeo"], ["Sierra"], ["Tango"], ["Uniform"], ["Victor"],
+    ["Whiskey", ["Whisky"]], ["X-Ray", ["Xray"]], ["Yankee"], ["Zulu"]] },
+  { cat: "Wissen", q: "Die 7 Monate mit 31 Tagen", items: [
+    ["Januar"], ["März", ["Maerz"]], ["Mai"], ["Juli"], ["August"], ["Oktober"], ["Dezember"]] },
+  { cat: "Wissen", q: "Die 5 Sinne des Menschen", items: [
+    ["Sehen", ["Sehsinn", "Augen"]], ["Hören", ["Hoeren", "Gehör", "Ohren"]], ["Riechen", ["Geruch", "Geruchssinn", "Nase"]],
+    ["Schmecken", ["Geschmack", "Geschmackssinn", "Zunge"]], ["Tasten", ["Fühlen", "Tastsinn", "Haut"]]] },
+  { cat: "Wissen", q: "Die 5 Ozeane", items: [
+    ["Pazifik", ["Pazifischer Ozean", "Stiller Ozean"]], ["Atlantik", ["Atlantischer Ozean"]], ["Indischer Ozean", ["Indik"]],
+    ["Arktischer Ozean", ["Nordpolarmeer", "Arktis"]], ["Südlicher Ozean", ["Südpolarmeer", "Antarktischer Ozean"]]] },
+  { cat: "Wissen", q: "Die 6 Halogene", items: [
+    ["Fluor"], ["Chlor"], ["Brom"], ["Iod", ["Jod"]], ["Astat"], ["Tenness"]] },
+  { cat: "Wissen", q: "Die 6 Schachfiguren", items: [
+    ["König", ["Koenig"]], ["Dame", ["Königin"]], ["Turm"], ["Läufer", ["Laeufer"]], ["Springer", ["Pferd", "Rössl"]], ["Bauer"]] },
+  { cat: "Geschichte", q: "Die 7 Weltwunder der Antike", items: [
+    ["Pyramiden von Gizeh", ["Pyramiden", "Cheops-Pyramide", "Cheopspyramide"]], ["Hängende Gärten der Semiramis", ["Hängende Gärten", "Hängende Gärten von Babylon"]],
+    ["Tempel der Artemis in Ephesos", ["Artemistempel", "Tempel der Artemis", "Artemis-Tempel"]], ["Zeusstatue des Phidias", ["Zeusstatue", "Statue des Zeus"]],
+    ["Mausoleum von Halikarnassos", ["Mausoleum"]], ["Koloss von Rhodos", ["Koloss"]], ["Leuchtturm von Pharos", ["Leuchtturm von Alexandria", "Pharos"]]] },
+  { cat: "Geschichte", q: "Die 9 Musen der griechischen Sage", items: [
+    ["Kalliope"], ["Klio"], ["Erato"], ["Euterpe"], ["Melpomene"], ["Polyhymnia"], ["Terpsichore"], ["Thalia"], ["Urania"]] },
+  { cat: "Geschichte", q: "Die 7 Todsünden", items: [
+    ["Hochmut", ["Stolz", "Übermut"]], ["Geiz", ["Habgier", "Gier"]], ["Wollust", ["Lust"]], ["Zorn", ["Wut"]], ["Völlerei", ["Voellerei", "Maßlosigkeit"]],
+    ["Neid", ["Eifersucht"]], ["Trägheit", ["Faulheit"]]] },
+
+  { cat: "Länder", q: "Die 6 Nachbarländer Italiens", items: [
+    ["Frankreich"], ["Schweiz"], ["Österreich", ["Oesterreich"]], ["Slowenien"], ["San Marino"], ["Vatikanstadt", ["Vatikan"]]] },
+  { cat: "Länder", q: "Die 5 Nachbarländer der Schweiz", items: [
+    ["Deutschland"], ["Österreich", ["Oesterreich"]], ["Liechtenstein"], ["Italien"], ["Frankreich"]] },
+  { cat: "Länder", q: "Die 8 Nachbarländer Frankreichs in Europa", items: [
+    ["Belgien"], ["Luxemburg"], ["Deutschland"], ["Schweiz"], ["Italien"], ["Monaco"], ["Spanien"], ["Andorra"]] },
+  { cat: "Länder", q: "Die 7 Nachbarländer Polens", items: [
+    ["Deutschland"], ["Tschechien"], ["Slowakei"], ["Ukraine"], ["Belarus", ["Weißrussland", "Weissrussland"]], ["Litauen"], ["Russland"]] },
+  { cat: "Länder", q: "Die 5 nordischen Länder", items: [["Dänemark", ["Daenemark"]], ["Finnland"], ["Island"], ["Norwegen"], ["Schweden"]] },
+  { cat: "Städte", q: "Die 5 Hauptstädte der nordischen Länder", items: [
+    ["Kopenhagen"], ["Helsinki"], ["Reykjavík", ["Reykjavik"]], ["Oslo"], ["Stockholm"]] },
+  { cat: "Länder", q: "Die 7 Länder Mittelamerikas", note: "zwischen Mexiko und Kolumbien", items: [
+    ["Belize"], ["Guatemala"], ["Honduras"], ["El Salvador"], ["Nicaragua"], ["Costa Rica"], ["Panama"]] },
+  { cat: "Länder", q: "Die 7 Länder, deren Name auf „-stan“ endet", items: [
+    ["Afghanistan"], ["Kasachstan"], ["Kirgisistan", ["Kirgistan"]], ["Pakistan"], ["Tadschikistan"], ["Turkmenistan"], ["Usbekistan"]] },
+  { cat: "Länder", q: "Die 6 Länder mit Deutsch als landesweiter Amtssprache", items: [
+    ["Deutschland"], ["Österreich", ["Oesterreich"]], ["Schweiz"], ["Liechtenstein"], ["Luxemburg"], ["Belgien"]] },
+  { cat: "Länder", q: "Die 7 Emirate der Vereinigten Arabischen Emirate", items: [
+    ["Abu Dhabi", ["Abu Dabi"]], ["Dubai"], ["Schardscha", ["Sharjah"]], ["Adschman", ["Ajman"]], ["Umm al-Qaiwain", ["Umm al Quwain"]],
+    ["Ras al-Chaima", ["Ras al-Khaimah", "Ras al Khaimah"]], ["Fudschaira", ["Fujairah"]]] },
+  { cat: "Länder", q: "Die 10 Länder an der Donau", items: [
+    ["Deutschland"], ["Österreich", ["Oesterreich"]], ["Slowakei"], ["Ungarn"], ["Kroatien"], ["Serbien"], ["Rumänien", ["Rumaenien"]],
+    ["Bulgarien"], ["Moldau", ["Moldawien", "Republik Moldau"]], ["Ukraine"]] },
+  { cat: "Länder", q: "Die 6 Länder am Rhein", items: [
+    ["Schweiz"], ["Liechtenstein"], ["Österreich", ["Oesterreich"]], ["Deutschland"], ["Frankreich"], ["Niederlande", ["Holland"]]] },
+  { cat: "Länder", q: "Die 8 Alpenländer", note: "laut Alpenkonvention", items: [
+    ["Frankreich"], ["Monaco"], ["Italien"], ["Schweiz"], ["Liechtenstein"], ["Deutschland"], ["Österreich", ["Oesterreich"]], ["Slowenien"]] },
+  { cat: "Städte", q: "Die 9 Hauptstädte der Nachbarländer Deutschlands", items: [
+    ["Kopenhagen"], ["Warschau"], ["Prag"], ["Wien"], ["Bern"], ["Paris"], ["Luxemburg"], ["Brüssel", ["Bruessel"]], ["Amsterdam"]] },
+  { cat: "Städte", q: "Die 9 Landeshauptstädte Österreichs", items: [
+    ["Wien"], ["Sankt Pölten", ["St. Pölten", "St Pölten", "St. Poelten"]], ["Linz"], ["Graz"], ["Klagenfurt"], ["Salzburg"], ["Innsbruck"],
+    ["Bregenz"], ["Eisenstadt"]] },
+  { cat: "Tirol", q: "Die 9 Bezirke Tirols", note: "Bundesland Tirol, Innsbruck-Stadt zählt mit", items: [
+    ["Innsbruck", ["Innsbruck-Stadt"]], ["Innsbruck-Land"], ["Imst"], ["Kitzbühel", ["Kitzbuehel"]], ["Kufstein"], ["Landeck"], ["Lienz"], ["Reutte"], ["Schwaz"]] },
+  { cat: "Südtirol", q: "Die 6 Nachbarn Südtirols", note: "Bundesländer, Kanton und Provinzen, an die Südtirol grenzt", items: [
+    ["Tirol", ["Nordtirol", "Osttirol"]], ["Salzburg"], ["Graubünden", ["Graubuenden"]], ["Sondrio", ["Provinz Sondrio"]], ["Trentino", ["Trient", "Provinz Trient"]],
+    ["Belluno", ["Provinz Belluno"]]] },
+  { cat: "Südtirol", q: "Die 8 Kartenwerte beim Watten", note: "ohne den Weli", items: [
+    ["Sieben", ["7"]], ["Acht", ["8"]], ["Neun", ["9"]], ["Zehn", ["10", "Zehner"]], ["Unter"], ["Ober"], ["König", ["Koenig"]], ["Ass", ["Sau", "Daus"]]] },
+
+  { cat: "Sport", q: "Die 9 Olympia-Winterorte in den Alpenländern", note: "Gastgeber in Frankreich, Schweiz, Deutschland, Österreich und Italien, bis 2026", items: [
+    ["Chamonix"], ["St. Moritz", ["Sankt Moritz", "St Moritz"]], ["Garmisch-Partenkirchen", ["Garmisch"]], ["Cortina d'Ampezzo", ["Cortina"]], ["Innsbruck"],
+    ["Grenoble"], ["Albertville"], ["Turin", ["Torino"]], ["Mailand", ["Milano"]]] },
+  { cat: "Sport", q: "Die 18 Vereine der Fußball-Bundesliga", note: "Saison 2025/26", items: [
+    ["FC Bayern München", ["Bayern", "Bayern München"]], ["Bayer 04 Leverkusen", ["Leverkusen", "Bayer Leverkusen", "Bayer"]], ["Eintracht Frankfurt", ["Frankfurt", "Eintracht"]],
+    ["Borussia Dortmund", ["Dortmund", "BVB"]], ["SC Freiburg", ["Freiburg"]], ["1. FSV Mainz 05", ["Mainz", "Mainz 05"]], ["RB Leipzig", ["Leipzig"]],
+    ["Werder Bremen", ["Bremen", "Werder"]], ["VfB Stuttgart", ["Stuttgart"]], ["Borussia Mönchengladbach", ["Gladbach", "Mönchengladbach"]],
+    ["VfL Wolfsburg", ["Wolfsburg"]], ["FC Augsburg", ["Augsburg"]], ["1. FC Union Berlin", ["Union Berlin", "Union"]], ["FC St. Pauli", ["St. Pauli", "St Pauli"]],
+    ["TSG Hoffenheim", ["Hoffenheim"]], ["1. FC Heidenheim", ["Heidenheim"]], ["1. FC Köln", ["Köln", "Koeln"]], ["Hamburger SV", ["HSV", "Hamburg"]]] },
+
+  { cat: "Unterhaltung", q: "Die 7 Zwerge aus Disneys „Schneewittchen“", note: "deutsche Namen (englisch geht auch)", items: [
+    ["Chef", ["Doc"]], ["Brummbär", ["Brummbaer", "Grumpy"]], ["Happy"], ["Pimpel", ["Bashful"]], ["Hatschi", ["Sneezy"]], ["Schlafmütz", ["Schlafmuetz", "Sleepy"]],
+    ["Seppl", ["Dopey"]]] },
+  { cat: "Unterhaltung", q: "Die 7 Harry-Potter-Bände", note: "Titel ohne „Harry Potter und …“ reicht", items: [
+    ["der Stein der Weisen", ["Stein der Weisen"]], ["die Kammer des Schreckens", ["Kammer des Schreckens"]], ["der Gefangene von Askaban", ["Gefangene von Askaban", "Askaban"]],
+    ["der Feuerkelch", ["Feuerkelch"]], ["der Orden des Phönix", ["Orden des Phönix", "Orden des Phoenix"]], ["der Halbblutprinz", ["Halbblutprinz"]],
+    ["die Heiligtümer des Todes", ["Heiligtümer des Todes"]]] },
+  { cat: "Unterhaltung", q: "Die 5 Mitglieder der Familie Simpson", items: [["Homer"], ["Marge"], ["Bart"], ["Lisa"], ["Maggie"]] },
+  { cat: "Unterhaltung", q: "Die 5 Spice Girls", note: "Vor-/Nachname oder Spitzname", items: [
+    ["Victoria Beckham", ["Victoria Adams", "Posh Spice", "Posh"]], ["Melanie Brown", ["Mel B", "Scary Spice", "Scary"]], ["Emma Bunton", ["Baby Spice", "Baby"]],
+    ["Melanie Chisholm", ["Mel C", "Sporty Spice", "Sporty"]], ["Geri Halliwell", ["Ginger Spice", "Ginger"]]], names: true },
 ];
