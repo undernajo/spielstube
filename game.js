@@ -1780,7 +1780,7 @@
     app.querySelectorAll(".whand").forEach((h) => [...h.children].forEach((el, i) => { el.style.position = "relative"; el.style.zIndex = String(i + 1); }));
   }
   // ---------- Schnapsen ----------
-  let xShown = { round: 0, n: 0 }, xHold = null;
+  let xShown = { round: 0, n: 0 }, xHold = null, xFly = null;
   // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
   let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 };
   // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
@@ -1822,7 +1822,13 @@
     if (xHold && st.trick.length) { xShown.n = nTricks; xHold = null; }
     if (nTricks > xShown.n && !xHold && st.lastTrick && !st.trick.length) {
       const held = xHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards }, hr = st.roundNo;
-      setTimeout(() => { if (xHold !== held || xShown.round !== hr) return; xShown.n = nTricks; xHold = null; if (view && view.phase === "schnapsen") renderSchnapsen(); }, 1000);
+      // Stich in Ruhe zeigen, dann wandern die Karten zum Stapel des Gewinners
+      setTimeout(() => {
+        if (xHold !== held || xShown.round !== hr) return;
+        const tr = app.querySelector(".wtrick");
+        xFly = { winner: held.winner, from: tr ? [...tr.querySelectorAll(".wcard")].map((c) => c.getBoundingClientRect()) : [] };
+        xShown.n = nTricks; xHold = null; if (view && view.phase === "schnapsen") renderSchnapsen();
+      }, 1800);
     }
     const shown = xHold ? xHold.cards : st.trick;
     const table = shown.length ? `<div class="wtrick">${shown.map((t) => `<div class="wplayed"><span class="muted small">${esc(nameOf(t.pid))}</span>${wCard(t.card)}</div>`).join("")}
@@ -1831,7 +1837,7 @@
     const pile = (id, pos) => {
       let g = (st.won && st.won[id]) || []; if (xHold && xHold.winner === id) g = g.slice(0, -1);
       const openLast = !xHold && st.trick.length === 0 && st.lastTrick && st.lastTrick.winner === id;
-      return `<div class="wpile ${pos}">${g.map((cs, i) => `<div class="wpile-g" style="--i:${i}">${cs.map((c) => openLast && i === g.length - 1 ? wCard(c, "xs") : `<div class="wcard xs back">${WCARDS.back()}</div>`).join("")}</div>`).join("")}</div>`;
+      return `<div class="wpile ${pos}" data-pile="${id}">${g.map((cs, i) => `<div class="wpile-g ${i === g.length - 1 ? "newest" : ""}" style="--i:${i}">${cs.map((c) => openLast && i === g.length - 1 ? wCard(c, "xs") : `<div class="wcard xs back">${WCARDS.back()}</div>`).join("")}</div>`).join("")}</div>`;
     };
     // Talon mit Trumpf-Karte (links in der Mitte)
     const talon = `<div class="xtalon">${st.atout ? `<div class="xatout">${wCard(st.atout, "sm")}</div>` : ""}
@@ -1915,6 +1921,16 @@
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
     stackHands();
+    if (xFly) { // Stichkarten von der Mitte zum Stapel fliegen lassen
+      const cards = [...app.querySelectorAll(`[data-pile="${xFly.winner}"] .wpile-g.newest .wcard`)];
+      cards.forEach((el, i) => {
+        const f = xFly.from[i]; if (!f || !el.animate) return;
+        const t = el.getBoundingClientRect();
+        el.animate([{ transform: `translate(${f.left - t.left}px, ${f.top - t.top}px) scale(${f.width / t.width})`, transformOrigin: "top left" },
+          { transform: "translate(0, 0) scale(1)", transformOrigin: "top left" }], { duration: 600, delay: i * 80, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
+      });
+      xFly = null;
+    }
     if (!waitDraw && (xDraw.cards.length || xDraw.opp)) {
       const src = app.querySelector(".xstack .wcard, .xatout .wcard, .xtalon");
       const from = src ? src.getBoundingClientRect() : null;
