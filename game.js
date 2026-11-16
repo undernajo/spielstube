@@ -539,6 +539,7 @@
     }
     camDock.classList.toggle("docked", dock);
     if (!dock) renderCamDock();
+    else document.body.style.setProperty("--cam-h", "0px"); // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
   }
   addEventListener("resize", () => camDockPlace());
   // Browser blockieren Ton manchmal, bis man einmal tippt
