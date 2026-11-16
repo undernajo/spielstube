@@ -176,9 +176,9 @@
           <rect x="${x - 10}" y="118" width="8.5" height="4" fill="${skin}"/><rect x="${x + 1.5}" y="118" width="8.5" height="4" fill="${skin}"/>
           <path d="M${x - 14} 106 C${x - 15} 86 ${x - 10} 73 ${x} 72 C${x + 10} 73 ${x + 15} 86 ${x + 14} 106Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
           <path d="M${x - 4} 73 L${x} 79 L${x + 4} 73" fill="#fff" stroke="${ink}" stroke-width=".7"/>
-          <path d="M${x - 14} 104 H${x + 14} L${x + 13} 118 H${x + 1} L${x} 112 L${x - 1} 118 H${x - 13}Z" fill="#8a5a2b" stroke="#4a2e12" stroke-width="1"/>
-          <path d="M${x - 9} 104 L${x - 7} 74 M${x + 9} 104 L${x + 7} 74" stroke="#6e4520" stroke-width="2.6"/>
-          <rect x="${x - 8}" y="88" width="16" height="4" rx="1" fill="#6e4520"/>
+          <path d="M${x - 14} 104 H${x + 14} L${x + 13} 118 H${x + 1} L${x} 112 L${x - 1} 118 H${x - 13}Z" fill="#4b3420" stroke="#2a1a0a" stroke-width="1"/>
+          <path d="M${x - 9} 104 L${x - 7} 74 M${x + 9} 104 L${x + 7} 74" stroke="#2e1f12" stroke-width="2.6"/>
+          <rect x="${x - 8}" y="88" width="16" height="4" rx="1" fill="#2e1f12"/>
           <circle cx="${x}" cy="90" r="1.3" fill="#f4efe4"/>
           <path d="M${x - 13} 77 Q${x - 18} 88 ${x - 18} 100" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
           <circle cx="${x - 18}" cy="102" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
