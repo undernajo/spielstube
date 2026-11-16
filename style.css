@@ -724,3 +724,13 @@ textarea { resize: vertical; font: inherit; }
 .btn.danger { background: var(--bad); color: #fff; box-shadow: 0 4px 0 #a32f3b; }
 .geo-kind { font-size: .9rem; font-weight: 500; color: var(--muted); margin-left: 6px; white-space: nowrap; vertical-align: middle; }
 .toast { z-index: 5100; }
+/* Watten: Halten oder gehen – auf dem Spielfeld rechts unten */
+.wdecide { display: grid; gap: 8px; padding: 12px 14px; border-radius: 16px; background: rgba(20, 16, 50, .92); border: 1px solid var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4); z-index: 4; justify-self: center; width: min(100%, 260px); }
+.wdecide p { margin: 0; font-size: .9rem; text-align: center; }
+@media (min-width: 900px) { .wtable .wdecide { position: absolute; right: 18px; bottom: 18px; } }
+@media (min-width: 900px) {
+  .wtable .wdecide { width: 172px; right: 14px; bottom: 14px; padding: 10px; gap: 6px; }
+  .wtable .wdecide .btn { padding: 8px 6px; font-size: .85rem; }
+  .wtable .wdecide p { font-size: .8rem; }
+}

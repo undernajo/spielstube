@@ -1619,7 +1619,7 @@
       }).join("")}</div>`;
     };
     // Aktionen
-    let action = "";
+    let action = "", decide = "";
     if (st.step === "schlag") action = st.vorhand === me
       ? `<p><b>Sag den Schlag an:</b> Tippe auf eine deiner Karten – ihr Wert wird der Schlag. Beim Weli ist der Weli der einzige Schlag.</p>`
       : `<p class="muted">${esc(nameOf(st.vorhand))} sagt den Schlag an …</p>`;
@@ -1627,14 +1627,19 @@
       ? `<p><b>Sag den Trumpf an:</b> Tippe auf eine deiner Karten – ihre Farbe wird Trumpf. (Schlag ist ${rankName(st.schlag)}.)</p>`
       : `<p class="muted">${esc(nameOf(st.dealer))} sagt den Trumpf an …</p>`;
     else if (st.step === "play") {
-      if (st.bid) action = st.bid.by === me
-        ? `<p class="muted">Du hast auf ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
-        : seated ? `<p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} Punkte.</b></p><div class="wbtns">
+      // Halten-oder-gehen-Entscheidung kommt aufs Spielfeld (rechts unten)
+      if (st.bid) {
+        action = st.bid.by === me ? `<p class="muted">Du hast auf ${st.bid.to} geboten – ${esc(nameOf(opp))} entscheidet …</p>`
+          : `<p class="muted small">${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to} – entscheide auf dem Spielfeld.</p>`;
+        if (seated && st.bid.by !== me) decide = `<div class="wdecide"><p><b>${esc(nameOf(st.bid.by))} bietet auf ${st.bid.to}.</b></p>
             <button class="btn primary" id="w-hold">Halten (um ${st.bid.to})</button>
-            <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} bekommt ${st.value})</button></div>` : "";
-      else if (st.mustDecide === me) action = `<p><b>Du bist gestrichen – es gehen 4.</b> Hältst du oder gehst du?</p><div class="wbtns">
+            <button class="btn ghost" id="w-fold">Gehen (${esc(nameOf(st.bid.by))} +${st.value})</button></div>`;
+      } else if (st.mustDecide === me) {
+        action = `<p class="muted small">Du bist gestrichen – entscheide auf dem Spielfeld.</p>`;
+        decide = `<div class="wdecide"><p><b>Du bist gestrichen – es gehen 4.</b></p>
             <button class="btn primary" id="w-hold4">Halten (um 4)</button>
-            <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} bekommt 2)</button></div>`;
+            <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} +2)</button></div>`;
+      }
       else action = `<p class="muted small">${st.mustDecide ? esc(nameOf(st.mustDecide)) + " entscheidet: halten oder gehen …" : st.turn === me ? (st.trick.length ? "Gib eine Karte zu." : "Spiel eine Karte aus.") : "Warte auf " + esc(nameOf(st.turn)) + " …"}</p>
         ${st.turn === me && st.follow === "pflicht" ? `<p class="wrule"><b>Trumpf ausgespielt:</b> Du musst Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.</p>`
           : st.turn === me && st.follow === "guter" ? `<p class="wrule">Der <b>Gute</b> wurde ausgespielt – kein Trumpf-Zwang.</p>` : ""}
@@ -1677,7 +1682,7 @@
             <div class="wtop">${combo}${myMove ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
-            ${myMove ? turnBadge : ""}
+            ${myMove ? turnBadge : ""}${decide}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
