@@ -336,4 +336,6 @@ window.SCHLAU10_DUELL = [
   { cat: "Südtirol", q: "Südtiroler Olympiasieger", note: "Goldmedaillen bis einschließlich 2022, Einzel und Team · Nachname reicht", names: true, items: [
     ["Gustav Thöni", ["Thoeni"]], ["Paul Hildgartner"], ["Walter Plaikner"], ["Erika Lechner"], ["Armin Zöggeler", ["Zoeggeler"]], ["Gerda Weissensteiner", ["Weißensteiner"]],
     ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"]] },
+  { cat: "Südtirol", q: "Die 5 Landeshauptleute Südtirols", note: "seit 1948, Stand 2026 · Nachname reicht", names: true, items: [
+    ["Karl Erckert"], ["Alois Pupp"], ["Silvius Magnago"], ["Luis Durnwalder", ["Alois Durnwalder"]], ["Arno Kompatscher"]] },
 ];
