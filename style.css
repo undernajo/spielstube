@@ -966,7 +966,6 @@ textarea { resize: vertical; font: inherit; }
 /* Lobby am Computer: Kamera fest in der linken Spalte */
 #camdock.docked { position: static; left: auto !important; top: auto !important; right: auto; bottom: auto; width: 100%; max-width: none; box-shadow: none;
   background: #15123a; }
-#camdock.docked .camsize { display: none; }
 #camdock.docked .camhead { cursor: default; }
 #camdock.docked .camtile { width: 100% !important; }
 #camdock.docked:not(.pip) .camtiles { display: grid; grid-template-columns: 1fr; }
@@ -986,3 +985,18 @@ textarea { resize: vertical; font: inherit; }
 .code-copy::after { content: "zum Kopieren tippen"; display: block; margin-top: 2px; font: 500 .68rem Fredoka, sans-serif; letter-spacing: .5px; color: var(--muted); }
 /* Höher oder tiefer: Knöpfe mittig übereinander */
 .hl-btns { grid-template-columns: 1fr; justify-self: center; width: min(100%, 420px); gap: 10px; }
+
+/* Lobby: großes Anruf-Fenster im Vordergrund (zum Plaudern) */
+#camback { position: fixed; inset: 0; z-index: 4400; background: rgba(8, 6, 25, .78); display: none; }
+#camback.show { display: block; }
+#camdock.stage { position: fixed !important; left: 50% !important; top: 50% !important; right: auto !important; bottom: auto !important;
+  transform: translate(-50%, -50%); width: min(94vw, 1100px); max-width: none; z-index: 4500; padding: 10px; border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .55); }
+#camdock.stage .camhead { cursor: default; font-size: 1rem; padding: 2px 4px 8px; }
+#camdock.stage .camtiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+#camdock.stage .camtile { width: 100% !important; aspect-ratio: 16 / 10; max-height: 76vh; }
+#camdock.stage .camname { font-size: .95rem; padding: 3px 10px; }
+#camdock.stage.pip .camtile.self { position: absolute; right: 12px; bottom: 12px; width: 22% !important; max-width: 240px; min-width: 110px; aspect-ratio: 4 / 3; }
+#camdock.stage .camtile.novideo .caminit { font-size: 4rem; }
+#camdock.stage .cambtns button { font-size: 1rem; }
+@media (max-width: 640px) { #camdock.stage .camtile { aspect-ratio: 3 / 4; max-height: 72vh; } #camdock.stage.pip .camtile.self { width: 30% !important; min-width: 90px; } }

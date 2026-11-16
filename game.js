@@ -534,6 +534,13 @@
   const camDock = document.createElement("div"); camDock.id = "camdock"; document.body.appendChild(camDock);
   const camVideos = new Map();
   let camBig = store.get("s10-cam-big") === true;
+  // In der Lobby öffnet „Vergrößern“ ein großes Anruf-Fenster im Vordergrund – zum Plaudern ohne zu spielen
+  let camStage = false;
+  const camBack = document.createElement("div"); camBack.id = "camback"; document.body.appendChild(camBack);
+  const inLobby = () => !!view && view.phase === "lobby";
+  function setCamStage(on) { camStage = on && inLobby(); camDockPlace(); }
+  camBack.onclick = () => setCamStage(false);
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && camStage) setCamStage(false); });
   function camPlace(x, y) { // im sichtbaren Bereich halten
     const w = camDock.offsetWidth, h = camDock.offsetHeight;
     camDock.style.left = Math.max(4, Math.min(innerWidth - w - 4, x)) + "px";
@@ -578,11 +585,14 @@
           <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button></span></div><div class="camtiles"></div>`;
       camDock.querySelector(".camtoggle").onclick = () => { camOpen = !camOpen; renderCamDock(); };
       camDock.querySelector(".camaud").onclick = () => { camMuteAll = !camMuteAll; camNeedTap(false); renderCamDock(); camDock.querySelectorAll("video").forEach((v) => v.play && v.play().catch(() => {})); };
-      camDock.querySelector(".camsize").onclick = () => { camBig = !camBig; store.set("s10-cam-big", camBig); renderCamDock(); };
+      camDock.querySelector(".camsize").onclick = () => {
+        if (inLobby()) return setCamStage(!camStage);
+        camBig = !camBig; store.set("s10-cam-big", camBig); renderCamDock();
+      };
       // verschieben per Maus oder Finger; Position wird pro Gerät gemerkt
       const grip = camDock.querySelector(".camhead");
       grip.onpointerdown = (e) => {
-        if (e.target.closest("button")) return;
+        if (e.target.closest("button") || camStage) return;
         const r = camDock.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
         grip.setPointerCapture(e.pointerId);
         grip.onpointermove = (ev) => camPlace(ev.clientX - dx, ev.clientY - dy);
@@ -592,13 +602,19 @@
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
     const anyAudio = [...remoteCams.values()].some((st) => st && st !== "failed" && st.getAudioTracks().length);
     const ab = camDock.querySelector(".camaud"); ab.style.display = anyAudio ? "" : "none"; ab.textContent = camMuteAll ? "🔇" : "🔊";
-    camDock.classList.toggle("big", camBig);
+    camDock.classList.toggle("big", camBig && !camStage);
+    camDock.classList.toggle("stage", camStage);
+    if (camStage) camDock.classList.remove("closed");
+    camBack.classList.toggle("show", camStage && camDock.classList.contains("show"));
+    const sz = camDock.querySelector(".camsize");
+    sz.textContent = camStage ? "✕" : "⤢";
+    sz.title = camStage ? "Großes Anruf-Fenster schließen" : inLobby() ? "Großes Anruf-Fenster öffnen" : "Größer/kleiner";
     // Position merkt sich die Ecke rechts unten – beim Vergrößern/Verkleinern bleibt sie stehen
     const pos = store.get("s10-cam-pos");
-    if (pos && pos.rx != null && camDock.classList.contains("show") && !camDock.classList.contains("docked")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
+    if (!camStage && pos && pos.rx != null && camDock.classList.contains("show") && !camDock.classList.contains("docked")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
     // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
     // (am Computer stehen sie links neben dem Kamerafenster, damit sie nicht über die rechte Spalte rutschen, z. B. „Zählt das?“)
-    const camCorner = camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null);
+    const camCorner = !camStage && camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null);
     document.body.style.setProperty("--cam-h", camCorner ? camDock.offsetHeight + 16 + "px" : "0px");
     document.body.style.setProperty("--cam-w", camCorner ? camDock.offsetWidth + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
@@ -606,7 +622,8 @@
   }
   // In der Lobby (am Computer) sitzt das Kamerafenster fest in der linken Spalte statt über den Einstellungen zu schweben
   function camDockPlace() {
-    const slot = app.querySelector("#camslot"), dock = !!slot && innerWidth >= 1100;
+    if (camStage && !inLobby()) camStage = false; // beim Spielstart schließt das große Fenster
+    const slot = app.querySelector("#camslot"), dock = !camStage && !!slot && innerWidth >= 1100;
     const target = dock ? slot : document.body;
     if (camDock.parentNode !== target) {
       // Beim Wechsel aus der Lobby ins Spiel: Kamera wieder unten rechts (danach weiter frei verschiebbar)
@@ -616,7 +633,10 @@
     }
     camDock.classList.toggle("docked", dock);
     if (!dock) renderCamDock();
-    else { document.body.style.setProperty("--cam-h", "0px"); document.body.style.setProperty("--cam-w", "0px"); } // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
+    else {
+      camDock.classList.remove("stage"); camBack.classList.remove("show");
+      const sz = camDock.querySelector(".camsize"); if (sz) { sz.textContent = "⤢"; sz.title = "Großes Anruf-Fenster öffnen"; } document.body.style.setProperty("--cam-h", "0px"); document.body.style.setProperty("--cam-w", "0px");
+    } // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
   }
   addEventListener("resize", () => camDockPlace());
   // Browser blockieren Ton manchmal, bis man einmal tippt
