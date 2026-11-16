@@ -2076,8 +2076,10 @@
           : `<div class="muted small">Nicht wörtlich gleich – ${esc(nameOf(st.asker))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
       const r = st.result, iWon = !r.voided && r.winner === myId, cp = st.complaint;
-      const reason = { right: `${esc(nameOf(st.guesser))} wusste die Antwort.`, wrong: `${esc(nameOf(st.guesser))} lag daneben.`,
-        time: `${esc(nameOf(st.guesser))} hat nicht rechtzeitig geantwortet.`, noq: `${esc(nameOf(st.asker))} ist keine Frage eingefallen.`, pass: `${esc(nameOf(st.asker))} hat gepasst.` }[r.why];
+      const G = iGuess ? null : esc(nameOf(st.guesser)), A = iAsk ? null : esc(nameOf(st.asker));
+      const reason = { right: G ? `${G} wusste die Antwort.` : "Du wusstest die Antwort.", wrong: G ? `${G} lag daneben.` : "Du lagst daneben.",
+        time: G ? `${G} hat nicht rechtzeitig geantwortet.` : "Du hast nicht rechtzeitig geantwortet.",
+        noq: A ? `${A} ist keine Frage eingefallen.` : "Dir ist keine Frage eingefallen.", pass: A ? `${A} hat gepasst.` : "Du hast gepasst." }[r.why];
       body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, iGuess ? "Deine Antwort" : esc(nameOf(st.guesser)) + " sagte") : ""}</div>
         ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> findet die Frage unpassend.</div>
           ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
