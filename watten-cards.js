@@ -150,7 +150,7 @@
       if (kind === "O") {
         // Ober: gestandener Tiroler – Joppe in der Kartenfarbe mit Hornknöpfen, Weste, Schnurrbart, Hand in der Hüfte, Wanderstock
         fig = `
-          <path d="M${x + 21} 70 V137" stroke="#6e4520" stroke-width="2.4" stroke-linecap="round"/><path d="M${x + 21} 70 q0 -4 -4 -4" stroke="#6e4520" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <path d="M${x - 21} 70 V137" stroke="#6e4520" stroke-width="2.4" stroke-linecap="round"/><path d="M${x - 21} 70 q0 -4 4 -4" stroke="#6e4520" stroke-width="2.4" fill="none" stroke-linecap="round"/>
           ${legs(110, 124)}
           <path d="M${x - 14} 112 C${x - 15} 88 ${x - 10} 73 ${x} 72 C${x + 10} 73 ${x + 15} 88 ${x + 14} 112Z" fill="#f4efe4" stroke="${ink}" stroke-width="1.1"/>
           <path d="M${x - 5} 74 L${x - 4} 110 M${x + 5} 74 L${x + 4} 110" stroke="#c9b48a" stroke-width="5"/>
@@ -158,11 +158,11 @@
           <path d="M${x + 14} 112 C${x + 15} 88 ${x + 10} 73 ${x + 3} 72 L${x + 7} 112Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
           <path d="M${x - 3} 72 L${x - 8} 84 L${x - 6} 72Z M${x + 3} 72 L${x + 8} 84 L${x + 6} 72Z" fill="#2f3a26"/>
           <g fill="#7a5a32" stroke="${ink}" stroke-width=".5">${[88, 96, 104].map((y) => `<circle cx="${x - 9}" cy="${y}" r="1.4"/><circle cx="${x + 9}" cy="${y}" r="1.4"/>`).join("")}</g>
-          <path d="M${x - 13} 77 Q${x - 23} 86 ${x - 19} 95 Q${x - 16} 99 ${x - 12} 99" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M${x - 13} 77 Q${x - 23} 86 ${x - 19} 95 Q${x - 16} 99 ${x - 12} 99" stroke="${ink}" stroke-opacity=".35" stroke-width=".8" fill="none"/>
-          <circle cx="${x - 11.5}" cy="99" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
-          <path d="M${x + 13} 77 Q${x + 19} 86 ${x + 20} 95" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <circle cx="${x + 20.5}" cy="97" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <path d="M${x + 13} 77 Q${x + 23} 86 ${x + 19} 95 Q${x + 16} 99 ${x + 12} 99" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M${x + 13} 77 Q${x + 23} 86 ${x + 19} 95 Q${x + 16} 99 ${x + 12} 99" stroke="${ink}" stroke-opacity=".35" stroke-width=".8" fill="none"/>
+          <circle cx="${x + 11.5}" cy="99" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <path d="M${x - 13} 77 Q${x - 19} 86 ${x - 20} 95" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="${x - 20.5}" cy="97" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
           <circle cx="${x}" cy="61" r="10.5" fill="${skin}" stroke="${ink}" stroke-width="1.1"/>
           <circle cx="${x - 3.6}" cy="59.5" r="1.3" fill="${ink}"/><circle cx="${x + 3.6}" cy="59.5" r="1.3" fill="${ink}"/>
           <path d="M${x - 2.5} 59 Q${x - 3.6} 56 ${x - 5.5} 57.2 M${x + 2.5} 59 Q${x + 3.6} 56 ${x + 5.5} 57.2" stroke="${ink}" stroke-width=".7" fill="none" opacity=".6"/>
@@ -199,7 +199,7 @@
     // Figur auf die ganze Karte vergrößern (Ecken und großes Farbsymbol bleiben frei)
     // ohne gespiegeltes Eckzeichen: Figur nutzt die ganze Karte
     // Figuren reichen vom oberen bis zum unteren Kartenrand
-    const tf = kind === "K" ? "translate(-19 -22) scale(1.23)" : kind === "U" ? "translate(-54 -46.7) scale(1.65)" : "translate(-44 -26) scale(1.5)";
+    const tf = kind === "K" ? "translate(-19 -22) scale(1.23)" : kind === "U" ? "translate(-54 -46.7) scale(1.65)" : "translate(-46 -46.7) scale(1.65)";
     const er = suit === "eichel" ? 180 : 0; // Eichel bei Figuren mit Stiel nach unten
     const big = kind === "U" ? sym(suit, 22, 166, 1.15, er) : sym(suit, 22, 26, 1.15, er);
     return frame(corner(kind, suit, c, false, false) + `<g transform="${tf}">${fig}</g>` + big);
