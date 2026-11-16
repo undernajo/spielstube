@@ -845,10 +845,13 @@ textarea { resize: vertical; font: inherit; }
   .slf-headrow { gap: 14px; }
   .slf-head .slf-letter { width: 56px; height: 56px; font-size: 2.2rem; border-radius: 14px; box-shadow: 0 4px 0 #c48f0a; }
   .slf-head .slf-timer { font-size: 2.2rem; }
-  .slf-head .slf-info .muted { display: none; }
+
 }
 /* Auswertung: Zusatz „doppelt“ bleibt in der Zeile; am Handy bleibt „Passt“ unten sichtbar */
 .slf-ans em { white-space: nowrap; }
 @media (max-width: 640px) {
   .screen.slf .slf-actions { position: sticky; bottom: 8px; z-index: 5; padding: 8px; border-radius: 16px; background: rgba(20, 16, 50, .92); box-shadow: 0 -6px 18px rgba(0, 0, 0, .35); }
 }
+.slf-clock { display: grid; justify-items: start; gap: 2px; }
+.slf-head .slf-info:has(#slf-stop:empty) { display: none; }
+@media (max-width: 640px) { .slf-rule { font-size: .72rem; } }
