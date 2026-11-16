@@ -77,6 +77,7 @@
     const st = s.frage;
     st.score[winner]++;
     st.result = { winner, why };
+    st.complaint = null; // Beschwerde über eine unpassende Frage: { state: "open" | "accepted" | "rejected" }
     st.history.push({ key: keyOf(...st.order[st.li]), winner });
     st.deadline = 0;
     st.step = st.score[winner] >= st.opts.target ? "final" : "reveal";
@@ -119,7 +120,21 @@
         if (st.step !== "judge" || pid !== st.asker) return false;
         finish(s, a.ok ? guesser : st.asker, a.ok ? "right" : "wrong");
         return true;
+      case "fqComplain": // der Antwortende findet die Frage unpassend (nur wenn er dadurch den Punkt verloren hat)
+        if ((st.step !== "reveal" && st.step !== "final") || pid !== guesser || !st.result || st.result.winner !== st.asker || st.complaint) return false;
+        st.complaint = { state: "open" };
+        return true;
+      case "fqComplaint": // der Fragensteller nimmt die Beschwerde an (Runde zählt nicht) oder lehnt ab
+        if (!st.complaint || st.complaint.state !== "open" || pid !== st.asker) return false;
+        if (a.ok) {
+          st.score[st.asker]--; st.result.voided = true;
+          const h = st.history[st.history.length - 1]; if (h) h.winner = null;
+          st.step = "reveal"; // falls der Punkt das Spiel entschieden hatte, geht es weiter
+        }
+        st.complaint.state = a.ok ? "accepted" : "rejected";
+        return true;
       case "fqNext":
+        if (st.complaint && st.complaint.state === "open") return false;
         if (st.step !== "reveal" || (!st.seats.includes(pid) && !isHost)) return false;
         nextRound(s, now); return true;
     }
@@ -144,6 +159,7 @@
       timerMs: (st.step === "write" ? WRITE[st.opts.write] : ANSWER[st.opts.answer]).ms,
       writeName: WRITE[st.opts.write].name, answerName: ANSWER[st.opts.answer].name,
       answer: open ? c.a[0] : null, result: st.result ? { ...st.result } : null, history: st.history.slice(),
+      complaint: st.complaint ? { ...st.complaint } : null,
     };
   }
 

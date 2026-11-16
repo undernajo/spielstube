@@ -1385,7 +1385,8 @@
         <li>Der andere sieht die Frage und tippt seine <b>Antwort</b>. Stimmt sie, bekommt <b>er</b> den Punkt – sonst der <b>Fragensteller</b>.</li>
         <li>Ist die Antwort nicht wörtlich gleich (z. B. „die drei Könige“), entscheidet der Fragensteller ehrlich, ob sie zählt.</li>
         <li>Fällt dem Fragensteller in der Zeit keine Frage ein, bekommt der andere den Punkt; antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
-        <li>Die Rollen wechseln jede Runde. Wer zuerst die Zielpunkte hat, gewinnt. Tipp: Die Frage sollte eindeutig und fair sein – sonst macht es keinen Spaß.</li>
+        <li><b>Beschwerde:</b> Hat der Antwortende den Punkt verloren und findet die Frage danach unpassend (passt nicht zur Antwort oder Kategorie, nicht eindeutig), kann er sich beschweren. Gibt der Fragensteller ihm recht, zählt die Runde nicht.</li>
+        <li>Die Rollen wechseln jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
       </ul>
     </details>`;
   function duSettingsHtml() {
@@ -2048,7 +2049,7 @@
       txt.textContent = left >= 60000 ? Math.floor(left / 60000) + ":" + String(Math.floor(left / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(left / 1000) + " s";
       bar.parentNode.classList.toggle("urgent", left < 10000);
     }, 250);
-    const key = [v.code, st.round, st.step, st.li, priv ? priv.answer : "", st.question, st.guess].join(":");
+    const key = [v.code, st.round, st.step, st.li, priv ? priv.answer : "", st.question, st.guess, st.complaint ? st.complaint.state : "", st.result && st.result.voided].join(":");
     const pills = () => st.seats.map((id) => `<div class="du-pill ${(st.step === "write" && st.asker === id) || (st.step === "answer" && st.guesser === id) || (st.step === "judge" && st.asker === id) ? "on" : ""}" style="--pc:${colorOf(id)}">
         <i class="pdot"></i><span>${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""} <small class="fq-role">${id === st.asker ? "fragt" : "antwortet"}</small></span><b>${st.score[id]}</b><small>/${st.target}</small></div>`).join("");
     if (fqRendered === key && app.querySelector(".fq-main")) { const sc = app.querySelector(".du-pills"); if (sc) sc.innerHTML = pills(); return; }
@@ -2074,14 +2075,19 @@
           <div class="banner-actions"><button class="btn primary" data-fqjudge="1">✓ Zählt</button><button class="btn ghost" data-fqjudge="0">✗ Zählt nicht</button></div>`
           : `<div class="muted small">Nicht wörtlich gleich – ${esc(nameOf(st.asker))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
-      const r = st.result, iWon = r.winner === myId;
+      const r = st.result, iWon = !r.voided && r.winner === myId, cp = st.complaint;
       const reason = { right: `${esc(nameOf(st.guesser))} wusste die Antwort.`, wrong: `${esc(nameOf(st.guesser))} lag daneben.`,
         time: `${esc(nameOf(st.guesser))} hat nicht rechtzeitig geantwortet.`, noq: `${esc(nameOf(st.asker))} ist keine Frage eingefallen.` }[r.why];
       body = `${qBox}<div class="fq-reveal">${ansCard(st.answer, "Gesuchte Antwort")}${st.guess ? ansCard(st.guess, esc(nameOf(st.guesser)) + " sagte") : ""}</div>
-        <div class="banner ${iWon ? "win" : seated ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
-          : `<b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>`}
-          <div class="small">${reason}</div>
-          <div class="banner-actions">${st.step === "final" ? `<button id="fq-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
+        ${cp && cp.state === "open" ? `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(st.guesser))}</b> findet die Frage unpassend.</div>
+          ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
+            <div class="banner-actions"><button class="btn primary" data-fqcomplaint="1">Stimmt – Runde zählt nicht</button><button class="btn ghost" data-fqcomplaint="0">Nein, die Frage war fair</button></div>`
+            : `<div class="muted small">${esc(nameOf(st.asker))} entscheidet …</div>`}</div>` : ""}
+        <div class="banner ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
+          : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>`}
+          <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>
+          <div class="banner-actions">${iGuess && r.winner === st.asker && !r.voided && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}
+            ${cp && cp.state === "open" ? "" : st.step === "final" ? `<button id="fq-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
             : seated || isHost ? `<button id="fq-next" class="btn primary">Nächste Runde</button>` : ""}</div></div>`;
     }
     app.innerHTML = `
@@ -2107,6 +2113,8 @@
     on("#toLobby", () => send({ type: "lobby" }));
     on("#fq-reroll", () => send({ type: "fqReroll" }));
     app.querySelectorAll("[data-fqjudge]").forEach((b) => b.onclick = () => send({ type: "fqJudge", ok: b.dataset.fqjudge === "1" }));
+    on("#fq-complain", () => send({ type: "fqComplain" }));
+    app.querySelectorAll("[data-fqcomplaint]").forEach((b) => b.onclick = () => send({ type: "fqComplaint", ok: b.dataset.fqcomplaint === "1" }));
     const qf = app.querySelector(".fq-form");
     if (qf) {
       const ta = qf.querySelector("#fq-q");
@@ -2177,7 +2185,7 @@
           <div class="banner-actions"><button class="btn primary" data-dujudge="1">✓ Zählt</button><button class="btn ghost" data-dujudge="0">✗ Zählt nicht</button></div>`
           : `<div class="muted small">Ähnlich wie eine Antwort auf der Liste – ${esc(nameOf(opp(j.by)))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
-      const r = st.result, iWon = r.winner === myId;
+      const r = st.result, iWon = !r.voided && r.winner === myId, cp = st.complaint;
       const reason = r.why === "full" ? `Alle ${st.items.length} gefunden – ${esc(nameOf(r.winner))} hat die letzte genannt.`
         : r.why === "time" ? `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`
         : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
