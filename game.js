@@ -532,6 +532,8 @@
     const slot = app.querySelector("#camslot"), dock = !!slot && innerWidth >= 1100;
     const target = dock ? slot : document.body;
     if (camDock.parentNode !== target) {
+      // Beim Wechsel aus der Lobby ins Spiel: Kamera wieder unten rechts (danach weiter frei verschiebbar)
+      if (!dock) { store.del("s10-cam-pos"); camDock.style.left = camDock.style.top = camDock.style.bottom = ""; }
       target.appendChild(camDock);
       camDock.querySelectorAll("video").forEach((v) => { if (v.srcObject) v.play().catch(() => {}); });
     }
