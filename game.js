@@ -1846,7 +1846,7 @@
     const augen = (id) => st.points ? `<span class="wcall">${st.points[id]} Augen${st.pending && st.pending[id] ? ` (+${st.pending[id]})` : ""}</span>` : "";
     const combo = `<div class="wcombo" title="Trumpf ${sn(st.trump)}"><span class="wsuit big">${WCARDS.sym(st.trump, 1)}</span><b>Trumpf</b>
         <span class="wvalue">${st.strict ? "Farbzwang!" : "freies Zugeben"}</span></div>`;
-    const turnBadge = myTurn ? `<div class="wturn me">${st.trick.length ? "Gib eine Karte zu!" : "Spiel aus!"}</div>`
+    const turnBadge = myTurn ? `<div class="wturn me">Du bist dran!</div>`
       : st.turn ? `<div class="wturn other">${esc(nameOf(st.turn))} ist dran …</div>` : "";
     // Knöpfe auf dem Spielfeld
     const btns = [];
