@@ -460,7 +460,7 @@
     camDock.style.top = Math.max(4, Math.min(innerHeight - h - 4, y)) + "px";
     camDock.style.bottom = "auto";
   }
-  addEventListener("resize", () => { const p = store.get("s10-cam-pos"); if (p && camDock.classList.contains("show")) camPlace(p.x * innerWidth, p.y * innerHeight); });
+  addEventListener("resize", () => { const p = store.get("s10-cam-pos"); if (p && p.rx != null && camDock.classList.contains("show")) camPlace(p.rx * innerWidth - camDock.offsetWidth, p.by * innerHeight - camDock.offsetHeight); });
   function camTile(id, stream, label, mirror) {
     let tile = camVideos.get(id);
     if (!tile) {
@@ -497,15 +497,16 @@
         const r = camDock.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
         grip.setPointerCapture(e.pointerId);
         grip.onpointermove = (ev) => camPlace(ev.clientX - dx, ev.clientY - dy);
-        grip.onpointerup = () => { grip.onpointermove = null; const q = camDock.getBoundingClientRect(); store.set("s10-cam-pos", { x: q.left / innerWidth, y: q.top / innerHeight }); };
+        grip.onpointerup = () => { grip.onpointermove = null; const q = camDock.getBoundingClientRect(); store.set("s10-cam-pos", { rx: q.right / innerWidth, by: q.bottom / innerHeight }); };
       };
     }
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
     camDock.classList.toggle("big", camBig);
+    // Position merkt sich die Ecke rechts unten – beim Vergrößern/Verkleinern bleibt sie stehen
     const pos = store.get("s10-cam-pos");
-    if (pos && camDock.classList.contains("show")) camPlace(pos.x * innerWidth, pos.y * innerHeight);
+    if (pos && pos.rx != null && camDock.classList.contains("show")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
     // Hinweise (Toasts) unten rechts nicht unter dem Kamerafenster verstecken
-    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !pos ? camDock.offsetHeight + 16 + "px" : "0px");
+    document.body.style.setProperty("--cam-h", camDock.classList.contains("show") && !(pos && pos.rx != null) ? camDock.offsetHeight + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
   }
