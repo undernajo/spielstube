@@ -1173,3 +1173,7 @@ textarea { resize: vertical; font: inherit; }
 .fq-tile.given.bad { background: rgba(239, 75, 90, .08); }
 .fq-said { background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
 .fq-player.active { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 18%, transparent); }
+/* Antwort sucht Frage: einfarbige Flächen statt Farbübergängen (besser lesbar) */
+.fq-tile.cat, .fq-catchip { background: #7a3fc0; }
+.fq-tile.secret { background: #33291a; }
+.fq-dotsanim { white-space: nowrap; }
