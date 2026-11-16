@@ -476,7 +476,8 @@
     if (wantCam || wantMic) {
       try {
         next = await navigator.mediaDevices.getUserMedia({
-          video: wantCam ? { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" } : false,
+          // HD-Auflösung, damit das Bild auch im großen Anruf-Fenster scharf ist; bei schwacher Leitung regelt der Browser selbst herunter
+          video: wantCam ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 }, facingMode: "user" } : false,
           audio: wantMic ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false });
       } catch (e) { toast(wantMic && !wantCam ? "Mikrofon nicht verfügbar oder nicht erlaubt." : "Kamera/Mikrofon nicht verfügbar oder nicht erlaubt.", "bad"); return; }
     }
