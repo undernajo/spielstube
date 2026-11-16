@@ -128,16 +128,15 @@ window.SCHLAU10_CARDS.push(...[
     ["Landeshauptleute seit 1948", 5], ["Kehren am Stilfser Joch (Trafoier Seite)", 48], ["Ladinische Täler in Südtirol", 2],
     ["Angrenzende Staaten", 2], ["Angrenzende italienische Provinzen", 3], ["Achttausender, die Reinhold Messner bestiegen hat", 14] ] },
 
-  { q: "Südtirol in Zahlen – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.1, items: [
+  { q: "Südtirol in Zahlen – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.15, items: [
     ["Einwohner Südtirols", 535000], ["Fläche (km²)", 7400], ["Anteil deutschsprachig (%)", 69],
-    ["Anteil italienischsprachig (%)", 26], ["Anteil ladinischsprachig (%)", 4.5, 0.35], ["Ötzis Alter (Jahre)", 5300],
-    ["Tätowierungen auf Ötzis Körper", 61, 0.3], ["Höhe der Ötzi-Fundstelle (m)", 3210], ["Länge der Etsch (km)", 410],
+    ["Anteil italienischsprachig (%)", 26], ["Anteil ladinischsprachig (%)", 4.5], ["Ötzis Alter (Jahre)", 5300],
+    ["Tätowierungen auf Ötzis Körper", 61], ["Höhe der Ötzi-Fundstelle (m)", 3210], ["Länge der Etsch (km)", 410],
     ["Höhe von Bozen über dem Meer (m)", 262] ] },
 
   { q: "Wie viele Einwohner hat der Ort (ungefähr)?", type: "estimate", tol: 0.15, items: [
-    // 3. Feld = eigene Toleranz: bekannte Städte enger, kleine Gemeinden großzügiger
-    ["Bozen", 108000, 0.15], ["Meran", 41500, 0.15], ["Brixen", 23000, 0.2], ["Leifers", 18000, 0.3], ["Bruneck", 17000, 0.25],
-    ["Eppan", 15000, 0.3], ["Lana", 12800, 0.3], ["Kaltern", 8200, 0.3], ["Sterzing", 7000, 0.3], ["Glurns", 900, 0.4] ] },
+    ["Bozen", 108000], ["Meran", 41500], ["Brixen", 23000], ["Leifers", 18000], ["Bruneck", 17000],
+    ["Eppan", 15000], ["Lana", 12800], ["Kaltern", 8200], ["Sterzing", 7000], ["Glurns", 900] ] },
 
 
   // ===================== Erweiterung =====================

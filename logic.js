@@ -262,7 +262,17 @@
 
   // Bereich, der bei einer Schätzfrage noch gezählt hätte (z. B. „97.200 bis 118.800“)
   // Toleranz einer Schätzung: eigene beim Begriff (3. Feld), sonst die der Karte, sonst 10 %
-  function itemTol(card, item) { return typeof item[2] === "number" ? item[2] : card.tol != null ? card.tol : 0.1; }
+  // Regel: Auf Karten, die überall dieselbe Größe abfragen (gemeinsame Einheit oder Einwohner), bekommen kleinere Werte
+  // mehr Spielraum – der größte Wert die Karten-Toleranz, der kleinste die doppelte (dazwischen logarithmisch).
+  // Karten mit gemischten Größen (z. B. „Südtirol in Zahlen“) behalten überall die Karten-Toleranz.
+  function itemTol(card, item) {
+    const base = card.tol != null ? card.tol : 0.1;
+    if (!(card.unit || /Einwohner/.test(card.q))) return base;
+    const vals = card.items.map((x) => Math.abs(x[1])).filter((x) => x > 0), max = Math.max(...vals), min = Math.min(...vals), v = Math.abs(item[1]);
+    if (!(max > min) || !(v > 0)) return base;
+    const f = (Math.log(max) - Math.log(v)) / (Math.log(max) - Math.log(min));
+    return Math.round(base * (1 + f) * 100) / 100;
+  }
   function estRange(card, val, t) {
     const tol = t * Math.abs(val);
     const r = (x) => Number(x.toPrecision(4));
