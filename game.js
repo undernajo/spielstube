@@ -828,11 +828,12 @@
   function guestSettingsHtml() {
     const lb = view.lobby;
     if (!lb) return "";
-    const row = (on, name, detail) => `<div class="setopt ro ${on ? "on" : ""}"><span class="ro-mark">${on ? "✓" : ""}</span>
+    // radio = Einfachauswahl beim Gastgeber -> runder Punkt statt Häkchen
+    const row = (on, name, detail, radio) => `<div class="setopt ro ${on ? "on" : ""} ${radio ? "radio" : ""}"><span class="ro-mark">${on && !radio ? "✓" : ""}</span>
       <span class="setname">${name}</span><span class="setcount">${detail}</span></div>`;
     if (view.game === "slf") {
-      const presets = Object.entries(SLF.PRESETS).map(([k, p]) => row(lb.slf.preset === k, esc(p.name), esc(p.cats.join(" · "))));
-      if (lb.slf.preset === "eigene") presets.push(row(true, "Eigene", esc(lb.slf.cats.join(" · "))));
+      const presets = Object.entries(SLF.PRESETS).map(([k, p]) => row(lb.slf.preset === k, esc(p.name), esc(p.cats.join(" · ")), true));
+      if (lb.slf.preset === "eigene") presets.push(row(true, "Eigene", esc(lb.slf.cats.join(" · ")), true));
       return `<div class="field"><span>Kategorien (wählt der Gastgeber)</span><div class="setlist">${presets.join("")}</div></div>
         <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
     }
@@ -842,7 +843,7 @@
         return `<div class="field"><span>Orte</span><div class="setlist">${row(true, esc(r.name), esc(r.places.length + " Orte, z. B. Bozen · Venedig · München …"))}</div></div>
         <p class="muted small">${lb.geo.rounds} Runden · ${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden pro Runde</p>`;
       }
-      const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), ""));
+      const regs = Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) => row(lb.geo.region === k, esc(r.name), "", true));
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
@@ -854,7 +855,7 @@
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
-      return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n]) => row(lb.wl.pack === k, esc(n), "")).join("")}</div></div>
+      return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n]) => row(lb.wl.pack === k, esc(n), "", true)).join("")}</div></div>
         <p class="muted small">${lb.wl.rounds} Impulse</p>`;
     }
     const sets = L.SET_KEYS.map((k) => row(lb.sets.includes(k), esc(SET_NAMES[k]), `${CARDS.filter((c) => (c.set || "standard") === k).length} Karten`));
