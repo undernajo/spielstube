@@ -43,8 +43,8 @@
     const seats = s.players.filter((p) => p.connected).slice(0, 2).map((p) => p.id);
     if (seats.length < 2) return false;
     const target = TARGETS.includes(Number(opts.target)) ? Number(opts.target) : 5;
-    const write = WRITE[String(opts.write)] ? String(opts.write) : "120";
-    const answer = ANSWER[String(opts.answer)] ? String(opts.answer) : "30";
+    const write = WRITE[String(opts.write)] ? String(opts.write) : "0";
+    const answer = ANSWER[String(opts.answer)] ? String(opts.answer) : "0";
     const avoid = new Set(opts.avoid || []);
     const all = []; data().forEach((c, ci) => c.answers.forEach((_, ai) => all.push([ci, ai])));
     const fresh = shuffle(all.filter(([ci, ai]) => !avoid.has(keyOf(ci, ai)))), old = shuffle(all.filter(([ci, ai]) => avoid.has(keyOf(ci, ai))));

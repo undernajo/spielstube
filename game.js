@@ -139,7 +139,7 @@
   const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
   let duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
   const FQ = window.S10Frage, FQDATA = window.SCHLAU10_FRAGE || [];
-  let fqOpts = Object.assign({ target: 5, write: "120", answer: "30" }, store.get("s10-fq") || {});
+  let fqOpts = Object.assign({ target: 5, write: "0", answer: "0" }, store.get("s10-fq") || {});
   const fqAllKeys = () => FQDATA.flatMap((c, ci) => c.answers.map((_, ai) => FQ.keyOf(ci, ai)));
   const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
   let wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
@@ -1273,7 +1273,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
     if (view.game === "frage" && lb.frage) {
-      return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["120"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["30"]).name)} zum Antworten</p>`;
+      return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
     }
     if (view.game === "duell" && lb.duell) {
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
