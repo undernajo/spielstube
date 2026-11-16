@@ -244,10 +244,20 @@
       <g transform="translate(53 156.5) scale(.44)">${HOUSE}</g>`;
     return frame(corner("A", suit, c) + sym(suit, 60, 38, 1.9, er) + sym(suit, 60, 91, 1.9, er) + ribbon + alps);
   }
+  // Weli: je drei Schellen oben und unten, lila Schriftband in der Mitte, lila Doppelrahmen (auch in der Hand gut erkennbar)
   function weli() {
-    return frame(corner("6", "schelle", "#b07d00", false, false) + PIPS[6].map(([x, y]) => sym("schelle", x, y, PIP_SCALE[6])).join("") + `
-      <path d="M18 106 H102 L95 124 H25Z" fill="#7b2fb5"/>
-      <text x="60" y="119.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="#fff" letter-spacing="2.5">WELI</text>`);
+    const v = "#7b2fb5";
+    const pips = [[36, 34], [84, 34], [60, 62], [60, 128], [36, 156], [84, 156]].map(([x, y]) => sym("schelle", x, y, PIP)).join("");
+    const ribbon = `<g transform="translate(0 -36)">
+      <path d="M27 127 L15 128 L20 133.5 L15 140 L29 139Z" fill="${v}" stroke="#2a1040" stroke-opacity=".5" stroke-width=".8"/>
+      <path d="M93 127 L105 128 L100 133.5 L105 140 L91 139Z" fill="${v}" stroke="#2a1040" stroke-opacity=".5" stroke-width=".8"/>
+      <path d="M27 127 L29 139 L32 136Z M93 127 L91 139 L88 136Z" fill="#000" opacity=".35"/>
+      <path d="M26 124 Q60 119 94 124 L94 137 Q60 132 26 137Z" fill="${v}" stroke="#2a1040" stroke-opacity=".5" stroke-width=".8"/>
+      <path d="M28 126.5 Q60 121.8 92 126.5" stroke="#fff" stroke-opacity=".35" stroke-width=".9" fill="none"/>
+      <text x="60" y="134" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="10.5" fill="#ffc83d" stroke="#2a1040" stroke-width="2.2" paint-order="stroke" letter-spacing="2.5">WELI</text></g>`;
+    const border = `<rect x="3.5" y="3.5" width="${W - 7}" height="${H - 7}" rx="9.5" fill="none" stroke="${v}" stroke-width="2.2"/>
+      <rect x="7" y="7" width="${W - 14}" height="${H - 14}" rx="7" fill="none" stroke="${v}" stroke-opacity=".55" stroke-width="1"/>`;
+    return frame(border + pips + ribbon);
   }
   function back() {
     let dots = "";
