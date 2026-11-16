@@ -707,7 +707,8 @@
       const turn = v.phase === "playing" && i === v.turn;
       const res = v.roundResult && v.roundResult.find((r) => r.id === p.id);
       const pct = Math.min(100, (p.score / v.target) * 100);
-      const rp = v.phase === "playing" ? (p.status === "out" ? "Runde: 0" : `Runde: ${p.roundPts ? "+" + p.roundPts : 0}`) : res ? `Runde: ${res.gained ? "+" + res.gained : 0}` : "";
+      // Rundenpunkte nur zeigen, wenn es welche gibt: „+3 offen“ während der Runde, „+3“ nach der Runde
+      const rp = v.phase === "playing" ? (p.status !== "out" && p.roundPts ? `+${p.roundPts} offen` : "") : res && res.gained ? `+${res.gained}` : "";
       const badge = v.phase === "playing" ? (turn ? "am Zug" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]) : "";
       return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
         <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
@@ -715,7 +716,6 @@
           <span class="chip-score"><b>${p.score}</b><small>/${v.target}</small></span></div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         <div class="chip-l2"><span class="rpts ${res && res.gained ? "pos" : ""}">${rp}</span>
-          ${p.id === v.hostId ? `<span class="host-tag" title="Das Spiel läuft auf diesem Gerät">Gastgeber</span>` : ""}
           ${badge ? `<span class="badge">${badge}</span>` : ""}</div>
       </div>`;
     }).join("");
@@ -750,10 +750,8 @@
         </div>`;
     } else if (v.phase === "playing") {
       banner = myTurn
-        ? `<div class="banner me row"><div class="banner-text">Wähle eine Antwort${me.roundPts ? ` – oder sichere deine ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""}` : ""}.</div>
-            <button id="pass" class="btn">Passen${me.roundPts ? ` (+${me.roundPts})` : ""}</button></div>`
-        : `<div class="banner row"><div class="banner-text"><span class="pdot" style="--pc:${colorOf(cur.id)}"></span> <b>${esc(cur.name)}</b> ist am Zug …</div>
-            ${isHost && !cur.connected ? `<button id="skip" class="btn ghost sm">Getrennt – überspringen</button>` : ""}</div>`;
+        ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "Passen"}</button>`
+        : isHost && !cur.connected ? `<div class="banner row"><div class="banner-text"><b>${esc(cur.name)}</b> ist getrennt.</div><button id="skip" class="btn ghost sm">Überspringen</button></div>` : "";
     } else if (v.phase === "roundEnd") {
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
         <button id="next" class="btn primary">Nächste Runde</button></div>`;

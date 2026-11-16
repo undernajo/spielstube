@@ -819,3 +819,5 @@ textarea { resize: vertical; font: inherit; }
   .game-grid { grid-template-areas: "board players" "board action" "board ." "board log" "board tools"; grid-template-rows: auto auto 1fr auto auto; }
   .game-grid > .log.compact { align-self: end; }
 }
+.pass-btn { width: 100%; padding: 12px; font-size: 1rem; }
+.chip-l2 .rpts:empty { display: none; }
