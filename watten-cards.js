@@ -143,20 +143,63 @@
            <path d="M${x - 11.3} 46.4 Q${x - 9.5} 49 ${x - 8.5} 47.3 Q${x - 7.5} 49.6 ${x - 6.1} 46.8" stroke="#3a2f22" stroke-width="1.1" fill="none" stroke-linecap="round"/>
            <rect x="${x - 9.2}" y="54.4" width="3.6" height="2.2" rx=".6" fill="#b08a3e" stroke="${ink}" stroke-width=".4"/>`
         : `<path d="M${x - 9} 59 Q${x} 50 ${x + 9} 59 L${x + 13} 61 L${x - 9} 61Z" fill="${c}" stroke="${ink}" stroke-width="1"/>`;
-      fig = `
-        <path d="M${x - 12} 106 C${x - 12} 84 ${x - 8} 78 ${x} 77 C${x + 8} 78 ${x + 12} 84 ${x + 12} 106Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
-        <path d="M${x - 12} 84 L${x - 17} 104" stroke="${c}" stroke-width="5" stroke-linecap="round"/><path d="M${x + 12} 84 L${x + 17} 104" stroke="${c}" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="${x - 17}" cy="106" r="2.6" fill="${skin}" stroke="${ink}" stroke-width=".8"/><circle cx="${x + 17}" cy="106" r="2.6" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
-        <rect x="${x - 12}" y="103" width="24" height="3" fill="#2a1d10"/>
-        <path d="M${x - 4} 78 L${x} 86 L${x + 4} 78" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.3"/>
-        <rect x="${x - 9}" y="106" width="7.5" height="30" rx="2" fill="${pants}"/><rect x="${x + 1.5}" y="106" width="7.5" height="30" rx="2" fill="${pants}"/>
-        <rect x="${x - 11}" y="135" width="10" height="4.5" rx="2" fill="#2a1d10"/><rect x="${x + 1}" y="135" width="10" height="4.5" rx="2" fill="#2a1d10"/>
-        ${face(x, 67)}${hat}`;
+      const legs = (top, stock) => `
+        <rect x="${x - 10}" y="${top}" width="8.5" height="${stock - top}" rx="2" fill="${pants}"/><rect x="${x + 1.5}" y="${top}" width="8.5" height="${stock - top}" rx="2" fill="${pants}"/>
+        <rect x="${x - 9.5}" y="${stock}" width="7.5" height="${134 - stock}" rx="1.5" fill="#f4efe4" stroke="#b9ad92" stroke-width=".6"/><rect x="${x + 2}" y="${stock}" width="7.5" height="${134 - stock}" rx="1.5" fill="#f4efe4" stroke="#b9ad92" stroke-width=".6"/>
+        <path d="M${x - 12} 138 Q${x - 12} 133 ${x - 6} 133 H${x - 1.5} V138Z" fill="#2a1d10"/><path d="M${x + 12} 138 Q${x + 12} 133 ${x + 6} 133 H${x + 1.5} V138Z" fill="#2a1d10"/>`;
+      if (kind === "O") {
+        // Ober: gestandener Tiroler – Joppe in der Kartenfarbe mit Hornknöpfen, Weste, Schnurrbart, Hand in der Hüfte, Wanderstock
+        fig = `
+          <path d="M${x + 21} 70 V137" stroke="#6e4520" stroke-width="2.4" stroke-linecap="round"/><path d="M${x + 21} 70 q0 -4 -4 -4" stroke="#6e4520" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          ${legs(110, 124)}
+          <path d="M${x - 14} 112 C${x - 15} 88 ${x - 10} 73 ${x} 72 C${x + 10} 73 ${x + 15} 88 ${x + 14} 112Z" fill="#f4efe4" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M${x - 5} 74 L${x - 4} 110 M${x + 5} 74 L${x + 4} 110" stroke="#c9b48a" stroke-width="5"/>
+          <path d="M${x - 14} 112 C${x - 15} 88 ${x - 10} 73 ${x - 3} 72 L${x - 7} 112Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M${x + 14} 112 C${x + 15} 88 ${x + 10} 73 ${x + 3} 72 L${x + 7} 112Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M${x - 3} 72 L${x - 8} 84 L${x - 6} 72Z M${x + 3} 72 L${x + 8} 84 L${x + 6} 72Z" fill="#2f3a26"/>
+          <g fill="#7a5a32" stroke="${ink}" stroke-width=".5">${[88, 96, 104].map((y) => `<circle cx="${x - 9}" cy="${y}" r="1.4"/><circle cx="${x + 9}" cy="${y}" r="1.4"/>`).join("")}</g>
+          <path d="M${x - 13} 77 Q${x - 23} 86 ${x - 19} 95 Q${x - 16} 99 ${x - 12} 99" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M${x - 13} 77 Q${x - 23} 86 ${x - 19} 95 Q${x - 16} 99 ${x - 12} 99" stroke="${ink}" stroke-opacity=".35" stroke-width=".8" fill="none"/>
+          <circle cx="${x - 11.5}" cy="99" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <path d="M${x + 13} 77 Q${x + 19} 86 ${x + 20} 95" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="${x + 20.5}" cy="97" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <circle cx="${x}" cy="61" r="10.5" fill="${skin}" stroke="${ink}" stroke-width="1.1"/>
+          <circle cx="${x - 3.6}" cy="59.5" r="1.3" fill="${ink}"/><circle cx="${x + 3.6}" cy="59.5" r="1.3" fill="${ink}"/>
+          <path d="M${x - 2.5} 59 Q${x - 3.6} 56 ${x - 5.5} 57.2 M${x + 2.5} 59 Q${x + 3.6} 56 ${x + 5.5} 57.2" stroke="${ink}" stroke-width=".7" fill="none" opacity=".6"/>
+          <path d="M${x} 64.2 Q${x - 4} 62.5 ${x - 7.5} 66.5 Q${x - 4} 65.5 ${x} 66.2 Q${x + 4} 65.5 ${x + 7.5} 66.5 Q${x + 4} 62.5 ${x} 64.2Z" fill="#5a3712"/>
+          <path d="M${x - 2.5} 68.4 Q${x} 69.6 ${x + 2.5} 68.4" stroke="${ink}" stroke-width=".9" fill="none"/>
+          <g transform="translate(0 -6.5) translate(${x} 59) scale(1.1) translate(${-x} -59)">${hat}</g>`;
+      } else {
+        // Unter: junger Bursch – Hemd in der Kartenfarbe, kurze Lederhose mit Hosenträgern, Kniestrümpfe, Bierkrug
+        fig = `
+          ${legs(104, 121)}
+          <rect x="${x - 10}" y="118" width="8.5" height="4" fill="${skin}"/><rect x="${x + 1.5}" y="118" width="8.5" height="4" fill="${skin}"/>
+          <path d="M${x - 14} 106 C${x - 15} 86 ${x - 10} 73 ${x} 72 C${x + 10} 73 ${x + 15} 86 ${x + 14} 106Z" fill="${c}" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M${x - 4} 73 L${x} 79 L${x + 4} 73" fill="#fff" stroke="${ink}" stroke-width=".7"/>
+          <path d="M${x - 14} 104 H${x + 14} L${x + 13} 118 H${x + 1} L${x} 112 L${x - 1} 118 H${x - 13}Z" fill="#8a5a2b" stroke="#4a2e12" stroke-width="1"/>
+          <path d="M${x - 9} 104 L${x - 7} 74 M${x + 9} 104 L${x + 7} 74" stroke="#6e4520" stroke-width="2.6"/>
+          <rect x="${x - 8}" y="88" width="16" height="4" rx="1" fill="#6e4520"/>
+          <circle cx="${x}" cy="90" r="1.3" fill="#f4efe4"/>
+          <path d="M${x - 13} 77 Q${x - 18} 88 ${x - 18} 100" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <circle cx="${x - 18}" cy="102" r="3" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <path d="M${x + 13} 77 Q${x + 20} 86 ${x + 19} 94" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <rect x="${x + 15}" y="80" width="11" height="15" rx="2" fill="#e8c35a" stroke="#8a6a12" stroke-width="1"/>
+          <path d="M${x + 26} 84 q5 0 5 4.5 q0 4.5 -5 4.5" stroke="#8a6a12" stroke-width="1.6" fill="none"/>
+          <path d="M${x + 14.5} 81 q1 -4 4 -3 q2 -3 5 -1 q3 -1 3 3 Z" fill="#fff" stroke="#c9c2b0" stroke-width=".6"/>
+          <circle cx="${x + 18.5}" cy="95" r="3.2" fill="${skin}" stroke="${ink}" stroke-width=".8"/>
+          <circle cx="${x}" cy="61" r="10.5" fill="${skin}" stroke="${ink}" stroke-width="1.1"/>
+          <path d="M${x - 9} 56 q-1 5 1 7 M${x + 9} 56 q1 5 -1 7" stroke="#7a4a1e" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <circle cx="${x - 3.6}" cy="60" r="1.3" fill="${ink}"/><circle cx="${x + 3.6}" cy="60" r="1.3" fill="${ink}"/>
+          <path d="M${x - 4.5} 64.5 Q${x + 0.5} 69.5 ${x + 5} 63.8" stroke="${ink}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+          <circle cx="${x - 6}" cy="64" r="1.6" fill="#f0a08a" opacity=".6"/><circle cx="${x + 6}" cy="64" r="1.6" fill="#f0a08a" opacity=".6"/>
+          <path d="M${x - 6} 53.5 q2 3 5 1 q2 3 5 0" stroke="#7a4a1e" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <g transform="translate(0 -7) translate(${x} 59) scale(1.15) translate(${-x} -59)">${hat}</g>`;
+      }
     }
     // Figur auf die ganze Karte vergrößern (Ecken und großes Farbsymbol bleiben frei)
     // ohne gespiegeltes Eckzeichen: Figur nutzt die ganze Karte
     // Figuren reichen vom oberen bis zum unteren Kartenrand
-    const tf = kind === "K" ? "translate(-15.4 -24) scale(1.2)" : "translate(-60.2 -77) scale(1.9 1.85)";
+    const tf = kind === "K" ? "translate(-15.4 -24) scale(1.2)" : kind === "U" ? "translate(-44 -34) scale(1.5)" : "translate(-44 -26) scale(1.5)";
     const er = suit === "eichel" ? 180 : 0; // Eichel bei Figuren mit Stiel nach unten
     const big = kind === "U" ? sym(suit, 22, 166, 1.15, er) : sym(suit, 22, 26, 1.15, er);
     return frame(corner(kind, suit, c, false, false) + `<g transform="${tf}">${fig}</g>` + big);
