@@ -1271,3 +1271,34 @@ body.qb-play .banner.win .trophy { display: none; }
 .setlist.qb-ro .setopt { cursor: default; }
 .setlist.qb-ro .setopt, .setlist.qb-ro input { pointer-events: none; }
 .setlist.qb-ro .setopt:not(.on):not(.dis) { opacity: .6; }
+
+/* Lobby Gastgeber: „So geht's“ rechts neben „Spiel wählen“, Regeln statt Kacheln */
+.pick-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.linkbtn { background: none; border: 0; padding: 2px 0; font: inherit; font-size: .85rem; font-weight: 600; color: color-mix(in srgb, var(--gc) 75%, #fff); cursor: pointer; }
+.linkbtn:hover { text-decoration: underline; }
+.rules-view { display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; border: 1.5px solid color-mix(in srgb, var(--gc) 55%, var(--line)); background: color-mix(in srgb, var(--gc) 7%, transparent); }
+.rv-title { display: flex; align-items: center; gap: 10px; }
+.rv-title b { font-size: 1.15rem; }
+.rv-body ul { margin: 0; padding-left: 20px; display: grid; gap: 7px; line-height: 1.45; }
+.rv-body p { margin: 0; }
+
+/* Gäste: Erklärung eines Spiels mit Wunsch-Knopf */
+.info-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.info-tab { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 6px; border-radius: 10px; border: 1.5px solid var(--line);
+  background: transparent; color: inherit; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; line-height: 1.15; }
+.info-tab.on { border-color: var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); }
+.info-tab .gt-icon.xs { width: 22px; height: 22px; flex: none; }
+.info-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.info-actions .gt-wish { position: static; }
+
+/* Wunsch-Knopf bleibt beim Lesen langer Erklärungen sichtbar */
+.info-actions { position: sticky; bottom: 0; z-index: 2; padding: 10px 0 4px; background: var(--panel); border-top: 1px solid var(--line); }
+/* Gäste-Kacheln: „wird gespielt“ / „Dein Wunsch“ / „💡 Name“ als kleines Etikett oben rechts, ohne zusätzliche Höhe */
+.lobby-guest .wishtile .gt-wish { position: absolute; top: 6px; right: 6px; margin: 0; max-width: 78px; padding: 1px 6px; font-size: .64rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lobby-guest .wishtile .gt-check { display: none; }
+
+/* Gastgeber-Kacheln: Wünsche als kleines Etikett oben rechts (neben dem Häkchen der Auswahl) */
+.lobby-host .gametile .gt-wish { position: absolute; top: 6px; right: 6px; margin: 0; max-width: 78px; padding: 1px 6px; font-size: .64rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lobby-host .gametile.on .gt-wish { right: 30px; }

@@ -1160,7 +1160,6 @@
 
   function renderLobby() {
     const isFile = location.protocol === "file:";
-    const rules = ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml, duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[isHost ? chosenGame : view.game] || rulesHtml;
     const settings = !isHost ? "" : `
           ${isMode(chosenGame) ? modeSwitchHtml() : ""}
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
@@ -1183,6 +1182,8 @@
             ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}
           ` : ""}`;
     // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
+    // Scroll-Stellung der Spalten merken: die Lobby wird bei jeder Änderung neu gezeichnet (z. B. nach einem Wunsch)
+    const keepScroll = [...app.querySelectorAll(".lobby .lobby-col")].map((c) => c.scrollTop), keepY = scrollY;
     app.innerHTML = `
       <main class="screen lobby ${isHost ? "lobby-host" : "lobby-guest"}">
         <h1 class="logo small">${LOGO}</h1>
@@ -1201,15 +1202,24 @@
             <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
             ${reportsHtml()}
           </div>
-          ${isHost ? `<div class="lobby-col lobby-games"><div class="panel">${gamePickerHtml()}</div><div class="rules-desk">${rules}</div></div>
-          <div class="lobby-col lobby-settings"><div class="panel">${settings}</div><div class="rules-mob">${rules}</div></div>`
+          ${isHost ? `<div class="lobby-col lobby-games"><div class="panel">${gamePickerHtml()}</div></div>
+          <div class="lobby-col lobby-settings"><div class="panel">${settings}</div></div>`
           : `<div class="lobby-col lobby-games"><div class="panel">${guestGamesHtml()}</div></div>
           <div class="lobby-col lobby-settings"><div class="panel">${gameBannerHtml()}${guestSettingsHtml()}
-              <p class="muted">Warte, bis der Gastgeber das Spiel startet …</p></div>${rules}</div>`}
+              <p class="muted">Warte, bis der Gastgeber das Spiel startet …</p></div></div>`}
         </div>
       </main>`;
+    app.querySelectorAll(".lobby .lobby-col").forEach((c, i) => { if (keepScroll[i]) c.scrollTop = keepScroll[i]; });
+    if (keepY && scrollY !== keepY) scrollTo(0, keepY);
     bindReports(renderLobby);
     bindGamePicker();
+    app.querySelectorAll("[data-info]").forEach((b) => b.onclick = () => {
+      guestInfo = b.dataset.info; guestInfoMode = null; renderLobby();
+      const f = app.querySelector(".lobby-games"); // am Handy: Erklärung beginnt evtl. oberhalb des Sichtbaren
+      if (f && f.getBoundingClientRect().top < 0) f.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    app.querySelectorAll("[data-infomode]").forEach((b) => b.onclick = () => { guestInfoMode = b.dataset.infomode; renderLobby(); });
+    app.querySelectorAll("[data-infoback]").forEach((b) => b.onclick = () => { guestInfo = null; renderLobby(); });
     app.querySelectorAll("[data-wish]").forEach((b) => b.onclick = () => {
       if (b.dataset.wish === groupOf(view.game)) return toast("Das wird gerade gespielt.", "info");
       send({ type: "wish", game: b.dataset.wish });
@@ -1402,13 +1412,34 @@
   const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", kindheit: "Kindheit der 2000er", mixed: "Gemischt" };
 
   // ---------- Spielauswahl & Einstellungen ----------
+  // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
+  function rulesFor(key) {
+    return ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[key] || rulesHtml;
+  }
+  const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
+  let rulesOpen = false; // Gastgeber: Spielauswahl oder „So geht's“ des gewählten Spiels
+  // Kopf der Spielfläche (Gastgeber und Gäste): Beschriftung links, „So geht's: …“ rechts; offen = Regeln statt Kacheln
+  function pickHeadHtml(label, key) {
+    const cur = GAMES.find((g) => g.key === key) || GAMES[0];
+    return `<div class="pick-head"><span>${rulesOpen ? "So geht's" : label}</span>
+      <button type="button" id="rulesToggle" class="linkbtn" style="--gc:${cur.color}">${rulesOpen ? "‹ Zurück zur Spielauswahl" : `So geht's: ${esc(cur.name)} ›`}</button></div>`;
+  }
+  function rulesViewHtml(key) {
+    const cur = GAMES.find((g) => g.key === key) || GAMES[0];
+    return `<div class="rules-view" style="--gc:${cur.color}">
+        <div class="rv-title"><span class="gt-icon" aria-hidden="true">${cur.icon}</span><div><b>${esc(cur.name)}</b><div class="muted small">${esc(cur.desc)}</div></div></div>
+        <div class="rv-body">${rulesBody(key)}</div></div>`;
+  }
   function gamePickerHtml() {
-    return `<div class="field"><span>Spiel wählen</span><div class="gamegrid" role="radiogroup">${TILES.map((g) => `
+    const head = pickHeadHtml("Spiel wählen", chosenGame);
+    if (rulesOpen) return `<div class="field">${head}${rulesViewHtml(chosenGame)}</div>`;
+    return `<div class="field">${head}<div class="gamegrid" role="radiogroup">${TILES.map((g) => `
       <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""}" style="--gc:${g.color}">
         <input type="radio" name="game" value="${g.key}" ${groupOf(chosenGame) === g.key ? "checked" : ""}>
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
-        ${wishTagHtml(g.key)}
+        ${guestTagHtml(g.key, true)}
         <span class="gt-check" aria-hidden="true">✓</span></label>`).join("")}</div></div>`;
   }
   // Spielart bei zusammengefassten Spielen (Landkarte: Wo liegt das? · Länder finden · Von oben)
@@ -1429,16 +1460,44 @@
     return names.length ? `<span class="gt-wish">💡 ${names.join(", ")}</span>` : "";
   }
   // Gäste: alle Spiele sehen und sich eines wünschen
+  // Gäste-Kachel: kurzes Etikett oben rechts – „läuft“ oder Wünsche („💡 Du“, „💡 Maria“, „💡 Du +1“, „💡 3“); volle Namen im Tooltip
+  // forHost: beim Gastgeber ohne „läuft“ (dort zeigt das Häkchen die Auswahl)
+  function guestTagHtml(key, forHost) {
+    if (!forHost && groupOf(view.game) === key) return `<span class="gt-wish now" title="Wird gerade gespielt">läuft</span>`;
+    const w = (view.lobby && view.lobby.wishes) || {};
+    const ids = Object.entries(w).filter(([, k]) => groupOf(k) === key).map(([id]) => id);
+    if (!ids.length) return "";
+    const names = ids.map((id) => id === myId ? "Du" : (view.players.find((p) => p.id === id) || { name: "?" }).name);
+    const mine = ids.includes(myId), others = ids.length - (mine ? 1 : 0);
+    const short = mine ? (others ? `Du +${others}` : "Du") : ids.length === 1 ? names[0] : String(ids.length);
+    return `<span class="gt-wish" title="Gewünscht von: ${esc(names.join(", "))}">💡 ${esc(short)}</span>`;
+  }
+  // Gäste: Kachel antippen zeigt die Erklärung des Spiels, dort kann man es sich wünschen
+  let guestInfo = null, guestInfoMode = null;
   function guestGamesHtml() {
     const myWish = view.lobby && view.lobby.wishes && view.lobby.wishes[myId];
-    return `<div class="field"><span>Alle Spiele – tippe, um dir eines zu wünschen</span><div class="gamegrid">${TILES.map((g) => `
-      <button type="button" class="gametile wishtile ${groupOf(view.game) === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""}" style="--gc:${g.color}" data-wish="${g.key}"
-        title="${groupOf(view.game) === g.key ? "Wird gerade gespielt" : myWish === g.key ? "Wunsch zurücknehmen" : "Wünsch dir " + esc(g.name)}">
+    if (guestInfo) {
+      const tile = TILES.find((g) => g.key === guestInfo) || TILES[0];
+      const modes = tile.modes || null;
+      const key = modes ? (modes.includes(guestInfoMode) ? guestInfoMode : modes.includes(view.game) ? view.game : modes[0]) : tile.key;
+      const playing = groupOf(view.game) === tile.key, wished = myWish && groupOf(myWish) === tile.key;
+      return `<div class="field"><div class="pick-head"><span>So geht's</span>
+          <button type="button" class="linkbtn" data-infoback style="--gc:${tile.color}">‹ Zurück zu allen Spielen</button></div>
+        ${modes ? `<div class="info-tabs">${modes.map((k) => { const g = GAMES.find((x) => x.key === k);
+          return `<button type="button" class="info-tab ${k === key ? "on" : ""}" style="--gc:${g.color}" data-infomode="${k}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span>${esc(g.name)}</button>`; }).join("")}</div>` : ""}
+        ${rulesViewHtml(key)}
+        <div class="info-actions">${playing ? `<span class="gt-wish now">wird gerade gespielt</span>`
+          : `<button type="button" class="btn ${wished ? "ghost" : "primary"}" data-wish="${tile.key}">${wished ? "Wunsch zurücknehmen" : "💡 Das wünsch ich mir"}</button>`}
+          ${wishTagHtml(tile.key)}</div></div>`;
+    }
+    return `<div class="field"><span>Alle Spiele – tippe für Erklärung und Wunsch</span><div class="gamegrid">${TILES.map((g) => `
+      <button type="button" class="gametile wishtile ${groupOf(view.game) === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""}" style="--gc:${g.color}" data-info="${g.key}"
+        title="So geht's: ${esc(g.name)}">
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
-        ${groupOf(view.game) === g.key ? `<span class="gt-wish now">wird gespielt</span>` : wishTagHtml(g.key)}
-        <span class="gt-check" aria-hidden="true">${myWish === g.key ? "💡" : "✓"}</span></button>`).join("")}</div></div>`;
+        ${guestTagHtml(g.key)}</button>`).join("")}</div></div>`;
   }
+
   function slfSettingsHtml() {
     const presetCats = slfOpts.preset !== "eigene" && SLF.PRESETS[slfOpts.preset] ? SLF.PRESETS[slfOpts.preset].cats : null;
     return `<label class="field"><span>Kategorien</span>
@@ -1538,6 +1597,8 @@
       chosenGame = key; store.set("s10-game", chosenGame); send({ type: "setGame", game: chosenGame }); publish();
     };
     app.querySelectorAll('input[name="game"]').forEach((r) => r.onchange = () => pickGame(r.value));
+    const rt = app.querySelector("#rulesToggle");
+    if (rt) rt.onclick = () => { rulesOpen = !rulesOpen; renderLobby(); };
     app.querySelectorAll("[data-mode]").forEach((b) => b.onclick = () => { if (b.dataset.mode !== chosenGame) pickGame(b.dataset.mode); });
     const saveOpts = () => store.set("s10-slf", slfOpts);
     const ps = app.querySelector("#slf-preset");
