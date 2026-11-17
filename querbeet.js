@@ -22,6 +22,17 @@
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
   const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "slf", "duell", "frage"];
+  // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
+  const MIXES = {
+    alle: { icon: "🎲", name: "Bunt gemischt", games: null },
+    wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "hl", "schaetzen", "hinweis", "duell"] },
+    welt: { icon: "🗺️", name: "Rund um die Welt", games: ["geo", "land", "umriss", "oben"] },
+    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage"] },
+    karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
+    kurz: { icon: "⚡", name: "Kurz & schnell", games: ["hl", "schaetzen", "bus", "siebzehn", "oben", "geo"] },
+  };
+  const mixOff = (key) => { const m = MIXES[key]; return m && m.games ? ORDER.filter((k) => !m.games.includes(k)) : []; };
+  const mixOf = (off) => Object.keys(MIXES).find((k) => { const o = mixOff(k); return o.length === off.length && o.every((x) => off.includes(x)); }) || null;
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
   // Auszeichnungen bei der Siegerehrung (je Art von Spiel)
@@ -156,5 +167,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { LENGTHS, POINTS, STAGES, ORDER, THEMES, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { LENGTHS, POINTS, STAGES, ORDER, THEMES, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

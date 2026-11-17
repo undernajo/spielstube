@@ -1756,3 +1756,9 @@ body.qb-play .banner.win .trophy { display: none; }
 @keyframes fq-shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
 @media (max-width: 600px) { .fq-choice { min-height: 72px; padding: 10px 6px; } .fq-choice b { font-size: 1.15rem; } }
 .fq-bubble-cat { margin-left: auto; padding: 2px 10px; border-radius: 99px; background: linear-gradient(135deg, #7e3fb8, #c084fc); color: #fff; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+
+/* Querbeet: Mischungen je nach Stimmung */
+.qb-mixes { display: flex; flex-wrap: wrap; gap: 6px; }
+.qb-mix { padding: 6px 12px; border-radius: 99px; border: 1.5px solid var(--line); background: transparent; color: inherit; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.qb-mix.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+@media (hover: hover) { .qb-mix:not(.on):hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); } }

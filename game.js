@@ -53,11 +53,12 @@
       <circle cx="47" cy="47" r="12" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/>
       <text x="47" y="52.2" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#2a1d00">66</text></svg>`;
   }
-  // Symbol für „Zehnkampf“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld)
+  // Symbol für „Zehnkampf“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld);
+  // drei schon aufgedeckt, verteilt im Ring: zwei richtig (grün), eine falsch (rot)
   function zehnIcon() {
     const tiles = Array.from({ length: 10 }, (_, i) => {
       const a = (-90 + i * 36) * Math.PI / 180, x = 32 + 23 * Math.cos(a), y = 32 + 23 * Math.sin(a);
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" fill="${i < 3 ? "#2fbf71" : "#fbf6ea"}" stroke="#2a2170" stroke-width="1"/>`;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5.6" fill="${({ 1: "#2fbf71", 4: "#ef4b5a", 7: "#2fbf71" })[i] || "#fbf6ea"}" stroke="#2a2170" stroke-width="1"/>`;
     }).join("");
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${tiles}
       <circle cx="32" cy="32" r="14.5" fill="#170f4d" stroke="#ffc83d" stroke-width="2"/>
@@ -1870,6 +1871,7 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
     });
+    app.querySelectorAll("[data-qbmix]").forEach((b) => b.onclick = () => { qbOpts.off = QB.mixOff(b.dataset.qbmix); store.set("s10-qb", qbOpts); publish(); });
     const qbAll = app.querySelector("#qb-all");
     if (qbAll) qbAll.onclick = () => { qbOpts.off = []; store.set("s10-qb", qbOpts); publish(); };
     const qbL = app.querySelector("#qb-length");
@@ -1925,7 +1927,8 @@
   // Liste der Querbeet-Spiele: beim Gastgeber zum Anhaken, bei Gästen gleich aussehend, aber nur zum Ansehen
   function qbGamesHtml(off, readOnly) {
     const two = view.players.filter((p) => p.connected).length === 2;
-    const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)</span>`
+    const mx = QB.mixOf(off), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
+    const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)${mxTxt}</span>`
       : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>`;
     return `<div class="field">${head}<div class="setlist ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = D.two && !two;
         return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
@@ -1967,6 +1970,8 @@
         `<option value="${k}" ${(qbOpts.theme || "mix") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label></div>
       <label class="field"><span>Joker</span><select id="qb-joker"><option value="1" ${qbOpts.joker !== false ? "selected" : ""}>Mit Joker – jeder darf eine Etappe doppelt zählen lassen</option>
         <option value="0" ${qbOpts.joker === false ? "selected" : ""}>Ohne Joker</option></select></label>
+      <div class="field"><span>Mischung je nach Stimmung</span><div class="qb-mixes">${Object.entries(QB.MIXES).map(([k, m]) =>
+        `<button type="button" class="qb-mix ${QB.mixOf(qbOpts.off) === k ? "on" : ""}" data-qbmix="${k}">${m.icon} ${esc(m.name)}</button>`).join("")}</div></div>
       ${qbGamesHtml(qbOpts.off, false)}
       <p class="muted small">Jede Etappe ist eine Kurzfassung. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>
       <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Querbeet starten</button>
