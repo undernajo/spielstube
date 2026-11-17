@@ -1323,9 +1323,9 @@ body.qb-play .banner.win .trophy { display: none; }
 .plist .kick:hover { color: #ff8a8a; border-color: #ff8a8a; }
 .plist li .host-tag + .kick, .plist li em + .kick { margin-left: 6px; }
 .plist li > .kick:only-of-type { margin-left: auto; }
-/* Gastgeber am Handy: feste Startleiste unten */
+/* Gastgeber am Handy und bei mittlerer Breite: feste Startleiste unten */
 #startbar { display: none; }
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   body.has-startbar #startbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; gap: 10px; align-items: center;
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: #1b163f; border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(0,0,0,.35); }
   body.has-startbar { padding-bottom: 84px; }
@@ -1412,3 +1412,7 @@ body.qb-play .banner.win .trophy { display: none; }
 .est-pin b { font-size: .72rem; line-height: 1.1; white-space: nowrap; color: var(--pc); }
 .est-pin small { font-size: .68rem; color: var(--muted); white-space: nowrap; line-height: 1; }
 .est-scale { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: 2px; }
+/* Gastgeber am Computer: „Spiel starten“ bleibt unten sichtbar, auch wenn die Einstellungen lang sind */
+@media (min-width: 1100px) {
+  .lobby-host .lobby-settings #start { position: sticky; bottom: 10px; z-index: 3; box-shadow: 0 0 0 6px var(--panel), 0 -14px 18px 6px var(--panel); }
+}

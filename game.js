@@ -1243,7 +1243,7 @@
             <label class="field"><span>Spielen bis</span>
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
             <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
-            ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}
+            
           ` : ""}`;
     // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
     // Scroll-Stellung der Spalten merken: die Lobby wird bei jeder Änderung neu gezeichnet (z. B. nach einem Wunsch)
@@ -1604,7 +1604,7 @@
         <label class="field"><span>Zeit</span><select id="slf-timer">${Object.entries(SLF.TIMERS).map(([k, t]) => `<option value="${k}" ${slfOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
       </div>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
-      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      `;
   }
   // Für Gäste: gut sichtbar, welches Spiel der Gastgeber gewählt hat
   // Kleines Spielsymbol mit Namen für die Kopfzeile der Spielbildschirme
@@ -1736,6 +1736,8 @@
       if (!(await askConfirm("Gespielte vergessen?", "Danach sind bei Schätzen, Hinweis für Hinweis und Umriss-Rätsel wieder alle Fragen neu.", "Vergessen"))) return;
       S.quizSeen = {}; store.set("s10-quiz-seen", {}); publish(); toast("Speicher gelöscht – alles wieder neu.", "ok");
     };
+    const qbAll = app.querySelector("#qb-all");
+    if (qbAll) qbAll.onclick = () => { qbOpts.off = []; store.set("s10-qb", qbOpts); publish(); };
     const qbL = app.querySelector("#qb-length");
     if (qbL) qbL.onchange = () => { qbOpts.length = Number(qbL.value); store.set("s10-qb", qbOpts); publish(); };
     app.querySelectorAll("[data-qbgame]").forEach((cb) => cb.onchange = () => {
@@ -1788,12 +1790,14 @@
           : `<label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>`}
       </div>
       <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
-      ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : ""}`;
   }
   // Liste der Querbeet-Spiele: beim Gastgeber zum Anhaken, bei Gästen gleich aussehend, aber nur zum Ansehen
   function qbGamesHtml(off, readOnly) {
     const two = view.players.filter((p) => p.connected).length === 2;
-    return `<div class="field"><span>Mit dabei${readOnly ? " (wählt der Gastgeber)" : ""}</span><div class="setlist ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = D.two && !two;
+    const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)</span>`
+      : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>`;
+    return `<div class="field">${head}<div class="setlist ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = D.two && !two;
         return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
           <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.short)}</span></label>`; }).join("")}</div></div>`;
   }
@@ -1813,7 +1817,7 @@
       <p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} sind neu.` : `Noch ${nw.fresh} von ${nw.total} neu – gespielte kommen erst wieder, wenn alle durch sind.`}
         ${nw.fresh < nw.total ? `<button id="quiz-reset" class="btn ghost sm">Gespielte vergessen</button>` : ""}</p>
       <button id="start" class="btn primary big" ${view.players.length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
-      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      `;
   }
   function qbSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
@@ -1827,7 +1831,7 @@
       ${qbGamesHtml(qbOpts.off, false)}
       <p class="muted small">Jede Etappe ist eine Kurzfassung. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>
       <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Querbeet starten</button>
-      ${!games.length ? `<p class="err small">Bitte mindestens ein Spiel auswählen.</p>` : n < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      ${!games.length ? `<p class="err small">Bitte mindestens ein Spiel auswählen.</p>` : ""}`;
   }
   function landSettingsHtml() {
     if (!needLandData()) return `<p class="muted">Länderkarte wird geladen …</p><button id="start" class="btn primary big" disabled>Spiel starten</button>`;
@@ -1847,14 +1851,14 @@
         <label class="field"><span>Zeit pro Runde</span>${sel("land-timer", LAND.TIMERS, landOpts.timer)}</label>
       </div>
       <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
-      ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : ""}`;
   }
   function hlSettingsHtml() {
     return `<label class="field"><span>Länge</span><select id="hl-length">${Object.entries(HL.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${hlOpts.length === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       <p class="muted small">${Object.keys(HLDATA).length} Kategorien, zufällig gezogen – z. B. Berge, Flüsse, Tiere, Filme, Lieder.</p>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
-      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+      `;
   }
   function fqSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
