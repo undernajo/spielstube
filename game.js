@@ -53,7 +53,7 @@
       <circle cx="47" cy="47" r="12" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/>
       <text x="47" y="52.2" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#2a1d00">66</text></svg>`;
   }
-  // Symbol für „Schlaue Zehn“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld)
+  // Symbol für „Zehnkampf“: der Ring mit zehn Antwortkärtchen um eine goldene „10“ (wie das Spielfeld)
   function zehnIcon() {
     const tiles = Array.from({ length: 10 }, (_, i) => {
       const a = (-90 + i * 36) * Math.PI / 180, x = 32 + 23 * Math.cos(a), y = 32 + 23 * Math.sin(a);
@@ -179,25 +179,26 @@
   }
   const GAMES = [
     { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
-    { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
+    { key: "zehn", color: "#8b7cff", name: "Zehnkampf", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "raten", color: "#ffb347", name: "Zahlen schätzen", desc: "Höher oder tiefer · Schätzen", icon: schaetzenIcon(), modes: ["hl", "schaetzen"] },
     { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Begriff erraten – je früher richtig, desto mehr Punkte", icon: hinweisIcon() },
     { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Umriss-Rätsel · Von oben", icon: geoIcon(), modes: ["geo", "land", "umriss", "oben"] },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
-    // Spielarten der Sammelkacheln „Zahlen schätzen“, „Landkarte“ und „Kartenspaß für alle“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
+    // Spielarten der Sammelkacheln „Zahlen schätzen“, „Landkarte“, „Schnelle Kartenrunde“ und „Klassiker zu zweit“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
     { key: "hl", group: "raten", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
     { key: "schaetzen", group: "raten", color: "#ffb347", name: "Schätzen", desc: "Zahl schätzen – wer am nächsten liegt", icon: schaetzenIcon() },
     { key: "umriss", group: "karte", color: "#ffd24d", name: "Umriss-Rätsel", desc: "Gebiet am Umriss erkennen", icon: umrissIcon() },
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
-    { key: "kartenrunde", color: "#2fbf71", name: "Kartenspaß für alle", desc: "Siebzehn und Vier · Stichhaltig · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "stich", "bus"] },
+    { key: "kartenrunde", color: "#2fbf71", name: "Schnelle Kartenrunde", desc: "Siebzehn und Vier · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "bus"] },
     { key: "siebzehn", group: "kartenrunde", color: "#2fbf71", name: "Siebzehn und Vier", desc: "Wer kommt am nächsten an 21?", icon: siebzehnIcon() },
     { key: "bus", group: "kartenrunde", color: "#ffc83d", name: "Busfahrt", desc: "Station für Station – weiterfahren oder aussteigen?", icon: busIcon() },
-    { key: "stich", group: "kartenrunde", color: "#6f8cff", name: "Stichhaltig", desc: "Stiche ansagen – und genau so viele holen", icon: stichIcon() },
-    { key: "watten", two: true, color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
-    { key: "schnapsen", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
+    { key: "stich", min2: true, color: "#6f8cff", name: "Stichhaltig", desc: "Stiche ansagen – und genau so viele holen", icon: stichIcon() },
+    { key: "klassik", two: true, color: "#e05a5a", name: "Klassiker zu zweit", desc: "Watten · Schnapsen", icon: wattenIcon(), modes: ["watten", "schnapsen"] },
+    { key: "watten", group: "klassik", two: true, color: "#e05a5a", name: "Watten", desc: "Der Südtiroler Klassiker", icon: wattenIcon() },
+    { key: "schnapsen", group: "klassik", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Bummerl für Bummerl", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
   ];
@@ -235,7 +236,7 @@
   const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
   let duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
   const FQ = window.S10Frage, FQDATA = window.SCHLAU10_FRAGE || [];
-  let fqOpts = Object.assign({ target: 5, write: "0", answer: "0" }, store.get("s10-fq") || {});
+  let fqOpts = Object.assign({ target: 5, write: "0", answer: "0", choices: "3" }, store.get("s10-fq") || {});
   const fqAllKeys = () => FQDATA.flatMap((c, ci) => c.answers.map((_, ai) => FQ.keyOf(ci, ai)));
   const WAT = window.S10Watten, WCARDS = window.S10WattenCards;
   let wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
@@ -244,7 +245,7 @@
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Kartenspiele", ["kartenrunde", "watten", "schnapsen"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Kartenspiele", ["kartenrunde", "stich", "klassik"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
     const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
@@ -659,7 +660,7 @@
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
-      frage: { target: Number(fqOpts.target), write: fqOpts.write, answer: fqOpts.answer },
+      frage: { target: Number(fqOpts.target), write: fqOpts.write, answer: fqOpts.answer, choices: fqOpts.choices },
       watten: { target: Number(wattenOpts.target), weli: wattenOpts.weli },
       schnapsen: { mode: schOpts.mode },
     };
@@ -680,10 +681,10 @@
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
-      const k = FQ.keyOf(...S.frage.order[S.frage.li]), seen = store.get("s10-fq-seen") || [];
-      if (!seen.includes(k)) { const all = fqAllKeys(), next = seen.concat(k).filter((x) => all.includes(x)); store.set("s10-fq-seen", all.every((x) => next.includes(x)) ? [k] : next); }
+      const k = FQ.curKey(S.frage), seen = store.get("s10-fq-seen") || [];
+      if (S.frage.step !== "write" && !seen.includes(k)) { const all = fqAllKeys(), next = seen.concat(k).filter((x) => all.includes(x)); store.set("s10-fq-seen", all.every((x) => next.includes(x)) ? [k] : next); }
     }
-    if (view.duell) { // gespielte Themen merken: sie kommen erst wieder, wenn alle einmal dran waren (wie bei Schlaue Zehn)
+    if (view.duell) { // gespielte Themen merken: sie kommen erst wieder, wenn alle einmal dran waren (wie bei Zehnkampf)
       const q = view.duell.list.q, seen = store.get("s10-du-seen") || [];
       if (!seen.includes(q)) {
         const next = seen.concat(q).filter((x) => DUDATA.some((l) => l.q === x));
@@ -1227,7 +1228,7 @@
   document.addEventListener("visibilitychange", () => { if (!document.hidden) document.title = BASE_TITLE; else if (view) reactToChanges(view); });
 
   const rulesHtml = `
-    <details class="rules"><summary>Regeln: Schlaue Zehn</summary>
+    <details class="rules"><summary>Regeln: Zehnkampf</summary>
       <ul>
         <li>Jede Karte hat eine Frage und <b>10 Antworten</b>.</li>
         <li>Wer dran ist, wählt eine noch offene Antwort und beantwortet sie – oder <b>passt</b>.</li>
@@ -1798,7 +1799,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
     if (view.game === "frage" && lb.frage) {
-      return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
+      return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${lb.frage.choices === "1" ? "1 Antwort vorgegeben" : "3 Antworten zur Auswahl"} · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
     }
     if (view.game === "duell" && lb.duell) {
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
@@ -1888,7 +1889,7 @@
     if (wT) wT.onchange = () => { wattenOpts.target = Number(wT.value); store.set("s10-watten", wattenOpts); publish(); };
     const wW = app.querySelector("#watten-weli");
     if (wW) wW.onchange = () => { wattenOpts.weli = wW.value; store.set("s10-watten", wattenOpts); publish(); };
-    [["#fq-target", "target"], ["#fq-write", "write"], ["#fq-answer", "answer"]].forEach(([id, k]) => {
+    [["#fq-target", "target"], ["#fq-write", "write"], ["#fq-answer", "answer"], ["#fq-choices", "choices"]].forEach(([id, k]) => {
       const el = app.querySelector(id);
       if (el) el.onchange = () => { fqOpts[k] = k === "target" ? Number(el.value) : el.value; store.set("s10-fq", fqOpts); publish(); };
     });
@@ -1954,7 +1955,8 @@
             `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>`
         : `<label class="field"><span>Runden</span><select id="kg-stichrounds">${KG.STICH_ROUNDS.map((n) =>
             `<option value="${n}" ${Number(kgOpts.stichRounds) === n ? "selected" : ""}>${n} Runden (1 bis ${n} Karten)</option>`).join("")}</select></label>`}
-      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
+      <button id="start" class="btn primary big" ${view.players.length < (mode === "stich" ? 2 : 1) ? "disabled" : ""}>Spiel starten</button>
+      ${mode === "stich" ? playerNoteHtml(view.players.length, false) : ""}`;
   }
   function qbSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
@@ -2003,6 +2005,7 @@
     const seen = store.get("s10-fq-seen") || [], all = fqAllKeys(), fresh = all.filter((k) => !seen.includes(k)).length;
     return `<label class="field"><span>Spielen bis</span><select id="fq-target">${FQ.TARGETS.map((t) =>
         `<option value="${t}" ${Number(fqOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
+      <label class="field"><span>Antworten für den Fragensteller</span>${sel("fq-choices", FQ.CHOICES, fqOpts.choices)}</label>
       <label class="field"><span>Zeit zum Frage-Ausdenken</span>${sel("fq-write", FQ.WRITE, fqOpts.write)}</label>
       <label class="field"><span>Zeit zum Antworten</span>${sel("fq-answer", FQ.ANSWER, fqOpts.answer)}</label>
       ${freshHtml(fresh, all.length, "Aufgaben", "frage")}
@@ -2014,6 +2017,7 @@
       <ul>
         <li>Einer ist <b>Fragensteller</b>: Er bekommt eine <b>Kategorie</b> und eine <b>Antwort</b>, z. B. „Religion“ und „3“. Die Antwort sieht nur er.</li>
         <li>Er denkt sich eine <b>Frage</b> aus, die in die Kategorie passt und genau diese Antwort hat – z. B. „Wie viele Weise kamen zur Krippe?“.</li>
+        <li>Mit <b>„3 Antworten zur Auswahl“</b> (einstellbar in der Lobby) bekommt der Fragensteller zur Kategorie drei Antworten und sucht sich die aus, zu der ihm die kniffligste Frage einfällt.</li>
         <li>Der andere sieht die Frage und tippt seine <b>Antwort</b>. Stimmt sie, bekommt <b>er</b> den Punkt – sonst der <b>Fragensteller</b>.</li>
         <li>Ist die Antwort nicht wörtlich gleich (z. B. „die drei Könige“), entscheidet der Fragensteller ehrlich, ob sie zählt.</li>
         <li>Fällt dem Fragensteller keine Frage ein, kann er <b>passen</b> – dann bekommt der andere den Punkt (ebenso, wenn die Zeit abläuft); antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
@@ -2162,7 +2166,7 @@
   const qbRulesHtml = `
     <details class="rules"><summary>Regeln: Querbeet</summary>
       <ul>
-        <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 1 Karte Schlaue Zehn, 3 Orte bei „Wo liegt das?“, 1 Buchstabe Stadt, Land, Fluss).</li>
+        <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 1 Karte Zehnkampf, 3 Orte bei „Wo liegt das?“, 1 Buchstabe Stadt, Land, Fluss).</li>
         <li>Pro Etappe zählt nur die Platzierung: Platz 1 bekommt ${QB.POINTS[0]} Partypunkte, Platz 2 ${QB.POINTS[1]}, Platz 3 ${QB.POINTS[2]}, alle anderen 1. Bei Gleichstand bekommen alle die höhere Punktzahl.</li>
         <li>Die letzte Etappe ist das Finale und zählt doppelt.</li>
         <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Partie. Vor einer Etappe gesetzt, zählen deine Partypunkte dieser Etappe doppelt (nicht im Finale).</li>
@@ -2842,14 +2846,15 @@
   const hlMine = (st) => hlPick && hlPick.key === st.ci + ":" + st.pos ? hlPick.dir : null;
 
   // ---------- Antwort sucht Frage ----------
-  let fqRendered = null, fqTimer = null, fqSent = null;
+  let fqRendered = null, fqTimer = null, fqSent = null, fqPick = null;
   function renderFrage() {
     const v = view, st = v.frage;
     if (!st) return;
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const seated = st.seats.includes(myId), iAsk = st.asker === myId, iGuess = st.guesser === myId;
-    const priv = iAsk && wattenPriv && wattenPriv.roundNo === st.round && wattenPriv.li === st.li ? wattenPriv : null;
+    const priv = iAsk && wattenPriv && wattenPriv.roundNo === st.round && (wattenPriv.li === st.li || (st.step === "write" && wattenPriv.options)) ? wattenPriv : null;
+    const pickSel = fqPick && fqPick.round === st.round && fqPick.code === v.code ? fqPick.i : null;
     const endAt = st.deadlineIn ? Date.now() + st.deadlineIn : 0;
     clearInterval(fqTimer);
     if (endAt) fqTimer = setInterval(() => {
@@ -2860,7 +2865,7 @@
       txt.textContent = left >= 60000 ? Math.floor(left / 60000) + ":" + String(Math.floor(left / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(left / 1000) + " s";
       bar.parentNode.classList.toggle("urgent", left < 10000);
     }, 250);
-    const key = [v.code, st.round, st.step, st.li, priv ? priv.answer : "", st.question, st.guess, st.complaint ? st.complaint.state : "", st.result && st.result.voided].join(":");
+    const key = [v.code, st.round, st.step, st.li, priv ? priv.answer + (priv.options ? "+" + priv.options.length : "") : "", st.question, st.guess, st.complaint ? st.complaint.state : "", st.result && st.result.voided].join(":");
     const activeId = st.step === "write" || st.step === "judge" ? st.asker : st.step === "answer" ? st.guesser : null;
     const players = () => st.seats.map((id) => {
       const ask = id === st.asker, dots = Array.from({ length: st.target }, (_, k) => `<i class="${k < st.score[id] ? "on" : ""}"></i>`).join("");
@@ -2881,18 +2886,24 @@
     const catTile = `<div class="fq-tile cat"><span>Kategorie</span><b>${esc(st.cat)}</b></div>`;
     const secret = (a) => `<div class="fq-tile secret"><span>Gesuchte Antwort</span><b>${esc(a)}</b>${iAsk && stepNo < 2 ? `<small>🤫 nur du siehst sie</small>` : ""}</div>`;
     const bubble = st.question ? `<div class="fq-bubble ${stepNo === 2 ? "small" : ""}" style="--pc:${colorOf(st.asker)}">
-        <div class="fq-bubble-who"><i class="fq-mini" style="--pc:${colorOf(st.asker)}">${esc(nameOf(st.asker).charAt(0).toUpperCase())}</i>${iAsk ? "Deine Frage" : esc(nameOf(st.asker)) + " fragt"}</div>
+        <div class="fq-bubble-who"><i class="fq-mini" style="--pc:${colorOf(st.asker)}">${esc(nameOf(st.asker).charAt(0).toUpperCase())}</i>${iAsk ? "Deine Frage" : esc(nameOf(st.asker)) + " fragt"}${st.cat ? `<span class="fq-bubble-cat">${esc(st.cat)}</span>` : ""}</div>
         <div class="fq-bubble-q">${esc(st.question)}</div></div>` : "";
     const waiting = (id, text, icon) => `<div class="fq-wait"><div class="fq-wait-ico">${icon}</div><div><b style="color:${colorOf(id)}">${esc(nameOf(id))}</b> ${text}<span class="fq-dotsanim"><i></i><i></i><i></i></span></div></div>`;
     let body = "";
     if (st.step === "write") {
-      if (iAsk) body = `<div class="fq-task">${catTile}${priv ? secret(priv.answer) : `<div class="fq-tile secret"><span>Gesuchte Antwort</span><b>…</b></div>`}</div>
-        ${time()}
+      const choose = iAsk && priv && priv.options;
+      if (choose) body = `<div class="fq-task one">${catTile}</div>
+        <p class="fq-choose-h"><b>Wähle eine Antwort</b> <span class="muted small">– zu der dir die gemeinste Frage einfällt · 🤫 nur du siehst sie</span></p>
+        <div class="fq-choices">${priv.options.map((o, i) => `<button type="button" class="fq-choice ${pickSel === i ? "on" : ""}" data-fqpick="${i}"><b>${esc(o.answer)}</b></button>`).join("")}</div>
+        ${time()}`;
+      else if (iAsk) body = `<div class="fq-task">${catTile}${priv ? secret(priv.answer) : `<div class="fq-tile secret"><span>Gesuchte Antwort</span><b>…</b></div>`}</div>
+        ${time()}`;
+      if (iAsk) body += `
         <form class="fq-form" autocomplete="off"><label for="fq-q">Deine Frage</label>
-          <textarea id="fq-q" rows="3" maxlength="300" placeholder="Eine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …"></textarea>
+          <textarea id="fq-q" rows="3" maxlength="300" placeholder="${choose ? (pickSel != null ? `Eine Frage, deren Antwort „${esc(priv.options[pickSel].answer)}“ ist …` : "Wähle oben zuerst eine Antwort …") : `Eine Frage, deren Antwort „${priv ? esc(priv.answer) : "…"}“ ist …`}"></textarea>
           <div class="fq-row"><button type="button" id="fq-pass" class="btn ghost">Passen</button><button class="btn primary">Frage stellen</button></div></form>
         <p class="muted small fq-hint">Die Frage soll in die Kategorie passen und eindeutig sein.<span class="fq-keys"> Enter schickt ab, Umschalt+Enter macht eine neue Zeile.</span></p>`;
-      else body = `<div class="fq-task one">${catTile}</div>${time()}${waiting(st.asker, "denkt sich eine Frage aus", "✍️")}`;
+      else body = `<div class="fq-task one">${catTile}</div>${time()}${waiting(st.asker, st.choices > 1 ? `wählt eine von ${st.choices} Antworten und denkt sich eine Frage aus` : "denkt sich eine Frage aus", "✍️")}`;
     } else if (st.step === "answer") {
       body = `${bubble}${time()}` + (iGuess
         ? `<form class="du-form fq-aform" autocomplete="off"><input id="fq-a" maxlength="80" placeholder="Deine Antwort …" enterkeyhint="send"><button class="btn primary">Antworten</button></form>`
@@ -2952,11 +2963,18 @@
       send({ type: "fqPass", round: st.round });
     });
     app.querySelectorAll("[data-fqcomplaint]").forEach((b) => b.onclick = () => send({ type: "fqComplaint", ok: b.dataset.fqcomplaint === "1" }));
+    // Auswahl der Antwort: nur lokal merken (Frage wird erst mit „Frage stellen“ verschickt)
+    app.querySelectorAll("[data-fqpick]").forEach((b) => b.onclick = () => {
+      const i = Number(b.dataset.fqpick); fqPick = { code: v.code, round: st.round, i };
+      app.querySelectorAll("[data-fqpick]").forEach((x) => x.classList.toggle("on", x === b));
+      const ta = app.querySelector("#fq-q"), o = priv && priv.options && priv.options[i];
+      if (ta && o) { ta.placeholder = `Eine Frage, deren Antwort „${o.answer}“ ist …`; ta.focus(); }
+    });
     const qf = app.querySelector(".fq-form");
     if (qf) {
       const ta = qf.querySelector("#fq-q");
       // Entwurf bleibt nur innerhalb derselben Runde erhalten (z. B. beim Neuzeichnen), danach ist das Feld leer
-      const dKey = "s10-fq-draft", dId = [v.code, st.round, st.li, st.asker].join(":");
+      const dKey = "s10-fq-draft", dId = [v.code, st.round, st.asker].join(":");
       try { const d = JSON.parse(sessionStorage.getItem(dKey) || "null"); if (d && d.id === dId) ta.value = d.text; else sessionStorage.removeItem(dKey); } catch (e) {}
       ta.oninput = () => { try { sessionStorage.setItem(dKey, JSON.stringify({ id: dId, text: ta.value })); } catch (e) {} };
       ta.focus();
@@ -2965,7 +2983,9 @@
         e.preventDefault(); const t = ta.value.trim(); if (!t) return;
         const k = "q" + st.round; if (fqSent === k) return; fqSent = k;
         try { sessionStorage.removeItem("s10-fq-draft"); } catch (e) {}
-        send({ type: "fqQuestion", round: st.round, text: t });
+        const pk = fqPick && fqPick.round === st.round && fqPick.code === v.code ? fqPick.i : null; // aktuelle Wahl, nicht die vom Zeichnen
+        if (priv && priv.options && pk == null) { const ch = app.querySelector(".fq-choices"); if (ch) { ch.classList.remove("shake"); void ch.offsetWidth; ch.classList.add("shake"); } fqSent = null; return; }
+        send({ type: "fqQuestion", round: st.round, text: t, pick: pk });
       };
     }
     const af = app.querySelector(".du-form");

@@ -1,5 +1,5 @@
 // Stadt, Land, Fluss – Spiellogik (läuft beim Gastgeber, testbar in Node).
-// Der Zustand liegt in s.slf; Spieler (s.players) teilt sich das Spiel mit Schlaue Zehn.
+// Der Zustand liegt in s.slf; Spieler (s.players) teilt sich das Spiel mit Zehnkampf.
 // Ablauf pro Runde: Buchstabe dreht sich (SPIN_MS) → schreiben → einsammeln → Auswertung Kategorie für Kategorie
 // (jeder kann fremde Antworten per Daumen anzweifeln; bei Mehrheit kippt die Wertung) → nächste Runde.
 (function (root) {

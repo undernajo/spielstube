@@ -24,7 +24,7 @@
     if (list.names) v.slice().forEach((x) => { const w = x.trim().split(/\s+/); if (w.length > 1) v.push(w[w.length - 1]); });
     return v;
   };
-  // sicher richtig (wie bei Schlaue Zehn: kleine Tippfehler werden verziehen)
+  // sicher richtig (wie bei Zehnkampf: kleine Tippfehler werden verziehen)
   function matches(list, item, text) {
     return L().textMatches(item[0], text, variants(list, item).slice(1), false);
   }

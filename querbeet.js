@@ -6,7 +6,7 @@
   const POINTS = [5, 3, 2]; // Platz 1, 2, 3 – alle weiteren bekommen 1 Partypunkt
   // Spiele mit Kurzfassung; kind sorgt für Abwechslung (nicht zweimal dieselbe Art hintereinander)
   const STAGES = {
-    zehn: { kind: "wissen", name: "Schlaue Zehn", short: "1 Karte", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
+    zehn: { kind: "wissen", name: "Zehnkampf", short: "1 Karte", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
     hl: { kind: "wissen", name: "Höher oder tiefer", short: "1 Kategorie, 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig." },
     geo: { kind: "karte", name: "Wo liegt das?", short: "3 Orte", rule: "Tippt auf der Karte, wo der Ort liegt – je näher, desto mehr Punkte." },
     land: { kind: "karte", name: "Länder finden", short: "5 Gebiete", rule: "Tippt das genannte Land (oder Bundesland, Region, Kanton) auf der Karte an." },

@@ -711,7 +711,7 @@ textarea { resize: vertical; font: inherit; }
 .rules .game-list { list-style: none; padding-left: 0; display: grid; gap: 8px; }
 .rules .game-list li { display: flex; align-items: center; gap: 8px; }
 .rules .game-list .gt-icon.xs { border: 0; background: color-mix(in srgb, var(--gc) 35%, #1a1640); }
-/* Schlaue Zehn: dunkle Kärtchen mit heller Schrift (blendet nicht) */
+/* Zehnkampf: dunkle Kärtchen mit heller Schrift (blendet nicht) */
 :root { --slot: #3a2f8a; --slot-ink: #f4f1ff; }
 .slot { border: 2px solid rgba(255, 255, 255, .14); box-shadow: 0 4px 0 rgba(0, 0, 0, .3); }
 .slot.open { border-color: rgba(255, 255, 255, .22); }
@@ -721,14 +721,14 @@ textarea { resize: vertical; font: inherit; }
 .slot.ok { border-color: rgba(255, 255, 255, .25); }
 .slot.bad { border-color: rgba(255, 255, 255, .25); }
 .slot.pending { border-color: transparent; }
-/* Schlaue Zehn: größere, besser lesbare Schrift auf den Kärtchen */
+/* Zehnkampf: größere, besser lesbare Schrift auf den Kärtchen */
 .slot { width: 23%; font-size: clamp(.8rem, 2.75cqw, 1.25rem); line-height: 1.15; padding: 6px 6px 8px; hyphens: auto; }
 .slot-t { font-weight: 500; letter-spacing: .3px; }
 .slot-a { font-weight: 600; }
 @media (max-width: 640px) {
   .slot { width: auto; font-size: 1.05rem; min-height: 78px; }
 }
-/* Schlaue Zehn: „Du bist dran“ gut sichtbar im Spielfeld */
+/* Zehnkampf: „Du bist dran“ gut sichtbar im Spielfeld */
 .zturn { align-self: center; margin-bottom: 6px; padding: 5px 16px; border-radius: 99px; font-weight: 700; font-size: clamp(.85rem, 2.6cqw, 1.1rem);
   background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 4px rgba(255, 200, 61, .25); animation: wpulse 1.6s ease-in-out infinite; }
 .ring.myturn .center { box-shadow: inset 0 0 0 4px var(--accent), 0 0 26px rgba(255, 200, 61, .35); }
@@ -830,7 +830,7 @@ textarea { resize: vertical; font: inherit; }
 }
 .wcard.pre-draw { opacity: 0; }
 .xcallchip { background: rgba(255, 200, 61, .2); color: #ffe3a0; }
-/* Schlaue Zehn: kompakter Verlauf */
+/* Zehnkampf: kompakter Verlauf */
 .log.compact { padding: 10px 14px; }
 .log.compact h3 { font-size: .8rem; margin-bottom: 4px; }
 .log.compact ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; font-size: .84rem; color: #c9c3ea; }
@@ -839,7 +839,7 @@ textarea { resize: vertical; font: inherit; }
 .log.compact summary { cursor: pointer; font-size: .78rem; color: var(--muted); }
 .log.compact details ul { margin-top: 4px; max-height: 180px; overflow: auto; }
 @media (min-width: 900px) { .game-grid > .log.compact { min-height: 0; } }
-/* Schlaue Zehn am Computer: „Letzte Züge“ unten in der Seitenleiste, über „Karte melden“ */
+/* Zehnkampf am Computer: „Letzte Züge“ unten in der Seitenleiste, über „Karte melden“ */
 @media (min-width: 900px) {
   .game-grid { grid-template-areas: "board players" "board action" "board ." "board log" "board tools"; grid-template-rows: auto auto 1fr auto auto; }
   .game-grid > .log.compact { align-self: end; }
@@ -984,7 +984,7 @@ textarea { resize: vertical; font: inherit; }
 .camtile.novideo .caminit { display: block; font: 700 2rem Nunito, sans-serif; color: var(--ink); }
 .camtap { margin-top: 6px; width: 100%; }
 #camdock { opacity: 1; background: #1b1640; } /* nicht durchsichtig */
-/* Gäste, Schlaue Zehn: Kartenzahl rechts neben dem Namen */
+/* Gäste, Zehnkampf: Kartenzahl rechts neben dem Namen */
 .setlist.inline-count .setopt.ro { grid-template-columns: auto minmax(0, 1fr) auto; }
 .setlist.inline-count .setopt.ro .setcount { grid-column: 3; text-align: right; white-space: nowrap; }
 @media (min-width: 1100px) { .lobby-guest .setlist.inline-count { grid-template-columns: 1fr; } }
@@ -1742,3 +1742,17 @@ body.qb-play .banner.win .trophy { display: none; }
 .qb-plus.minus { color: #ff8a8a; }
 .st-leadinfo { font-size: .95rem; }
 .st-leadinfo::first-letter { color: var(--accent); }
+
+/* Antwort sucht Frage: drei Antworten zur Auswahl */
+.fq-choose-h { margin: 0; text-align: center; }
+.fq-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.fq-choice { display: grid; gap: 6px; justify-items: center; align-content: center; text-align: center; min-height: 96px; padding: 12px 8px; border-radius: 16px;
+  background: #fbf6ea; color: #2a1d00; border: 3px solid transparent; font: inherit; cursor: pointer; transition: transform .12s, border-color .12s; }
+.fq-choice b { font: 700 1.45rem/1.1 Nunito, sans-serif; overflow-wrap: anywhere; }
+.fq-choice.on { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); transform: translateY(-2px); }
+.fq-choices:has(.on) .fq-choice:not(.on) { opacity: .55; }
+@media (hover: hover) { .fq-choice:hover { transform: translateY(-2px); } }
+.fq-choices.shake { animation: fq-shake .4s; }
+@keyframes fq-shake { 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+@media (max-width: 600px) { .fq-choice { min-height: 72px; padding: 10px 6px; } .fq-choice b { font-size: 1.15rem; } }
+.fq-bubble-cat { margin-left: auto; padding: 2px 10px; border-radius: 99px; background: linear-gradient(135deg, #7e3fb8, #c084fc); color: #fff; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }

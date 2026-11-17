@@ -2,8 +2,10 @@
 // Zwei Spieler. Der Fragensteller bekommt eine Kategorie und eine Antwort (z. B. Religion → 3) und denkt sich
 // eine passende Frage aus. Der andere beantwortet sie: richtig = Punkt für ihn, sonst Punkt für den Fragensteller.
 // Die gesuchte Antwort sieht bis zur Auflösung nur der Fragensteller (privat, wie Handkarten).
+// Wahlweise bekommt der Fragensteller zu der einen Kategorie drei Antworten und sucht sich eine aus.
 (function (root) {
   const TARGETS = [3, 5, 7];
+  const CHOICES = { "3": { name: "3 Antworten zur Auswahl", n: 3 }, "1": { name: "1 Antwort (vorgegeben)", n: 1 } };
   const WRITE = { "60": { name: "1 Minute", ms: 60000 }, "120": { name: "2 Minuten", ms: 120000 }, "180": { name: "3 Minuten", ms: 180000 }, "300": { name: "5 Minuten", ms: 300000 }, "0": { name: "ohne Zeitlimit", ms: 0 } };
   const ANSWER = { "15": { name: "15 Sekunden", ms: 15000 }, "30": { name: "30 Sekunden", ms: 30000 }, "45": { name: "45 Sekunden", ms: 45000 }, "60": { name: "1 Minute", ms: 60000 }, "0": { name: "ohne Zeitlimit", ms: 0 } };
   const data = () => root.SCHLAU10_FRAGE || [];
@@ -45,19 +47,20 @@
     const tn = Number(opts.target), target = TARGETS.includes(tn) || (opts.free && Number.isInteger(tn) && tn > 0 && tn <= 9) ? tn : 5; // free: Querbeet
     const write = WRITE[String(opts.write)] ? String(opts.write) : "0";
     const answer = ANSWER[String(opts.answer)] ? String(opts.answer) : "0";
+    const choices = CHOICES[String(opts.choices)] ? String(opts.choices) : "3";
     const avoid = new Set(opts.avoid || []);
     const all = []; data().forEach((c, ci) => c.answers.forEach((_, ai) => all.push([ci, ai])));
     const fresh = shuffle(all.filter(([ci, ai]) => !avoid.has(keyOf(ci, ai)))), old = shuffle(all.filter(([ci, ai]) => avoid.has(keyOf(ci, ai))));
     s.game = "frage"; s.phase = "frage";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.frage = { opts: { target, write, answer }, seats, score: { [seats[0]]: 0, [seats[1]]: 0 }, order: [...fresh, ...old], li: -1, round: 0,
+    s.frage = { opts: { target, write, answer, choices }, seats, score: { [seats[0]]: 0, [seats[1]]: 0 }, order: [...fresh, ...old], li: -1, cur: null, options: [], avoid: [...avoid], round: 0,
       asker: seats[Math.random() < 0.5 ? 0 : 1], history: [] };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
     nextRound(s, now);
     return true;
   }
   const other = (st, id) => st.seats.find((x) => x !== id);
-  const cur = (st) => { const [ci, ai] = st.order[st.li]; return { cat: data()[ci].cat, a: data()[ci].answers[ai] }; };
+  const cur = (st) => { const [ci, ai] = st.cur || st.order[st.li]; return { cat: data()[ci].cat, a: data()[ci].answers[ai] }; };
 
   function nextRound(s, now) {
     const st = s.frage;
@@ -67,7 +70,21 @@
     st.question = ""; st.guess = ""; st.result = null; st.step = "write";
     setDeadline(st, now, "write");
   }
-  function pick(st) { st.li = (st.li + 1) % st.order.length; }
+  // nächste Aufgabe aus dem Stapel; bei Auswahl kommen zwei weitere Antworten derselben Kategorie dazu
+  // (bevorzugt noch nicht gespielte). Vorgewählt ist die erste.
+  function pick(st) {
+    st.li = (st.li + 1) % st.order.length;
+    const [ci, ai] = st.order[st.li];
+    st.cur = [ci, ai]; st.options = [[ci, ai]];
+    const n = CHOICES[st.opts.choices || "1"].n;
+    if (n > 1) {
+      const played = new Set([...(st.avoid || []), ...st.history.map((h) => h.key)]);
+      const others = shuffle(data()[ci].answers.map((_, k) => k).filter((k) => k !== ai));
+      others.sort((x, y) => played.has(keyOf(ci, x)) - played.has(keyOf(ci, y))); // ungespielte zuerst
+      others.slice(0, n - 1).forEach((k) => st.options.push([ci, k]));
+    }
+  }
+  const multi = (st) => st.options && st.options.length > 1;
   function setDeadline(st, now, kind) {
     const ms = (kind === "write" ? WRITE[st.opts.write] : ANSWER[st.opts.answer]).ms;
     st.deadline = ms ? now + ms : 0;
@@ -77,7 +94,7 @@
     st.score[winner]++;
     st.result = { winner, why };
     st.complaint = null; // Beschwerde über eine unpassende Frage: { state: "open" | "accepted" | "rejected" }
-    st.history.push({ key: keyOf(...st.order[st.li]), winner });
+    st.history.push({ key: keyOf(...st.cur), winner });
     st.deadline = 0;
     st.step = st.score[winner] >= st.opts.target ? "final" : "reveal";
   }
@@ -99,6 +116,7 @@
         if (st.step !== "write" || pid !== st.asker || a.round !== st.round) return false;
         const q = String(a.text || "").trim().slice(0, 300);
         if (!q) return false;
+        if (multi(st) && a.pick != null) { const i = Number(a.pick); if (!Number.isInteger(i) || i < 0 || i >= st.options.length) return false; st.cur = st.options[i]; }
         st.question = q; st.step = "answer"; setDeadline(st, now, "answer");
         return true;
       }
@@ -143,7 +161,10 @@
   function privateState(s, id) {
     const st = s.frage;
     if (!st || id !== st.asker || st.step === "reveal" || st.step === "final") return null;
-    return { roundNo: st.round, li: st.li, answer: cur(st).a[0] };
+    const out = { roundNo: st.round, li: st.li, answer: cur(st).a[0] };
+    // Auswahl: alle drei Antworten mit Kategorie, solange die Frage noch nicht gestellt ist
+    if (st.step === "write" && multi(st)) out.options = st.options.map(([ci, ai]) => ({ answer: data()[ci].answers[ai][0] }));
+    return out;
   }
 
   function publicState(s, now) {
@@ -152,7 +173,7 @@
     const c = cur(st), open = st.step === "reveal" || st.step === "final";
     return {
       step: st.step, round: st.round, seats: st.seats.slice(), score: { ...st.score }, target: st.opts.target, asker: st.asker, guesser: other(st, st.asker),
-      cat: c.cat, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || open ? st.guess : "", li: st.li,
+      cat: c.cat, choices: st.options ? st.options.length : 1, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || open ? st.guess : "", li: st.li,
       deadlineIn: st.deadline ? Math.max(0, st.deadline - now) : 0,
       timerMs: (st.step === "write" ? WRITE[st.opts.write] : ANSWER[st.opts.answer]).ms,
       writeName: WRITE[st.opts.write].name, answerName: ANSWER[st.opts.answer].name,
@@ -161,5 +182,6 @@
     };
   }
 
-  root.S10Frage = { start, apply, tick, publicState, privateState, correct, numWords, keyOf, TARGETS, WRITE, ANSWER };
+  const curKey = (st) => keyOf(...(st.cur || st.order[st.li]));
+  root.S10Frage = { curKey, start, apply, tick, publicState, privateState, correct, numWords, keyOf, TARGETS, WRITE, ANSWER, CHOICES };
 })(typeof window !== "undefined" ? window : globalThis);
