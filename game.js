@@ -197,7 +197,7 @@
     { key: "watten", two: true, color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
     { key: "schnapsen", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
-    { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
+    { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -225,7 +225,11 @@
   let landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-land") || {});
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
-  let hlOpts = Object.assign({ length: "mittel" }, store.get("s10-hl") || {});
+  let hlOpts = Object.assign({ length: "mittel", theme: "mix" }, store.get("s10-hl") || {});
+  // Höher oder tiefer: Kategorien mit Südtirol-Bezug (für „Ohne Südtirol“; „Nur Südtirol“ wären zu wenige Kategorien)
+  const HL_ST = ["suedtirolBerge", "gemeinden"];
+  const HL_THEMES = { mix: "Gemischt", allgemein: "Ohne Südtirol" };
+  const hlCatCount = (theme) => Object.keys(HLDATA).filter((k) => theme !== "allgemein" || !HL_ST.includes(k)).length;
   const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
   let duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
   const FQ = window.S10Frage, FQDATA = window.SCHLAU10_FRAGE || [];
@@ -647,7 +651,7 @@
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
-      hl: { length: hlOpts.length },
+      hl: { length: hlOpts.length, theme: hlOpts.theme },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", joker: qbOpts.joker !== false },
       kg: { rounds: Number(kgOpts.rounds), busRounds: Number(kgOpts.busRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
@@ -1305,6 +1309,12 @@
     duell: () => store.set("s10-du-seen", []),
     frage: () => store.set("s10-fq-seen", []),
   };
+  // Einheitliche Anmerkung unter „Spiel starten“ bei Spielen ab 2 Spielern – nur wenn sie etwas erklärt
+  function playerNoteHtml(n, onlyTwo) {
+    if (n < 2) return `<p class="muted small">Mindestens zwei Spieler nötig – lade jemanden ein.</p>`;
+    if (onlyTwo && n > 2) return `<p class="muted small">Es spielen die ersten beiden, die anderen schauen zu.</p>`;
+    return "";
+  }
   function renderLobby() {
     const isFile = location.protocol === "file:";
     const settings = !isHost ? "" : `
@@ -1402,7 +1412,7 @@
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
-      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
+      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
       if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
@@ -1643,9 +1653,11 @@
   // Gäste-Kachel: kurzes Etikett oben rechts – „läuft“ oder Wünsche („💡 Du“, „💡 Maria“, „💡 Du +1“, „💡 3“); volle Namen im Tooltip
   // Spiele zu zweit: Etikett oben links; sind mehr als zwei da, spielen nur zwei mit (Kachel abgeblendet)
   const twoCrowd = () => view.players.filter((p) => p.connected).length > 2;
-  const twoTagHtml = (g) => !g.two ? "" : twoCrowd()
+  // Schild an der Kachel: „ab 2“ bei Spielen, für die man mindestens zu zweit sein muss;
+  // bei reinen Zweierspielen und mehr als zwei Spielern stattdessen der Hinweis „nur 2 spielen“
+  const twoTagHtml = (g) => !(g.two || g.min2) ? "" : g.two && twoCrowd()
     ? `<span class="gt-two warn" title="Ihr seid mehr als zwei – es spielen nur die ersten beiden, die anderen schauen zu.">nur 2 spielen</span>`
-    : `<span class="gt-two" title="Ein Spiel für zwei Spieler">zu zweit</span>`;
+    : `<span class="gt-two" title="Mindestens zwei Spieler nötig">ab 2</span>`;
   const twoCls = (g) => g.two && twoCrowd() ? "crowd" : "";
   // forHost: beim Gastgeber ohne „läuft“ (dort zeigt das Häkchen die Auswahl)
   function guestTagHtml(key, forHost) {
@@ -1771,7 +1783,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
     }
     if (view.game === "hl" && lb.hl) {
-      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${Object.keys(HLDATA).length} Kategorien (z. B. Berge, Flüsse, Tiere, Filme, Lieder) · je ${HL.PER_CAT} Vergleiche</p>`;
+      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -1859,6 +1871,8 @@
     if (duZ) duZ.onchange = () => { duOpts.timer = duZ.value; store.set("s10-du", duOpts); publish(); };
     const hlL = app.querySelector("#hl-length");
     if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
+    const hlT = app.querySelector("#hl-theme");
+    if (hlT) hlT.onchange = () => { hlOpts.theme = hlT.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
@@ -1866,7 +1880,7 @@
     const level = oben ? "gemischt" : GEO.LEVELS[geoOpts.level] ? geoOpts.level : "gemischt";
     const region = oben ? "oben" : geoOpts.region;
     const nw = GEODATA[region] ? GEO.countNew(S && S.geoSeen, region, level) : null;
-    return `${oben ? `<p class="muted small">Die wichtigsten Städte und ein paar Orte, die man von oben gut erkennt – von Bozen und Meran bis Venedig, München und Paris.</p>` : `<div class="row2">
+    return `${oben ? "" : `<div class="row2">
         <label class="field"><span>Region</span><select id="geo-region">${Object.entries(GEODATA).filter(([, r]) => !r.hidden).map(([k, r]) =>
           `<option value="${k}" ${geoOpts.region === k ? "selected" : ""}>${esc(r.name)} (${GEO.poolFor(k, level).length} Orte)</option>`).join("")}</select></label>
         <label class="field"><span>Schwierigkeit</span><select id="geo-level">${Object.entries(GEO.LEVELS).map(([k, l]) =>
@@ -1911,9 +1925,8 @@
     return `${mode === "siebzehn" ? `<label class="field"><span>Runden</span><select id="kg-rounds">${KG.ROUND_CHOICES.map((n) =>
         `<option value="${n}" ${Number(kgOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>`
         : mode === "bus" ? `<label class="field"><span>Runden</span><select id="kg-busrounds">${KG.BUS_ROUNDS.map((n) =>
-            `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>
-          <p class="muted small">Pro Runde 5 Stationen mit 1, 1, 2, 10 und 30 Punkten – nach jeder richtigen Station weiterfahren oder aussteigen.</p>`
-        : `<p class="muted small">Eine Partie hat 8 Punktekarten (1 bis 8 Punkte) – jeder bietet mit seinen eigenen 8 Karten.</p>`}
+            `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>`
+        : ""}
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
   function qbSettingsHtml() {
@@ -1952,7 +1965,8 @@
   function hlSettingsHtml() {
     return `<label class="field"><span>Länge</span><select id="hl-length">${Object.entries(HL.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${hlOpts.length === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
-      <p class="muted small">${Object.keys(HLDATA).length} Kategorien, zufällig gezogen – z. B. Berge, Flüsse, Tiere, Filme, Lieder.</p>
+      <label class="field"><span>Kategorien</span><select id="hl-theme">${Object.entries(HL_THEMES).map(([k, n]) =>
+        `<option value="${k}" ${hlOpts.theme === k ? "selected" : ""}>${n} (${hlCatCount(k)})</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
@@ -1964,10 +1978,9 @@
         `<option value="${t}" ${Number(fqOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit zum Frage-Ausdenken</span>${sel("fq-write", FQ.WRITE, fqOpts.write)}</label>
       <label class="field"><span>Zeit zum Antworten</span>${sel("fq-answer", FQ.ANSWER, fqOpts.answer)}</label>
-      <p class="muted small">${FQDATA.length} Kategorien, z. B. ${FQDATA.slice(0, 4).map((c) => esc(c.cat)).join(", ")} …</p>
       ${freshHtml(fresh, all.length, "Aufgaben", "frage")}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
-      <p class="muted small">${n < 2 ? "„Antwort sucht Frage“ braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Zu zweit, abwechselnd fragen und antworten."}</p>`;
+      ${playerNoteHtml(n, true)}`;
   }
   const fqRulesHtml = `
     <details class="rules"><summary>Regeln: Antwort sucht Frage</summary>
@@ -1990,7 +2003,7 @@
       ${(() => { const seen = store.get("s10-du-seen") || [], fresh = DUDATA.filter((l) => !seen.includes(l.q)).length;
         return freshHtml(fresh, DUDATA.length, "Themen", "duell"); })()}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
-      <p class="muted small">${n < 2 ? "Das Listen-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Listen-Duell zu zweit."}</p>`;
+      ${playerNoteHtml(n, true)}`;
   }
   const duRulesHtml = `
     <details class="rules"><summary>Regeln: Listen-Duell</summary>
@@ -2008,7 +2021,7 @@
     return `<label class="field"><span>Spielweise</span><select id="sch-mode">${Object.entries(SCH.MODES).map(([k, m]) =>
         `<option value="${k}" ${schOpts.mode === k ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
-      <p class="muted small">${n < 2 ? "Schnapsen braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : `Schnapsen zu zweit, ${SCH.TARGET} Punkte pro Bummerl.`}</p>`;
+      ${playerNoteHtml(n, true)}`;
   }
   const schRulesHtml = `
     <details class="rules"><summary>Regeln: Schnapsen</summary>
@@ -2029,7 +2042,7 @@
         <option value="schell" ${wattenOpts.weli !== "trumpf" ? "selected" : ""}>kleinste Schelle (Guter beim Schell-Ass, als Schlag der Rechte)</option>
         <option value="trumpf" ${wattenOpts.weli === "trumpf" ? "selected" : ""}>kleinster Trumpf (als Schlag die beste Karte, kein Guter)</option></select></label>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
-      <p class="muted small">${n < 2 ? "Watten braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Watten zu zweit nach Südtiroler Regeln."}</p>`;
+      ${playerNoteHtml(n, true)}`;
   }
   const wattenRulesHtml = `
     <details class="rules"><summary>Regeln: Watten zu zweit</summary>
@@ -2162,7 +2175,7 @@
       </div>
       ${best != null ? `<p class="muted small">Euer Rekord: <b>${best} Punkte</b></p>` : ""}
       <button id="start" class="btn primary big" ${view.players.length < 2 ? "disabled" : ""}>Spiel starten</button>
-      ${view.players.length < 2 ? `<p class="muted small">Für dieses Spiel braucht ihr mindestens zwei Spieler.</p>` : ""}`;
+      ${playerNoteHtml(view.players.length, false)}`;
   }
   const wlRulesHtml = `
     <details class="rules"><summary>Regeln: Gleiche Wellenlänge</summary>
