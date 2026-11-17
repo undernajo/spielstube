@@ -21,7 +21,7 @@ html, body { margin: 0; }
 body {
   background: radial-gradient(1200px 700px at 50% -10%, var(--bg2), var(--bg)) fixed, var(--bg);
   color: var(--ink);
-  font-family: "Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
   min-height: 100vh;
 }
@@ -302,7 +302,7 @@ textarea { resize: vertical; font: inherit; }
 }
 
 /* ---------- Emoji-Karten: Flaggen überall als Bild (Noto Color Emoji), große Darstellung ---------- */
-.emo .slot-t, .m-item.emo { font-family: "Fredoka", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
+.emo .slot-t, .m-item.emo { font-family: "Nunito", "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif; }
 .emo .slot-t { font-size: 1.7em; line-height: 1.15; letter-spacing: 2px; }
 .m-item.emo { font-size: 2.4rem; letter-spacing: 3px; }
 /* einzelne Emojis (Flaggen) groß darstellen */
@@ -421,14 +421,14 @@ textarea { resize: vertical; font: inherit; }
 .geo-goal { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: #1a1530; color: var(--accent);
   font-size: 22px; border: 3px solid var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.5); }
 .geo-pin-wrap { background: none; border: 0; }
-.leaflet-tooltip.geo-tip { background: #1f1a4a; color: #fff; border: 0; border-radius: 8px; font: 600 12px Fredoka, sans-serif; padding: 2px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.leaflet-tooltip.geo-tip { background: #1f1a4a; color: #fff; border: 0; border-radius: 8px; font: 600 12px Nunito, sans-serif; padding: 2px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
 .leaflet-tooltip.geo-tip.goal { background: var(--accent); color: var(--accent-ink); font-size: 13px; }
 .leaflet-tooltip.geo-tip::before { display: none; }
 /* Länder finden: Karte nur aus Umrissen, Meer einfarbig */
 .land-map { background: #17375a; cursor: pointer; }
 .land-map .leaflet-interactive { cursor: pointer; }
 .leaflet-tooltip.land-tip { text-align: center; line-height: 1.2; }
-.land-hint { font: 400 13px Fredoka, sans-serif; color: var(--muted); margin-left: 8px; letter-spacing: 0; white-space: nowrap; }
+.land-hint { font: 400 13px Nunito, sans-serif; color: var(--muted); margin-left: 8px; letter-spacing: 0; white-space: nowrap; }
 .leaflet-tooltip.land-tip.goal { background: #2fbf71; color: #fff; }
 .leaflet-tooltip.land-tip small { font-weight: 500; opacity: .85; }
 .geo-results { display: grid; gap: 6px; flex: 1 1 260px; }
@@ -476,7 +476,7 @@ textarea { resize: vertical; font: inherit; }
 .hl-vs { display: grid; place-items: center; font-size: 1.8rem; font-weight: 700; color: var(--muted); }
 .hl-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .hl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 12px; border-radius: var(--radius);
-  border: 2px solid var(--line); background: #1d1845; color: var(--ink, #fff); font: 700 1.25rem Fredoka, sans-serif; cursor: pointer; }
+  border: 2px solid var(--line); background: #1d1845; color: var(--ink, #fff); font: 700 1.25rem Nunito, sans-serif; cursor: pointer; }
 .hl-btn:hover:not(:disabled) { border-color: var(--accent); }
 .hl-btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .hl-btn.right { border-color: var(--ok); box-shadow: 0 0 0 3px rgba(47, 191, 113, .35); }
@@ -652,7 +652,7 @@ textarea { resize: vertical; font: inherit; }
 .wblock th .pdot { background: var(--pc); margin-right: 5px; display: inline-block; }
 .wblock th .wtag { margin-left: 4px; }
 .wkreuz { font-size: .8rem; color: var(--accent); letter-spacing: 2px; min-height: 1.1em; }
-.wblock tbody td { font-size: 1.05rem; height: 1.6em; font-family: "Fredoka", sans-serif; }
+.wblock tbody td { font-size: 1.05rem; height: 1.6em; font-family: "Nunito", sans-serif; }
 .wblock tbody td.strich { box-shadow: inset 0 -2px 0 var(--bad); }
 .wblock tbody td.sieg { color: var(--accent); font-weight: 700; }
 .wblock tfoot td { border-left: 0 !important; padding-top: 8px; }
@@ -750,8 +750,8 @@ textarea { resize: vertical; font: inherit; }
 .wdecide p { margin: 0; font-size: .9rem; text-align: center; }
 @media (min-width: 900px) { .wtable .wdecide { position: absolute; right: 18px; bottom: 18px; } }
 @media (min-width: 900px) {
-  .wtable .wdecide { width: 172px; right: 14px; bottom: 14px; padding: 10px; gap: 6px; }
-  .wtable .wdecide .btn { padding: 8px 6px; font-size: .85rem; }
+  .wtable .wdecide { width: 196px; right: 14px; bottom: 14px; padding: 10px; gap: 6px; box-sizing: border-box; }
+  .wtable .wdecide .btn { padding: 8px 8px; font-size: .85rem; white-space: normal; line-height: 1.2; min-width: 0; width: 100%; }
   .wtable .wdecide p { font-size: .8rem; }
 }
 .wdecide.wbidbox { border-color: rgba(255, 255, 255, .15); background: rgba(20, 16, 50, .75); }
@@ -936,7 +936,7 @@ textarea { resize: vertical; font: inherit; }
   border-radius: 14px; padding: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, .45); max-width: calc(100vw - 24px); }
 #camdock.show { display: block; }
 .camhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; background: none; border: 0; color: var(--muted);
-  font: 600 .78rem Fredoka, sans-serif; padding: 2px 6px 6px; cursor: pointer; }
+  font: 600 .78rem Nunito, sans-serif; padding: 2px 6px 6px; cursor: pointer; }
 #camdock.closed .camtiles { display: none; }
 #camdock.closed .camhead { padding-bottom: 2px; }
 .camtiles { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -954,7 +954,7 @@ textarea { resize: vertical; font: inherit; }
 .camhead { cursor: grab; user-select: none; touch-action: none; padding: 1px 4px 4px; }
 .camhead:active { cursor: grabbing; }
 .cambtns { display: inline-flex; gap: 2px; }
-.cambtns button { background: none; border: 0; color: var(--muted); font: 600 .9rem Fredoka, sans-serif; cursor: pointer; padding: 0 5px; line-height: 1; }
+.cambtns button { background: none; border: 0; color: var(--muted); font: 600 .9rem Nunito, sans-serif; cursor: pointer; padding: 0 5px; line-height: 1; }
 .cambtns button:hover { color: var(--ink); }
 .camtile { width: 112px; }
 #camdock.big .camtile { width: 200px; }
@@ -976,7 +976,7 @@ textarea { resize: vertical; font: inherit; }
 .caminit { display: none; }
 .camtile.novideo { display: grid; place-items: center; background: #2a2366; }
 .camtile.novideo video { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.camtile.novideo .caminit { display: block; font: 700 2rem Fredoka, sans-serif; color: var(--ink); }
+.camtile.novideo .caminit { display: block; font: 700 2rem Nunito, sans-serif; color: var(--ink); }
 .camtap { margin-top: 6px; width: 100%; }
 #camdock { opacity: 1; background: #1b1640; } /* nicht durchsichtig */
 /* Gäste, Schlaue Zehn: Kartenzahl rechts neben dem Namen */
@@ -1002,7 +1002,7 @@ textarea { resize: vertical; font: inherit; }
   background: radial-gradient(circle at 50% 0%, rgba(255, 200, 61, .16), transparent 70%), #15123a;
   border: 1px dashed rgba(255, 200, 61, .45); box-shadow: inset 0 2px 10px rgba(0, 0, 0, .35); transition: background .15s, border-color .15s; }
 .code-copy:hover { background: radial-gradient(circle at 50% 0%, rgba(255, 200, 61, .24), transparent 70%), #1a1645; border-color: var(--accent); }
-.code-copy::after { content: "zum Kopieren tippen"; display: block; margin-top: 2px; font: 500 .68rem Fredoka, sans-serif; letter-spacing: .5px; color: var(--muted); }
+.code-copy::after { content: "zum Kopieren tippen"; display: block; margin-top: 2px; font: 500 .68rem Nunito, sans-serif; letter-spacing: .5px; color: var(--muted); }
 /* Höher oder tiefer: Knöpfe mittig übereinander */
 .hl-btns { grid-template-columns: 1fr; justify-self: center; width: min(100%, 420px); gap: 10px; }
 
@@ -1031,7 +1031,7 @@ textarea { resize: vertical; font: inherit; }
 .du-pill .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); align-self: center; }
 .du-pill span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .du-pill em { color: var(--muted); font-style: normal; font-weight: 400; }
-.du-pill b { font: 700 1.5rem Fredoka, sans-serif; color: var(--pc); }
+.du-pill b { font: 700 1.5rem Nunito, sans-serif; color: var(--pc); }
 .du-pill small { color: var(--muted); }
 .du-pill.on { border-color: var(--pc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 22%, transparent); }
 .du-title { text-align: center; }
@@ -1072,7 +1072,7 @@ textarea { resize: vertical; font: inherit; }
 .fq-role { font-size: .7rem; font-weight: 600; color: var(--muted); margin-left: 4px; text-transform: uppercase; letter-spacing: .06em; }
 .fq-answer { display: grid; gap: 2px; justify-items: center; padding: 14px; border-radius: 16px; background: #fbf6ea; color: #2a1d00; text-align: center; }
 .fq-answer span { font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; color: #8a7a5a; }
-.fq-answer b { font: 700 2.2rem/1.1 Fredoka, sans-serif; word-break: break-word; }
+.fq-answer b { font: 700 2.2rem/1.1 Nunito, sans-serif; word-break: break-word; }
 .fq-form { display: grid; gap: 8px; }
 .fq-form textarea { font: inherit; font-size: 1.05rem; padding: 12px 14px; border-radius: 12px; resize: vertical; min-height: 84px; }
 .fq-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
@@ -1094,14 +1094,14 @@ textarea { resize: vertical; font: inherit; }
 .fq-player { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 16px; background: var(--panel, #1f1a4a);
   border: 2px solid transparent; min-width: 0; transition: border-color .2s, box-shadow .2s; }
 .fq-player.active { border-color: var(--pc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 20%, transparent); }
-.fq-ava { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--pc); color: #1b1640; font: 700 1.2rem Fredoka, sans-serif; }
+.fq-ava { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--pc); color: #1b1640; font: 700 1.2rem Nunito, sans-serif; }
 .fq-pinfo { flex: 1; min-width: 0; display: grid; gap: 3px; }
 .fq-pname { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fq-pname em { font-style: normal; font-weight: 400; color: var(--muted); }
 .fq-badge { justify-self: start; font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--muted); }
 .fq-player.active .fq-badge { background: color-mix(in srgb, var(--pc) 25%, transparent); color: var(--ink); }
 .fq-score { display: grid; justify-items: end; gap: 4px; }
-.fq-score b { font: 700 1.6rem/1 Fredoka, sans-serif; color: var(--pc); }
+.fq-score b { font: 700 1.6rem/1 Nunito, sans-serif; color: var(--pc); }
 .fq-dots { display: flex; gap: 3px; }
 .fq-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, .15); }
 .fq-dots i.on { background: var(--pc); }
@@ -1117,7 +1117,7 @@ textarea { resize: vertical; font: inherit; }
 .fq-task.one { grid-template-columns: minmax(0, 1fr); }
 .fq-tile { position: relative; display: grid; gap: 4px; align-content: center; justify-items: center; text-align: center; padding: 16px 14px; border-radius: 16px; min-height: 96px; }
 .fq-tile span { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
-.fq-tile b { font: 700 1.9rem/1.1 Fredoka, sans-serif; overflow-wrap: anywhere; }
+.fq-tile b { font: 700 1.9rem/1.1 Nunito, sans-serif; overflow-wrap: anywhere; }
 .fq-tile.cat { background: linear-gradient(135deg, #7e3fb8, #c084fc); color: #fff; }
 .fq-tile.cat span { color: rgba(255, 255, 255, .8); }
 .fq-tile.secret { background: #fbf6ea; color: #2a1d00; }
@@ -1140,8 +1140,8 @@ textarea { resize: vertical; font: inherit; }
 .fq-bubble::after { content: ""; position: absolute; left: 28px; bottom: -11px; width: 18px; height: 18px; background: inherit; border-right: 2px solid var(--pc);
   border-bottom: 2px solid var(--pc); transform: rotate(45deg); }
 .fq-bubble-who { display: flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--muted); margin-bottom: 6px; }
-.fq-mini { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--pc); color: #1b1640; font: 700 .75rem Fredoka, sans-serif; font-style: normal; }
-.fq-bubble-q { font: 600 1.45rem/1.3 Fredoka, sans-serif; overflow-wrap: anywhere; }
+.fq-mini { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--pc); color: #1b1640; font: 700 .75rem Nunito, sans-serif; font-style: normal; }
+.fq-bubble-q { font: 600 1.45rem/1.3 Nunito, sans-serif; overflow-wrap: anywhere; }
 .fq-bubble.small .fq-bubble-q { font-size: 1.15rem; }
 .fq-aform { margin-top: 6px; }
 .fq-aform input { font-size: 1.2rem; padding: 14px 16px; }
@@ -1153,7 +1153,7 @@ textarea { resize: vertical; font: inherit; }
 @keyframes fqDot { 30% { opacity: 1; } }
 .fq-said { display: grid; gap: 2px; justify-items: center; padding: 12px; border-radius: 14px; background: rgba(255, 255, 255, .06); margin-top: 6px; }
 .fq-said span { font-size: .78rem; color: var(--muted); }
-.fq-said b { font: 700 1.5rem Fredoka, sans-serif; overflow-wrap: anywhere; }
+.fq-said b { font: 700 1.5rem Nunito, sans-serif; overflow-wrap: anywhere; }
 .fq-stage .banner { margin: 0; }
 @media (max-width: 640px) {
   .fq-stage { padding: 14px; border-radius: 16px; }
@@ -1302,3 +1302,11 @@ body.qb-play .banner.win .trophy { display: none; }
 .lobby-host .gametile .gt-wish { position: absolute; top: 6px; right: 6px; margin: 0; max-width: 78px; padding: 1px 6px; font-size: .64rem;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lobby-host .gametile.on .gt-wish { right: 30px; }
+
+/* Schrift: Nunito überall (gut lesbar); nur das Logo „Spielstube“ bleibt in Fredoka */
+.logo, .brand-name { font-family: "Fredoka", "Nunito", system-ui, sans-serif; }
+/* Nunito ist feiner als Fredoka: Titel, Knöpfe und Namen eine Stufe kräftiger */
+.btn, .gt-name, .gtitle b, .game-name, .geo-name, .qb-gname, .rv-title b, h1, h2, h3 { font-weight: 800; }
+/* Karten (Leaflet) in eine eigene Ebene sperren: ihre hohen z-index-Werte sollen nicht über Leisten
+   wie der Querbeet-Etappenkarte oder Dialogen liegen */
+.leaflet-container { isolation: isolate; }
