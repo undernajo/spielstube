@@ -1,11 +1,11 @@
-// „Siebzehn und Vier“ und „Geheimgebot“ – Kartenspiele mit dem eigenen Blatt (läuft beim Gastgeber, testbar in Node).
-// Zustand in s.karten, alle Spieler spielen gleichzeitig.
+// „Kartenspaß für alle“ – Kartenspiele mit dem eigenen Blatt (läuft beim Gastgeber, testbar in Node). Zustand in s.karten.
 //  siebzehn: jeder für sich gegen die anderen – wer am nächsten an 21 liegt, gewinnt die Runde (über 21 = raus).
 //            Zwei Asse („Feuer“) schlagen alles, genau 21 gibt einen Bonuspunkt. Die eigenen Karten sieht nur man selbst.
-//  gebot:    jeder hat Sieben bis Ass einer Farbe als Gebotskarten. Eine Punktekarte wird aufgedeckt, alle bieten verdeckt –
-//            das höchste Gebot holt die Punkte; bei Gleichstand bleiben sie liegen und kommen zur nächsten Punktekarte dazu.
+//  bus:      Busfahrt – Station für Station tippen, weiterfahren oder aussteigen.
+//  stich:    Stichhaltig – Stichspiel mit Ansage. Runde 1 eine Karte pro Spieler, Runde 2 zwei usw.; alle sagen gleichzeitig
+//            geheim an, wie viele Stiche sie machen, dann wird reihum gespielt (Farbe bedienen, Trumpf sticht).
 (function (root) {
-  const MODES = { siebzehn: { name: "Siebzehn und Vier" }, gebot: { name: "Geheimgebot" }, bus: { name: "Busfahrt" } };
+  const MODES = { siebzehn: { name: "Siebzehn und Vier" }, stich: { name: "Stichhaltig" }, bus: { name: "Busfahrt" } };
   const SUITS = ["herz", "laub", "eichel", "schelle"];
   const RANKS = ["7", "8", "9", "10", "U", "O", "K", "A"];
   const VALUE = { 7: 7, 8: 8, 9: 9, 10: 10, U: 2, O: 3, K: 4, A: 11 }; // Siebzehn und Vier
@@ -16,6 +16,7 @@
   const rankOf = (id) => id.split("-")[1];
   const sum = (hand) => hand.reduce((n, id) => n + VALUE[rankOf(id)], 0);
   const isFeuer = (hand) => hand.length === 2 && hand.every((id) => rankOf(id) === "A");
+  const rk = (id) => RANKS.indexOf(rankOf(id));
 
   function start(s, opts, now) {
     opts = opts || {};
@@ -29,7 +30,7 @@
     s.players.forEach((p) => { p.waiting = !seats.includes(p.id); p.status = "active"; });
     if (mode === "siebzehn") { s.karten.rounds = rounds; nextSiebzehn(s.karten); }
     else if (mode === "bus") startBus(s.karten, now, opts);
-    else startGebot(s.karten, opts);
+    else startStich(s.karten, now, opts);
     return true;
   }
 
@@ -60,37 +61,68 @@
     return true;
   }
 
-  // ---------- Geheimgebot ----------
-  function startGebot(st) {
-    // Punktekarten: eine eigene Farbreihe, Sieben = 1 Punkt … Ass = 8 Punkte
-    st.prizes = shuffle(RANKS.map((r) => "schelle-" + r));
-    st.rounds = st.prizes.length;
-    st.hand = Object.fromEntries(st.seats.map((id, i) => [id, RANKS.map((r) => SUITS[i % 3] + "-" + r)])); // Herz, Laub, Eichel – Schelle sind die Punktekarten
-    st.pot = 0; st.round = 0;
-    nextGebot(st);
+  // ---------- Stichhaltig (Stichspiel mit Ansage) ----------
+  // Rangfolge in jeder Farbe: Sieben < Acht < Neun < Zehner < Unter < Ober < König < Ass.
+  // Punkte: genau getroffen = 10 + 2 pro Stich, daneben = −2 pro Stich Abweichung.
+  const STICH_ROUNDS = [4, 6, 8], STICH_BID_MS = 3200, STICH_TRICK_MS = 2000;
+  const suitOfC = (id) => id.split("-")[0];
+  const stichPts = (bid, got) => (bid === got ? 10 + 2 * got : -2 * Math.abs(bid - got));
+  function startStich(st, now, opts) {
+    const rn = Number(opts && opts.rounds);
+    st.rounds = STICH_ROUNDS.includes(rn) || (opts && opts.free && Number.isInteger(rn) && rn > 0 && rn <= 10) ? rn : 6;
+    st.maxCards = Math.max(1, Math.floor(32 / st.seats.length)); // mit einem Blatt (32 Karten)
+    st.round = 0; nextStich(st, now);
   }
-  const prizePts = (id) => RANKS.indexOf(rankOf(id)) + 1;
-  const bidVal = (id) => RANKS.indexOf(rankOf(id)) + 1;
-  function nextGebot(st) {
+  function nextStich(st, now) {
     st.round++;
     if (st.round > st.rounds) { st.round = st.rounds; st.step = "final"; return; }
-    st.prize = st.prizes[st.round - 1];
-    st.pot += prizePts(st.prize);
-    st.bids = {}; st.result = null; st.ready = {};
-    st.step = "play";
+    st.n = Math.min(st.round, st.maxCards);
+    const d = deck(1);
+    st.hands = Object.fromEntries(st.seats.map((id) => [id, d.splice(0, st.n)]));
+    st.trumpCard = d.length ? d.pop() : null; // keine Karte übrig: ohne Trumpf
+    st.trump = st.trumpCard ? suitOfC(st.trumpCard) : null;
+    st.lead = st.seats[(st.round - 1) % st.seats.length]; // wer anspielt, wechselt jede Runde
+    st.bids = {}; st.tricks = Object.fromEntries(st.seats.map((id) => [id, 0]));
+    st.trick = []; st.lastTrick = null; st.turn = null; st.until = 0; st.result = null; st.ready = {};
+    st.step = "bid";
   }
-  function checkGebot(st) {
-    if (!st.seats.every((id) => st.bids[id])) return false;
-    const vals = st.seats.map((id) => bidVal(st.bids[id])), max = Math.max(...vals);
-    const top = st.seats.filter((id) => bidVal(st.bids[id]) === max);
-    const winner = top.length === 1 ? top[0] : null;
-    const res = { bids: { ...st.bids }, winner, points: winner ? st.pot : 0, carried: winner ? 0 : st.pot, prize: st.prize };
-    if (winner) { st.total[winner] += st.pot; st.pot = 0; }
-    st.seats.forEach((id) => { st.hand[id] = st.hand[id].filter((c) => c !== st.bids[id]); });
+  // erlaubte Karten: wer die angespielte Farbe hat, muss sie bedienen
+  function legal(st, id) {
+    const h = st.hands[id] || [];
+    if (!st.trick.length) return h.slice();
+    const led = suitOfC(st.trick[0].card), same = h.filter((c) => suitOfC(c) === led);
+    return same.length ? same : h.slice();
+  }
+  function trickWinner(st, trick) {
+    const led = suitOfC(trick[0].card);
+    const score = (c) => (suitOfC(c) === st.trump ? 100 : suitOfC(c) === led ? 0 : -100) + rk(c);
+    return trick.reduce((best, t) => (score(t.card) > score(best.card) ? t : best)).id;
+  }
+  function stichNextTurn(st) {
+    const i = st.seats.indexOf(st.turn);
+    st.turn = st.seats[(i + 1) % st.seats.length];
+  }
+  // Stich ist vollständig zu sehen gewesen: dem Gewinner gutschreiben, dann weiter oder Runde werten
+  function stichCollect(st) {
+    const w = st.lastTrick.winner;
+    st.tricks[w]++; st.trick = []; st.turn = w; st.until = 0;
+    if (st.hands[w].length) { st.step = "play"; return; }
+    const res = {};
+    st.seats.forEach((id) => { const pts = stichPts(st.bids[id], st.tricks[id]); res[id] = { bid: st.bids[id], got: st.tricks[id], points: pts }; st.total[id] += pts; });
     st.result = res; st.step = "reveal"; st.ready = {};
-    st.history.push({ points: Object.fromEntries(st.seats.map((id) => [id, id === winner ? res.points : 0])) });
-    return true;
+    st.history.push({ points: Object.fromEntries(Object.entries(res).map(([k, r]) => [k, r.points])) });
   }
+  function stichPlay(st, id, card, now) {
+    st.hands[id] = st.hands[id].filter((c) => c !== card);
+    st.trick.push({ id, card });
+    if (st.trick.length < st.seats.length) { stichNextTurn(st); return; }
+    st.lastTrick = { cards: st.trick.slice(), winner: trickWinner(st, st.trick) };
+    st.step = "trick"; st.turn = null; st.until = now + STICH_TRICK_MS;
+  }
+  const sortHand = (st, h) => h.slice().sort((a, b) => {
+    const so = (c) => (suitOfC(c) === st.trump ? -1 : SUITS.indexOf(suitOfC(c)));
+    return so(a) - so(b) || rk(b) - rk(a);
+  });
 
   // ---------- Busfahrt (Leiter mit Aussteigen) ----------
   // Pro Runde fünf Stationen. Alle tippen gleichzeitig; richtig = Punkte der Station in den Rundentopf, falsch = Topf weg
@@ -104,7 +136,6 @@
     { key: "wert", pts: 30, text: "Welchen Wert hat die letzte Karte genau?", opts: RANKS.map((r) => [r, { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" }[r]]) },
   ];
   const BUS_SHOW_MS = 3000, BUS_ROUNDS = [1, 3, 5];
-  const rk = (id) => RANKS.indexOf(rankOf(id));
   const suitOf = (id) => id.split("-")[0];
   const isHL = (id) => suitOf(id) === "herz" || suitOf(id) === "laub";
   function startBus(st, now, opts) {
@@ -172,9 +203,16 @@
       case "kgStand":
         if (st.mode !== "siebzehn" || st.step !== "play" || !seated || st.done[pid] || a.round !== st.round) return false;
         st.done[pid] = "stand"; checkSiebzehn(st); return true;
-      case "kgBid": // Geheimgebot: verdeckt bieten (bis alle geboten haben, darf man umentscheiden)
-        if (st.mode !== "gebot" || st.step !== "play" || !seated || a.round !== st.round || !st.hand[pid].includes(a.card)) return false;
-        st.bids[pid] = a.card; checkGebot(st); return true;
+      case "kgSay": { // Stichhaltig: geheim ansagen (bis alle angesagt haben, darf man umentscheiden)
+        const n = Number(a.bid);
+        if (st.mode !== "stich" || st.step !== "bid" || !seated || a.round !== st.round || !Number.isInteger(n) || n < 0 || n > st.n) return false;
+        st.bids[pid] = n;
+        if (st.seats.every((id) => st.bids[id] != null)) { st.step = "bidShow"; st.until = (typeof now === "number" ? now : Date.now()) + STICH_BID_MS; }
+        return true;
+      }
+      case "kgPlay": // Stichhaltig: Karte ausspielen (nur wer dran ist, Farbe bedienen)
+        if (st.mode !== "stich" || st.step !== "play" || st.turn !== pid || a.round !== st.round || !legal(st, pid).includes(a.card)) return false;
+        stichPlay(st, pid, a.card, typeof now === "number" ? now : Date.now()); return true;
       case "kgGuess": // Busfahrt: tippen oder aussteigen („_out“, ab Station 2 mit Punkten im Topf); bis alle dran waren, umentscheidbar
         if (st.mode !== "bus" || st.step !== "guess" || st.status[pid] !== "ride" || a.station !== st.q || a.round !== st.round) return false;
         if (a.g === "_out" ? !(st.q > 0 && st.pot[pid] > 0) : !BUS_Q[st.q].opts.some((o) => o[0] === a.g)) return false;
@@ -184,12 +222,12 @@
         if (st.step !== "reveal" && st.step !== "roundEnd") return false;
         st.ready[pid] = !st.ready[pid];
         const ids = s.players.filter((p) => p.connected && st.seats.includes(p.id)).map((p) => p.id);
-        if (ids.length && ids.every((id) => st.ready[id])) (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : nextGebot)(st);
+        if (ids.length && ids.every((id) => st.ready[id])) (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : (x) => nextStich(x, now))(st);
         return true;
       }
       case "kgNext":
         if (!isHost || (st.step !== "reveal" && st.step !== "roundEnd")) return false;
-        (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : nextGebot)(st); return true;
+        (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : (x) => nextStich(x, now))(st); return true;
       case "kgRestart":
         if (st.step !== "final") return false;
         return start(s, st.opts, now);
@@ -198,10 +236,26 @@
   }
 
   // Wer die Verbindung verliert, blockiert die Runde nicht: der Gastgeber kann weiterschalten (kgNext) – zusätzlich
-  // gilt ein getrennter Spieler bei Siebzehn und Vier als „Genug“ und bietet beim Geheimgebot seine kleinste Karte.
+  // gilt ein getrennter Spieler bei Siebzehn und Vier als „Genug“; bei Stichhaltig sagt er 0 an und spielt seine kleinste erlaubte Karte.
   function tick(s, now) {
     if (s.phase !== "karten" || !s.karten) return false;
     const st = s.karten, off = st.seats.filter((id) => { const p = s.players.find((x) => x.id === id); return !p || !p.connected; });
+    if (st.mode === "stich") {
+      now = now || Date.now();
+      if (st.step === "bidShow" && now >= st.until) { st.step = "play"; st.turn = st.lead; st.until = 0; return true; }
+      if (st.step === "trick" && now >= st.until) { stichCollect(st); return true; }
+      if (st.step === "bid" && off.length) {
+        let ch = false;
+        off.forEach((id) => { if (st.bids[id] == null) { st.bids[id] = 0; ch = true; } });
+        if (ch && st.seats.every((id) => st.bids[id] != null)) { st.step = "bidShow"; st.until = now + STICH_BID_MS; }
+        return ch;
+      }
+      if (st.step === "play" && off.includes(st.turn)) {
+        const l = legal(st, st.turn).sort((x, y) => rk(x) - rk(y));
+        if (l.length) { stichPlay(st, st.turn, l[0], now); return true; }
+      }
+      return false;
+    }
     if (st.mode === "bus") {
       now = now || Date.now();
       if (st.step === "guess" && off.length) { // getrennte Spieler steigen aus (bzw. tippen an Station 1 zufällig)
@@ -218,15 +272,17 @@
     let changed = false;
     off.forEach((id) => {
       if (st.mode === "siebzehn" && !st.done[id]) { st.done[id] = "stand"; changed = true; }
-      if (st.mode === "gebot" && !st.bids[id] && st.hand[id].length) { st.bids[id] = st.hand[id][0]; changed = true; }
     });
-    if (changed) (st.mode === "siebzehn" ? checkSiebzehn : checkGebot)(st);
+    if (changed) checkSiebzehn(st);
     return changed;
   }
 
-  // Siebzehn und Vier: eigene Karten nur für einen selbst
+  // Eigene Karten nur für einen selbst (Siebzehn und Vier, Stichhaltig)
   function privateState(s, id) {
     const st = s.karten;
+    if (st && st.mode === "stich" && st.step !== "final" && st.hands && st.hands[id]) {
+      return { roundNo: st.round, hand: sortHand(st, st.hands[id]), playable: st.step === "play" && st.turn === id ? legal(st, id) : [] };
+    }
     if (!st || st.mode !== "siebzehn" || st.step !== "play" || !st.hands[id]) return null;
     return { roundNo: st.round, hand: st.hands[id].slice(), sum: sum(st.hands[id]), feuer: isFeuer(st.hands[id]) };
   }
@@ -244,15 +300,18 @@
       out.hands = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).slice()]));
       out.pot = { ...st.pot }; out.status = { ...st.status }; out.gain = { ...st.gain }; out.res = st.res;
       out.guessed = Object.fromEntries(st.seats.map((id) => [id, !!(st.guesses && st.guesses[id])]));
-    } else {
-      out.prize = st.prize; out.pot = st.pot; out.left = st.prizes.length - st.round;
-      out.hand = Object.fromEntries(st.seats.map((id) => [id, st.hand[id].slice()])); // was noch übrig ist, wissen alle
-      out.bid = Object.fromEntries(st.seats.map((id) => [id, !!st.bids[id]]));
+    } else if (st.mode === "stich") {
+      out.n = st.n; out.trumpCard = st.trumpCard; out.trump = st.trump; out.lead = st.lead; out.turn = st.turn;
+      out.trick = st.trick.slice(); out.lastTrick = st.lastTrick; out.tricks = { ...st.tricks };
+      out.count = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).length]));
+      out.said = Object.fromEntries(st.seats.map((id) => [id, st.bids[id] != null]));
+      out.bids = st.step === "bid" ? null : { ...st.bids }; // Ansagen erst zeigen, wenn alle angesagt haben
+      out.untilIn = st.until ? Math.max(0, st.until - Date.now()) : 0;
     }
     if (st.result) out.result = st.result;
     if (st.step === "final") { const max = Math.max(...Object.values(st.total)); out.winners = st.seats.filter((id) => st.total[id] === max); }
     return out;
   }
 
-  root.S10Karten = { MODES, ROUND_CHOICES, VALUE, BUS_Q, BUS_ROUNDS, isHL, start, apply, tick, publicState, privateState, sum, isFeuer, deck };
+  root.S10Karten = { MODES, ROUND_CHOICES, VALUE, BUS_Q, BUS_ROUNDS, STICH_ROUNDS, isHL, start, apply, tick, publicState, privateState, sum, isFeuer, deck, stichPts };
 })(typeof window !== "undefined" ? window : globalThis);
