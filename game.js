@@ -1302,9 +1302,10 @@
   }
   addEventListener("resize", () => fitLobbySettings());
   // Einheitliche Zeile „Noch X von Y … neu“ mit Knopf „Gespielte … vergessen“ (für alle Spiele gleich)
-  function freshHtml(fresh, total, unit, kind) {
+  // extra: kurzer Zusatz hinter dem Text (z. B. welche Pakete zusammengezählt sind)
+  function freshHtml(fresh, total, unit, kind, extra) {
     const dat = /[ns]$/.test(unit) ? unit : unit + "n"; // „von 100 Begriffen“, „von 50 Ländern“, aber „von 300 Karten“
-    const txt = fresh >= total ? `Alle ${total} ${unit} sind neu.` : `Noch <b>${fresh}</b> von ${total} ${dat} neu`;
+    const txt = (fresh >= total ? `Alle ${total} ${unit} sind neu` : `Noch <b>${fresh}</b> von ${total} ${dat} neu`) + (extra ? ` · ${extra}` : fresh >= total ? "." : "");
     return `<div class="fresh-row"><span class="muted small">${txt}</span>${kind && fresh < total
       ? `<button type="button" class="btn ghost sm" data-forget="${kind}" data-unit="${esc(unit)}" title="Gespielte ${esc(unit)} vergessen">Vergessen</button>` : ""}</div>`;
   }
@@ -2257,7 +2258,7 @@
         return `<label class="setopt ${on ? "on" : ""}"><input type="checkbox" value="${k}" ${on ? "checked" : ""}>
           <span class="setname">${SET_NAMES[k]}</span><span class="setcount">${count(k)} Karten${f !== null ? ` · ${f} neu` : ""}</span></label>`;
       }).join("")}</div>
-      ${cur.length ? (S ? freshHtml(fresh(cur), total, "Karten", "zehn") : `<div class="fresh-row"><span class="muted small">Zusammen: <b>${total}</b> Karten</span></div>`)
+      ${cur.length ? (S ? freshHtml(fresh(cur), total, "Karten", "zehn", cur.length > 1 && cur.length < L.SET_KEYS.length ? cur.map((k) => esc(SET_NAMES[k])).join(" + ") : cur.length > 1 ? "alle Pakete" : "") : `<div class="fresh-row"><span class="muted small">Zusammen: <b>${total}</b> Karten</span></div>`)
         : `<div class="fresh-row"><span class="err small">Bitte mindestens ein Set auswählen.</span></div>`}</div>`;
   }
   function addReport(rep) {

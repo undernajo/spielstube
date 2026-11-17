@@ -25,7 +25,7 @@
     "Erfundener Bandname", "Etwas, das man im Supermarkt kauft", "Wort mit mehr als 10 Buchstaben", "Etwas, das man sammeln kann",
   ];
   const TIMERS = {
-    stopp: { name: "„Stopp!“ + 10 Sekunden", limit: 180000, grace: 10000 },
+    stopp: { name: "„Stopp!“ + 10 s", limit: 180000, grace: 10000 },
     t90: { name: "90 Sekunden fest", limit: 90000 },
     t60: { name: "60 Sekunden fest", limit: 60000 },
   };
