@@ -178,19 +178,19 @@
   const GAMES = [
     { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
-    { key: "raten", color: "#ffb347", name: "Raten & Schätzen", desc: "Höher oder tiefer · Schätzen · Hinweis für Hinweis", icon: schaetzenIcon(), modes: ["hl", "schaetzen", "hinweis"] },
+    { key: "raten", color: "#ffb347", name: "Zahlen schätzen", desc: "Höher oder tiefer · Schätzen", icon: schaetzenIcon(), modes: ["hl", "schaetzen"] },
+    { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Begriff erraten – je früher richtig, desto mehr Punkte", icon: hinweisIcon() },
     { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Umriss-Rätsel · Von oben", icon: geoIcon(), modes: ["geo", "land", "umriss", "oben"] },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
-    // Spielarten der Sammelkacheln „Raten & Schätzen“ und „Landkarte“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
+    // Spielarten der Sammelkacheln „Zahlen schätzen“, „Landkarte“ und „Kartenspaß für alle“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
     { key: "hl", group: "raten", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
     { key: "schaetzen", group: "raten", color: "#ffb347", name: "Schätzen", desc: "Zahl schätzen – wer am nächsten liegt", icon: schaetzenIcon() },
-    { key: "hinweis", group: "raten", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Je früher richtig, desto mehr Punkte", icon: hinweisIcon() },
     { key: "umriss", group: "karte", color: "#ffd24d", name: "Umriss-Rätsel", desc: "Gebiet am Umriss erkennen", icon: umrissIcon() },
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
-    { key: "kartenrunde", color: "#2fbf71", name: "Kartenrunde", desc: "Siebzehn und Vier · Geheimgebot · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "gebot", "bus"] },
+    { key: "kartenrunde", color: "#2fbf71", name: "Kartenspaß für alle", desc: "Siebzehn und Vier · Geheimgebot · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "gebot", "bus"] },
     { key: "siebzehn", group: "kartenrunde", color: "#2fbf71", name: "Siebzehn und Vier", desc: "Wer kommt am nächsten an 21?", icon: siebzehnIcon() },
     { key: "bus", group: "kartenrunde", color: "#ffc83d", name: "Busfahrt", desc: "Station für Station – weiterfahren oder aussteigen?", icon: busIcon() },
     { key: "gebot", group: "kartenrunde", color: "#c9883a", name: "Geheimgebot", desc: "Verdeckt bieten – das höchste Gebot gewinnt", icon: gebotIcon() },
@@ -237,7 +237,18 @@
   let schOpts = Object.assign({ mode: "gemuetlich" }, store.get("s10-schnapsen") || {});
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
-  const TILES = GAMES.filter((g) => !g.group); // Kacheln in Lobby und Startseite
+  // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Kartenspiele", ["kartenrunde", "watten", "schnapsen"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
+  {
+    const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
+    const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
+    if (rest.length) SECTIONS[SECTIONS.length - 1][1].push(...rest);
+  }
+  const gameByKey = (k) => GAMES.find((g) => g.key === k);
+  const TILES = SECTIONS.flatMap(([, ks]) => ks.map(gameByKey)).filter(Boolean);
+  function tileSectionsHtml(tile) {
+    return SECTIONS.map(([name, ks]) => `${name ? `<div class="gsec">${esc(name)}</div>` : ""}<div class="gamegrid ${name ? "" : "gamegrid-top"}">${ks.map(gameByKey).filter(Boolean).map(tile).join("")}</div>`).join("");
+  }
   const groupOf = (key) => { const g = GAMES.find((x) => x.key === key); return g ? g.group || g.key : key; };
   const isMode = (key) => GAMES.some((g) => g.key === key && g.group);
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes) ? store.get("s10-game") : "zehn";
@@ -1271,9 +1282,33 @@
     if (codeIn) codeIn.onkeydown = (e) => { if (e.key === "Enter") joinCode(); };
   }
 
+  // Computer: Einstellungsspalte bleibt beim Scrollen stehen, wenn sie ganz auf den Bildschirm passt;
+  // ist sie länger, scrollt sie normal mit und „Spiel starten“ klebt unten am Bildschirmrand
+  function fitLobbySettings() {
+    const col = app.querySelector(".lobby-host .lobby-settings, .lobby-guest .lobby-settings");
+    if (!col) return;
+    col.classList.toggle("fits", col.scrollHeight <= innerHeight - 24);
+  }
+  addEventListener("resize", () => fitLobbySettings());
+  // Einheitliche Zeile „Noch X von Y … neu“ mit Knopf „Gespielte … vergessen“ (für alle Spiele gleich)
+  function freshHtml(fresh, total, unit, kind) {
+    const dat = /[ns]$/.test(unit) ? unit : unit + "n"; // „von 100 Begriffen“, „von 50 Ländern“, aber „von 300 Karten“
+    const txt = fresh >= total ? `Alle ${total} ${unit} sind neu.` : `Noch <b>${fresh}</b> von ${total} ${dat} neu`;
+    return `<div class="fresh-row"><span class="muted small">${txt}</span>${kind && fresh < total
+      ? `<button type="button" class="btn ghost sm" data-forget="${kind}" data-unit="${esc(unit)}" title="Gespielte ${esc(unit)} vergessen">Vergessen</button>` : ""}</div>`;
+  }
+  const FORGET = {
+    zehn: () => { S.seen = []; store.set("s10-seen", []); },
+    geo: () => { S.geoSeen = {}; store.set("s10-geo-seen", {}); },
+    quiz: () => { S.quizSeen = {}; store.set("s10-quiz-seen", {}); },
+    land: () => { S.landSeen = {}; store.set("s10-land-seen", {}); },
+    duell: () => store.set("s10-du-seen", []),
+    frage: () => store.set("s10-fq-seen", []),
+  };
   function renderLobby() {
     const isFile = location.protocol === "file:";
     const settings = !isHost ? "" : `
+          ${setHeadHtml()}
           ${isMode(chosenGame) ? modeSwitchHtml() : ""}
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
@@ -1289,8 +1324,6 @@
           ${chosenGame === "schnapsen" ? schSettingsHtml() : ""}
           ${chosenGame === "zehn" ? `
             ${setPickerHtml()}
-            ${S && S.seen && S.seen.length ? `<div class="seen-row"><span class="muted small">${S.seen.length} Karte${S.seen.length === 1 ? "" : "n"} schon gespielt – die kommen erst wieder, wenn alle durch sind.</span>
-              <button id="resetSeen" class="btn ghost sm">Gespielte Karten vergessen</button></div>` : ""}
             <label class="field"><span>Spielen bis</span>
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
             <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
@@ -1326,6 +1359,7 @@
       </main>`;
     app.querySelectorAll(".lobby .lobby-col").forEach((c, i) => { if (keepScroll[i]) c.scrollTop = keepScroll[i]; });
     if (keepY && scrollY !== keepY) scrollTo(0, keepY);
+    fitLobbySettings();
     qbStartBar();
     bindReports(renderLobby);
     bindGamePicker();
@@ -1353,11 +1387,11 @@
     const start = app.querySelector("#start");
     const tsel = app.querySelector("#target");
     if (tsel) tsel.onchange = () => { chosenTarget = Number(tsel.value); store.set("s10-target", chosenTarget); publish(); };
-    const reset = app.querySelector("#resetSeen");
-    if (reset) reset.onclick = async () => {
-      if (!(await askConfirm("Gespielte Karten vergessen?", "Danach kann jede Karte wieder vorkommen.", "Vergessen"))) return;
-      S.seen = []; store.set("s10-seen", []); publish(); toast("Speicher gelöscht – alle Karten sind wieder neu.", "ok");
-    };
+    app.querySelectorAll("[data-forget]").forEach((b) => b.onclick = async () => {
+      const unit = b.dataset.unit, fn = FORGET[b.dataset.forget];
+      if (!fn || !(await askConfirm(`Gespielte ${unit} vergessen?`, `Danach können alle ${unit} wieder vorkommen.`, "Vergessen"))) return;
+      fn(); publish(); renderLobby(); toast(`Alle ${unit} sind wieder neu.`, "ok");
+    });
     app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame])').forEach((cb) => cb.onchange = () => {
       chosenSets = [...app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame]):checked')].map((x) => x.value);
       store.set("s10-sets", chosenSets); publish();
@@ -1562,7 +1596,14 @@
   function pickHeadHtml(label, key) {
     const cur = GAMES.find((g) => g.key === key) || GAMES[0];
     return `<div class="pick-head"><span>${rulesOpen ? "So geht's" : label}</span>
-      <button type="button" id="rulesToggle" class="linkbtn" style="--gc:${cur.color}">${rulesOpen ? "‹ Zurück zur Spielauswahl" : `So geht's: ${esc(cur.name)} ›`}</button></div>`;
+      ${rulesOpen ? `<button type="button" id="rulesToggle" class="linkbtn" style="--gc:${cur.color}">‹ Zurück zur Spielauswahl</button>` : ""}</div>`;
+  }
+  // Kopf der Einstellungen beim Gastgeber: gewähltes Spiel + „So geht's“
+  function setHeadHtml() {
+    const tile = GAMES.find((g) => g.key === groupOf(chosenGame)) || GAMES[0];
+    return `<div class="set-head" style="--gc:${tile.color}"><span class="gt-icon" aria-hidden="true">${tile.icon}</span>
+      <div class="set-head-txt"><span class="game-label">Gewählt</span><b>${esc(tile.name)}</b></div>
+      <button type="button" class="linkbtn" data-rules>${rulesOpen ? "Erklärung offen" : "So geht's ›"}</button></div>`;
   }
   function rulesViewHtml(key) {
     const cur = GAMES.find((g) => g.key === key) || GAMES[0];
@@ -1573,13 +1614,13 @@
   function gamePickerHtml() {
     const head = pickHeadHtml("Spiel wählen", chosenGame);
     if (rulesOpen) return `<div class="field">${head}${rulesViewHtml(chosenGame)}</div>`;
-    return `<div class="field">${head}<div class="gamegrid" role="radiogroup">${TILES.map((g) => `
+    return `<div class="field">${head}<div class="gamesecs" role="radiogroup">${tileSectionsHtml((g) => `
       <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""} ${twoCls(g)}" style="--gc:${g.color}">${twoTagHtml(g)}
         <input type="radio" name="game" value="${g.key}" ${groupOf(chosenGame) === g.key ? "checked" : ""}>
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
         ${guestTagHtml(g.key, true)}
-        <span class="gt-check" aria-hidden="true">✓</span></label>`).join("")}</div></div>`;
+        <span class="gt-check" aria-hidden="true">✓</span></label>`)}</div></div>`;
   }
   // Spielart bei zusammengefassten Spielen (Landkarte: Wo liegt das? · Länder finden · Von oben)
   // cur = gewählte Spielart; Gäste sehen die Auswahl nur (readOnly), wählen kann der Gastgeber
@@ -1635,12 +1676,12 @@
           : `<button type="button" class="btn ${wished ? "ghost" : "primary"}" data-wish="${tile.key}">${wished ? "Wunsch zurücknehmen" : "💡 Das wünsch ich mir"}</button>`}
           ${wishTagHtml(tile.key)}</div></div>`;
     }
-    return `<div class="field"><span>Alle Spiele – tippe für Erklärung und Wunsch</span><div class="gamegrid">${TILES.map((g) => `
+    return `<div class="field"><span>Alle Spiele – tippe für Erklärung und Wunsch</span><div class="gamesecs">${tileSectionsHtml((g) => `
       <button type="button" class="gametile wishtile ${groupOf(view.game) === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""} ${twoCls(g)}" style="--gc:${g.color}" data-info="${g.key}"
         title="So geht's: ${esc(g.name)}">${twoTagHtml(g)}
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
-        ${guestTagHtml(g.key)}</button>`).join("")}</div></div>`;
+        ${guestTagHtml(g.key)}</button>`)}</div></div>`;
   }
 
   function slfSettingsHtml() {
@@ -1752,6 +1793,11 @@
     app.querySelectorAll('input[name="game"]').forEach((r) => r.onchange = () => pickGame(r.value));
     const rt = app.querySelector("#rulesToggle");
     if (rt) rt.onclick = () => { rulesOpen = !rulesOpen; renderLobby(); };
+    const rl = app.querySelector("[data-rules]");
+    if (rl) rl.onclick = () => {
+      rulesOpen = true; renderLobby();
+      if (innerWidth < 1100) { const gc = app.querySelector(".lobby-games"); if (gc) gc.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    };
     app.querySelectorAll("[data-mode]").forEach((b) => b.onclick = () => { if (b.dataset.mode !== chosenGame) pickGame(b.dataset.mode); });
     const saveOpts = () => store.set("s10-slf", slfOpts);
     const ps = app.querySelector("#slf-preset");
@@ -1773,11 +1819,6 @@
     if (gt) gt.onchange = () => { geoOpts.timer = gt.value; saveGeo(); };
     const gl = app.querySelector("#geo-level");
     if (gl) gl.onchange = () => { geoOpts.level = gl.value; saveGeo(); };
-    const gx = app.querySelector("#geo-reset");
-    if (gx) gx.onclick = async () => {
-      if (!(await askConfirm("Gespielte Orte vergessen?", "Danach sind in allen Regionen wieder alle Orte neu.", "Vergessen"))) return;
-      S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
-    };
     const qbJ = app.querySelector("#qb-joker");
     if (qbJ) qbJ.onchange = () => { qbOpts.joker = qbJ.value === "1"; store.set("s10-qb", qbOpts); publish(); };
     const qbT = app.querySelector("#qb-theme");
@@ -1790,11 +1831,6 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
     });
-    const qzx = app.querySelector("#quiz-reset");
-    if (qzx) qzx.onclick = async () => {
-      if (!(await askConfirm("Gespielte vergessen?", "Danach sind bei Schätzen, Hinweis für Hinweis und Umriss-Rätsel wieder alle Fragen neu.", "Vergessen"))) return;
-      S.quizSeen = {}; store.set("s10-quiz-seen", {}); publish(); toast("Speicher gelöscht – alles wieder neu.", "ok");
-    };
     const qbAll = app.querySelector("#qb-all");
     if (qbAll) qbAll.onclick = () => { qbOpts.off = []; store.set("s10-qb", qbOpts); publish(); };
     const qbL = app.querySelector("#qb-length");
@@ -1808,11 +1844,6 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { landOpts[k] = k === "rounds" ? Number(el.value) : el.value; saveLand(); };
     });
-    const lx = app.querySelector("#land-reset");
-    if (lx) lx.onclick = async () => {
-      if (!(await askConfirm("Gespielte vergessen?", "Danach sind auf allen Karten wieder alle Länder, Bundesländer, Regionen und Kantone neu.", "Vergessen"))) return;
-      S.landSeen = {}; store.set("s10-land-seen", {}); publish(); toast("Speicher gelöscht – alle Länder sind wieder neu.", "ok");
-    };
     const xM = app.querySelector("#sch-mode");
     if (xM) xM.onchange = () => { schOpts.mode = xM.value; store.set("s10-schnapsen", schOpts); publish(); };
     const wT = app.querySelector("#watten-target");
@@ -1841,8 +1872,7 @@
         <label class="field"><span>Schwierigkeit</span><select id="geo-level">${Object.entries(GEO.LEVELS).map(([k, l]) =>
           `<option value="${k}" ${level === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       </div>`}
-      ${nw ? `<p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} Orte sind neu.` : `Noch ${nw.fresh} von ${nw.total} Orten neu – gespielte kommen erst wieder, wenn alle durch sind.`}
-        ${nw.fresh < nw.total ? `<button id="geo-reset" class="btn ghost sm">Gespielte Orte vergessen</button>` : ""}</p>` : ""}
+      ${nw ? freshHtml(nw.fresh, nw.total, "Orte", "geo") : ""}
       <div class="row2">
         <label class="field"><span>Runden</span><select id="geo-rounds">${GEO.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(geoOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         ${oben ? `<div class="field"><span>Zeit pro Runde</span><p class="muted small">${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden – alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild weiter heraus.</p></div>`
@@ -1873,8 +1903,7 @@
     return `${um ? `<label class="field"><span>Karte</span>${sel("quiz-region", regions, o.region)}</label>
         <label class="field"><span>Schwierigkeit</span>${sel("quiz-level", levels, o.level)}</label>` : `<label class="field"><span>Fragen</span>${sel("quiz-theme", themes, o.theme)}</label>`}
       <label class="field"><span>Runden</span><select id="quiz-rounds">${QZ.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(quizOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
-      <p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} sind neu.` : `Noch ${nw.fresh} von ${nw.total} neu – gespielte kommen erst wieder, wenn alle durch sind.`}
-        ${nw.fresh < nw.total ? `<button id="quiz-reset" class="btn ghost sm">Gespielte vergessen</button>` : ""}</p>
+      ${freshHtml(nw.fresh, nw.total, { schaetzen: "Fragen", hinweis: "Begriffe", umriss: "Umrisse" }[mode] || "Fragen", "quiz")}
       <button id="start" class="btn primary big" ${view.players.length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
       `;
   }
@@ -1912,8 +1941,7 @@
     const levels = Object.fromEntries(Object.entries(LAND.LEVELS).map(([k, l]) => [k, { name: `${l.name} (${LAND.poolFor(reg, k).length})` }]));
     return `<label class="field"><span>Karte</span>${sel("land-region", regions, reg)}</label>
       <label class="field"><span>Schwierigkeit</span>${sel("land-level", levels, level)}</label>
-      <p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} ${unit} sind neu.` : `Noch ${nw.fresh} von ${nw.total} ${unit} neu – gespielte kommen erst wieder, wenn alle durch sind.`}
-        ${nw.fresh < nw.total ? `<button id="land-reset" class="btn ghost sm">Gespielte vergessen</button>` : ""}</p>
+      ${freshHtml(nw.fresh, nw.total, unit, "land")}
       <div class="row2">
         <label class="field"><span>Runden</span><select id="land-rounds">${LAND.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(landOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         <label class="field"><span>Zeit pro Runde</span>${sel("land-timer", LAND.TIMERS, landOpts.timer)}</label>
@@ -1936,7 +1964,8 @@
         `<option value="${t}" ${Number(fqOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit zum Frage-Ausdenken</span>${sel("fq-write", FQ.WRITE, fqOpts.write)}</label>
       <label class="field"><span>Zeit zum Antworten</span>${sel("fq-answer", FQ.ANSWER, fqOpts.answer)}</label>
-      <p class="muted small"><b>${fresh} von ${all.length} Aufgaben noch neu</b> · ${FQDATA.length} Kategorien, z. B. ${FQDATA.slice(0, 4).map((c) => esc(c.cat)).join(", ")} …</p>
+      <p class="muted small">${FQDATA.length} Kategorien, z. B. ${FQDATA.slice(0, 4).map((c) => esc(c.cat)).join(", ")} …</p>
+      ${freshHtml(fresh, all.length, "Aufgaben", "frage")}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       <p class="muted small">${n < 2 ? "„Antwort sucht Frage“ braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Zu zweit, abwechselnd fragen und antworten."}</p>`;
   }
@@ -1958,8 +1987,8 @@
         `<option value="${t}" ${Number(duOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit pro Antwort</span><select id="du-timer">${Object.entries(DU.TIMERS).map(([k, t]) =>
         `<option value="${k}" ${String(duOpts.timer) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
-      <p class="muted small">${(() => { const seen = store.get("s10-du-seen") || [], fresh = DUDATA.filter((l) => !seen.includes(l.q)).length;
-        return `<b>${fresh} von ${DUDATA.length} Themen noch neu</b> – gespielte kommen erst wieder, wenn alle durch sind.`; })()}</p>
+      ${(() => { const seen = store.get("s10-du-seen") || [], fresh = DUDATA.filter((l) => !seen.includes(l.q)).length;
+        return freshHtml(fresh, DUDATA.length, "Themen", "duell"); })()}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       <p class="muted small">${n < 2 ? "Das Listen-Duell braucht zwei Spieler – lade jemanden ein." : n > 2 ? "Es spielen die ersten beiden Spieler, die anderen schauen zu." : "Listen-Duell zu zweit."}</p>`;
   }
@@ -2170,16 +2199,14 @@
     const count = (k) => CARDS.filter((c) => (c.set || "standard") === k).length;
     const fresh = (sets) => (S ? L.unseenCount(CARDS, sets, S.seen) : null);
     const total = cur.reduce((n, k) => n + count(k), 0);
-    return `<div class="field"><span>Fragen – beliebig kombinierbar</span>
+    return `<div class="field"><div class="pick-head"><span>Fragen – beliebig kombinierbar</span>${cur.length < L.SET_KEYS.length ? `<button type="button" id="setall" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>
       <div class="setlist">${L.SET_KEYS.map((k) => {
         const on = cur.includes(k), f = fresh([k]);
         return `<label class="setopt ${on ? "on" : ""}"><input type="checkbox" value="${k}" ${on ? "checked" : ""}>
           <span class="setname">${SET_NAMES[k]}</span><span class="setcount">${count(k)} Karten${f !== null ? ` · ${f} neu` : ""}</span></label>`;
       }).join("")}</div>
-      <div class="setsum">${cur.length
-        ? `<span class="muted small">Zusammen: <b>${total}</b> Karten${S ? ` (${fresh(cur)} neu)` : ""}</span>`
-        : `<span class="err small">Bitte mindestens ein Set auswählen.</span>`}
-        ${cur.length < L.SET_KEYS.length ? `<button id="setall" class="btn ghost sm">Alle auswählen</button>` : ""}</div></div>`;
+      ${cur.length ? (S ? freshHtml(fresh(cur), total, "Karten", "zehn") : `<div class="fresh-row"><span class="muted small">Zusammen: <b>${total}</b> Karten</span></div>`)
+        : `<div class="fresh-row"><span class="err small">Bitte mindestens ein Set auswählen.</span></div>`}</div>`;
   }
   function addReport(rep) {
     const r = {
@@ -3685,8 +3712,10 @@
               : `<div class="kg-actions"><button id="kg-hit" class="btn primary">Weitere Karte</button><button id="kg-stand" class="btn ghost">Genug</button></div>`}</div>`
           : seated ? `<p class="muted">Karten werden ausgeteilt …</p>` : `<p class="muted">Du schaust in dieser Runde zu.</p>`;
         kgSound(sounds, 380, 0);
+        const valuesBox = `<div class="bus-scale kg-scale" aria-label="Kartenwerte"><span class="bs-end">Werte</span>${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
+          .map(([n, v]) => `<span><em>${n}</em><b>${v}</b></span>`).join("")}<span class="kg-feuer">2 Asse = 🔥</span></div>`;
         main = `<div class="panel kg-table"><div class="kg-goal"><b>Ziel: so nah wie möglich an 21 – aber nicht darüber!</b></div>
-          ${mine}<div class="kg-values muted small">Kartenwerte: Sieben–Zehn = Zahl · Unter 2 · Ober 3 · König 4 · Ass 11 · zwei Asse = 🔥 Feuer</div></div>
+          <div class="bus-q with-scale"><div class="bus-q-main">${mine}</div>${valuesBox}</div></div>
           ${others ? `<div class="kg-opps">${others}</div>` : ""}`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
@@ -3754,11 +3783,11 @@
       el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
     });
   }
-  // Fortschrittsbalken bis 21: grün bis 16, gelb 17–20, voll bei 21, rot darüber
+  // Fortschrittsbalken bis 21: grün bis 16, gelb 17–20, voll bei 21, rot darüber (nur 21 als Markierung)
   function kgMeter(priv) {
     const v = priv.feuer ? 21 : priv.sum, pct = Math.min(100, (v / 21) * 100);
     const cls = v > 21 ? "bust" : v === 21 ? "full" : v >= 17 ? "near" : "";
-    return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark" style="left:${(17 / 21) * 100}%">17</span><span class="kg-mark end">21</span></div>`;
+    return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark end">21</span></div>`;
   }
   let kgMyBid = null, busMine = null;
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
