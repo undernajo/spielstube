@@ -5,7 +5,7 @@
 //  gebot:    jeder hat Sieben bis Ass einer Farbe als Gebotskarten. Eine Punktekarte wird aufgedeckt, alle bieten verdeckt –
 //            das höchste Gebot holt die Punkte; bei Gleichstand bleiben sie liegen und kommen zur nächsten Punktekarte dazu.
 (function (root) {
-  const MODES = { siebzehn: { name: "Siebzehn und Vier" }, gebot: { name: "Geheimgebot" } };
+  const MODES = { siebzehn: { name: "Siebzehn und Vier" }, gebot: { name: "Geheimgebot" }, bus: { name: "Busfahrt" } };
   const SUITS = ["herz", "laub", "eichel", "schelle"];
   const RANKS = ["7", "8", "9", "10", "U", "O", "K", "A"];
   const VALUE = { 7: 7, 8: 8, 9: 9, 10: 10, U: 2, O: 3, K: 4, A: 11 }; // Siebzehn und Vier
@@ -25,9 +25,10 @@
     const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 10) ? rn : 5;
     s.game = mode; s.phase = "karten";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.karten = { opts: { mode, rounds }, mode, seats, total: Object.fromEntries(seats.map((id) => [id, 0])), round: 0, history: [] };
+    s.karten = { gid: Math.random().toString(36).slice(2, 9), opts: { mode, rounds }, mode, seats, total: Object.fromEntries(seats.map((id) => [id, 0])), round: 0, history: [] };
     s.players.forEach((p) => { p.waiting = !seats.includes(p.id); p.status = "active"; });
     if (mode === "siebzehn") { s.karten.rounds = rounds; nextSiebzehn(s.karten); }
+    else if (mode === "bus") startBus(s.karten, now, opts);
     else startGebot(s.karten, opts);
     return true;
   }
@@ -91,6 +92,72 @@
     return true;
   }
 
+  // ---------- Busfahrt (Leiter mit Aussteigen) ----------
+  // Pro Runde fünf Stationen. Alle tippen gleichzeitig; richtig = Punkte der Station in den Rundentopf, falsch = Topf weg
+  // („Bus verunglückt“). Ab Station 2 kann man stattdessen aussteigen und den Topf sicher mitnehmen.
+  // Bei Station 2 und 3 zählt ein gleich hoher Wert zugunsten des Spielers. Figuren: Unter, Ober, König, Ass (4 von 8 Werten).
+  const BUS_Q = [
+    { key: "figur", pts: 1, text: "Wird deine erste Karte eine Figur oder eine Zahl?", opts: [["fig", "Figur (Unter, Ober, König, Ass)"], ["zahl", "Zahl (Sieben bis Zehner)"]] },
+    { key: "hoeher", pts: 2, text: "Ist die nächste Karte höher oder tiefer als deine erste?", opts: [["hoch", "Höher"], ["tief", "Tiefer"]] },
+    { key: "zwischen", pts: 3, text: "Liegt die nächste Karte zwischen deinen ersten beiden oder außerhalb?", opts: [["in", "Zwischen"], ["out", "Außerhalb"]] },
+    { key: "suit", pts: 5, text: "Welche Farbe hat die nächste Karte genau?", opts: [["herz", "Herz"], ["laub", "Laub"], ["eichel", "Eichel"], ["schelle", "Schelle"]] },
+    { key: "wert", pts: 10, text: "Welchen Wert hat die letzte Karte genau?", opts: RANKS.map((r) => [r, { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" }[r]]) },
+  ];
+  const BUS_SHOW_MS = 3000, BUS_ROUNDS = [1, 3, 5];
+  const rk = (id) => RANKS.indexOf(rankOf(id));
+  const suitOf = (id) => id.split("-")[0];
+  const isHL = (id) => suitOf(id) === "herz" || suitOf(id) === "laub";
+  function startBus(st, now, opts) {
+    const rn = Number(opts && opts.rounds);
+    st.rounds = BUS_ROUNDS.includes(rn) ? rn : 3;
+    st.round = 0; nextBusRound(st, now);
+  }
+  function nextBusRound(st, now) {
+    st.round++;
+    if (st.round > st.rounds) { st.round = st.rounds; st.step = "final"; return; }
+    st.deck = deck(st.seats.length * 5 > 32 ? 2 : 1);
+    st.hands = Object.fromEntries(st.seats.map((id) => [id, []]));
+    st.pot = Object.fromEntries(st.seats.map((id) => [id, 0]));
+    st.status = Object.fromEntries(st.seats.map((id) => [id, "ride"])); // ride | out (ausgestiegen) | crash | done (alle 5 geschafft)
+    st.gain = Object.fromEntries(st.seats.map((id) => [id, 0]));
+    st.q = 0; st.res = null; st.ready = {};
+    busAsk(st);
+  }
+  const riders = (st) => st.seats.filter((id) => st.status[id] === "ride");
+  function busAsk(st) { st.step = "guess"; st.guesses = {}; st.until = 0; }
+  function busCheck(st, now) { if (riders(st).every((id) => st.guesses[id])) busDeal(st, now); }
+  // Alle Fahrenden haben getippt (oder sind ausgestiegen): Karten austeilen und werten
+  function busDeal(st, now) {
+    const q = BUS_Q[st.q], res = {};
+    riders(st).forEach((id) => {
+      const g = st.guesses[id];
+      if (g === "_out") { st.status[id] = "out"; st.gain[id] = st.pot[id]; st.total[id] += st.pot[id]; res[id] = { out: true, pts: st.pot[id] }; return; }
+      const c = st.deck.pop(), h = st.hands[id];
+      let ok;
+      if (q.key === "figur") ok = (g === "fig") === ["U", "O", "K", "A"].includes(rankOf(c));
+      else if (q.key === "hoeher") ok = rk(c) === rk(h[0]) || (g === "hoch" ? rk(c) > rk(h[0]) : rk(c) < rk(h[0])); // gleich hoch = zu deinen Gunsten
+      else if (q.key === "zwischen") { const lo = Math.min(rk(h[0]), rk(h[1])), hi = Math.max(rk(h[0]), rk(h[1]));
+        ok = rk(c) === lo || rk(c) === hi || (g === "in" ? rk(c) > lo && rk(c) < hi : rk(c) < lo || rk(c) > hi); }
+      else if (q.key === "suit") ok = suitOf(c) === g;
+      else ok = rankOf(c) === g;
+      h.push(c);
+      if (ok) {
+        st.pot[id] += q.pts;
+        if (st.q === BUS_Q.length - 1) { st.status[id] = "done"; st.gain[id] = st.pot[id]; st.total[id] += st.pot[id]; }
+      } else { st.status[id] = "crash"; st.gain[id] = 0; }
+      res[id] = { card: c, guess: g, ok, pts: q.pts, lost: ok ? 0 : st.pot[id] };
+      if (!ok) st.pot[id] = 0;
+    });
+    st.res = res; st.step = "show"; st.until = now + BUS_SHOW_MS;
+  }
+  function busNext(st, now) {
+    if (st.step !== "show") return;
+    st.q++;
+    if (!riders(st).length || st.q >= BUS_Q.length) { st.step = "roundEnd"; st.until = 0; st.ready = {};
+      st.history.push({ points: { ...st.gain } }); return; }
+    busAsk(st);
+  }
+
   function apply(s, pid, a, isHost, now) {
     if (!a || typeof a !== "object" || !s.karten) return false;
     const st = s.karten, seated = st.seats.includes(pid);
@@ -108,16 +175,21 @@
       case "kgBid": // Geheimgebot: verdeckt bieten (bis alle geboten haben, darf man umentscheiden)
         if (st.mode !== "gebot" || st.step !== "play" || !seated || a.round !== st.round || !st.hand[pid].includes(a.card)) return false;
         st.bids[pid] = a.card; checkGebot(st); return true;
+      case "kgGuess": // Busfahrt: tippen oder aussteigen („_out“, ab Station 2 mit Punkten im Topf); bis alle dran waren, umentscheidbar
+        if (st.mode !== "bus" || st.step !== "guess" || st.status[pid] !== "ride" || a.station !== st.q || a.round !== st.round) return false;
+        if (a.g === "_out" ? !(st.q > 0 && st.pot[pid] > 0) : !BUS_Q[st.q].opts.some((o) => o[0] === a.g)) return false;
+        st.guesses[pid] = a.g; busCheck(st, now);
+        return true;
       case "kgReady": {
-        if (st.step !== "reveal") return false;
+        if (st.step !== "reveal" && st.step !== "roundEnd") return false;
         st.ready[pid] = !st.ready[pid];
         const ids = s.players.filter((p) => p.connected && st.seats.includes(p.id)).map((p) => p.id);
-        if (ids.length && ids.every((id) => st.ready[id])) (st.mode === "siebzehn" ? nextSiebzehn : nextGebot)(st);
+        if (ids.length && ids.every((id) => st.ready[id])) (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : nextGebot)(st);
         return true;
       }
       case "kgNext":
-        if (!isHost || st.step !== "reveal") return false;
-        (st.mode === "siebzehn" ? nextSiebzehn : nextGebot)(st); return true;
+        if (!isHost || (st.step !== "reveal" && st.step !== "roundEnd")) return false;
+        (st.mode === "siebzehn" ? nextSiebzehn : st.mode === "bus" ? (x) => nextBusRound(x, now) : nextGebot)(st); return true;
       case "kgRestart":
         if (st.step !== "final") return false;
         return start(s, st.opts, now);
@@ -127,9 +199,21 @@
 
   // Wer die Verbindung verliert, blockiert die Runde nicht: der Gastgeber kann weiterschalten (kgNext) – zusätzlich
   // gilt ein getrennter Spieler bei Siebzehn und Vier als „Genug“ und bietet beim Geheimgebot seine kleinste Karte.
-  function tick(s) {
-    if (s.phase !== "karten" || !s.karten || s.karten.step !== "play") return false;
+  function tick(s, now) {
+    if (s.phase !== "karten" || !s.karten) return false;
     const st = s.karten, off = st.seats.filter((id) => { const p = s.players.find((x) => x.id === id); return !p || !p.connected; });
+    if (st.mode === "bus") {
+      now = now || Date.now();
+      if (st.step === "guess" && off.length) { // getrennte Spieler steigen aus (bzw. tippen an Station 1 zufällig)
+        let ch = false;
+        off.forEach((id) => { if (st.status[id] === "ride" && !st.guesses[id]) { st.guesses[id] = st.q > 0 && st.pot[id] > 0 ? "_out" : BUS_Q[st.q].opts[0][0]; ch = true; } });
+        if (ch) busCheck(st, now);
+        return ch;
+      }
+      if (st.step === "show" && st.until && now >= st.until) { busNext(st, now); return true; }
+      return false;
+    }
+    if (st.step !== "play") return false;
     if (!off.length) return false;
     let changed = false;
     off.forEach((id) => {
@@ -150,11 +234,16 @@
   function publicState(s) {
     const st = s.karten;
     if (!st) return null;
-    const out = { mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, roundNo: st.round, seats: st.seats.slice(),
+    const out = { gid: st.gid, mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, roundNo: st.round, seats: st.seats.slice(),
       total: { ...st.total }, ready: { ...(st.ready || {}) } };
     if (st.mode === "siebzehn") {
       out.count = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).length]));
       out.done = Object.fromEntries(st.seats.map((id) => [id, st.step === "play" ? (st.done[id] ? "fertig" : "") : st.done[id] || ""]));
+    } else if (st.mode === "bus") {
+      out.q = st.q; out.question = BUS_Q[Math.min(st.q, BUS_Q.length - 1)]; out.stations = BUS_Q.map((x) => x.pts);
+      out.hands = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).slice()]));
+      out.pot = { ...st.pot }; out.status = { ...st.status }; out.gain = { ...st.gain }; out.res = st.res;
+      out.guessed = Object.fromEntries(st.seats.map((id) => [id, !!(st.guesses && st.guesses[id])]));
     } else {
       out.prize = st.prize; out.pot = st.pot; out.left = st.prizes.length - st.round;
       out.hand = Object.fromEntries(st.seats.map((id) => [id, st.hand[id].slice()])); // was noch übrig ist, wissen alle
@@ -165,5 +254,5 @@
     return out;
   }
 
-  root.S10Karten = { MODES, ROUND_CHOICES, VALUE, start, apply, tick, publicState, privateState, sum, isFeuer, deck };
+  root.S10Karten = { MODES, ROUND_CHOICES, VALUE, BUS_Q, BUS_ROUNDS, isHL, start, apply, tick, publicState, privateState, sum, isFeuer, deck };
 })(typeof window !== "undefined" ? window : globalThis);

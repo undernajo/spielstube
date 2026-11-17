@@ -17,10 +17,11 @@
     schaetzen: { kind: "wissen", name: "Schätzen", short: "3 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
     hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "2 Begriffe", rule: "Alle 8 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
     siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "3 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
+    bus: { kind: "karten", name: "Busfahrt", short: "1 Runde, 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
     gebot: { kind: "karten", name: "Geheimgebot", short: "8 Punktekarten", rule: "Alle bieten gleichzeitig und verdeckt mit ihren Karten – das höchste Gebot holt die Punkte." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
-  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "gebot", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "gebot", "bus", "slf", "duell", "frage"];
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
   // Auszeichnungen bei der Siegerehrung (je Art von Spiel)
@@ -70,6 +71,7 @@
       case "hinweis": return { mode: "hinweis", rounds: 2, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "siebzehn": return { mode: "siebzehn", rounds: 3 };
       case "gebot": return { mode: "gebot" };
+      case "bus": return { mode: "bus", rounds: 1 };
       case "slf": return { preset: st ? "suedtirol" : pick(["klassisch", "gemischt", "spass", "suedtirol"]), rounds: 1, timer: "stopp" };
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };

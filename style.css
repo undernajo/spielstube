@@ -1493,3 +1493,62 @@ body.qb-play .banner.win .trophy { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .kg-card.anim-deal, .kg-card.anim-flip, .kg-card.anim-flip .kg-in, .kg-card.anim-turn .kg-in, .kg-late, .kg-bid.anim-win, .kg-res.anim-row { animation: none !important; }
 }
+
+/* Busfahrt */
+.kg-card.mid { width: clamp(44px, 9vw, 60px); }
+.kg-card.hit { outline: 3px solid var(--accent); outline-offset: 2px; transform: translateY(-4px); }
+.bus-ref { margin: 0; }
+.bus-opts { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.bus-opts .btn { min-width: 150px; }
+.bus-opts.many .btn { min-width: 0; flex: 1 1 22%; padding: 10px 8px; }
+.bus-players { display: grid; gap: 10px; max-width: 820px; width: 100%; min-width: 0; margin: 12px auto 0; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+.bus-player { padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc); display: grid; gap: 8px; }
+.bus-player.me { grid-column: 1 / -1; }
+.bus-pname { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bus-pname .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); }
+.bus-minus { margin-left: auto; font-weight: 800; color: #ffb48f; }
+.bus-badge { padding: 1px 8px; border-radius: 99px; font-size: .8rem; font-weight: 800; }
+.bus-badge.bad { background: rgba(239, 75, 90, .2); color: #ff8a8a; }
+.bus-badge.ok { background: rgba(60, 207, 142, .18); color: #7ee2b1; }
+.bus-badge.good { background: rgba(255, 200, 61, .2); color: var(--accent); }
+.bus-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.bus-slot { display: grid; justify-items: center; gap: 4px; padding: 6px; border-radius: 12px; border: 2px solid transparent; }
+.bus-slot.cur { border-color: var(--accent); }
+.bus-slot.cur.give { background: rgba(60, 207, 142, .12); } .bus-slot.cur.take { background: rgba(239, 75, 90, .12); }
+.bus-pts { font-size: .72rem; color: var(--muted); font-weight: 700; }
+.bus-give { color: #7ee2b1; font-weight: 700; } .bus-take { color: #ff8a8a; font-weight: 700; }
+.bus-event { display: grid; gap: 6px; padding: 10px 14px; border-radius: 12px; background: #17133d; border: 1px solid var(--line); width: 100%; }
+.bus-ev-body { color: var(--muted); }
+.bus-ev-body b { font-weight: 800; }
+.bus-pick { display: grid; gap: 8px; margin-top: 4px; }
+.bus-badge.neutral { background: rgba(255, 255, 255, .08); color: var(--muted); }
+
+.bus-slot.next { border-color: color-mix(in srgb, var(--accent) 60%, transparent); animation: bus-pulse 1s ease-in-out infinite; }
+@keyframes bus-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+.bus-next-hint { margin: 0; color: var(--accent); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .bus-slot.next { animation: none; } }
+
+.bus-pts-short { display: none; }
+@media (max-width: 600px) {
+  .bus-row { flex-wrap: nowrap; gap: 4px; }
+  .bus-slot { padding: 4px 3px; flex: 1 1 0; min-width: 0; }
+  .bus-slot .kg-card.mid { width: 100%; max-width: 58px; }
+  .bus-pts-long { display: none; } .bus-pts-short { display: inline; }
+}
+/* Busfahrt als Leiter */
+.bus-ladder { display: flex; align-items: center; justify-content: center; width: 100%; max-width: 520px; }
+.bus-stop { display: grid; justify-items: center; gap: 1px; flex: none; width: 58px; padding: 5px 0; border-radius: 12px; border: 2px solid var(--line); background: #17133d; opacity: .7; }
+.bus-stop span { font-size: .58rem; white-space: nowrap; color: var(--muted); font-weight: 700; }
+.bus-stop b { font-size: 1.05rem; }
+.bus-stop.past { opacity: .45; }
+.bus-stop.cur { opacity: 1; border-color: var(--accent); box-shadow: 0 0 12px rgba(255, 200, 61, .35); }
+.bus-road { flex: 1; height: 3px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); min-width: 6px; }
+.bus-exit { border-color: #3ccf8e; color: #7ee2b1; }
+.bus-exit.on { background: #2fbf71; border-color: #2fbf71; color: #fff; }
+.bus-state { margin: 0; font-size: 1.05rem; }
+.bus-pot { margin-left: auto; font-size: .8rem; font-weight: 700; color: var(--accent); }
+.bus-pot + .bus-minus { margin-left: 8px; }
+.bus-pot:empty + .bus-minus { margin-left: auto; }
+.bus-minus { color: #fff; }
+.bus-player.st-crash .kg-hand { opacity: .55; }
+.bus-player.st-out { border-top-style: dashed; }

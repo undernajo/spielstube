@@ -121,6 +121,14 @@
     <g transform="rotate(-8 24 36)"><rect x="10" y="14" width="26" height="36" rx="4" fill="#2b2366" stroke="#ffc83d" stroke-width="1.6"/>
       <text x="23" y="39" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="18" fill="#ffc83d">?</text></g>
     <circle cx="44" cy="24" r="12" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/><text x="44" y="29" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="#2a1d00">+5</text>`);
+  // Busfahrt: kleiner Bus mit Karten als Fenstern
+  const busIcon = () => svgIcon(`
+    <rect x="8" y="16" width="48" height="30" rx="7" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/>
+    ${[13, 24, 35].map((x) => `<rect x="${x}" y="21" width="8" height="11" rx="1.5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1"/>`).join("")}
+    <rect x="46" y="21" width="6" height="16" rx="1.5" fill="#9fd8ff" stroke="#1f5f99" stroke-width="1"/>
+    <path d="M8 38 H56" stroke="#a37400" stroke-width="1.4"/>
+    <circle cx="19" cy="47" r="5" fill="#2a2456" stroke="#fbf6ea" stroke-width="1.6"/><circle cx="45" cy="47" r="5" fill="#2a2456" stroke="#fbf6ea" stroke-width="1.6"/>
+    <path d="M16 26.5 h2 M27 26.5 h2 M38 26.5 h2" stroke="#ef4b5a" stroke-width="2" stroke-linecap="round"/>`);
   // Querbeet: geschwungener Weg mit bunten Etappen-Punkten und Zielfahne
   const qbIcon = () => svgIcon(`
     <path d="M10 50 C22 50 18 36 30 36 S40 22 50 22" stroke="#fbf6ea" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-dasharray="1 6.5"/>
@@ -182,8 +190,9 @@
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
-    { key: "kartenrunde", color: "#2fbf71", name: "Kartenrunde", desc: "Siebzehn und Vier · Geheimgebot", icon: siebzehnIcon(), modes: ["siebzehn", "gebot"] },
+    { key: "kartenrunde", color: "#2fbf71", name: "Kartenrunde", desc: "Siebzehn und Vier · Geheimgebot · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "gebot", "bus"] },
     { key: "siebzehn", group: "kartenrunde", color: "#2fbf71", name: "Siebzehn und Vier", desc: "Wer kommt am nächsten an 21?", icon: siebzehnIcon() },
+    { key: "bus", group: "kartenrunde", color: "#ffc83d", name: "Busfahrt", desc: "Station für Station – weiterfahren oder aussteigen?", icon: busIcon() },
     { key: "gebot", group: "kartenrunde", color: "#c9883a", name: "Geheimgebot", desc: "Verdeckt bieten – das höchste Gebot gewinnt", icon: gebotIcon() },
     { key: "watten", two: true, color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
     { key: "schnapsen", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
@@ -194,7 +203,7 @@
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const QZ = window.S10Quiz;
   const KG = window.S10Karten;
-  let kgOpts = Object.assign({ rounds: 5 }, store.get("s10-kg") || {});
+  let kgOpts = Object.assign({ rounds: 5, busRounds: 3 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
   let qbOpts = Object.assign({ length: 8, off: [], joker: true }, store.get("s10-qb") || {});
@@ -380,7 +389,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -512,7 +521,7 @@
       case "duell": return !!S.duell && S.duell.step === "final";
       case "frage": return !!S.frage && S.frage.step === "final" && !(S.frage.complaint && S.frage.complaint.state === "open");
       case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
-      case "siebzehn": case "gebot": return !!S.karten && S.karten.step === "final";
+      case "siebzehn": case "gebot": case "bus": return !!S.karten && S.karten.step === "final";
     }
     return false;
   }
@@ -528,7 +537,7 @@
       case "duell": return all(S.duell.score);
       case "frage": return all(S.frage.score);
       case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
-      case "siebzehn": case "gebot": return all(S.karten.total);
+      case "siebzehn": case "gebot": case "bus": return all(S.karten.total);
     }
     return all({});
   }
@@ -548,7 +557,7 @@
       case "duell": ok = DU.start(S, { ...o, free: true, avoid: store.get("s10-du-seen") || [] }, now); break;
       case "frage": ok = FQ.start(S, { ...o, free: true, avoid: store.get("s10-fq-seen") || [] }, now); break;
       case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
-      case "siebzehn": case "gebot": ok = KG.start(S, { ...o, free: true }, now); break;
+      case "siebzehn": case "gebot": case "bus": ok = KG.start(S, { ...o, free: true }, now); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
@@ -629,7 +638,7 @@
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", joker: qbOpts.joker !== false },
-      kg: { rounds: Number(kgOpts.rounds) },
+      kg: { rounds: Number(kgOpts.rounds), busRounds: Number(kgOpts.busRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
@@ -1363,7 +1372,7 @@
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
       if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
-      if (KG.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: kgOpts });
+      if (KG.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: chosenGame === "bus" ? { rounds: kgOpts.busRounds } : kgOpts });
       if (chosenGame === "duell") return send({ type: "start", game: "duell", opts: duOpts });
       if (chosenGame === "frage") return send({ type: "start", game: "frage", opts: fqOpts });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
@@ -1545,7 +1554,7 @@
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
     return ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
-      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, gebot: gebotRulesHtml })[key] || rulesHtml;
+      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, gebot: gebotRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
   let rulesOpen = false; // Gastgeber: Spielauswahl oder „So geht's“ des gewählten Spiels
@@ -1692,7 +1701,7 @@
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (KG.MODES[view.game] && lb.kg) {
-      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt` : "8 Punktekarten · alle bieten gleichzeitig und verdeckt"}</p>`;
+      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt` : view.game === "bus" ? `${lb.kg.busRounds} ${lb.kg.busRounds === 1 ? "Runde" : "Runden"} · 5 Stationen, nach jeder: weiterfahren oder aussteigen` : "8 Punktekarten · alle bieten gleichzeitig und verdeckt"}</p>`;
     }
     if (QZ.MODES[view.game] && lb.quiz) {
       const det = view.game === "umriss" ? esc(LAND.REGION_NAMES[lb.quiz.region] || "Europa") + " · " + esc((QZ.LEVELS[lb.quiz.level] || QZ.LEVELS.gemischt).name)
@@ -1775,6 +1784,8 @@
     if (qbT) qbT.onchange = () => { qbOpts.theme = qbT.value; store.set("s10-qb", qbOpts); publish(); };
     const kgR = app.querySelector("#kg-rounds");
     if (kgR) kgR.onchange = () => { kgOpts.rounds = Number(kgR.value); store.set("s10-kg", kgOpts); publish(); };
+    const kgB = app.querySelector("#kg-busrounds");
+    if (kgB) kgB.onchange = () => { kgOpts.busRounds = Number(kgB.value); store.set("s10-kg", kgOpts); publish(); };
     [["#quiz-rounds", "rounds"], ["#quiz-theme", "theme"], ["#quiz-region", "region"], ["#quiz-level", "level"]].forEach(([id, k]) => {
       const el = app.querySelector(id);
       if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
@@ -1870,6 +1881,9 @@
   function kgSettingsHtml(mode) {
     return `${mode === "siebzehn" ? `<label class="field"><span>Runden</span><select id="kg-rounds">${KG.ROUND_CHOICES.map((n) =>
         `<option value="${n}" ${Number(kgOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>`
+        : mode === "bus" ? `<label class="field"><span>Runden</span><select id="kg-busrounds">${KG.BUS_ROUNDS.map((n) =>
+            `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>
+          <p class="muted small">Pro Runde 5 Stationen mit 1, 2, 3, 5 und 10 Punkten – nach jeder richtigen Station weiterfahren oder aussteigen.</p>`
         : `<p class="muted small">Eine Partie hat 8 Punktekarten (1 bis 8 Punkte) – jeder bietet mit seinen eigenen 8 Karten.</p>`}
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
@@ -2025,6 +2039,18 @@
         <li>Wenn alle fertig sind, wird aufgedeckt: Wer am nächsten an 21 liegt, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Genau 21 gibt einen Bonuspunkt.</li>
         <li><b>Feuer:</b> Zwei Asse auf der Hand schlagen alles (und zählen wie 21).</li>
         <li>Von den anderen sieht man nur, wie viele Karten sie haben und ob sie schon fertig sind.</li>
+      </ul>
+    </details>`;
+  const busRulesHtml = `
+    <details class="rules"><summary>Regeln: Busfahrt</summary>
+      <ul>
+        <li>Jede Runde hat <b>5 Stationen</b>. Vor jeder Station tippen alle gleichzeitig, dann bekommt jeder seine nächste Karte:
+          1. Figur (Unter, Ober, König, Ass) oder Zahl (Sieben bis Zehner)? (1 Punkt) · 2. Höher oder tiefer als die erste Karte? (2) · 3. Zwischen den ersten beiden oder außerhalb? (3) ·
+          4. Welche Farbe genau? (5) · 5. Welcher Wert genau? (10)</li>
+        <li><b>Richtig:</b> Die Punkte der Station kommen in deinen Rundentopf. <b>Falsch:</b> Dein Bus ist verunglückt – der Topf dieser Runde ist weg.</li>
+        <li>Ab Station 2 kannst du statt zu tippen <b>aussteigen</b> und deinen Topf sicher mitnehmen. Wer alle 5 Stationen schafft, bekommt 21 Punkte.</li>
+        <li>Werte von klein nach groß: Sieben, Acht, Neun, Zehner, Unter, Ober, König, Ass. Ist die neue Karte bei Station 2 oder 3 gleich hoch wie eine deiner Karten, zählt das für dich.</li>
+        <li>Nach allen Runden gewinnt, wer die meisten Punkte hat.</li>
       </ul>
     </details>`;
   const gebotRulesHtml = `
@@ -3594,9 +3620,10 @@
   function kgChips(v, st) {
     return st.seats.map((id) => {
       const i = v.players.findIndex((p) => p.id === id), p = v.players[i] || { name: "?", connected: false };
-      const done = st.step === "play" ? (st.mode === "siebzehn" ? !!st.done[id] : !!st.bid[id]) : st.step === "reveal" ? !!st.ready[id] : false;
+      const done = st.mode === "bus" ? (st.step === "guess" ? !!st.guessed[id] || st.status[id] !== "ride" : st.step === "roundEnd" ? !!st.ready[id] : false)
+        : st.step === "play" ? (st.mode === "siebzehn" ? !!st.done[id] : !!st.bid[id]) : st.step === "reveal" ? !!st.ready[id] : false;
       return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[Math.max(0, i) % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
-        <span class="geo-score-name">${esc(p.name)}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0}</b>${st.step !== "final" ? `<span class="geo-mark">${done ? "✓" : "…"}</span>` : ""}</span>`;
+        <span class="geo-score-name">${esc(p.name)}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0}</b>${st.step !== "final" && (st.mode !== "bus" || st.step === "guess" || st.step === "roundEnd") ? `<span class="geo-mark">${done ? "✓" : "…"}</span>` : ""}</span>`;
     }).join("");
   }
   function renderKarten() {
@@ -3604,7 +3631,8 @@
     if (!st) return;
     const seated = st.seats.includes(myId);
     const priv = seated && wattenPriv && wattenPriv.roundNo === st.round ? wattenPriv : null;
-    const key = v.code + ":" + st.mode + ":" + st.round + ":" + st.step + ":" + (priv ? priv.hand.length : "-") + ":" + JSON.stringify(st.done || st.bid || {}) + ":" + (st.mode === "gebot" && st.step === "play" ? JSON.stringify(st.hand[myId] || []) : "");
+    const key = v.code + ":" + st.gid + ":" + st.mode + ":" + st.round + ":" + st.step + ":" + (priv ? priv.hand.length : "-") + ":" + JSON.stringify(st.done || st.bid || {}) + ":" + (st.mode === "gebot" && st.step === "play" ? JSON.stringify(st.hand[myId] || []) : "")
+      + (st.mode === "bus" ? ":" + st.q + ":" + st.revealed + ":" + JSON.stringify(st.pick || {}) + ":" + JSON.stringify(st.guessed || {}) + ":" + JSON.stringify(st.status || {}) : "");
     if (kgRendered === key && app.querySelector(".kg-main")) {
       const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = kgChips(v, st);
       if (st.step === "reveal") { const rb = app.querySelector("#kg-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"; }
@@ -3622,9 +3650,11 @@
           <div class="banner-actions"><button id="kg-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
         <div class="panel slf-final">${ranking.map((id, i) => `<div class="slf-rank" style="--pc:${colorOf(id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
           <span class="slf-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0} Punkte</b></div>`).join("")}
-          <p class="muted small">${esc(st.modeName)} · ${st.rounds} Runden</p></div>`;
+          <p class="muted small">${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
+    } else if (st.mode === "bus") {
+      main = busMainHtml(v, st, colorOf, nameOf);
     } else if (st.mode === "siebzehn") {
-      const gk = v.code + ":" + st.round;
+      const gk = st.gid + ":" + st.round;
       // Hat die eigene letzte Karte die Runde beendet (21, über 21 oder als Letzter fertig), bleibt der Tisch kurz stehen:
       // erst wird die Karte ausgeteilt, dann geht es zur Auflösung
       const myR = st.step === "reveal" && st.result[myId], heldNew = myR ? myR.hand.filter((c) => !kgSeen.has(`${gk}:m:${c}`)) : [];
@@ -3676,7 +3706,7 @@
       }
     } else {
       const hand = (st.hand[myId] || []);
-      const gk = v.code + ":" + st.round, pa = kgAnim(`${gk}:prize`, 100, 1100);
+      const gk = st.gid + ":" + st.round, pa = kgAnim(`${gk}:prize`, 100, 1100);
       if (pa && pa.first) kgSound(1, 0, 250);
       const prize = `<div class="kg-prize">${kgCard(st.prize, "big", "", pa ? "flip" : "", pa ? pa.d : 0)}<div><div class="game-label">Punktekarte ${st.round} von ${st.rounds} – darum wird geboten</div>
           <div class="kg-pot">${((n) => `${n} ${n === 1 ? "Punkt" : "Punkte"}`)(st.step === "play" ? st.pot : st.result.points || st.result.carried)}${st.step === "play" && st.pot > KG_PTS(st.prize) ? ` <span class="muted small">(inkl. ${st.pot - KG_PTS(st.prize)} liegengeblieben)</span>` : ""}</div></div></div>`;
@@ -3702,7 +3732,7 @@
       <main class="screen game slf geo kg-main">
         <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
-        <section class="slf-main">${st.step !== "final" ? `<div class="geo-bar"><span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}${st.mode === "siebzehn" ? `Runde ${st.round}/${st.rounds}` : `Punktekarte ${st.round}/${st.rounds}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
+        <section class="slf-main">${st.step !== "final" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}${st.mode === "siebzehn" ? `Runde ${st.round}/${st.rounds}` : `Punktekarte ${st.round}/${st.rounds}`}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
@@ -3713,6 +3743,11 @@
     on("#kg-next", () => send({ type: "kgNext" }));
     on("#kg-restart", () => send({ type: "kgRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
+    app.querySelectorAll("[data-busg]").forEach((b) => b.onclick = () => {
+      busMine = { gid: st.gid, q: st.q, r: st.round, g: b.dataset.busg };
+      app.querySelectorAll("[data-busg]").forEach((x) => { x.classList.toggle("on", x === b); x.classList.toggle("primary", x === b); x.classList.toggle("ghost", x !== b); });
+      send({ type: "kgGuess", round: st.round, station: st.q, g: b.dataset.busg });
+    });
     app.querySelectorAll("[data-bid]").forEach((el) => {
       const go = () => { kgMyBid = el.dataset.bid; app.querySelectorAll("[data-bid]").forEach((x) => x.classList.toggle("chosen", x === el)); send({ type: "kgBid", round: st.round, card: el.dataset.bid }); };
       el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
@@ -3724,7 +3759,55 @@
     const cls = v > 21 ? "bust" : v === 21 ? "full" : v >= 17 ? "near" : "";
     return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark" style="left:${(17 / 21) * 100}%">17</span><span class="kg-mark end">21</span></div>`;
   }
-  let kgMyBid = null;
+  let kgMyBid = null, busMine = null;
+  const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
+  function busMainHtml(v, st, colorOf, nameOf) {
+    const gk = st.gid + ":bus:" + st.round, seated = st.seats.includes(myId), me = seated ? st.status[myId] : null;
+    const rankOfId = (c) => c.split("-")[1];
+    const order = seated ? [myId, ...st.seats.filter((id) => id !== myId)] : st.seats;
+    let flips = 0;
+    // Fortschritt: fünf Stationen mit Punkten
+    const ladder = `<div class="bus-ladder">${st.stations.map((p, i) => `<div class="bus-stop ${i < st.q || st.step === "roundEnd" ? "past" : i === st.q ? "cur" : ""}"><span>Station ${i + 1}</span><b>+${p}</b></div>`).join(`<i class="bus-road"></i>`)}</div>`;
+    const statusTxt = (id) => ({ ride: st.step === "guess" ? (st.guessed[id] ? "✓ getippt" : "überlegt …") : "fährt", out: `🚏 ausgestiegen · +${st.gain[id]}`, crash: "💥 verunglückt", done: `🏁 Endstation! +${st.gain[id]}` })[st.status[id]];
+    const handRow = (id) => {
+      const res = st.step === "show" && st.res ? st.res[id] : null, h = st.hands[id] || [];
+      const cards = h.map((c, i) => {
+        const a = i === h.length - 1 && res && !res.out ? kgAnim(`${gk}:h:${id}:${i}`, 150, 1000) : null;
+        if (a && a.first) flips++;
+        return kgCard(c, id === myId ? "big" : "mid", "", a ? "flip" : "", a ? a.d : 0);
+      }).join("");
+      const badge = res ? `<span class="bus-badge ${res.out ? "good" : res.ok ? "ok" : "bad"} ${res.out ? "" : "kg-late"}" style="--d:1100ms">${res.out ? `🚏 steigt aus mit ${res.pts}` : res.ok ? `✓ +${res.pts}` : `💥 verunglückt${res.lost ? ` – ${res.lost} weg` : ""}`}</span>` : "";
+      return `<div class="bus-player ${id === myId ? "me" : ""} st-${st.status[id]}" style="--pc:${colorOf(id)}"><div class="bus-pname"><span class="pdot"></span><b>${esc(nameOf(id))}${id === myId ? " (du)" : ""}</b>
+          <span class="muted small">${res ? "" : statusTxt(id)}</span>${badge}<span class="bus-pot" title="Rundentopf – noch nicht sicher">${st.status[id] === "ride" && st.pot[id] ? `Topf ${st.pot[id]}` : ""}</span><span class="bus-minus">${st.total[id] || 0}</span></div>
+        <div class="kg-hand">${cards || `<span class="muted small">noch keine Karte</span>`}</div></div>`;
+    };
+    let top;
+    if (st.step === "roundEnd") {
+      const rows = st.seats.slice().sort((a, b) => st.gain[b] - st.gain[a]).map((id) => `<div class="kg-res ${st.gain[id] ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span>
+          <span class="muted small">${st.status[id] === "crash" ? "💥 verunglückt" : st.status[id] === "done" ? "🏁 alle 5 Stationen!" : "🚏 ausgestiegen"}</span><span></span><b class="qb-plus">+${st.gain[id]}</b></div>`).join("");
+      top = `${ladder}<div class="kg-results">${rows}</div>
+        <div class="geo-actions"><button id="kg-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"}</button>
+          ${isHost ? `<button id="kg-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+    } else {
+      const q = st.question, h = st.hands[myId] || [], mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[myId] ? busMine.g : null;
+      const ref = st.q === 1 && h[0] ? `Deine erste Karte: <b>${esc(kgName(h[0]))}</b>` : st.q === 2 && h[1] ? `Zwischen <b>${esc(BUS_VAL[rankOfId(h[0])])}</b> und <b>${esc(BUS_VAL[rankOfId(h[1])])}</b>?` : "";
+      const pot = seated ? st.pot[myId] : 0;
+      let act = "";
+      if (st.step === "guess" && me === "ride") {
+        act = `${ref ? `<p class="bus-ref">${ref}</p>` : ""}
+          <div class="bus-opts ${q.opts.length > 2 ? "many" : ""}">${q.opts.map(([k, t]) => `<button class="btn ${mine === k ? "primary on" : "ghost"}" data-busg="${k}">${esc(t)}</button>`).join("")}</div>
+          ${st.q > 0 && pot > 0 ? `<button class="btn ${mine === "_out" ? "primary on" : "ghost"} bus-exit" data-busg="_out">🚏 Aussteigen und ${pot} ${pot === 1 ? "Punkt" : "Punkte"} sichern</button>` : ""}
+          <p class="muted small">${mine ? (mine === "_out" ? "Du steigst aus ✓ – noch umentscheidbar, bis alle dran waren." : "Getippt ✓ – du kannst noch umentscheiden, bis alle getippt haben.") : `Richtig: +${q.pts} in deinen Topf · Falsch: Topf weg`}</p>`;
+      } else if (st.step === "show") act = `<p class="muted">Die Karten werden ausgeteilt …</p>`;
+      else if (me === "out") act = `<p class="bus-state">🚏 Du bist mit <b>${st.gain[myId]}</b> ${st.gain[myId] === 1 ? "Punkt" : "Punkten"} ausgestiegen – schau, wie weit die anderen kommen.</p>`;
+      else if (me === "crash") act = `<p class="bus-state">💥 Dein Bus ist verunglückt – du schaust bis zum Rundenende zu.</p>`;
+      else if (me === "done") act = `<p class="bus-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[myId]}</b></p>`;
+      top = `${ladder}<div class="kg-goal"><b>${esc(q.text)}</b><span class="muted small">Station ${st.q + 1}: ${q.pts} ${q.pts === 1 ? "Punkt" : "Punkte"} · Reihenfolge: Sieben – Acht – Neun – Zehner – Unter – Ober – König – Ass${st.q === 1 || st.q === 2 ? " · Gleich hoch zählt für dich" : ""}</span></div>${act}`;
+    }
+    if (flips) kgSound(flips, 200, 150);
+    return `<div class="panel kg-table bus">${top}</div><div class="bus-players">${order.map(handRow).join("")}</div>`;
+  }
+
   const KG_PTS = (id) => ["7", "8", "9", "10", "U", "O", "K", "A"].indexOf(id.split("-")[1]) + 1;
 
   // ---------- Querbeet ----------
@@ -3789,7 +3872,7 @@
       const rows = Object.entries(x.res).sort((a, b) => a[1].place - b[1].place);
       return `<div class="panel qb-result" style="--gc:${g.color}"><div class="qb-head"><span class="gt-icon">${g.icon}</span><div><div class="game-label">${title}</div><b>${esc(g.name)}</b></div></div>
         ${rows.map(([id, r]) => `<div class="qb-row" style="--pc:${colorOf(id)}"><span class="qb-place">${medal[r.place - 1] || r.place + "."}</span><span class="pdot"></span>
-          <span class="qb-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${qbFmt(r.score)} ${x.game === "zehn" || x.game === "hl" || x.game === "land" ? "richtig" : "Punkte"}</span><b class="qb-plus">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}+${r.pts}</b></div>`).join("")}</div>`;
+          <span class="qb-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${x.game === "bus" ? `${qbFmt(r.score)} Punkte` : `${qbFmt(r.score)} ${x.game === "zehn" || x.game === "hl" || x.game === "land" ? "richtig" : "Punkte"}`}</span><b class="qb-plus">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}+${r.pts}</b></div>`).join("")}</div>`;
     };
     const nextCard = (n, isFinal) => { const g = qbGame(n.game), jk = qbJokerHtml(q, isFinal);
       return `<div class="panel qb-next ${jk ? "with-joker" : ""}" style="--gc:${g.color}">
