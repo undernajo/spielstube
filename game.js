@@ -3745,7 +3745,8 @@
     on("#toLobby", () => send({ type: "lobby" }));
     app.querySelectorAll("[data-busg]").forEach((b) => b.onclick = () => {
       busMine = { gid: st.gid, q: st.q, r: st.round, g: b.dataset.busg };
-      app.querySelectorAll("[data-busg]").forEach((x) => { x.classList.toggle("on", x === b); x.classList.toggle("primary", x === b); x.classList.toggle("ghost", x !== b); });
+      app.querySelectorAll("[data-busg]").forEach((x) => x.classList.toggle("on", x === b));
+      const sk = app.querySelector(".bus-stakes"); if (sk) sk.innerHTML = `<span class="bs-done">${b.dataset.busg === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`;
       send({ type: "kgGuess", round: st.round, station: st.q, g: b.dataset.busg });
     });
     app.querySelectorAll("[data-bid]").forEach((el) => {
@@ -3794,15 +3795,25 @@
       const pot = seated ? st.pot[myId] : 0;
       let act = "";
       if (st.step === "guess" && me === "ride") {
-        act = `${ref ? `<p class="bus-ref">${ref}</p>` : ""}
-          <div class="bus-opts ${q.opts.length > 2 ? "many" : ""}">${q.opts.map(([k, t]) => `<button class="btn ${mine === k ? "primary on" : "ghost"}" data-busg="${k}">${esc(t)}</button>`).join("")}</div>
-          ${st.q > 0 && pot > 0 ? `<button class="btn ${mine === "_out" ? "primary on" : "ghost"} bus-exit" data-busg="_out">🚏 Aussteigen und ${pot} ${pot === 1 ? "Punkt" : "Punkte"} sichern</button>` : ""}
-          <p class="muted small">${mine ? (mine === "_out" ? "Du steigst aus ✓ – noch umentscheidbar, bis alle dran waren." : "Getippt ✓ – du kannst noch umentscheiden, bis alle getippt haben.") : `Richtig: +${q.pts} in deinen Topf · Falsch: Topf weg`}</p>`;
+        // Antwort-Kacheln mit Symbol; Bezugskarten klein als Bild
+        const ICON = { fig: "👑", zahl: "🔢", hoch: "⬆️", tief: "⬇️", in: "⇥ ⇤", out: "⇤ ⇥" };
+        const sym = (k) => ["herz", "laub", "eichel", "schelle"].includes(k) ? `<span class="bus-suit">${WCARDS.sym(k, 1)}</span>` : ICON[k] ? `<span class="bus-ico">${ICON[k]}</span>` : "";
+        const label = (k, t) => q.key === "figur" ? `<b>${k === "fig" ? "Figur" : "Zahl"}</b><small>${k === "fig" ? "Unter · Ober · König · Ass" : "Sieben bis Zehner"}</small>` : `<b>${esc(t)}</b>`;
+        act = `<div class="bus-choices ${q.opts.length > 4 ? "many" : q.opts.length > 2 ? "four" : ""}">${q.opts.map(([k, t]) =>
+            `<button type="button" class="bus-choice ${mine === k ? "on" : ""}" data-busg="${k}">${sym(k)}${label(k, t)}</button>`).join("")}</div>
+          ${st.q > 0 && pot > 0 ? `<div class="bus-or"><span>oder</span></div>
+            <button type="button" class="bus-exit ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bus-ico">🚏</span><span><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></span></button>` : ""}
+          <div class="bus-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
+            : `<span class="bs-win">Richtig: +${q.pts}</span><span class="bs-lose">Falsch: ${pot ? `Topf (${pot}) weg` : "Bus verunglückt"}</span>`}</div>`;
       } else if (st.step === "show") act = `<p class="muted">Die Karten werden ausgeteilt …</p>`;
       else if (me === "out") act = `<p class="bus-state">🚏 Du bist mit <b>${st.gain[myId]}</b> ${st.gain[myId] === 1 ? "Punkt" : "Punkten"} ausgestiegen – schau, wie weit die anderen kommen.</p>`;
       else if (me === "crash") act = `<p class="bus-state">💥 Dein Bus ist verunglückt – du schaust bis zum Rundenende zu.</p>`;
       else if (me === "done") act = `<p class="bus-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[myId]}</b></p>`;
-      top = `${ladder}<div class="kg-goal"><b>${esc(q.text)}</b><span class="muted small">Station ${st.q + 1}: ${q.pts} ${q.pts === 1 ? "Punkt" : "Punkte"} · Reihenfolge: Sieben – Acht – Neun – Zehner – Unter – Ober – König – Ass${st.q === 1 || st.q === 2 ? " · Gleich hoch zählt für dich" : ""}</span></div>${act}`;
+      // Bei höher/tiefer und zwischen/außerhalb: Rangfolge der Werte rechts daneben, eigene Bezugskarten markiert
+      const refs = st.q === 1 ? [h[0]] : st.q === 2 ? [h[0], h[1]] : [];
+      const scale = (st.q === 1 || st.q === 2) && refs.every(Boolean) ? `<div class="bus-scale" aria-label="Reihenfolge der Werte"><span class="bs-end">hoch</span>${["A", "K", "O", "U", "10", "9", "8", "7"].map((r) =>
+        `<span>${BUS_VAL[r]}</span>`).join("")}<span class="bs-end">tief</span></div>` : "";
+      top = `${ladder}<div class="bus-q ${scale ? "with-scale" : ""}"><div class="bus-q-main"><div class="bus-question"><h3>${esc(q.text)}</h3>${st.q === 1 || st.q === 2 ? `<span class="bus-qnote">Gleich hoch zählt für dich</span>` : ""}</div>${act}</div>${scale}</div>`;
     }
     if (flips) kgSound(flips, 200, 150);
     return `<div class="panel kg-table bus">${top}</div><div class="bus-players">${order.map(handRow).join("")}</div>`;
