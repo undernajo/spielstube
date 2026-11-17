@@ -98,10 +98,10 @@
   // Bei Station 2 und 3 zählt ein gleich hoher Wert zugunsten des Spielers. Figuren: Unter, Ober, König, Ass (4 von 8 Werten).
   const BUS_Q = [
     { key: "figur", pts: 1, text: "Wird deine erste Karte eine Figur oder eine Zahl?", opts: [["fig", "Figur (Unter, Ober, König, Ass)"], ["zahl", "Zahl (Sieben bis Zehner)"]] },
-    { key: "hoeher", pts: 2, text: "Ist die nächste Karte höher oder tiefer als deine erste?", opts: [["hoch", "Höher"], ["tief", "Tiefer"]] },
-    { key: "zwischen", pts: 3, text: "Liegt die nächste Karte zwischen deinen ersten beiden oder außerhalb?", opts: [["in", "Zwischen"], ["out", "Außerhalb"]] },
-    { key: "suit", pts: 5, text: "Welche Farbe hat die nächste Karte genau?", opts: [["herz", "Herz"], ["laub", "Laub"], ["eichel", "Eichel"], ["schelle", "Schelle"]] },
-    { key: "wert", pts: 10, text: "Welchen Wert hat die letzte Karte genau?", opts: RANKS.map((r) => [r, { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" }[r]]) },
+    { key: "hoeher", pts: 1, text: "Ist die nächste Karte höher oder tiefer als deine erste?", opts: [["hoch", "Höher"], ["tief", "Tiefer"]] },
+    { key: "zwischen", pts: 2, text: "Liegt die nächste Karte zwischen deinen ersten beiden oder außerhalb?", opts: [["in", "Zwischen"], ["out", "Außerhalb"]] },
+    { key: "suit", pts: 10, text: "Welche Farbe hat die nächste Karte genau?", opts: [["herz", "Herz"], ["laub", "Laub"], ["eichel", "Eichel"], ["schelle", "Schelle"]] },
+    { key: "wert", pts: 30, text: "Welchen Wert hat die letzte Karte genau?", opts: RANKS.map((r) => [r, { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" }[r]]) },
   ];
   const BUS_SHOW_MS = 3000, BUS_ROUNDS = [1, 3, 5];
   const rk = (id) => RANKS.indexOf(rankOf(id));

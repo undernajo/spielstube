@@ -1883,7 +1883,7 @@
         `<option value="${n}" ${Number(kgOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>`
         : mode === "bus" ? `<label class="field"><span>Runden</span><select id="kg-busrounds">${KG.BUS_ROUNDS.map((n) =>
             `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>
-          <p class="muted small">Pro Runde 5 Stationen mit 1, 2, 3, 5 und 10 Punkten – nach jeder richtigen Station weiterfahren oder aussteigen.</p>`
+          <p class="muted small">Pro Runde 5 Stationen mit 1, 1, 2, 10 und 30 Punkten – nach jeder richtigen Station weiterfahren oder aussteigen.</p>`
         : `<p class="muted small">Eine Partie hat 8 Punktekarten (1 bis 8 Punkte) – jeder bietet mit seinen eigenen 8 Karten.</p>`}
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
@@ -2045,10 +2045,10 @@
     <details class="rules"><summary>Regeln: Busfahrt</summary>
       <ul>
         <li>Jede Runde hat <b>5 Stationen</b>. Vor jeder Station tippen alle gleichzeitig, dann bekommt jeder seine nächste Karte:
-          1. Figur (Unter, Ober, König, Ass) oder Zahl (Sieben bis Zehner)? (1 Punkt) · 2. Höher oder tiefer als die erste Karte? (2) · 3. Zwischen den ersten beiden oder außerhalb? (3) ·
-          4. Welche Farbe genau? (5) · 5. Welcher Wert genau? (10)</li>
+          1. Figur (Unter, Ober, König, Ass) oder Zahl (Sieben bis Zehner)? (1 Punkt) · 2. Höher oder tiefer als die erste Karte? (1) · 3. Zwischen den ersten beiden oder außerhalb? (2) ·
+          4. Welche Farbe genau? (10) · 5. Welcher Wert genau? (30)</li>
         <li><b>Richtig:</b> Die Punkte der Station kommen in deinen Rundentopf. <b>Falsch:</b> Dein Bus ist verunglückt – der Topf dieser Runde ist weg.</li>
-        <li>Ab Station 2 kannst du statt zu tippen <b>aussteigen</b> und deinen Topf sicher mitnehmen. Wer alle 5 Stationen schafft, bekommt 21 Punkte.</li>
+        <li>Ab Station 2 kannst du statt zu tippen <b>aussteigen</b> und deinen Topf sicher mitnehmen. Wer alle 5 Stationen schafft, bekommt 44 Punkte.</li>
         <li>Werte von klein nach groß: Sieben, Acht, Neun, Zehner, Unter, Ober, König, Ass. Ist die neue Karte bei Station 2 oder 3 gleich hoch wie eine deiner Karten, zählt das für dich.</li>
         <li>Nach allen Runden gewinnt, wer die meisten Punkte hat.</li>
       </ul>
