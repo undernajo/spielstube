@@ -1397,3 +1397,18 @@ body.qb-play .banner.win .trophy { display: none; }
   .qbn-act .btn.primary { flex: 1; }
 }
 .qbn-act, .qbn-joker, .qbn-info { justify-self: stretch; }
+
+/* Schätzen: Zahlenstrahl in der Auflösung */
+.est { width: 100%; padding: 4px 18px 0; box-sizing: border-box; }
+.est-area { position: relative; }
+.est-track { position: absolute; left: 0; right: 0; top: 22px; height: 6px; border-radius: 3px; background: #2a2456; }
+.est-side { position: absolute; top: 0; font-size: .7rem; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+.est-side.lo { left: 0; } .est-side.hi { right: 0; }
+.est-goal { position: absolute; top: 8px; width: 4px; height: 34px; margin-left: -2px; background: var(--accent); border-radius: 2px; box-shadow: 0 0 10px rgba(255, 200, 61, .6); }
+.est-goal span { position: absolute; bottom: calc(100% + 2px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: .75rem; font-weight: 800; color: var(--accent); }
+.est-pin { position: absolute; top: calc(18px + var(--row) * 30px); transform: translateX(-50%); display: grid; justify-items: center; gap: 1px; min-width: 0; }
+.est-pin i { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .5); }
+.est-pin.best i { width: 18px; height: 18px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 35%, transparent); }
+.est-pin b { font-size: .72rem; line-height: 1.1; white-space: nowrap; color: var(--pc); }
+.est-pin small { font-size: .68rem; color: var(--muted); white-space: nowrap; line-height: 1; }
+.est-scale { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); margin-top: 2px; }

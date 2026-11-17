@@ -74,7 +74,24 @@
       fresh = all;
       event(s, "info", "Alle Karten dieses Sets wurden gespielt – es geht von vorn los.");
     }
-    return shuffle(fresh.slice());
+    return mixDeck(cards, fresh);
+  }
+  // Mischung bei mehreren Paketen: Für jede Karte wird zuerst ein Paket gezogen – Standard mit doppelter,
+  // jedes andere mit einfacher Chance (unabhängig von der Kartenzahl). Ein leeres Paket fällt heraus, bis alles durch ist.
+  const SET_WEIGHT = (k) => (k === "standard" ? 2 : 1);
+  function mixDeck(cards, ids) {
+    const bySet = {};
+    shuffle(ids.slice()).forEach((i) => { const k = cardSetKey(cards[i]); (bySet[k] = bySet[k] || []).push(i); });
+    const out = [];
+    for (;;) {
+      const keys = Object.keys(bySet).filter((k) => bySet[k].length);
+      if (!keys.length) break;
+      const total = keys.reduce((n, k) => n + SET_WEIGHT(k), 0);
+      let r = Math.random() * total, k = keys[keys.length - 1];
+      for (const key of keys) { r -= SET_WEIGHT(key); if (r < 0) { k = key; break; } }
+      out.push(bySet[k].pop());
+    }
+    return out;
   }
 
   function startGame(s, cards, target, set) {

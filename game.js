@@ -3336,7 +3336,11 @@
 
   // ---------- Schätzen · Hinweis für Hinweis · Umriss-Rätsel ----------
   let quizRendered = null, quizSent = null, quizMine = null, quizDeadline = 0, quizHintAt = 0;
-  const quizFmt = (n) => Number(n).toLocaleString("de-DE", { maximumFractionDigits: 3 });
+  // Zahlen fürs Schätzen: Jahreszahlen ohne Tausenderpunkt (Fragen ohne Einheit), große Werte ohne Nachkommastellen
+  let quizYear = false;
+  const quizFmt = (n) => { n = Number(n);
+    if (quizYear && Math.abs(n) < 10000) return String(Math.round(n));
+    return n.toLocaleString("de-DE", { maximumFractionDigits: Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 3 }); };
   function quizChips(v, st) {
     return v.players.map((p, i) => {
       const done = st.step === "ask" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
@@ -3365,6 +3369,27 @@
   function quizHintsHtml(st) {
     const it = st.item; if (!it || !it.hints) return "";
     return `<ol class="quiz-hints">${it.hints.map((h, i) => `<li class="${i === it.hints.length - 1 && st.step === "ask" ? "new" : ""}"><span class="qh-n">${i + 1}</span>${esc(h)}</li>`).join("")}</ol>`;
+  }
+  // Schätzen: Zahlenstrahl – richtige Antwort in der Mitte, Schätzungen als farbige Nadeln (zu tief links, zu hoch rechts)
+  function estLineHtml(v, st) {
+    const val = st.item.v, unit = st.item.unit ? " " + esc(st.item.unit) : "";
+    const pins = v.players.map((p, i) => ({ p, color: PLAYER_COLORS[i % PLAYER_COLORS.length], r: st.result[p.id] })).filter((x) => x.r && x.r.given != null);
+    if (!pins.length) return "";
+    const far = Math.max(...pins.map((x) => Math.abs(x.r.given - val)), Math.abs(val) * 0.02, 1);
+    let lo = val - far * 1.12, hi = val + far * 1.12;
+    if (pins.every((x) => x.r.given >= 0) && val >= 0 && lo < 0) lo = 0; // keine negativen Werte auf dem Strahl
+    const pos = (x) => Math.max(0, Math.min(100, ((x - lo) / (hi - lo)) * 100));
+    // nah beieinander liegende Nadeln übereinander stapeln
+    const sorted = pins.slice().sort((a, b) => a.r.given - b.r.given), rows = [];
+    sorted.forEach((x) => { x.left = pos(x.r.given); let row = 0; while (rows[row] != null && x.left - rows[row] < 14) row++; rows[row] = x.left; x.row = row; });
+    const h = 64 + Math.max(0, rows.length - 1) * 30;
+    const tick = (x) => quizFmt(x);
+    return `<div class="est" style="--rows:${rows.length}"><div class="est-area" style="height:${h}px">
+        <div class="est-track"></div><div class="est-side lo">zu tief</div><div class="est-side hi">zu hoch</div>
+        <div class="est-goal" style="left:${pos(val)}%"><span>${tick(val)}${unit}</span></div>
+        ${sorted.map((x) => `<div class="est-pin ${x.r.place === 1 ? "best" : ""}" style="left:${x.left}%;--pc:${x.color};--row:${x.row}" title="${esc(x.p.name)}: ${tick(x.r.given)}${unit}">
+          <i></i><b>${esc(x.p.name)}${x.p.id === myId ? " (du)" : ""}</b><small>${tick(x.r.given)}</small></div>`).join("")}
+      </div><div class="est-scale"><span>${tick(lo)}</span><span>${tick(hi)}</span></div></div>`;
   }
   function quizResultsHtml(v, st) {
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
@@ -3404,6 +3429,7 @@
   function renderQuiz() {
     const v = view, st = v.quiz;
     if (!st) return;
+    quizYear = st.mode === "schaetzen" && !!st.item && !st.item.unit;
     const head = (inner) => `<main class="screen game slf geo quiz"><header class="top topbar">${headBrandHtml(st.mode)}
         <div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>${statusBarHtml()}<section class="slf-main quiz-main">${inner}</section></main>`;
     if (st.mode === "umriss" && !needLandData()) { quizRendered = null; app.innerHTML = head(`<div class="panel"><p class="muted">Länderkarte wird geladen …</p></div>`); return; }
@@ -3436,7 +3462,7 @@
     } else {
       const sent = quizSent === st.round, it = st.item || {};
       let q = "";
-      if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>` : ""}`;
+      if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>${estLineHtml(v, st)}` : ""}`;
       else if (st.mode === "hinweis") q = `<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Wer oder was ist gemeint?</div>`}
           ${quizHintsHtml(st)}${st.step === "ask" ? `<p class="muted small">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte · <span id="quiz-nexthint"></span></p>` : ""}</div>`;
       else q = `<div class="umriss-box">${umrissSvg(it.c)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Welches Gebiet ist das?</div>`}`;
