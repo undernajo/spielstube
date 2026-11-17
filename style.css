@@ -1744,3 +1744,8 @@ body.qb-play .banner.win .trophy { display: none; }
 .qb-mix { padding: 6px 12px; border-radius: 99px; border: 1.5px solid var(--line); background: transparent; color: inherit; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
 .qb-mix.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 @media (hover: hover) { .qb-mix:not(.on):hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); } }
+
+/* Querbeet: Etappe als Abzeichen in der Kopfzeile (überdeckt nichts) */
+.qb-tag { flex: none; margin-left: 4px; padding: 2px 9px; border-radius: 999px; border: 1.5px solid #ff8a5c; color: #ffb48f;
+  background: rgba(255, 138, 92, .1); font-size: .78rem; font-weight: 800; white-space: nowrap; }
+@media (max-width: 640px) { .qb-tag { font-size: .72rem; padding: 1px 7px; } }

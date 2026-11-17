@@ -1744,8 +1744,11 @@
   // Kopfzeile der Spielbildschirme: Marke Spielstube · großer Spieltitel · Infos · Knöpfe
   function headBrandHtml(key) {
     const g = GAMES.find((x) => x.key === key) || GAMES[0];
+    // In Querbeet steht die Etappe als kleines Abzeichen neben dem Spielnamen (statt einer Leiste, die etwas überdecken könnte)
+    const q = view && view.qb, inStage = q && q.cur && !q.done && view.phase !== "querbeet" && view.phase !== "lobby";
+    const qbTag = inStage ? `<span class="qb-tag" title="Querbeet · Etappe ${q.idx + 1} von ${q.n}${q.idx === q.n - 1 ? " · Finale, zählt doppelt" : ""}">🧩 Etappe ${q.idx + 1}/${q.n}${q.idx === q.n - 1 ? " · Finale ×2" : ""}</span>` : "";
     return `<div class="brand" title="Spielstube">${LOGO}</div>
-      <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b></div>`;
+      <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b>${qbTag}</div>`;
   }
   function gameBannerHtml() {
     const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
@@ -4099,7 +4102,8 @@
   qbBarEl.addEventListener("click", (e) => { const b = e.target.closest("[data-qb]"); if (b) send({ type: b.dataset.qb === "go" ? "qbGo" : "qbReady" }); });
   function qbBarRender() {
     const q = view && view.qb;
-    if (!q || view.phase === "querbeet" || view.phase === "lobby" || !q.cur) { qbBarEl.className = ""; qbBarEl.innerHTML = ""; return; }
+    // Während der Etappe zeigt die Kopfzeile die Etappe an; die Leiste unten kommt erst, wenn die Etappe geschafft ist
+    if (!q || view.phase === "querbeet" || view.phase === "lobby" || !q.cur || !q.done) { qbBarEl.className = ""; qbBarEl.innerHTML = ""; return; }
     const g = qbGame(q.cur.game), fin = q.idx === q.n - 1;
     qbBarEl.className = "on" + (q.done ? " done" : "");
     qbBarEl.style.setProperty("--gc", "#ff8a5c");
