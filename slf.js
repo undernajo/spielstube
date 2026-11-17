@@ -29,7 +29,7 @@
 
   function start(s, opts, now) {
     opts = opts || {};
-    const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 5;
+    const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 10) ? rn : 5; // free: Querbeet
     const timer = TIMERS[opts.timer] ? opts.timer : "stopp";
     s.game = "slf"; s.phase = "slf";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;

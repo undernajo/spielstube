@@ -40,7 +40,7 @@
     // „Von oben“ hat eine eigene feste Liste; die normalen Regionen nur für „Wo liegt das?“
     const region = mode === "oben" ? "oben" : data()[opts.region] && !data()[opts.region].hidden ? opts.region : "europa";
     const level = mode === "oben" ? "gemischt" : LEVELS[opts.level] ? opts.level : "gemischt";
-    const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
+    const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 20) ? rn : 10; // free: Querbeet
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
     const places = data()[region].places;
     // Ungespielte Orte zuerst. Reichen sie nicht mehr, beginnt diese Auswahl von vorn.

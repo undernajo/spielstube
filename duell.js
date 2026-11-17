@@ -63,7 +63,7 @@
     opts = opts || {};
     const seats = s.players.filter((p) => p.connected).slice(0, 2).map((p) => p.id);
     if (seats.length < 2) return false;
-    const target = TARGETS.includes(Number(opts.target)) ? Number(opts.target) : 5;
+    const tn = Number(opts.target), target = TARGETS.includes(tn) || (opts.free && Number.isInteger(tn) && tn > 0 && tn <= 9) ? tn : 5; // free: Querbeet
     const timer = TIMERS[String(opts.timer)] ? String(opts.timer) : "30";
     // erst Themen, die noch nicht dran waren
     const avoid = new Set(opts.avoid || []);

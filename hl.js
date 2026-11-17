@@ -46,7 +46,8 @@
   function start(s, opts, now) {
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "mittel";
-    const keys = shuffle(Object.keys(data())).slice(0, LENGTHS[length].cats);
+    const n = Number.isInteger(opts.cats) && opts.cats > 0 ? opts.cats : LENGTHS[length].cats; // Querbeet: 1 Kategorie
+    const keys = shuffle(Object.keys(data())).slice(0, n);
     s.game = "hl"; s.phase = "hl";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.hl = { opts: { length }, cats: keys, ci: -1, total: {}, history: [] };

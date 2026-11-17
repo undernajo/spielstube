@@ -82,6 +82,8 @@ em { color: var(--muted); font-style: normal; font-size: .9em; }
 .top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .top .meta { flex: 1; color: var(--muted); font-size: .9rem; text-align: right; }
 .status { background: #4a2330; color: #ffd0d5; padding: 8px 12px; border-radius: 10px; margin-bottom: 12px; font-size: .9rem; }
+/* Verbindung wird aufgebaut: kein Fehler, daher ruhig statt rot */
+.status.busy { background: #2a2456; color: var(--muted); }
 
 .players { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .chip { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: 10px 12px; display: grid; gap: 4px; transition: border-color .2s, transform .2s; }
@@ -422,6 +424,13 @@ textarea { resize: vertical; font: inherit; }
 .leaflet-tooltip.geo-tip { background: #1f1a4a; color: #fff; border: 0; border-radius: 8px; font: 600 12px Fredoka, sans-serif; padding: 2px 8px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
 .leaflet-tooltip.geo-tip.goal { background: var(--accent); color: var(--accent-ink); font-size: 13px; }
 .leaflet-tooltip.geo-tip::before { display: none; }
+/* Länder finden: Karte nur aus Umrissen, Meer einfarbig */
+.land-map { background: #17375a; cursor: pointer; }
+.land-map .leaflet-interactive { cursor: pointer; }
+.leaflet-tooltip.land-tip { text-align: center; line-height: 1.2; }
+.land-hint { font: 400 13px Fredoka, sans-serif; color: var(--muted); margin-left: 8px; letter-spacing: 0; white-space: nowrap; }
+.leaflet-tooltip.land-tip.goal { background: #2fbf71; color: #fff; }
+.leaflet-tooltip.land-tip small { font-weight: 500; opacity: .85; }
 .geo-results { display: grid; gap: 6px; flex: 1 1 260px; }
 .geo-res { display: grid; grid-template-columns: auto 1fr auto auto 3.2em; gap: 8px; align-items: center; padding: 4px 10px; border-radius: 10px; background: #15123a; border-left: 4px solid var(--pc); }
 .geo-res b { color: var(--ok); }
@@ -489,6 +498,17 @@ textarea { resize: vertical; font: inherit; }
 }
 /* Lobby: Spielauswahl als Kacheln (ruhig: flache Flächen, gedämpfte Farben) */
 .gamegrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+/* Spielart-Umschalter (Landkarte) */
+.modeswitch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.modebtn { display: grid; justify-items: center; gap: 2px; padding: 8px 6px; border-radius: 12px; border: 1.5px solid var(--line); background: transparent;
+  color: inherit; font: inherit; cursor: pointer; text-align: center; }
+.modebtn b { font-size: .9rem; line-height: 1.15; }
+.modebtn small { color: var(--muted); font-size: .72rem; line-height: 1.2; }
+.modebtn:hover { border-color: color-mix(in srgb, var(--gc) 45%, var(--line)); }
+.modebtn.on { border-color: var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); }
+.modeswitch.ro .modebtn { cursor: default; }
+.modeswitch.ro .modebtn:not(.on) { opacity: .6; }
+.mode-now { margin-top: 2px; font-size: .68rem; font-weight: 600; color: var(--gc); }
 .gametile { position: relative; display: grid; justify-items: center; align-content: start; gap: 3px; text-align: center; cursor: pointer;
   padding: 14px 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: #1a1640;
   transition: border-color .15s ease, background-color .15s ease; }
@@ -787,9 +807,9 @@ textarea { resize: vertical; font: inherit; }
   .lobby-host .gamegrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .lobby-host .gametile { padding: 10px 8px 9px; }
   .lobby-host .gt-icon { width: 36px; height: 36px; font-size: 1.15rem; margin-bottom: 2px; }
-  .lobby-host .setlist { gap: 5px; }
-  .lobby-host .setopt { padding: 7px 10px; }
-  .lobby-host .setopt .setcount { white-space: nowrap; font-size: .78rem; }
+  .lobby-host .setlist, .lobby-guest .setlist.qb-ro { gap: 5px; }
+  .lobby-host .setopt, .lobby-guest .setlist.qb-ro .setopt { padding: 7px 10px; }
+  .lobby-host .setopt .setcount, .lobby-guest .setlist.qb-ro .setopt .setcount { white-space: nowrap; font-size: .78rem; }
   .lobby-guest .setlist { grid-template-columns: 1fr 1fr; gap: 6px; }
   .lobby-guest .setopt.ro { padding: 8px 10px; }
   .lobby .code { font-size: 2.1rem; letter-spacing: 8px; }
@@ -1177,3 +1197,77 @@ textarea { resize: vertical; font: inherit; }
 .fq-tile.cat, .fq-catchip { background: #7a3fc0; }
 .fq-tile.secret { background: #33291a; }
 .fq-dotsanim { white-space: nowrap; }
+
+/* ---------- Querbeet ---------- */
+.setopt.dis { opacity: .5; cursor: default; }
+.qb-main { display: grid; gap: 14px; max-width: 980px; margin: 0 auto; width: 100%; }
+.qb-main .panel { margin: 0; }
+.qb-intro h2 { margin: 0 0 6px; }
+.qb-path { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; justify-content: center; padding: 6px 0; }
+.qb-stop { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--line); background: var(--panel); opacity: .55; }
+.qb-stop .gt-icon.xs { width: 26px; height: 26px; }
+.qb-stop.done { opacity: 1; border-color: color-mix(in srgb, var(--gc) 60%, var(--line)); }
+.qb-stop.next { opacity: 1; border-color: var(--gc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gc) 30%, transparent); }
+.qb-stop.fin { width: 44px; height: 44px; border-style: double; border-width: 4px; }
+.qb-link { width: 14px; height: 2px; background: var(--line); }
+.qb-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .qb-grid { grid-template-columns: minmax(0, 1fr); } }
+.qb-standing h3, .qb-table h3 { margin: 0 0 8px; font-size: 1rem; }
+.qb-row { display: grid; grid-template-columns: 30px 12px minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 5px 0; }
+.qb-standing .qb-row { grid-template-columns: 30px 12px minmax(0, 1fr) minmax(40px, 30%) 28px; }
+.qb-row .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); }
+.qb-place { text-align: center; font-weight: 700; }
+.qb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qb-bar { height: 8px; border-radius: 4px; background: #2a2456; overflow: hidden; }
+.qb-bar i { display: block; height: 100%; background: var(--pc); border-radius: 4px; }
+.qb-row b { text-align: right; }
+.qb-plus { color: #3ccf8e; }
+.qb-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.qb-head b { font-size: 1.05rem; }
+.qb-result { border-top: 3px solid var(--gc); }
+.qb-next { border: 2px solid var(--gc); display: grid; gap: 8px; justify-items: start; }
+.qb-next .qb-gname { font-size: 1.35rem; }
+.qb-next p { margin: 0; }
+.qb-next .btn.primary { min-width: 220px; }
+.qb-scroll { overflow-x: auto; }
+.qb-table table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.qb-table th, .qb-table td { padding: 4px 6px; text-align: center; white-space: nowrap; }
+.qb-table th small { display: block; color: var(--muted); }
+.qb-table td:first-child { text-align: left; }
+.qb-table td:first-child .pdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--pc); }
+.qb-table tbody tr { border-top: 1px solid var(--line); }
+/* Leiste während einer Etappe */
+#qbbar { display: none; }
+#qbbar.on { display: flex; position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 40; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  max-width: calc(100vw - 24px); padding: 8px 12px; border-radius: 14px; background: #241e4f; border: 1.5px solid #ff8a5c; box-shadow: 0 6px 22px rgba(0,0,0,.45); }
+#qbbar .qb-chip { display: inline-flex; align-items: center; gap: 6px; }
+#qbbar .gt-icon.xs { width: 24px; height: 24px; }
+#qbbar.done { padding: 10px 14px; }
+#qbbar .qb-done { font-weight: 700; color: #ffb48f; }
+#qbbar .btn { padding: 8px 14px; }
+body.qb-play { padding-bottom: 70px; }
+/* In Querbeet geht es nicht über „Nochmal spielen“ / „Nächste Runde“ weiter, sondern über die Leiste */
+body.qb-play #next, body.qb-play #restart, body.qb-play #slf-restart, body.qb-play #hl-restart, body.qb-play #fq-restart,
+body.qb-play #du-restart, body.qb-play #geo-restart, body.qb-play #land-restart, body.qb-play #toLobby { display: none !important; }
+#qbbar .qb-chip, #qbbar .qb-chip .muted { white-space: nowrap; }
+@media (max-width: 640px) {
+  /* Handy: während der Etappe nur ein kleines Abzeichen unten rechts */
+  #qbbar.on:not(.done) { left: auto; right: 10px; transform: none; padding: 5px 10px; }
+  #qbbar.on:not(.done) .qb-cur { display: none; }
+  #qbbar.on:not(.done) .qb-chip b { display: none; }
+  #qbbar.done { width: calc(100vw - 24px); }
+}
+
+/* Querbeet: Etappen-Ende zurückhaltend, Siegerehrung groß */
+body.qb-play .banner.win { background: var(--panel); border-color: var(--line); }
+body.qb-play .banner.win .trophy { display: none; }
+.querbeet .banner.win { padding: 22px 16px; }
+.querbeet .banner.win .trophy { font-size: 3.6rem; animation: qb-cup 1.2s ease-in-out infinite alternate; }
+.querbeet .banner.win > b { font-size: 1.4rem; }
+@keyframes qb-cup { from { transform: translateY(0) rotate(-4deg) scale(1); } to { transform: translateY(-6px) rotate(4deg) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .querbeet .banner.win .trophy { animation: none; } }
+
+/* Gäste sehen die Querbeet-Auswahl wie der Gastgeber, können sie aber nicht ändern */
+.setlist.qb-ro .setopt { cursor: default; }
+.setlist.qb-ro .setopt, .setlist.qb-ro input { pointer-events: none; }
+.setlist.qb-ro .setopt:not(.on):not(.dis) { opacity: .6; }
