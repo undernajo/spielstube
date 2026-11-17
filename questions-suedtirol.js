@@ -222,8 +222,8 @@ window.SCHLAU10_CARDS.push(...[
     ["Städte mit Stadtrecht", 8] ] },
 
   { q: "Südtirol schätzen", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Apfelanbaufläche (Hektar)", 18000], ["Anteil an der EU-Apfelernte (%)", 10], ["Rebfläche (Hektar)", 5500],
-    ["Gästeübernachtungen pro Jahr (Mio.)", 36], ["Ötzis Körpergröße (cm)", 160], ["Ötzis Gewicht (kg)", 50],
+    ["Alter der ältesten Weinrebe Südtirols in Prissian (Jahre)", 350], ["Minusgrade, bei denen Ötzi im Museum lagert (°C)", 6],
+    ["Fläche des Kalterer Sees (km²)", 1.5], ["Länge des Marlinger Waalwegs (km)", 12], ["Ötzis Körpergröße (cm)", 160], ["Ötzis Gewicht (kg)", 50],
     ["Ötzis Alter beim Tod (Jahre)", 45], ["Fläche der Seiser Alm (km²)", 56], ["Waldanteil an der Landesfläche (%)", 50],
     ["Größte Tiefe des Pragser Wildsees (m)", 36] ] },
 

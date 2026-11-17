@@ -312,10 +312,4 @@ window.SCHLAU10_CARDS.push(
     ["Henning Mankells Kommissar aus Ystad", "Kurt Wallander", ["Wallander"]], ["TV-Ermittler im zerknitterten Trenchcoat", "Columbo", ["Inspektor Columbo"]],
     ["Ermittler mit Zwangsstörung aus San Francisco", "Adrian Monk", ["Monk"]], ["Astrid Lindgrens Meisterdetektiv", "Kalle Blomquist", ["Blomquist", "Kalle"]],
     ["Inspector aus Midsomer", "Tom Barnaby", ["Barnaby", "Inspector Barnaby"]], ["Dürrenmatts kranker Kommissar in Bern", "Hans Bärlach", ["Bärlach", "Kommissär Bärlach"]] ] },
-
-  { q: "Deutschland in Zahlen", type: "num", items: [
-    ["Stadtstaaten", 3], ["Senate des Bundesverfassungsgerichts", 2], ["Richter am Bundesverfassungsgericht", 16],
-    ["Nummer des letzten Grundgesetz-Artikels", 146], ["Die Grundrechte stehen in Artikel 1 bis …", 19], ["Bundesweite gesetzliche Feiertage", 9],
-    ["Stellen einer Postleitzahl", 5], ["Mindestalter für das Amt des Bundespräsidenten", 40], ["Wahlalter bei der Bundestagswahl", 18],
-    ["Prozent-Hürde für den Einzug in den Bundestag", 5] ] },
 );

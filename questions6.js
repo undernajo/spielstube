@@ -128,11 +128,6 @@ window.SCHLAU10_CARDS.push(
     ["Plant Häuser", "Architekt", ["Architektin"]], ["Leitet ein Orchester", "Dirigent", ["Dirigentin"]], ["Stellt Fässer her", "Böttcher", ["Küfer", "Fassbinder"]],
     ["Bindet Bücher", "Buchbinder"] ] },
 
-  { q: "Deutschland – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.1, items: [
-    ["Haushalte (Mio.)", 41], ["Anteil der Einpersonenhaushalte (%)", 41], ["Durchschnittsalter der Bevölkerung (Jahre)", 44.6],
-    ["Lebenserwartung von Frauen (Jahre)", 83], ["Lebenserwartung von Männern (Jahre)", 78.5], ["Geburten pro Jahr", 680000],
-    ["Hunde (Mio.)", 10.5], ["Katzen (Mio.)", 15.7], ["Gesetzlicher Mindesturlaub bei 5-Tage-Woche (Tage)", 20], ["Höhe eines Stockwerks (m)", 3] ] },
-
   { q: "Wie heißt das Zeichen?", type: "choice", items: [
     ["@", "At-Zeichen", ["Klammeraffe", "At"]], ["&", "Und-Zeichen", ["Et-Zeichen", "Ampersand", "Und"]], ["#", "Raute", ["Hashtag", "Doppelkreuz"]],
     ["§", "Paragraf", ["Paragraph", "Paragrafenzeichen"]], ["~", "Tilde"], ["*", "Sternchen", ["Asterisk", "Stern"]], ["‰", "Promille"],

@@ -252,10 +252,6 @@ window.SCHLAU10_CARDS.push(...[
     ["SAP S/4HANA", true], ["Microsoft Dynamics 365", true], ["Oracle NetSuite", true], ["Odoo", true], ["Infor M3", true],
     ["Sage X3", true], ["Salesforce", false], ["Jira", false], ["Slack", false], ["Tableau", false] ] },
 
-  { q: "Welches SAP-Modul ist gemeint?", type: "choice", items: [
-    ["Finanzbuchhaltung", "FI"], ["Controlling", "CO"], ["Vertrieb", "SD"], ["Materialwirtschaft", "MM"], ["Produktionsplanung", "PP"],
-    ["Personalwirtschaft", "HCM", ["HR"]], ["Qualitätsmanagement", "QM"], ["Instandhaltung", "PM"], ["Lagerverwaltung", "WM", ["EWM"]], ["Projektsystem", "PS"] ] },
-
   { q: "Ordne die IT-Meilensteine zeitlich.", hint: "1 = am frühesten", type: "rank", items: [
     ["ENIAC", 1], ["COBOL", 2], ["ARPANET", 3], ["Relationales Datenmodell von Codd", 4], ["VisiCalc (erste Tabellenkalkulation)", 5],
     ["Microsoft Excel", 6], ["SAP R/3", 7], ["Java", 8], ["Agiles Manifest", 9], ["Amazon Web Services", 10] ] },

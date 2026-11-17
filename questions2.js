@@ -39,10 +39,6 @@ window.SCHLAU10_CARDS.push(
     ["Taylor Swift", 1980], ["Kylian Mbappé", 1990] ] },
 
   // ===================== Rang =====================
-  { q: "Der wievielte Bundespräsident war das?", hint: "1 = erster Bundespräsident", type: "rank", items: [
-    ["Theodor Heuss", 1], ["Heinrich Lübke", 2], ["Gustav Heinemann", 3], ["Walter Scheel", 4], ["Karl Carstens", 5],
-    ["Richard von Weizsäcker", 6], ["Roman Herzog", 7], ["Johannes Rau", 8], ["Horst Köhler", 9], ["Christian Wulff", 10] ] },
-
   { q: "Ordne die US-Präsidenten nach Amtsantritt.", hint: "1 = am frühesten im Amt", type: "rank", items: [
     ["George Washington", 1], ["Abraham Lincoln", 2], ["Theodore Roosevelt", 3], ["Franklin D. Roosevelt", 4],
     ["John F. Kennedy", 5], ["Richard Nixon", 6], ["Ronald Reagan", 7], ["Bill Clinton", 8], ["Barack Obama", 9], ["Joe Biden", 10] ] },
