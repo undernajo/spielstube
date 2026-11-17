@@ -1310,3 +1310,30 @@ body.qb-play .banner.win .trophy { display: none; }
 /* Karten (Leaflet) in eine eigene Ebene sperren: ihre hohen z-index-Werte sollen nicht über Leisten
    wie der Querbeet-Etappenkarte oder Dialogen liegen */
 .leaflet-container { isolation: isolate; }
+
+/* Lobby: Spiele zu zweit */
+.gt-two { position: absolute; top: 6px; left: 6px; margin: 0; padding: 1px 6px; border-radius: 99px; font-size: .64rem; font-weight: 700;
+  background: rgba(255, 255, 255, .08); color: var(--muted); white-space: nowrap; }
+.gt-two.warn { background: rgba(255, 138, 92, .16); color: #ffb48f; }
+.gametile.crowd:not(.on) > :not(.gt-two):not(.gt-wish):not(.gt-check) { opacity: .55; }
+/* Spielerliste: eigene Spielfarbe, getrennt = grau */
+.dot.pc.on { background: var(--pc); box-shadow: 0 0 8px color-mix(in srgb, var(--pc) 70%, transparent); }
+.plist .kick { margin-left: 6px; flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); font: inherit; font-size: .8rem; line-height: 1; cursor: pointer; display: grid; place-items: center; }
+.plist .kick:hover { color: #ff8a8a; border-color: #ff8a8a; }
+.plist li .host-tag + .kick, .plist li em + .kick { margin-left: 6px; }
+.plist li > .kick:only-of-type { margin-left: auto; }
+/* Gastgeber am Handy: feste Startleiste unten */
+#startbar { display: none; }
+@media (max-width: 899px) {
+  body.has-startbar #startbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; gap: 10px; align-items: center;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: #1b163f; border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgba(0,0,0,.35); }
+  body.has-startbar { padding-bottom: 84px; }
+  #startbar .sb-game { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0; }
+  #startbar .sb-game span:last-child { display: grid; min-width: 0; }
+  #startbar .sb-game b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #startbar .sb-game small { color: var(--muted); font-size: .75rem; }
+  #startbar .gt-icon.xs { width: 34px; height: 34px; flex: none; }
+  #startbar .btn { flex: none; padding: 12px 18px; }
+}
+@media (max-width: 600px) { .gametile:has(.gt-two) .gt-icon { margin-top: 12px; } }

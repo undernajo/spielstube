@@ -140,15 +140,15 @@
     { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
-    { key: "duell", color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
-    { key: "frage", color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
+    { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
+    { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
     // Die drei Kartenspiele teilen sich in der Lobby eine Kachel; die Spielart wählt man in den Einstellungen
     { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Von oben", icon: geoIcon(), modes: ["geo", "land", "oben"] },
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
-    { key: "watten", color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
-    { key: "schnapsen", color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
+    { key: "watten", two: true, color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
+    { key: "schnapsen", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
   ];
@@ -316,6 +316,7 @@
       lastSeen.set(cid, Date.now());
       const p = S.players.find((x) => x.id === cid);
       if (m.type === "join") {
+        if ((S.kicked || []).includes(cid)) return; // entfernt: kein erneutes Beitreten
         const nm = cleanName(m.name);
         // Gleicher Name, alter Eintrag getrennt (z. B. neuer Tab): in der Lobby den alten Eintrag entfernen
         if (S.phase === "lobby") S.players = S.players.filter((x) => x.id === cid || x.connected || x.name.toLowerCase() !== nm.toLowerCase());
@@ -366,6 +367,13 @@
         const p = S.players.find((x) => x.id === pid), g = GAMES.find((x) => x.key === action.game);
         if (!host && p && g) toast(`${p.name} wünscht sich ${g.name}${/[?!]$/.test(g.name) ? "" : "."}`, "info");
       }
+      return true;
+    }
+    if (type === "kick") { // Gastgeber entfernt jemanden aus der Stube (nur in der Lobby)
+      if (!host || S.phase !== "lobby" || action.id === myId || !S.players.some((p) => p.id === action.id)) return false;
+      S.kicked = (S.kicked || []).concat(String(action.id)).slice(-30);
+      S.players = S.players.filter((p) => p.id !== action.id);
+      if (S.wishes) delete S.wishes[action.id];
       return true;
     }
     if (type === "start" && host && S.phase === "lobby") S.wishes = {}; // Wünsche gelten bis zum Spielstart
@@ -547,6 +555,7 @@
     if (S.phase === "lobby") S.players = S.players.filter((p) => p.connected || p.id === myId);
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
+    view.kicked = (S.kicked || []).slice();
     if (S.phase === "lobby") view.lobby = {
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
@@ -656,6 +665,11 @@
       lastSeq = m.seq || lastSeq;
       view = m;
       if (status.startsWith("Suche Stube")) status = "";
+      if ((m.kicked || []).includes(myId)) { // vom Gastgeber entfernt
+        store.del("s10-guest"); leaving = true; try { c.end(true); } catch {} mq = null; view = null;
+        errorMsg = "Der Gastgeber hat dich aus der Stube entfernt."; history.replaceState(null, "", location.pathname);
+        return renderStart();
+      }
       if (!m.players.some((p) => p.id === myId) && Date.now() - lastRejoin > 3000) { lastRejoin = Date.now(); sendUp({ type: "join", name: myName }); }
       render();
     });
@@ -951,6 +965,7 @@
       lastLobbyGame = view.game;
     }
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
+    if (view.phase !== "lobby") qbStartBar();
     if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") renderQuerbeet(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "land") renderLand(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "frage") renderFrage(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
     camDockPlace();
     qbBarRender();
@@ -1193,7 +1208,7 @@
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             <h3>Spieler</h3>
-            <ul class="plist">${view.players.map((p) => `<li><span class="dot ${p.connected ? "on" : ""}"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}</li>`).join("")}</ul>
+            <ul class="plist">${view.players.map((p, i) => `<li style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
             ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
@@ -1211,8 +1226,14 @@
       </main>`;
     app.querySelectorAll(".lobby .lobby-col").forEach((c, i) => { if (keepScroll[i]) c.scrollTop = keepScroll[i]; });
     if (keepY && scrollY !== keepY) scrollTo(0, keepY);
+    qbStartBar();
     bindReports(renderLobby);
     bindGamePicker();
+    app.querySelectorAll("[data-kick]").forEach((b) => b.onclick = async () => {
+      const p = view.players.find((x) => x.id === b.dataset.kick);
+      if (!p || !(await askConfirm(`${p.name} entfernen?`, "Die Person fliegt aus der Stube und kann mit diesem Gerät nicht wieder beitreten, solange die Stube offen ist.", "Entfernen", "Abbrechen", true))) return;
+      send({ type: "kick", id: p.id });
+    });
     app.querySelectorAll("[data-info]").forEach((b) => b.onclick = () => {
       guestInfo = b.dataset.info; guestInfoMode = null; renderLobby();
       const f = app.querySelector(".lobby-games"); // am Handy: Erklärung beginnt evtl. oberhalb des Sichtbaren
@@ -1409,6 +1430,22 @@
 
   // ---------- Karten melden ----------
   let reportOpen = false;
+  // Gastgeber am Handy: feste Leiste unten mit gewähltem Spiel und „Spiel starten“ (tippt den echten Startknopf an)
+  const startBarEl = document.createElement("div");
+  startBarEl.id = "startbar"; document.body.appendChild(startBarEl);
+  startBarEl.addEventListener("click", (e) => {
+    if (e.target.closest("[data-gostart]")) { const b = app.querySelector("#start"); if (b && !b.disabled) b.click(); }
+    if (e.target.closest("[data-goset]")) { const s = app.querySelector(".lobby-settings"); if (s) s.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  });
+  function qbStartBar() {
+    const on = isHost && view && view.phase === "lobby";
+    document.body.classList.toggle("has-startbar", !!on);
+    if (!on) { startBarEl.innerHTML = ""; return; }
+    const g = GAMES.find((x) => x.key === chosenGame) || GAMES[0], b = app.querySelector("#start");
+    startBarEl.innerHTML = `<button type="button" class="sb-game" data-goset style="--gc:${g.color}" title="Zu den Einstellungen"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span>
+        <span><b>${esc(g.name)}</b><small>Einstellungen ›</small></span></button>
+      <button type="button" class="btn primary" data-gostart ${!b || b.disabled ? "disabled" : ""}>${b ? esc(b.textContent.trim()) : "Spiel starten"}</button>`;
+  }
   const SET_NAMES = { standard: "Standard", suedtirol: "Südtirol", wirtschaft: "Wirtschaft", emoji: "Emoji & Flaggen", winter: "Weihnachten & Winter", film: "Film & Serien", kindheit: "Kindheit der 2000er", mixed: "Gemischt" };
 
   // ---------- Spielauswahl & Einstellungen ----------
@@ -1435,7 +1472,7 @@
     const head = pickHeadHtml("Spiel wählen", chosenGame);
     if (rulesOpen) return `<div class="field">${head}${rulesViewHtml(chosenGame)}</div>`;
     return `<div class="field">${head}<div class="gamegrid" role="radiogroup">${TILES.map((g) => `
-      <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""}" style="--gc:${g.color}">
+      <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""} ${twoCls(g)}" style="--gc:${g.color}">${twoTagHtml(g)}
         <input type="radio" name="game" value="${g.key}" ${groupOf(chosenGame) === g.key ? "checked" : ""}>
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
@@ -1461,6 +1498,12 @@
   }
   // Gäste: alle Spiele sehen und sich eines wünschen
   // Gäste-Kachel: kurzes Etikett oben rechts – „läuft“ oder Wünsche („💡 Du“, „💡 Maria“, „💡 Du +1“, „💡 3“); volle Namen im Tooltip
+  // Spiele zu zweit: Etikett oben links; sind mehr als zwei da, spielen nur zwei mit (Kachel abgeblendet)
+  const twoCrowd = () => view.players.filter((p) => p.connected).length > 2;
+  const twoTagHtml = (g) => !g.two ? "" : twoCrowd()
+    ? `<span class="gt-two warn" title="Ihr seid mehr als zwei – es spielen nur die ersten beiden, die anderen schauen zu.">nur 2 spielen</span>`
+    : `<span class="gt-two" title="Ein Spiel für zwei Spieler">zu zweit</span>`;
+  const twoCls = (g) => g.two && twoCrowd() ? "crowd" : "";
   // forHost: beim Gastgeber ohne „läuft“ (dort zeigt das Häkchen die Auswahl)
   function guestTagHtml(key, forHost) {
     if (!forHost && groupOf(view.game) === key) return `<span class="gt-wish now" title="Wird gerade gespielt">läuft</span>`;
@@ -1491,8 +1534,8 @@
           ${wishTagHtml(tile.key)}</div></div>`;
     }
     return `<div class="field"><span>Alle Spiele – tippe für Erklärung und Wunsch</span><div class="gamegrid">${TILES.map((g) => `
-      <button type="button" class="gametile wishtile ${groupOf(view.game) === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""}" style="--gc:${g.color}" data-info="${g.key}"
-        title="So geht's: ${esc(g.name)}">
+      <button type="button" class="gametile wishtile ${groupOf(view.game) === g.key ? "on" : ""} ${myWish === g.key ? "wished" : ""} ${twoCls(g)}" style="--gc:${g.color}" data-info="${g.key}"
+        title="So geht's: ${esc(g.name)}">${twoTagHtml(g)}
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
         ${guestTagHtml(g.key)}</button>`).join("")}</div></div>`;
