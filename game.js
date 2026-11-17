@@ -256,7 +256,7 @@
   const groupOf = (key) => { const g = GAMES.find((x) => x.key === key); return g ? g.group || g.key : key; };
   const isMode = (key) => GAMES.some((g) => g.key === key && g.group);
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes) ? store.get("s10-game") : "zehn";
-  let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
+  let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
@@ -648,7 +648,7 @@
     if (S.phase === "lobby") view.lobby = {
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
-      slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer },
+      slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme },
@@ -1095,6 +1095,7 @@
       toggle() { muted = !muted; store.set("s10-muted", muted); if (!muted) { unlock(); this.turn(); } },
       // bewusst sparsam: nur wenn man gebraucht wird und am Spielende
       turn: () => play(() => { tone(880, 0, 0.14, "sine", 0.12); tone(1175, 0.15, 0.24, "sine", 0.12); }),
+      tick: () => play(() => tone(1500, 0, 0.03, "square", 0.025)),
       // In einer Querbeet-Etappe nur ein kurzer, leiser Ton – gejubelt wird bei der Siegerehrung
       win: () => play(() => { if (qbQuiet) return tone(659, 0, 0.18, "triangle", 0.06); [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.25, "triangle", 0.1)); }),
       lose: () => play(() => { if (qbQuiet) return; tone(392, 0, 0.22, "triangle", 0.08); tone(330, 0.2, 0.35, "triangle", 0.08); }),
@@ -1208,7 +1209,6 @@
         if (v.wl.step === "final") confetti();
       }
       if (now.slfKey && now.slfKey !== prev.slfKey) {
-        if (v.slf.step === "writing") sfx.turn();
         if (v.slf.step === "final") { if (v.slf.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.phase === "gameOver" && prev.phase !== "gameOver") {
@@ -1402,8 +1402,8 @@
       if (!fn || !(await askConfirm(`Gespielte ${unit} vergessen?`, `Danach können alle ${unit} wieder vorkommen.`, "Vergessen"))) return;
       fn(); publish(); renderLobby(); toast(`Alle ${unit} sind wieder neu.`, "ok");
     });
-    app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame])').forEach((cb) => cb.onchange = () => {
-      chosenSets = [...app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame]):checked')].map((x) => x.value);
+    app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame]):not(#slf-surprise)').forEach((cb) => cb.onchange = () => {
+      chosenSets = [...app.querySelectorAll('.setopt input[type="checkbox"]:not([data-qbgame]):not(#slf-surprise):checked')].map((x) => x.value);
       store.set("s10-sets", chosenSets); publish();
     });
     const all = app.querySelector("#setall");
@@ -1696,18 +1696,34 @@
         ${guestTagHtml(g.key)}</button>`)}</div></div>`;
   }
 
+  // Kategorien-Auswahl als Kacheln mit kurzem Vorgeschmack (Gastgeber wählt, Gäste sehen sie nur)
+  const SLF_TILES = [
+    ["zufall", "🎲", "Jede Runde neu", "Superkraft, Etwas Rundes …"],
+    ["klassisch", "📍", "Klassisch", "Stadt, Land, Fluss …"],
+    ["spass", "😄", "Spaß", "Schlechtes Geschenk, Ausrede …"],
+    ["suedtirol", "🏔", "Südtirol", "Dialektwort, Alm, Gipfel …"],
+    ["gemischt", "🔀", "Gemischt", "Stadt, Tier, Etwas Rundes …"],
+    ["eigene", "✏️", "Eigene", "Eure Kategorien"],
+  ];
+  function slfPresetTilesHtml(cur, readOnly) {
+    return `<div class="field"><span>${readOnly ? "Kategorien (wählt der Gastgeber)" : "Kategorien"}</span>
+      <div class="modeswitch slf-presets ${readOnly ? "ro" : ""}" style="--n:2" role="radiogroup">${SLF_TILES.map(([k, ic, name, teaser]) =>
+        `<button type="button" class="modebtn ${cur === k ? "on" : ""}" style="--gc:#3ccf8e" ${readOnly ? "disabled" : `data-slfpreset="${k}"`} role="radio" aria-checked="${cur === k}">
+          <b>${ic} ${esc(name)}</b><small>${esc(teaser)}</small></button>`).join("")}</div></div>`;
+  }
   function slfSettingsHtml() {
     const presetCats = slfOpts.preset !== "eigene" && SLF.PRESETS[slfOpts.preset] ? SLF.PRESETS[slfOpts.preset].cats : null;
-    return `<label class="field"><span>Kategorien</span>
-        <select id="slf-preset">${Object.entries(SLF.PRESETS).map(([k, p]) => `<option value="${k}" ${slfOpts.preset === k ? "selected" : ""}>${p.name}</option>`).join("")}
-          <option value="eigene" ${slfOpts.preset === "eigene" ? "selected" : ""}>Eigene Kategorien …</option></select></label>
-      ${presetCats ? `<p class="muted small">${presetCats.map(esc).join(" · ")}</p>`
+    return `${slfPresetTilesHtml(slfOpts.preset, false)}
+      ${slfOpts.preset === "zufall" ? `<p class="muted small">Jede Runde ${SLF.PRESETS.zufall.random} neue Kategorien aus ${SLF.POOL.length} – von „Tier“ bis „Ausrede fürs Zuspätkommen“.</p>`
+        : presetCats ? `<p class="muted small">${presetCats.map(esc).join(" · ")}</p>`
         : `<label class="field"><span>Eigene Kategorien (mit Komma getrennt, höchstens 10)</span>
             <textarea id="slf-custom" rows="2" maxlength="400" placeholder="z. B. Stadt, Pizzabelag, Ausrede, Promi">${esc(slfOpts.custom)}</textarea></label>`}
       <div class="row2">
         <label class="field"><span>Runden</span><select id="slf-rounds">${SLF.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(slfOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         <label class="field"><span>Zeit</span><select id="slf-timer">${Object.entries(SLF.TIMERS).map(([k, t]) => `<option value="${k}" ${slfOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
       </div>
+      ${slfOpts.preset === "zufall" ? "" : `<label class="setopt ${slfOpts.surprise !== false ? "on" : ""}"><input type="checkbox" id="slf-surprise" ${slfOpts.surprise !== false ? "checked" : ""}>
+        <span class="setname">🎁 Jede Runde eine Überraschungskategorie dazu</span><span></span></label>`}
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
@@ -1740,10 +1756,10 @@
     const row = (on, name, detail, radio) => `<div class="setopt ro ${on ? "on" : ""} ${radio ? "radio" : ""}"><span class="ro-mark">${on && !radio ? "✓" : ""}</span>
       <span class="setname">${name}</span><span class="setcount">${detail}</span></div>`;
     if (view.game === "slf") {
-      const presets = Object.entries(SLF.PRESETS).map(([k, p]) => row(lb.slf.preset === k, esc(p.name), esc(p.cats.join(" · ")), true));
-      if (lb.slf.preset === "eigene") presets.push(row(true, "Eigene", esc(lb.slf.cats.join(" · ")), true));
-      return `<div class="field"><span>Kategorien (wählt der Gastgeber)</span><div class="setlist">${presets.join("")}</div></div>
-        <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}</p>`;
+      const list = lb.slf.preset === "zufall" ? "Jede Runde neue Kategorien" : (lb.slf.cats || []).map(esc).join(" · ");
+      return `${slfPresetTilesHtml(lb.slf.preset, true)}
+        ${list ? `<p class="muted small">${list}</p>` : ""}
+        <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}${lb.slf.preset !== "zufall" && lb.slf.surprise ? " · mit Überraschungskategorie 🎁" : ""}</p>`;
     }
     if ((view.game === "geo" || view.game === "oben") && lb.geo) {
       if (view.game === "oben") {
@@ -1820,6 +1836,9 @@
     if (ro) ro.onchange = () => { slfOpts.rounds = Number(ro.value); saveOpts(); publish(); };
     const ti = app.querySelector("#slf-timer");
     if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); publish(); };
+    const su = app.querySelector("#slf-surprise");
+    if (su) su.onchange = () => { slfOpts.surprise = su.checked; saveOpts(); publish(); };
+    app.querySelectorAll("[data-slfpreset]").forEach((b) => b.onclick = () => { slfOpts.preset = b.dataset.slfpreset; saveOpts(); publish(); });
     const wp = app.querySelector("#wl-pack");
     if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
     const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
@@ -2190,9 +2209,11 @@
     <details class="rules"><summary>Regeln: Stadt, Land, Fluss</summary>
       <ul>
         <li>Jede Runde gibt es einen Buchstaben. Finde zu jeder Kategorie ein passendes Wort mit diesem Anfangsbuchstaben.</li>
-        <li>Wer fertig ist, ruft <b>„Stopp!“</b> – dann haben alle anderen noch 10 Sekunden. (Oder ihr spielt mit fester Zeit.)</li>
+        <li>Wer <b>alle Felder ausgefüllt</b> hat, darf <b>„Stopp!“</b> rufen – dann haben alle anderen noch 10 Sekunden. (Oder ihr spielt mit fester Zeit.)</li>
+        <li>Mit „Jede Runde neu“ gibt es jede Runde andere Kategorien; sonst kommt auf Wunsch jede Runde eine 🎁 Überraschungskategorie dazu.</li>
+        <li>Wisst ihr alle nicht mehr weiter, tippt jeder „🤷 Mir fällt nichts mehr ein“ – sind alle einverstanden, endet die Runde sofort.</li>
         <li><b>Punkte:</b> 10 für eine eigene Antwort, 5 wenn jemand dasselbe hat, 20 wenn nur du in der Kategorie etwas hast.</li>
-        <li>Bei der Auswertung kann jeder Antworten anzweifeln (✗) oder anerkennen (✓). Weiter geht's, wenn alle bestätigt haben.</li>
+        <li><b>Auswertung Kategorie für Kategorie:</b> Tippe 👎 bei einer Antwort, die nicht gilt. Stimmt die Mehrheit der anderen dagegen, zählt sie nicht. Mit 👍 lässt die Mehrheit eine Antwort mit falschem Anfangsbuchstaben doch gelten.</li>
       </ul>
     </details>`;
 
@@ -2317,17 +2338,18 @@
   setInterval(() => {
     const el = document.getElementById("slf-timer");
     if (!el || !view || !view.slf || view.slf.step !== "writing") return;
-    const ms = Math.max(0, slfDeadline - Date.now());
+    // während der Buchstabe sich dreht, steht die Uhr noch still
+    const ms = Math.max(0, slfDeadline - Math.max(Date.now(), slfStartAt));
     el.textContent = fmtClock(ms); el.classList.toggle("urgent", ms <= 10000);
   }, 250);
 
   function slfChips(v, st) {
     return v.players.map((p, i) => {
       let badge = "";
-      if (st.step === "writing") badge = st.done[p.id] ? "fertig ✓" : "schreibt …";
+      if (st.step === "writing") badge = st.done[p.id] ? "fertig ✓" : st.stuck && st.stuck[p.id] ? "weiß nicht weiter 🤷" : "schreibt …";
       else if (st.step === "review") badge = st.ready && st.ready[p.id] ? "bereit ✓" : "prüft …";
       const rp = st.roundPoints && st.roundPoints[p.id] != null && st.step === "review" ? ` <span class="pill-rp">+${st.roundPoints[p.id]}</span>` : "";
-      const done = st.done[p.id] || (st.ready && st.ready[p.id]);
+      const done = st.done[p.id] || (st.stuck && st.stuck[p.id]) || (st.ready && st.ready[p.id]);
       // kompakte Pille wie bei „Wo liegt das?“ und „Höher oder tiefer“
       return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}" title="${esc(badge)}">
         <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
@@ -2335,56 +2357,112 @@
     }).join("");
   }
 
+  // Buchstabe dreht sich vor jeder Runde: Zeichen wechseln erst schnell, dann immer langsamer, bis der echte stehen bleibt
+  let slfStartAt = 0, slfSpinKey = null, slfSpinTimer = null, slfLastSt = null;
+  function slfSpin(key, letter, ms) {
+    if (slfSpinKey === key) return;
+    slfSpinKey = key;
+    const LET = "ABDEFGHIKLMNOPRSTUVWZ", end = Date.now() + ms;
+    let delay = 55;
+    const step = () => {
+      const el = document.getElementById("slf-letter");
+      if (slfSpinKey !== key || !el) return;
+      const left = end - Date.now();
+      if (left <= delay) { el.textContent = letter; return; }
+      let ch; do { ch = LET[Math.floor(Math.random() * LET.length)]; } while (ch === el.textContent || ch === letter);
+      el.textContent = ch; sfx.tick();
+      delay = Math.min(420, delay * 1.13);
+      setTimeout(step, delay);
+    };
+    step();
+    clearTimeout(slfSpinTimer);
+    slfSpinTimer = setTimeout(() => { if (slfSpinKey !== key) return; sfx.turn(); slfRendered = null; render(); }, ms);
+  }
+  // Knopf „Stopp!“ / „Fertig“: Stopp gibt es erst, wenn alle Felder ausgefüllt sind
+  function slfDoneState(st) {
+    if (st.done[myId]) return { off: true, text: "Fertig – warte auf die anderen …" };
+    if (Date.now() < slfStartAt) return { off: true, text: "Gleich geht's los …" };
+    const empty = st.cats.filter((c) => !String(slfLocal.answers[c] || "").trim()).length;
+    if (st.timer === "stopp") return empty ? { off: true, text: `Stopp! – noch ${empty} ${empty === 1 ? "Feld" : "Felder"} leer` } : { off: false, text: "Stopp! Ich bin fertig" };
+    return { off: false, text: "Fertig" };
+  }
+  function slfUpdDone(st) {
+    const b = app.querySelector("#slf-done"); if (b) { const d = slfDoneState(st); b.disabled = d.off; b.textContent = d.text; }
+    const k = app.querySelector("#slf-stuck"); if (k) k.outerHTML = slfStuckHtml(st);
+    const on = app.querySelector("#slf-stuck"); if (on) on.onclick = () => { slfSaveLocal(); send({ type: "slfStuck", answers: slfLocal.answers }); };
+  }
+  // „Mir fällt nichts mehr ein“: stimmen alle zu (oder sind schon fertig), endet die Schreibzeit sofort
+  function slfStuckHtml(st) {
+    if (st.done[myId] || Date.now() < slfStartAt) return `<div id="slf-stuck"></div>`;
+    const ids = view.players.filter((p) => p.connected).map((p) => p.id);
+    const n = ids.filter((id) => st.stuck && st.stuck[id]).length, mine = st.stuck && st.stuck[myId];
+    return `<div id="slf-stuck" class="slf-stuck"><button type="button" class="btn ghost sm ${mine ? "on" : ""}">${mine ? "↩ Doch noch was eingefallen" : "🤷 Mir fällt nichts mehr ein"}</button>
+      ${n ? `<span class="muted small">${n} von ${ids.length} wissen nicht weiter – stimmen alle zu, ist die Runde vorbei.</span>` : ""}</div>`;
+  }
+
   function renderSlf() {
     const v = view, st = v.slf;
     if (!st) return;
     slfLoadLocal(v);
-    slfDeadline = Date.now() + (st.endsIn || 0);
+    // Zeiten nur bei einem neuen Spielstand übernehmen – beim Neuzeichnen ohne neuen Stand wären sie veraltet
+    if (st !== slfLastSt) { slfLastSt = st; slfDeadline = Date.now() + (st.endsIn || 0); slfStartAt = st.step === "writing" ? Date.now() + (st.startsIn || 0) : 0; }
+    const spinning = st.step === "writing" && Date.now() < slfStartAt;
     if (st.step === "collecting" && slfSubmitted !== slfLocal.key) { slfSubmitted = slfLocal.key; slfSend(true); }
-    const key = slfLocal.key + ":" + st.step;
+    const key = slfLocal.key + ":" + st.step + (spinning ? ":spin" : "") + (st.step === "review" ? ":" + st.ci : "");
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (st.step === "writing" && slfRendered === key && app.querySelector(".slf-form")) {
       // Eingaben nicht neu zeichnen – nur Spieler, Stopp-Hinweis und Knopf aktualisieren
       app.querySelector(".players").innerHTML = slfChips(v, st);
       app.querySelector("#slf-stop").innerHTML = slfStopHtml(st, nameOf);
-      const done = app.querySelector("#slf-done");
-      if (done && st.done[myId]) { done.disabled = true; done.textContent = "Fertig – warte auf die anderen …"; }
+      slfUpdDone(st);
       return;
     }
     slfRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     let main = "";
     if (st.step === "writing") {
+      const d = slfDoneState(st);
       main = `
         <div class="slf-head">
           <div class="slf-headrow">
-            <div class="slf-letter" aria-label="Buchstabe ${st.letter}">${st.letter}</div>
-            <div class="slf-clock"><div id="slf-timer" class="slf-timer">${fmtClock(st.endsIn)}</div><div id="slf-stop" class="muted small slf-rule">${slfStopHtml(st, nameOf)}</div></div>
+            <div id="slf-letter" class="slf-letter ${spinning ? "spinning" : "landed"}" aria-label="Buchstabe ${spinning ? "wird gezogen" : st.letter}">${spinning ? "?" : st.letter}</div>
+            <div class="slf-clock"><div id="slf-timer" class="slf-timer">${fmtClock(Math.max(0, st.endsIn - (st.startsIn || 0)))}</div><div id="slf-stop" class="muted small slf-rule">${slfStopHtml(st, nameOf)}</div></div>
           </div>
         </div>
-        <form class="slf-form" autocomplete="off" onsubmit="return false">
-          ${st.cats.map((c, i) => `<label class="slf-field"><span>${esc(c)}</span>
-            <input data-cat="${i}" maxlength="60" autocapitalize="words" spellcheck="false" placeholder="${st.letter} …" value="${esc(slfLocal.answers[c] || "")}"></label>`).join("")}
+        <form class="slf-form ${spinning ? "waiting" : ""}" autocomplete="off" onsubmit="return false">
+          ${st.cats.map((c, i) => `<label class="slf-field ${c === st.surpriseCat ? "surprise" : ""}"><span>${c === st.surpriseCat ? "🎁 " : ""}${esc(c)}</span>
+            <input data-cat="${i}" maxlength="60" autocapitalize="words" spellcheck="false" ${spinning ? "disabled" : ""} placeholder="${spinning ? "…" : st.letter + " …"}" value="${esc(slfLocal.answers[c] || "")}"></label>`).join("")}
         </form>
-        <button id="slf-done" class="btn primary big" ${st.done[myId] ? "disabled" : ""}>${st.done[myId] ? "Fertig – warte auf die anderen …" : st.timer === "stopp" ? "Stopp! Ich bin fertig" : "Fertig"}</button>`;
+        <button id="slf-done" class="btn primary big" ${d.off ? "disabled" : ""}>${d.text}</button>
+        ${slfStuckHtml(st)}`;
     } else if (st.step === "collecting") {
       main = `<div class="slf-wait"><div class="slf-letter small">${st.letter}</div><p><b>Zeit ist um!</b> Die Antworten werden eingesammelt …</p></div>`;
     } else if (st.step === "review") {
-      const iReady = st.ready && st.ready[myId];
+      const ci = st.ci, cat = st.cats[ci], row = st.table[cat], iReady = st.ready && st.ready[myId], last = ci >= st.cats.length - 1;
+      const canVote = st.answered.includes(myId);
+      const cards = st.answered.map((pid) => {
+        const cell = row[pid], mine = pid === myId, iVoted = cell.voters.includes(myId), n = cell.voters.length;
+        const tag = !cell.text ? "keine Antwort" : !cell.valid ? (cell.auto ? "von der Mehrheit abgelehnt" : "falscher Anfangsbuchstabe")
+          : cell.overridden ? "von der Mehrheit anerkannt" : cell.dup ? "doppelt" : cell.points === 20 ? "einzige gültige Antwort" : "";
+        const btn = !cell.text || mine || !canVote ? (n ? `<span class="slf-votes" title="Stimmen der anderen">${cell.auto ? "👎" : "👍"} ${n}</span>` : "")
+          : `<button type="button" class="slf-vote ${iVoted ? "on" : ""}" data-pid="${esc(pid)}" title="${cell.auto ? "Gilt nicht" : "Gilt doch"} – ${n} von ${cell.need} nötigen Stimmen">${cell.auto ? "👎" : "👍"}${n ? ` <b>${n}</b>` : ""}</button>`;
+        return `<div class="slf-card ${cell.valid ? "" : "bad"} ${mine ? "mine" : ""}" style="--pc:${colorOf(pid)}">
+            <div class="slf-card-top"><span class="pdot"></span><span class="slf-name">${esc(nameOf(pid))}${mine ? " (du)" : ""}</span><b class="slf-pts">${cell.points ? "+" + cell.points : "0"}</b></div>
+            <div class="slf-card-ans">${cell.text ? esc(cell.text) : "—"}</div>
+            <div class="slf-card-foot"><span class="slf-tag">${tag}</span>${btn}</div>
+          </div>`;
+      }).join("");
       main = `
-        <div class="banner row"><div class="banner-text"><b>Runde ${st.round} – Buchstabe ${st.letter}.</b> Prüft die Antworten: ✗ zweifelt an, ✓ erkennt an.</div></div>
-        <div class="slf-review">${st.cats.map((c, ci) => `
-          <div class="slf-cat"><h4>${esc(c)}</h4>
-            ${st.answered.map((pid) => { const cell = st.table[c][pid]; return `
-              <div class="slf-row ${cell.valid ? "" : "bad"}" style="--pc:${colorOf(pid)}">
-                <span class="pdot"></span><span class="slf-name">${esc(nameOf(pid))}</span>
-                <span class="slf-ans">${cell.text ? esc(cell.text) : "—"}${cell.dup ? ` <em>doppelt</em>` : ""}${cell.overridden ? ` <em>${cell.valid ? "anerkannt" : "angezweifelt"}</em>` : ""}</span>
-                <b class="slf-pts">${cell.points}</b>
-                ${cell.text ? `<button class="slf-tog btn ghost sm" data-pid="${esc(pid)}" data-cat="${ci}" title="${cell.valid ? "Antwort anzweifeln" : "Antwort anerkennen"}">${cell.valid ? "✗" : "✓"}</button>` : `<span class="slf-tog-space"></span>`}
-              </div>`; }).join("")}
-          </div>`).join("")}</div>
+        <div class="slf-revhead">
+          <div class="slf-letter small">${st.letter}</div>
+          <div class="slf-revtitle"><div class="game-label">Runde ${st.round} · Kategorie ${ci + 1} von ${st.cats.length}</div>
+            <h3>${cat === st.surpriseCat ? "🎁 " : ""}${esc(cat)}</h3>
+            <div class="slf-dots">${st.cats.map((c, i) => `<span class="${i < ci ? "done" : i === ci ? "cur" : ""}"></span>`).join("")}</div></div>
+        </div>
+        <div class="slf-cards">${cards}</div>
+        <p class="muted small slf-hint">Tippe 👎, wenn eine Antwort nicht gilt – stimmt die Mehrheit der anderen dagegen, zählt sie nicht.</p>
         <div class="slf-actions">
-          <button id="slf-ready" class="btn ${iReady ? "ghost" : "primary"} big">${iReady ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde"}</button>
+          <button id="slf-ready" class="btn ${iReady ? "ghost" : "primary"} big">${iReady ? "Warte auf die anderen … (zurücknehmen)" : !last ? "Weiter zur nächsten Kategorie" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde"}</button>
           ${isHost ? `<button id="slf-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}
         </div>`;
     } else if (st.step === "final") {
@@ -2412,24 +2490,26 @@
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
-    on("#slf-done", () => { slfSend(false); send({ type: "slfDone" }); });
+    on("#slf-done", () => { if (slfDoneState(st).off) return; slfSaveLocal(); send({ type: "slfDone", answers: slfLocal.answers }); });
+    slfUpdDone(st);
     on("#slf-ready", () => send({ type: "slfReady" }));
     on("#slf-next", () => send({ type: "slfNext" }));
     on("#slf-restart", () => send({ type: "slfRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
-    app.querySelectorAll(".slf-tog").forEach((b) => b.onclick = () => send({ type: "slfToggle", pid: b.dataset.pid, cat: st.cats[Number(b.dataset.cat)] }));
+    app.querySelectorAll(".slf-vote").forEach((b) => b.onclick = () => send({ type: "slfVote", pid: b.dataset.pid, cat: st.cats[st.ci] }));
     const inputs = [...app.querySelectorAll(".slf-form input")];
     inputs.forEach((inp, i) => {
       const cat = st.cats[Number(inp.dataset.cat)];
       const mark = () => inp.classList.toggle("wrong", !!inp.value.trim() && SLF.firstLetter(inp.value) !== st.letter);
       mark();
       inp.oninput = () => {
-        slfLocal.answers[cat] = inp.value; slfSaveLocal(); mark();
+        slfLocal.answers[cat] = inp.value; slfSaveLocal(); mark(); slfUpdDone(st);
         clearTimeout(slfDraftTimer); slfDraftTimer = setTimeout(() => slfSend(false), 800);
       };
       inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); (inputs[i + 1] || inp).focus(); } };
     });
-    if (st.step === "writing" && inputs.length && !inputs.some((x) => x.value) && matchMedia("(pointer: fine)").matches) inputs[0].focus();
+    if (spinning) slfSpin(key, st.letter, slfStartAt - Date.now());
+    else if (st.step === "writing" && inputs.length && !inputs.some((x) => x.value) && matchMedia("(pointer: fine)").matches) inputs[0].focus();
   }
   function slfStopHtml(st, nameOf) {
     // steht in derselben Zeile wie die Zeitregel unter der Uhr – der Kasten wird dadurch nicht höher
