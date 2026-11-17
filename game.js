@@ -108,6 +108,19 @@
   const umrissIcon = () => svgIcon(`
     <path d="M18 14 L30 10 L36 16 L46 14 L50 24 L44 30 L48 40 L40 50 L30 46 L22 52 L16 42 L20 34 L12 26Z" fill="#ffd24d" fill-opacity=".14" stroke="#ffd24d" stroke-width="2.2" stroke-dasharray="4 3" stroke-linejoin="round"/>
     <text x="31" y="38" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="20" fill="#fbf6ea">?</text>`);
+  // Kartenrunde / Siebzehn und Vier: zwei Karten (Ass und Zehner) mit „21“
+  const siebzehnIcon = () => svgIcon(`
+    <g transform="rotate(-12 26 40)"><rect x="12" y="14" width="24" height="34" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
+      <text x="24" y="37" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="14" fill="#c0392b">A</text></g>
+    <g transform="rotate(10 38 40)"><rect x="26" y="14" width="24" height="34" rx="4" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.4"/>
+      <text x="38" y="37" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="#2f7d32">10</text></g>
+    <circle cx="47" cy="49" r="11" fill="#2fbf71" stroke="#1d7a48" stroke-width="1.4"/>
+    <text x="47" y="53.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12.5" fill="#fff">21</text>`);
+  // Geheimgebot: verdeckte Karte mit Fragezeichen und goldene Punkte-Münze
+  const gebotIcon = () => svgIcon(`
+    <g transform="rotate(-8 24 36)"><rect x="10" y="14" width="26" height="36" rx="4" fill="#2b2366" stroke="#ffc83d" stroke-width="1.6"/>
+      <text x="23" y="39" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="18" fill="#ffc83d">?</text></g>
+    <circle cx="44" cy="24" r="12" fill="#ffc83d" stroke="#a37400" stroke-width="1.6"/><text x="44" y="29" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="#2a1d00">+5</text>`);
   // Querbeet: geschwungener Weg mit bunten Etappen-Punkten und Zielfahne
   const qbIcon = () => svgIcon(`
     <path d="M10 50 C22 50 18 36 30 36 S40 22 50 22" stroke="#fbf6ea" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-dasharray="1 6.5"/>
@@ -169,6 +182,9 @@
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
+    { key: "kartenrunde", color: "#2fbf71", name: "Kartenrunde", desc: "Siebzehn und Vier · Geheimgebot", icon: siebzehnIcon(), modes: ["siebzehn", "gebot"] },
+    { key: "siebzehn", group: "kartenrunde", color: "#2fbf71", name: "Siebzehn und Vier", desc: "Wer kommt am nächsten an 21?", icon: siebzehnIcon() },
+    { key: "gebot", group: "kartenrunde", color: "#c9883a", name: "Geheimgebot", desc: "Verdeckt bieten – das höchste Gebot gewinnt", icon: gebotIcon() },
     { key: "watten", two: true, color: "#e05a5a", name: "Watten", desc: "Kartenspiel zu zweit", icon: wattenIcon() },
     { key: "schnapsen", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Kartenspiel zu zweit", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
@@ -177,6 +193,8 @@
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const QZ = window.S10Quiz;
+  const KG = window.S10Karten;
+  let kgOpts = Object.assign({ rounds: 5 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
   let qbOpts = Object.assign({ length: 8, off: [], joker: true }, store.get("s10-qb") || {});
@@ -362,7 +380,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -466,11 +484,16 @@
       return QZ.start(S, { ...action.opts, mode: action.game }, now);
     }
     if (type.startsWith("quiz")) return S.phase === "quiz" && QZ.apply(S, pid, action, host, now);
+    if (type === "start" && KG.MODES[action.game]) {
+      if (!host || S.phase !== "lobby") return false;
+      return KG.start(S, { ...action.opts, mode: action.game }, now);
+    }
+    if (type.startsWith("kg")) return S.phase === "karten" && KG.apply(S, pid, action, host, now);
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -489,6 +512,7 @@
       case "duell": return !!S.duell && S.duell.step === "final";
       case "frage": return !!S.frage && S.frage.step === "final" && !(S.frage.complaint && S.frage.complaint.state === "open");
       case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
+      case "siebzehn": case "gebot": return !!S.karten && S.karten.step === "final";
     }
     return false;
   }
@@ -504,6 +528,7 @@
       case "duell": return all(S.duell.score);
       case "frage": return all(S.frage.score);
       case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
+      case "siebzehn": case "gebot": return all(S.karten.total);
     }
     return all({});
   }
@@ -523,13 +548,14 @@
       case "duell": ok = DU.start(S, { ...o, free: true, avoid: store.get("s10-du-seen") || [] }, now); break;
       case "frage": ok = FQ.start(S, { ...o, free: true, avoid: store.get("s10-fq-seen") || [] }, now); break;
       case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
+      case "siebzehn": case "gebot": ok = KG.start(S, { ...o, free: true }, now); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -603,6 +629,7 @@
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", joker: qbOpts.joker !== false },
+      kg: { rounds: Number(kgOpts.rounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
@@ -623,6 +650,7 @@
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
     view.land = S.phase === "land" ? LAND.publicState(S, Date.now()) : null;
     view.quiz = S.phase === "quiz" ? QZ.publicState(S, Date.now()) : null;
+    view.karten = S.phase === "karten" ? KG.publicState(S) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
@@ -640,7 +668,7 @@
     if (S.qb && S.qb.plan.some((p) => p.game === "land" || p.game === "umriss")) needLandData(); // Länderkarte rechtzeitig laden
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
-    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ }; // private Infos nur an den jeweiligen Spieler
+    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ, karten: KG }; // private Infos nur an den jeweiligen Spieler
     if (CARD_GAMES[S.phase]) {
       // Hände nur privat verteilen: eigene direkt, Gäste über ihren eigenen Kanal
       const M = CARD_GAMES[S.phase];
@@ -1008,7 +1036,7 @@
     }
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") renderQuerbeet(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "land") renderLand(); else if (view.phase === "quiz") renderQuiz(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "frage") renderFrage(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") renderQuerbeet(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "land") renderLand(); else if (view.phase === "quiz") renderQuiz(); else if (view.phase === "karten") renderKarten(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "frage") renderFrage(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
     camDockPlace();
     qbBarRender();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
@@ -1047,6 +1075,8 @@
       win: () => play(() => { if (qbQuiet) return tone(659, 0, 0.18, "triangle", 0.06); [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.12, 0.25, "triangle", 0.1)); }),
       lose: () => play(() => { if (qbQuiet) return; tone(392, 0, 0.22, "triangle", 0.08); tone(330, 0.2, 0.35, "triangle", 0.08); }),
       // Fanfare für die Querbeet-Siegerehrung
+      // kurzes „Klack“ für jede ausgeteilte oder umgedrehte Karte
+      card: (n = 1, gap = 0.16, start = 0) => play(() => { for (let i = 0; i < n; i++) { tone(1400, start + i * gap, 0.035, "square", 0.025); tone(700, start + i * gap + 0.01, 0.05, "triangle", 0.03); } }),
       fanfare: () => play(() => {
         [[523, 0, .16], [523, .16, .16], [523, .32, .16], [659, .5, .5], [587, 1.02, .16], [659, 1.2, .16], [784, 1.38, .7]].forEach(([f, t, d]) => tone(f, t, d, "triangle", 0.11));
         [[262, .5, .5], [330, 1.38, .7], [392, 1.38, .7]].forEach(([f, t, d]) => tone(f, t, d, "sine", 0.06));
@@ -1101,6 +1131,7 @@
       geoKey: v.geo ? v.geo.round + ":" + v.geo.step : null,
       landKey: v.land ? v.land.round + ":" + v.land.step : null,
       quizKey: v.quiz ? v.quiz.round + ":" + v.quiz.step : null,
+      kgKey: v.karten ? v.karten.round + ":" + v.karten.step : null,
       qbKey: v.qb ? v.qb.idx + ":" + v.qb.step + ":" + v.qb.done : null,
       hlKey: v.hl ? v.hl.catNo + ":" + v.hl.pos + ":" + v.hl.step : null,
       wMine: !!(v.watten && ((v.watten.turn === myId) || (v.watten.step === "schlag" && v.watten.vorhand === myId) ||
@@ -1119,6 +1150,16 @@
       if (now.qbKey && now.qbKey !== prev.qbKey) {
         if (v.qb.done || v.qb.step === "break") sfx.turn();
         if (v.qb.step === "final") { sfx.fanfare(); confettiGrand(); } // Siegerehrung: für alle ordentlich feiern
+      }
+      if (now.kgKey && now.kgKey !== prev.kgKey) {
+        if (v.karten.step === "play") sfx.turn();
+        if (v.karten.step === "reveal" && v.karten.result) {
+          // Gewinn-/Verlust-Ton erst, wenn die entscheidende Karte fertig aufgedeckt ist
+          const r = v.karten.mode === "siebzehn" ? v.karten.result[myId] : null;
+          const win = r ? r.points > 0 : v.karten.result.winner === myId, lose = r && r.bust;
+          if (win || lose) setTimeout(() => (win ? sfx.win() : sfx.lose()), kgOutcomeDelay);
+        }
+        if (v.karten.step === "final") { if ((v.karten.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.quizKey && now.quizKey !== prev.quizKey) {
         if (v.quiz.step === "ask") sfx.turn();
@@ -1231,6 +1272,7 @@
           ${chosenGame === "land" ? landSettingsHtml() : ""}
           ${chosenGame === "querbeet" ? qbSettingsHtml() : ""}
           ${QZ.MODES[chosenGame] ? quizSettingsHtml(chosenGame) : ""}
+          ${KG.MODES[chosenGame] ? kgSettingsHtml(chosenGame) : ""}
           ${chosenGame === "hl" ? hlSettingsHtml() : ""}
           ${chosenGame === "duell" ? duSettingsHtml() : ""}
           ${chosenGame === "frage" ? fqSettingsHtml() : ""}
@@ -1321,6 +1363,7 @@
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
       if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
+      if (KG.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: kgOpts });
       if (chosenGame === "duell") return send({ type: "start", game: "duell", opts: duOpts });
       if (chosenGame === "frage") return send({ type: "start", game: "frage", opts: fqOpts });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
@@ -1502,7 +1545,7 @@
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
     return ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
-      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml })[key] || rulesHtml;
+      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, gebot: gebotRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
   let rulesOpen = false; // Gastgeber: Spielauswahl oder „So geht's“ des gewählten Spiels
@@ -1648,6 +1691,9 @@
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
+    if (KG.MODES[view.game] && lb.kg) {
+      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt` : "8 Punktekarten · alle bieten gleichzeitig und verdeckt"}</p>`;
+    }
     if (QZ.MODES[view.game] && lb.quiz) {
       const det = view.game === "umriss" ? esc(LAND.REGION_NAMES[lb.quiz.region] || "Europa") + " · " + esc((QZ.LEVELS[lb.quiz.level] || QZ.LEVELS.gemischt).name)
         : esc((QZ.THEMES[lb.quiz.theme] || QZ.THEMES.mix).name);
@@ -1727,6 +1773,8 @@
     if (qbJ) qbJ.onchange = () => { qbOpts.joker = qbJ.value === "1"; store.set("s10-qb", qbOpts); publish(); };
     const qbT = app.querySelector("#qb-theme");
     if (qbT) qbT.onchange = () => { qbOpts.theme = qbT.value; store.set("s10-qb", qbOpts); publish(); };
+    const kgR = app.querySelector("#kg-rounds");
+    if (kgR) kgR.onchange = () => { kgOpts.rounds = Number(kgR.value); store.set("s10-kg", kgOpts); publish(); };
     [["#quiz-rounds", "rounds"], ["#quiz-theme", "theme"], ["#quiz-region", "region"], ["#quiz-level", "level"]].forEach(([id, k]) => {
       const el = app.querySelector(id);
       if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
@@ -1818,6 +1866,12 @@
         ${nw.fresh < nw.total ? `<button id="quiz-reset" class="btn ghost sm">Gespielte vergessen</button>` : ""}</p>
       <button id="start" class="btn primary big" ${view.players.length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
       `;
+  }
+  function kgSettingsHtml(mode) {
+    return `${mode === "siebzehn" ? `<label class="field"><span>Runden</span><select id="kg-rounds">${KG.ROUND_CHOICES.map((n) =>
+        `<option value="${n}" ${Number(kgOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>`
+        : `<p class="muted small">Eine Partie hat 8 Punktekarten (1 bis 8 Punkte) – jeder bietet mit seinen eigenen 8 Karten.</p>`}
+      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
   function qbSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
@@ -1961,6 +2015,26 @@
         <li>Alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild ein Stück heraus. Tippe auf der zweiten Karte, wo das ist, und lege deine Nadel fest.</li>
         <li>Punkte wie bei „Wo liegt das?“ (bis 1000, je näher, desto mehr), aber mal einem Faktor: früh getippt ×1, dann ×0,85, ×0,7 … bis ×0,4.</li>
         <li>Es kommen nur die wichtigsten Städte und ein paar Orte dran, die man von oben gut erkennt. Sie wiederholen sich erst, wenn alle dran waren.</li>
+      </ul>
+    </details>`;
+  const siebzehnRulesHtml = `
+    <details class="rules"><summary>Regeln: Siebzehn und Vier</summary>
+      <ul>
+        <li>Jeder bekommt zwei Karten, die nur er selbst sieht. Kartenwerte: Sieben bis Zehn zählen ihre Zahl, Unter 2, Ober 3, König 4, Ass 11.</li>
+        <li>Alle entscheiden gleichzeitig: <b>„Weitere Karte“</b> zieht noch eine, <b>„Genug“</b> hört auf. Wer über 21 kommt, ist für die Runde raus.</li>
+        <li>Wenn alle fertig sind, wird aufgedeckt: Wer am nächsten an 21 liegt, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Genau 21 gibt einen Bonuspunkt.</li>
+        <li><b>Feuer:</b> Zwei Asse auf der Hand schlagen alles (und zählen wie 21).</li>
+        <li>Von den anderen sieht man nur, wie viele Karten sie haben und ob sie schon fertig sind.</li>
+      </ul>
+    </details>`;
+  const gebotRulesHtml = `
+    <details class="rules"><summary>Regeln: Geheimgebot</summary>
+      <ul>
+        <li>Jeder hat 8 Gebotskarten: Sieben (1) bis Ass (8). In der Mitte liegt eine Punktekarte – Schell-Sieben bis Schell-Ass, also 1 bis 8 Punkte.</li>
+        <li>Alle wählen gleichzeitig und verdeckt eine ihrer Karten als Gebot. Das höchste Gebot gewinnt die Punkte.</li>
+        <li>Bieten mehrere gleich hoch, bekommt keiner etwas – die Punkte bleiben liegen und kommen zur nächsten Punktekarte dazu.</li>
+        <li>Jede Gebotskarte ist nach einmaligem Einsatz weg. Wann setzt du dein Ass?</li>
+        <li>Nach 8 Punktekarten gewinnt, wer die meisten Punkte hat.</li>
       </ul>
     </details>`;
   const schaetzenRulesHtml = `
@@ -3494,6 +3568,164 @@
     if (inp) { inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); quizSubmit(); } }; if (matchMedia("(pointer: fine)").matches) inp.focus(); }
     quizAskFoot();
   }
+
+  // ---------- Siebzehn und Vier · Geheimgebot ----------
+  const KG_RANK = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
+  const kgName = (id) => { const [su, r] = id.split("-"); return `${{ herz: "Herz", laub: "Laub", eichel: "Eichel", schelle: "Schell" }[su]}-${KG_RANK[r]}`; };
+  // anim: "deal" = heranfliegen, "flip" = heranfliegen und umdrehen, "turn" = nur umdrehen (an Ort und Stelle); d = Verzögerung in ms
+  const kgCard = (id, cls = "", attr = "", anim = "", d = 0) => {
+    const title = `title="${id ? esc(kgName(id)) : "verdeckt"}"`;
+    if (!anim || anim === "deal" || !id) return `<span class="kg-card ${cls} ${anim ? "anim-deal" : ""}" style="--d:${d}ms" ${attr} ${title}>${id ? WCARDS.svg(id) : WCARDS.back()}</span>`;
+    return `<span class="kg-card ${cls} anim-${anim}" style="--d:${d}ms" ${attr} ${title}><span class="kg-in"><span class="kg-face kg-front">${WCARDS.svg(id)}</span><span class="kg-face kg-back">${WCARDS.back()}</span></span></span>`;
+  };
+  // Welche Karten schon gezeigt wurden – nur neue werden animiert
+  // Animationen zeitbasiert: wird während einer Animation neu gezeichnet (z. B. weil Karten und Spielstand getrennt
+  // ankommen), läuft sie an derselben Stelle weiter statt abzubrechen. Rückgabe: { d: Verzögerung in ms (auch negativ), first }
+  const kgSeen = new Map();
+  function kgAnim(key, planned, dur) {
+    const now = performance.now(); let e = kgSeen.get(key); const first = !e;
+    if (!e) { e = { t: now, d: planned }; kgSeen.set(key, e); }
+    const el = now - e.t;
+    return el > e.d + dur ? null : { d: Math.round(e.d - el), first };
+  }
+  let kgSoundAt = 0, kgOutcomeDelay = 0; // Verzögerung für den Gewinn-/Verlust-Ton (passend zur Animation)
+  const kgSound = (n, gapMs, startMs) => { if (n > 0 && Date.now() > kgSoundAt) { sfx.card(n, gapMs / 1000, startMs / 1000); kgSoundAt = Date.now() + 150; } };
+  let kgRendered = null;
+  function kgChips(v, st) {
+    return st.seats.map((id) => {
+      const i = v.players.findIndex((p) => p.id === id), p = v.players[i] || { name: "?", connected: false };
+      const done = st.step === "play" ? (st.mode === "siebzehn" ? !!st.done[id] : !!st.bid[id]) : st.step === "reveal" ? !!st.ready[id] : false;
+      return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[Math.max(0, i) % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
+        <span class="geo-score-name">${esc(p.name)}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0}</b>${st.step !== "final" ? `<span class="geo-mark">${done ? "✓" : "…"}</span>` : ""}</span>`;
+    }).join("");
+  }
+  function renderKarten() {
+    const v = view, st = v.karten;
+    if (!st) return;
+    const seated = st.seats.includes(myId);
+    const priv = seated && wattenPriv && wattenPriv.roundNo === st.round ? wattenPriv : null;
+    const key = v.code + ":" + st.mode + ":" + st.round + ":" + st.step + ":" + (priv ? priv.hand.length : "-") + ":" + JSON.stringify(st.done || st.bid || {}) + ":" + (st.mode === "gebot" && st.step === "play" ? JSON.stringify(st.hand[myId] || []) : "");
+    if (kgRendered === key && app.querySelector(".kg-main")) {
+      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = kgChips(v, st);
+      if (st.step === "reveal") { const rb = app.querySelector("#kg-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"; }
+      return;
+    }
+    kgRendered = key;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+    const readyBtn = `<div class="geo-actions"><button id="kg-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"}</button>
+      ${isHost ? `<button id="kg-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+    let main = "";
+    if (st.step === "final") {
+      const ranking = st.seats.slice().sort((a, b) => (st.total[b] || 0) - (st.total[a] || 0)), medal = ["🥇", "🥈", "🥉"];
+      main = `<div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((id) => (st.winners || []).includes(id)).map((id) => esc(nameOf(id))).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"}!</b>
+          <div class="banner-actions"><button id="kg-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${ranking.map((id, i) => `<div class="slf-rank" style="--pc:${colorOf(id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
+          <span class="slf-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0} Punkte</b></div>`).join("")}
+          <p class="muted small">${esc(st.modeName)} · ${st.rounds} Runden</p></div>`;
+    } else if (st.mode === "siebzehn") {
+      const gk = v.code + ":" + st.round;
+      // Hat die eigene letzte Karte die Runde beendet (21, über 21 oder als Letzter fertig), bleibt der Tisch kurz stehen:
+      // erst wird die Karte ausgeteilt, dann geht es zur Auflösung
+      const myR = st.step === "reveal" && st.result[myId], heldNew = myR ? myR.hand.filter((c) => !kgSeen.has(`${gk}:m:${c}`)) : [];
+      const hold = heldNew.length ? { hand: myR.hand, sum: myR.sum, feuer: myR.feuer } : null;
+      if (st.step === "reveal") kgOutcomeDelay = hold ? heldNew.length * 380 + 950 : 0;
+      if (hold) setTimeout(() => { const k = view && view.karten; if (k && k.round === st.round && k.step === "reveal") { kgRendered = null; render(); } }, heldNew.length * 380 + 1700);
+      if (st.step === "play" || hold) {
+        const priv = hold || (seated && wattenPriv && wattenPriv.roundNo === st.round ? wattenPriv : null);
+        const doneOf = (id) => (hold ? true : st.done[id]), countOf = (id) => (hold ? st.result[id].hand.length : st.count[id] || 0);
+        let sounds = 0;
+        const others = st.seats.filter((id) => id !== myId).map((id) => `<div class="kg-opp" style="--pc:${colorOf(id)}"><b>${esc(nameOf(id))}</b>
+            <span class="kg-backs">${Array.from({ length: countOf(id) }, (_, k) => { const a = kgAnim(`${gk}:o:${id}:${k}`, k < 2 ? 450 + k * 300 : 0, 700); return kgCard(null, "mini", "", a ? "deal" : "", a ? a.d : 0); }).join("")}</span><span class="muted small">${doneOf(id) ? "fertig ✓" : "überlegt …"}</span></div>`).join("");
+        // eigene Karten: neue fliegen nacheinander heran und drehen sich um; Summe und Knöpfe erst danach
+        let fresh = 0;
+        let lateAt = null;
+        const handHtml = priv ? priv.hand.map((c) => {
+          const a = kgAnim(`${gk}:m:${c}`, fresh * 380, 1000);
+          if (a && a.first) fresh++;
+          if (a) lateAt = Math.max(lateAt == null ? -1e9 : lateAt, a.d + 900);
+          return kgCard(c, "big", "", a ? "flip" : "", a ? a.d : 0);
+        }).join("") : "";
+        sounds = fresh;
+        const late = lateAt != null ? `kg-late" style="--d:${lateAt}ms` : "";
+        const mine = priv ? `<div class="kg-hand">${handHtml}</div>
+            <div class="${late}">${kgMeter(priv)}
+            <div class="kg-sum ${priv.feuer || priv.sum === 21 ? "top" : priv.sum > 21 ? "bust" : ""}">${priv.feuer ? "🔥 Feuer – zwei Asse!" : priv.sum > 21 ? `${priv.sum} – über 21, leider raus` : `Summe: <b>${priv.sum}</b>`}</div>
+            ${hold ? `<p class="muted">Alle sind fertig – gleich wird aufgedeckt …</p>` : st.done[myId] ? `<p class="muted">${priv.sum > 21 && !priv.feuer ? "Warte auf die anderen …" : "Du bist fertig – warte auf die anderen …"}</p>`
+              : `<div class="kg-actions"><button id="kg-hit" class="btn primary">Weitere Karte</button><button id="kg-stand" class="btn ghost">Genug</button></div>`}</div>`
+          : seated ? `<p class="muted">Karten werden ausgeteilt …</p>` : `<p class="muted">Du schaust in dieser Runde zu.</p>`;
+        kgSound(sounds, 380, 0);
+        main = `<div class="panel kg-table"><div class="kg-goal"><b>Ziel: so nah wie möglich an 21 – aber nicht darüber!</b></div>
+          ${mine}<div class="kg-values muted small">Kartenwerte: Sieben–Zehn = Zahl · Unter 2 · Ober 3 · König 4 · Ass 11 · zwei Asse = 🔥 Feuer</div></div>
+          ${others ? `<div class="kg-opps">${others}</div>` : ""}`;
+      } else {
+        // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
+        const order = st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points || st.result[b].sum - st.result[a].sum);
+        const ra = kgAnim(`${gk}:reveal`, 0, 8000), animate = !!ra, off = ra ? ra.d : 0;
+        let t = 300, flips = 0;
+        const rows = order.map((id) => { const r = st.result[id], mine = id === myId;
+          const cards = r.hand.map((c, k) => kgCard(c, "mini", "", animate && !mine ? "turn" : "", t + k * 160 + off)).join("");
+          if (animate && !mine) { t += r.hand.length * 160; flips += r.hand.length; }
+          const after = animate ? `kg-late" style="--d:${t + 150 + off}ms` : "";
+          if (animate) t += 550;
+          return `<div class="kg-res ${r.bust ? "bust" : r.place === 1 ? "win" : ""} ${animate ? "anim-row" : ""}" style="--pc:${colorOf(id)};--d:${t + 150 + off}ms"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${mine ? " <em>(du)</em>" : ""}</span>
+            <span class="kg-hand small">${cards}</span>
+            <span class="kg-rsum ${after}">${r.feuer ? "🔥 Feuer" : r.bust ? `${r.sum} – über 21` : r.sum === 21 ? "21 – Siebzehn und Vier!" : r.sum}</span><b class="qb-plus ${after}">+${r.points}</b></div>`; }).join("");
+        if (ra && ra.first) { kgSound(flips, 160, 300); if (!kgOutcomeDelay) kgOutcomeDelay = t; }
+        main = `<div class="panel kg-table"><div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div>`;
+      }
+    } else {
+      const hand = (st.hand[myId] || []);
+      const gk = v.code + ":" + st.round, pa = kgAnim(`${gk}:prize`, 100, 1100);
+      if (pa && pa.first) kgSound(1, 0, 250);
+      const prize = `<div class="kg-prize">${kgCard(st.prize, "big", "", pa ? "flip" : "", pa ? pa.d : 0)}<div><div class="game-label">Punktekarte ${st.round} von ${st.rounds} – darum wird geboten</div>
+          <div class="kg-pot">${((n) => `${n} ${n === 1 ? "Punkt" : "Punkte"}`)(st.step === "play" ? st.pot : st.result.points || st.result.carried)}${st.step === "play" && st.pot > KG_PTS(st.prize) ? ` <span class="muted small">(inkl. ${st.pot - KG_PTS(st.prize)} liegengeblieben)</span>` : ""}</div></div></div>`;
+      if (st.step === "play") {
+        const mineBid = seated && v.karten.bid[myId];
+        main = `<div class="panel kg-table"><div class="kg-goal"><b>Wer am höchsten bietet, gewinnt die Punktekarte!</b>
+            <span class="muted small">Alle bieten gleichzeitig und verdeckt · Jede deiner Karten kannst du nur einmal setzen · Bei Gleichstand bleiben die Punkte liegen</span></div>
+          ${prize}
+          ${seated ? `<p class="muted">${mineBid ? "Gebot abgegeben ✓ – du kannst noch umentscheiden, bis alle geboten haben." : "Wähle eine deiner Karten als Gebot:"}</p>
+            <div class="kg-hand pick">${hand.map((c) => kgCard(c, "big pickable " + (kgMyBid === c && mineBid ? "chosen" : ""), `data-bid="${c}" role="button" tabindex="0"`)).join("")}</div>` : `<p class="muted">Du schaust zu.</p>`}
+          ${seated ? `<div class="kg-values muted small">Gebotswert: Sieben = 1 · Acht = 2 · Neun = 3 · Zehner = 4 · Unter = 5 · Ober = 6 · König = 7 · Ass = 8</div>` : ""}
+          <div class="kg-left">${st.seats.filter((id) => id !== myId).map((id) => `<span style="--pc:${colorOf(id)}"><span class="pdot"></span><b>${esc(nameOf(id))}</b> ${st.bid[id] ? "✓ geboten" : "…"} · noch: ${st.hand[id].map((c) => KG_RANK[c.split("-")[1]].replace("Zehner", "10").replace("Sieben", "7").replace("Acht", "8").replace("Neun", "9")).join(", ")}</span>`).join("")}</div></div>`;
+      } else {
+        const r = st.result, endT0 = 600 + st.seats.length * 280 + 400, ba = kgAnim(`${gk}:bids`, 0, endT0 + 800), animate = !!ba, off = ba ? ba.d : 0, endT = endT0 + off;
+        if (ba && ba.first) { kgSound(st.seats.length, 280, 600); kgOutcomeDelay = endT0; }
+        main = `<div class="panel kg-table">${prize}
+          <div class="kg-bids">${st.seats.map((id, i) => `<div class="kg-bid ${r.winner === id ? "win" : ""} ${animate ? "anim-win" : ""}" style="--pc:${colorOf(id)};--d:${endT}ms">${kgCard(r.bids[id], "big", "", animate ? "turn" : "", 600 + i * 280 + off)}<b>${esc(nameOf(id))}${id === myId ? " (du)" : ""}</b></div>`).join("")}</div>
+          <p class="kg-verdict ${animate ? "kg-late" : ""}" style="--d:${endT}ms">${r.winner ? `<b style="color:${colorOf(r.winner)}">${esc(nameOf(r.winner))}</b> holt ${r.points} ${r.points === 1 ? "Punkt" : "Punkte"}!` : `Gleichstand – ${r.carried === 1 ? "der Punkt bleibt" : `die ${r.carried} Punkte bleiben`} liegen und kommen zur nächsten Karte dazu.`}</p>
+          <div class="${animate ? `kg-late" style="--d:${endT + 200}ms` : ""}">${readyBtn}</div></div>`;
+      }
+    }
+    app.innerHTML = `
+      <main class="screen game slf geo kg-main">
+        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
+        ${statusBarHtml()}
+        <section class="slf-main">${st.step !== "final" ? `<div class="geo-bar"><span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}${st.mode === "siebzehn" ? `Runde ${st.round}/${st.rounds}` : `Punktekarte ${st.round}/${st.rounds}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
+      </main>`;
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#kg-hit", () => send({ type: "kgHit", round: st.round }));
+    on("#kg-stand", () => send({ type: "kgStand", round: st.round }));
+    on("#kg-ready", () => send({ type: "kgReady" }));
+    on("#kg-next", () => send({ type: "kgNext" }));
+    on("#kg-restart", () => send({ type: "kgRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    app.querySelectorAll("[data-bid]").forEach((el) => {
+      const go = () => { kgMyBid = el.dataset.bid; app.querySelectorAll("[data-bid]").forEach((x) => x.classList.toggle("chosen", x === el)); send({ type: "kgBid", round: st.round, card: el.dataset.bid }); };
+      el.onclick = go; el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } };
+    });
+  }
+  // Fortschrittsbalken bis 21: grün bis 16, gelb 17–20, voll bei 21, rot darüber
+  function kgMeter(priv) {
+    const v = priv.feuer ? 21 : priv.sum, pct = Math.min(100, (v / 21) * 100);
+    const cls = v > 21 ? "bust" : v === 21 ? "full" : v >= 17 ? "near" : "";
+    return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark" style="left:${(17 / 21) * 100}%">17</span><span class="kg-mark end">21</span></div>`;
+  }
+  let kgMyBid = null;
+  const KG_PTS = (id) => ["7", "8", "9", "10", "U", "O", "K", "A"].indexOf(id.split("-")[1]) + 1;
 
   // ---------- Querbeet ----------
   const qbGame = (k) => GAMES.find((g) => g.key === k) || GAMES[0];

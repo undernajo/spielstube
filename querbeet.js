@@ -16,13 +16,15 @@
     frage: { kind: "wort", two: true, name: "Antwort sucht Frage", short: "bis 2 Punkte", rule: "Zur vorgegebenen Antwort eine Frage erfinden – der andere muss sie beantworten." },
     schaetzen: { kind: "wissen", name: "Schätzen", short: "3 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
     hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "2 Begriffe", rule: "Alle 8 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
+    siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "3 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
+    gebot: { kind: "karten", name: "Geheimgebot", short: "8 Punktekarten", rule: "Alle bieten gleichzeitig und verdeckt mit ihren Karten – das höchste Gebot holt die Punkte." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
-  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "gebot", "slf", "duell", "frage"];
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
   // Auszeichnungen bei der Siegerehrung (je Art von Spiel)
-  const KIND_TITLES = { karte: "🧭 Kartenleser", wissen: "📚 Wandelndes Lexikon", wort: "✍️ Wortakrobat" };
+  const KIND_TITLES = { karte: "🧭 Kartenleser", wissen: "📚 Wandelndes Lexikon", wort: "✍️ Wortakrobat", karten: "🎴 Kartenhai" };
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -66,6 +68,8 @@
         return { mode: "umriss", region, level: region === "welt" ? "leicht" : "gemischt", rounds: 4 }; }
       case "schaetzen": return { mode: "schaetzen", rounds: 3, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "hinweis": return { mode: "hinweis", rounds: 2, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
+      case "siebzehn": return { mode: "siebzehn", rounds: 3 };
+      case "gebot": return { mode: "gebot" };
       case "slf": return { preset: st ? "suedtirol" : pick(["klassisch", "gemischt", "spass", "suedtirol"]), rounds: 1, timer: "stopp" };
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };
@@ -125,7 +129,7 @@
       const ks = st.filter((x) => STAGES[x.game].kind === kind);
       if (ks.length < 2) return;
       const w = best((id) => ks.reduce((n, x) => n + (x.res[id] ? x.res[id].base : 0), 0));
-      if (w.length && w.length < ids.length) out.push({ name, ids: w, why: `die meisten Platzpunkte in ${ks.length} ${kind === "karte" ? "Kartenspielen" : kind === "wissen" ? "Wissensspielen" : "Wortspielen"}` });
+      if (w.length && w.length < ids.length) out.push({ name, ids: w, why: `die meisten Platzpunkte in ${ks.length} ${({ karte: "Landkarten-Spielen", wissen: "Wissensspielen", wort: "Wortspielen", karten: "Kartenspielen" })[kind]}` });
     });
     if (ids.length >= 3 && st.length >= 4) {
       const swing = (id) => { const pl = st.filter((x) => x.res[id]).map((x) => x.res[id].place); return pl.length ? Math.max(...pl) - Math.min(...pl) : 0; };
