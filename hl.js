@@ -47,7 +47,9 @@
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "mittel";
     const n = Number.isInteger(opts.cats) && opts.cats > 0 ? opts.cats : LENGTHS[length].cats; // Querbeet: 1 Kategorie
-    const keys = shuffle(Object.keys(data())).slice(0, n);
+    // Querbeet-Themenabend: nur bestimmte Kategorien (only) oder ohne (not)
+    const allKeys = Object.keys(data()).filter((k) => (!Array.isArray(opts.only) || opts.only.includes(k)) && (!Array.isArray(opts.not) || !opts.not.includes(k)));
+    const keys = shuffle(allKeys.length ? allKeys : Object.keys(data())).slice(0, n);
     s.game = "hl"; s.phase = "hl";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.hl = { opts: { length }, cats: keys, ci: -1, total: {}, history: [] };

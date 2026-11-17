@@ -499,7 +499,7 @@ textarea { resize: vertical; font: inherit; }
 /* Lobby: Spielauswahl als Kacheln (ruhig: flache Flächen, gedämpfte Farben) */
 .gamegrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 /* Spielart-Umschalter (Landkarte) */
-.modeswitch { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.modeswitch { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; }
 .modebtn { display: grid; justify-items: center; gap: 2px; padding: 8px 6px; border-radius: 12px; border: 1.5px solid var(--line); background: transparent;
   color: inherit; font: inherit; cursor: pointer; text-align: center; }
 .modebtn b { font-size: .9rem; line-height: 1.15; }
@@ -1248,7 +1248,7 @@ textarea { resize: vertical; font: inherit; }
 body.qb-play { padding-bottom: 70px; }
 /* In Querbeet geht es nicht über „Nochmal spielen“ / „Nächste Runde“ weiter, sondern über die Leiste */
 body.qb-play #next, body.qb-play #restart, body.qb-play #slf-restart, body.qb-play #hl-restart, body.qb-play #fq-restart,
-body.qb-play #du-restart, body.qb-play #geo-restart, body.qb-play #land-restart, body.qb-play #toLobby { display: none !important; }
+body.qb-play #du-restart, body.qb-play #geo-restart, body.qb-play #land-restart, body.qb-play #quiz-restart, body.qb-play #toLobby { display: none !important; }
 #qbbar .qb-chip, #qbbar .qb-chip .muted { white-space: nowrap; }
 @media (max-width: 640px) {
   /* Handy: während der Etappe nur ein kleines Abzeichen unten rechts */
@@ -1283,7 +1283,7 @@ body.qb-play .banner.win .trophy { display: none; }
 .rv-body p { margin: 0; }
 
 /* Gäste: Erklärung eines Spiels mit Wunsch-Knopf */
-.info-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.info-tabs { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; }
 .info-tab { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 6px; border-radius: 10px; border: 1.5px solid var(--line);
   background: transparent; color: inherit; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; line-height: 1.15; }
 .info-tab.on { border-color: var(--gc); background: color-mix(in srgb, var(--gc) 14%, transparent); }
@@ -1337,3 +1337,63 @@ body.qb-play .banner.win .trophy { display: none; }
   #startbar .btn { flex: none; padding: 12px 18px; }
 }
 @media (max-width: 600px) { .gametile:has(.gt-two) .gt-icon { margin-top: 12px; } }
+
+/* Schätzen · Hinweis für Hinweis · Umriss-Rätsel */
+.quiz-card { max-width: 760px; width: 100%; margin: 0 auto; justify-items: center; text-align: center; gap: 16px; }
+.quiz-q { font-size: 1.45rem; font-weight: 800; line-height: 1.3; }
+.quiz-q.small { font-size: 1.05rem; font-weight: 700; color: var(--muted); }
+.quiz-answer { font-size: 2.2rem; font-weight: 800; color: var(--accent); line-height: 1.15; }
+.quiz-form { display: flex; gap: 8px; align-items: center; width: min(100%, 520px); }
+.quiz-form input { flex: 1; min-width: 0; font-size: 1.15rem; padding: 12px 14px; border-radius: 12px; }
+.quiz-unit { color: var(--muted); font-weight: 700; white-space: nowrap; }
+.quiz-sent { margin: 0; color: var(--muted); }
+.quiz-sent b { color: #fff; }
+.quiz-hintbox { width: 100%; display: grid; gap: 10px; justify-items: center; }
+.quiz-hints { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; width: 100%; text-align: left; }
+.quiz-hints li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: #17133d; border: 1px solid var(--line); font-size: 1.02rem; line-height: 1.4; }
+.quiz-hints li.new { border-color: #7fd1ff; animation: qh-in .45s ease-out; }
+.qh-n { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: #7fd1ff; color: #10213a; font-weight: 800; font-size: .85rem; }
+@keyframes qh-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.umriss-box { width: min(100%, 420px); aspect-ratio: 4 / 3; display: grid; place-items: center; background: #17375a; border-radius: 16px; padding: 14px; }
+.umriss-svg { width: 100%; height: 100%; display: block; }
+.quiz .geo-results { width: 100%; }
+/* Querbeet: Joker und Auszeichnungen */
+.qb-joker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.qb-joker .btn.on { border-color: var(--accent); color: var(--accent); }
+.qb-jk { font-size: .9em; }
+.qb-titles h3 { margin: 0 0 8px; font-size: 1rem; }
+.qb-tgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.qb-title { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: #17133d; border: 1px solid var(--line); }
+.qb-title b { font-size: 1rem; }
+
+.quiz .geo-results { text-align: left; }
+.quiz-foot { display: grid; gap: 6px; justify-items: center; width: 100%; }
+.quiz-note { margin: 0; }
+
+/* Querbeet: Etappenkarte – links Erklärung + Bereit, rechts das Joker-Feld (am Handy dazwischen) */
+.qb-next { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "act"; align-items: start; }
+.qb-next.with-joker { grid-template-columns: minmax(0, 1fr) 250px; grid-template-areas: "info joker" "act joker"; column-gap: 20px; }
+.qbn-info { grid-area: info; display: grid; gap: 8px; }
+.qbn-info p { margin: 0; }
+.qbn-act { grid-area: act; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; align-self: end; }
+.qbn-act .btn.primary { min-width: 200px; }
+.qbn-joker { grid-area: joker; display: grid; gap: 6px; align-self: stretch; align-content: stretch; }
+.qb-jbox { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 12px; height: 100%; min-height: 88px; padding: 12px 14px; border-radius: 14px;
+  border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.qb-jbox:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.qb-jbox.set { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.qb-jbox.off { border-color: var(--line); background: transparent; opacity: .6; cursor: default; }
+.qbj-card { font-size: 2rem; line-height: 1; }
+.qb-jbox.set .qbj-card { transform: rotate(-8deg); }
+.qbj-txt { display: grid; gap: 2px; }
+.qbj-txt b { font-size: 1rem; }
+.qbj-txt small { color: var(--muted); font-size: .8rem; line-height: 1.3; }
+.qb-jbox.set .qbj-txt b { color: var(--accent); }
+.qbj-who { color: var(--muted); font-size: .78rem; text-align: center; }
+@media (max-width: 760px) {
+  .qb-next.with-joker { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "joker" "act"; }
+  .qb-jbox { min-height: 0; }
+  .qbn-act .btn.primary { flex: 1; }
+}
+.qbn-act, .qbn-joker, .qbn-info { justify-self: stretch; }

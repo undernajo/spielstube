@@ -90,6 +90,24 @@
     <path d="M36 33 L46 30 L54 36 L50 46 L40 48 L34 44Z" fill="#b9d59c" stroke="#56704a" stroke-width="1.2" stroke-linejoin="round"/>
     <path d="M39 26 V40 l-3 -3 a2.4 2.4 0 0 0 -3.6 3.2 l6.2 8.3 a6 6 0 0 0 4.8 2.5 h4.6 a6 6 0 0 0 6 -6 V36 a2.2 2.2 0 0 0 -4.4 0 v-1.6 a2.2 2.2 0 0 0 -4.4 0 v-1 a2.2 2.2 0 0 0 -4.4 0 V26 a2.2 2.2 0 0 0 -4.4 0Z"
       fill="#fbf6ea" stroke="#3a2a10" stroke-width="1.3" stroke-linejoin="round"/>`);
+  // Schätzen: Glas voller bunter Kugeln
+  const schaetzenIcon = () => svgIcon(`
+    <path d="M20 14 h24 v5 c4 2 6 6 6 11 v18 a6 6 0 0 1 -6 6 h-24 a6 6 0 0 1 -6 -6 v-18 c0 -5 2 -9 6 -11Z" fill="#dff1fb" fill-opacity=".35" stroke="#e8f4ff" stroke-width="1.8"/>
+    <rect x="18" y="9" width="28" height="6" rx="2" fill="#c9883a" stroke="#7a4f1c" stroke-width="1.2"/>
+    ${[[22, 46, "#ef4b5a"], [30, 47, "#ffc83d"], [38, 46, "#4aa8ff"], [26, 39, "#3ccf8e"], [34, 39, "#c084fc"], [42, 40, "#ff8a5c"], [30, 32, "#4aa8ff"], [38, 32, "#ffc83d"], [22, 32, "#ef4b5a"]]
+      .map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="3.6" fill="${c}"/>`).join("")}
+    <circle cx="49" cy="15" r="9" fill="#ffd24d" stroke="#a37400" stroke-width="1.3"/><text x="49" y="19.6" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="13" fill="#2a1d00">?</text>`);
+  // Hinweis für Hinweis: Lupe über nummerierten Hinweiskärtchen
+  const hinweisIcon = () => svgIcon(`
+    ${[0, 1, 2].map((i) => `<rect x="${10 + i * 6}" y="${12 + i * 7}" width="28" height="18" rx="3" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.2"/>
+      <text x="${16 + i * 6}" y="${25 + i * 7}" font-family="Fredoka, sans-serif" font-weight="700" font-size="10" fill="#7a4f1c">${i + 1}</text>
+      <path d="M${22 + i * 6} ${21 + i * 7} h${11}" stroke="#cbbf9f" stroke-width="2" stroke-linecap="round"/>`).join("")}
+    <circle cx="42" cy="40" r="9" fill="#9fd8ff" fill-opacity=".35" stroke="#fbf6ea" stroke-width="3"/>
+    <path d="M48.5 46.5 L56 54" stroke="#c9883a" stroke-width="5" stroke-linecap="round"/>`);
+  // Umriss-Rätsel: gestrichelter Länderumriss mit Fragezeichen
+  const umrissIcon = () => svgIcon(`
+    <path d="M18 14 L30 10 L36 16 L46 14 L50 24 L44 30 L48 40 L40 50 L30 46 L22 52 L16 42 L20 34 L12 26Z" fill="#ffd24d" fill-opacity=".14" stroke="#ffd24d" stroke-width="2.2" stroke-dasharray="4 3" stroke-linejoin="round"/>
+    <text x="31" y="38" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="20" fill="#fbf6ea">?</text>`);
   // Querbeet: geschwungener Weg mit bunten Etappen-Punkten und Zielfahne
   const qbIcon = () => svgIcon(`
     <path d="M10 50 C22 50 18 36 30 36 S40 22 50 22" stroke="#fbf6ea" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-dasharray="1 6.5"/>
@@ -139,11 +157,15 @@
   const GAMES = [
     { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Schlaue Zehn", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
-    { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
+    { key: "raten", color: "#ffb347", name: "Raten & Schätzen", desc: "Höher oder tiefer · Schätzen · Hinweis für Hinweis", icon: schaetzenIcon(), modes: ["hl", "schaetzen", "hinweis"] },
+    { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Umriss-Rätsel · Von oben", icon: geoIcon(), modes: ["geo", "land", "umriss", "oben"] },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
-    // Die drei Kartenspiele teilen sich in der Lobby eine Kachel; die Spielart wählt man in den Einstellungen
-    { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Von oben", icon: geoIcon(), modes: ["geo", "land", "oben"] },
+    // Spielarten der Sammelkacheln „Raten & Schätzen“ und „Landkarte“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
+    { key: "hl", group: "raten", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
+    { key: "schaetzen", group: "raten", color: "#ffb347", name: "Schätzen", desc: "Zahl schätzen – wer am nächsten liegt", icon: schaetzenIcon() },
+    { key: "hinweis", group: "raten", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Je früher richtig, desto mehr Punkte", icon: hinweisIcon() },
+    { key: "umriss", group: "karte", color: "#ffd24d", name: "Umriss-Rätsel", desc: "Gebiet am Umriss erkennen", icon: umrissIcon() },
     { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
     { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
     { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
@@ -154,8 +176,10 @@
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
+  const QZ = window.S10Quiz;
+  let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
-  let qbOpts = Object.assign({ length: 8, off: [] }, store.get("s10-qb") || {});
+  let qbOpts = Object.assign({ length: 8, off: [], joker: true }, store.get("s10-qb") || {});
   const LAND = window.S10Land;
   // Länderkarte (gut 400 KB) erst laden, wenn „Länder finden“ gebraucht wird – gleiche Versionsnummer wie game.js
   const ASSET_V = ((document.currentScript && /[?&]v=([\w.]+)/.exec(document.currentScript.src)) || [])[1] || "1";
@@ -267,6 +291,7 @@
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
     S.geoSeen = store.get("s10-geo-seen") || {};
+    S.quizSeen = store.get("s10-quiz-seen") || {};
     S.landSeen = store.get("s10-land-seen") || {};
     S.hostId = myId;
     S.game = chosenGame;
@@ -278,6 +303,7 @@
     if (isHost) return; // schon am Öffnen (doppelt getippt)
     isHost = true; roomCode = saved.code; S = saved.state;
     if (!S.geoSeen) S.geoSeen = store.get("s10-geo-seen") || {};
+    if (!S.quizSeen) S.quizSeen = store.get("s10-quiz-seen") || {};
     if (!S.landSeen) S.landSeen = store.get("s10-land-seen") || {};
     if (saved.hostId) { myId = saved.hostId; setTabId(myId); }
     S.hostId = myId;
@@ -336,7 +362,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -434,11 +460,17 @@
     if (type === "duRestart" && S.phase === "duell" && S.duell && S.duell.step === "final")
       return DU.start(S, { ...S.duell.opts, avoid: store.get("s10-du-seen") || [] }, now);
     if (type.startsWith("du")) return S.phase === "duell" && DU.apply(S, pid, action, host, now);
+    if (type === "start" && QZ.MODES[action.game]) {
+      if (!host || S.phase !== "lobby") return false;
+      if (action.game === "umriss" && !needLandData()) return false;
+      return QZ.start(S, { ...action.opts, mode: action.game }, now);
+    }
+    if (type.startsWith("quiz")) return S.phase === "quiz" && QZ.apply(S, pid, action, host, now);
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -456,6 +488,7 @@
       case "slf": return !!S.slf && S.slf.step === "final";
       case "duell": return !!S.duell && S.duell.step === "final";
       case "frage": return !!S.frage && S.frage.step === "final" && !(S.frage.complaint && S.frage.complaint.state === "open");
+      case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
     }
     return false;
   }
@@ -470,6 +503,7 @@
       case "slf": return all(S.slf.total);
       case "duell": return all(S.duell.score);
       case "frage": return all(S.frage.score);
+      case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
     }
     return all({});
   }
@@ -480,7 +514,7 @@
     switch (st.game) {
       case "zehn": // über die normale Start-Aktion (verlangt die Lobby-Phase); Ziel 100 = nach einer Karte ist Schluss
         S.phase = "lobby";
-        ok = L.applyAction(S, CARDS, myId, { type: "start", target: 100, set: currentSets().length ? currentSets() : ["standard"] }, true);
+        ok = L.applyAction(S, CARDS, myId, { type: "start", target: 100, set: o.sets || (currentSets().length ? currentSets() : ["standard"]) }, true);
         S.game = "zehn"; break;
       case "hl": HL.start(S, o, now); break;
       case "geo": case "oben": GEO.start(S, { ...o, free: true }, now); break;
@@ -488,13 +522,14 @@
       case "slf": SLF.start(S, { ...o, free: true }, now); break;
       case "duell": ok = DU.start(S, { ...o, free: true, avoid: store.get("s10-du-seen") || [] }, now); break;
       case "frage": ok = FQ.start(S, { ...o, free: true, avoid: store.get("s10-fq-seen") || [] }, now); break;
+      case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -503,7 +538,7 @@
     const q = S.qb;
     if (S.phase !== "querbeet") { QB.finishStage(q, qbScores(), S.players.map((p) => p.id)); qbCleanup(); return true; }
     if (q.step === "final") return false;
-    if (q.plan[q.idx + 1] && q.plan[q.idx + 1].game === "land" && !needLandData()) { toast("Die Länderkarte wird noch geladen – einen Moment.", "info"); return false; }
+    if (q.plan[q.idx + 1] && ["land", "umriss"].includes(q.plan[q.idx + 1].game) && !needLandData()) { toast("Die Länderkarte wird noch geladen – einen Moment.", "info"); return false; }
     q.idx++; q.step = "play";
     return qbStartStage(now);
   }
@@ -519,6 +554,7 @@
       if (ids.length && ids.every((id) => q.ready[id])) qbAdvance(now);
       return true;
     }
+    if (a.type === "qbJoker") return S.phase === "querbeet" && QB.setJoker(q, pid, !!a.on);
     if (a.type === "qbRestart") {
       if (!host || q.step !== "final") return false;
       const nq = QB.create(q.opts, S.players.filter((p) => p.connected).length);
@@ -534,6 +570,8 @@
     if (st.game === "geo") return `${D.short} · ${(GEODATA[o.region] || {}).name || ""}`;
     if (st.game === "land") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
     if (st.game === "slf") return `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“`;
+    if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
+    if ((st.game === "schaetzen" || st.game === "hinweis") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
     return D.short;
   }
   function qbView() {
@@ -546,6 +584,7 @@
       step: q.step, idx: q.idx, n: q.plan.length, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready },
       done: qbStageDone(), cur: info(qbStage()), next: info(nextSt), lastDouble: q.idx + 1 === q.plan.length - 1,
       stages: q.stages.map((x) => ({ game: x.game, res: x.res })), winners: q.step === "final" ? QB.winners(q) : null,
+      joker: { ...(q.joker || {}) }, jokerOn: q.opts.joker !== false, theme: q.opts.theme || "mix", titles: q.step === "final" ? QB.titles(q, S.players.map((p) => p.id)) : null,
     };
   }
 
@@ -563,7 +602,8 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length },
-      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice() },
+      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", joker: qbOpts.joker !== false },
+      quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
       frage: { target: Number(fqOpts.target), write: fqOpts.write, answer: fqOpts.answer },
@@ -582,6 +622,7 @@
     view.geo = S.phase === "geo" ? GEO.publicState(S, Date.now()) : null;
     view.hl = S.phase === "hl" ? HL.publicState(S, Date.now()) : null;
     view.land = S.phase === "land" ? LAND.publicState(S, Date.now()) : null;
+    view.quiz = S.phase === "quiz" ? QZ.publicState(S, Date.now()) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
@@ -596,7 +637,7 @@
       }
     }
     view.qb = S.qb ? qbView() : null;
-    if (S.qb && S.qb.plan.some((p) => p.game === "land")) needLandData(); // Länderkarte rechtzeitig laden
+    if (S.qb && S.qb.plan.some((p) => p.game === "land" || p.game === "umriss")) needLandData(); // Länderkarte rechtzeitig laden
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
     const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ }; // private Infos nur an den jeweiligen Spieler
@@ -612,6 +653,7 @@
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
     if (S.seen) store.set("s10-seen", S.seen);
     if (S.geoSeen) store.set("s10-geo-seen", S.geoSeen);
+    if (S.quizSeen) store.set("s10-quiz-seen", S.quizSeen);
     if (S.landSeen) store.set("s10-land-seen", S.landSeen);
     if (mq && roomTopic) sendSealed(T("state"), view, { qos: 1, retain: true });
     render();
@@ -966,7 +1008,7 @@
     }
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") renderQuerbeet(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "land") renderLand(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "frage") renderFrage(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") renderQuerbeet(); else if (view.phase === "slf") renderSlf(); else if (view.phase === "wl") renderWl(); else if (view.phase === "geo") renderGeo(); else if (view.phase === "land") renderLand(); else if (view.phase === "quiz") renderQuiz(); else if (view.phase === "hl") renderHl(); else if (view.phase === "duell") renderDuell(); else if (view.phase === "frage") renderFrage(); else if (view.phase === "watten") renderWatten(); else if (view.phase === "schnapsen") renderSchnapsen(); else renderGame();
     camDockPlace();
     qbBarRender();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
@@ -1058,6 +1100,7 @@
       wlKey: v.wl ? v.wl.impulse + ":" + v.wl.attempt + ":" + v.wl.step : null,
       geoKey: v.geo ? v.geo.round + ":" + v.geo.step : null,
       landKey: v.land ? v.land.round + ":" + v.land.step : null,
+      quizKey: v.quiz ? v.quiz.round + ":" + v.quiz.step : null,
       qbKey: v.qb ? v.qb.idx + ":" + v.qb.step + ":" + v.qb.done : null,
       hlKey: v.hl ? v.hl.catNo + ":" + v.hl.pos + ":" + v.hl.step : null,
       wMine: !!(v.watten && ((v.watten.turn === myId) || (v.watten.step === "schlag" && v.watten.vorhand === myId) ||
@@ -1076,6 +1119,11 @@
       if (now.qbKey && now.qbKey !== prev.qbKey) {
         if (v.qb.done || v.qb.step === "break") sfx.turn();
         if (v.qb.step === "final") { sfx.fanfare(); confettiGrand(); } // Siegerehrung: für alle ordentlich feiern
+      }
+      if (now.quizKey && now.quizKey !== prev.quizKey) {
+        if (v.quiz.step === "ask") sfx.turn();
+        if (v.quiz.step === "reveal" && v.quiz.result && v.quiz.result[myId] && v.quiz.result[myId].points > 0) sfx.win();
+        if (v.quiz.step === "final") { if ((v.quiz.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.landKey && now.landKey !== prev.landKey) {
         if (v.land.step === "guess") sfx.turn();
@@ -1182,6 +1230,7 @@
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
           ${chosenGame === "querbeet" ? qbSettingsHtml() : ""}
+          ${QZ.MODES[chosenGame] ? quizSettingsHtml(chosenGame) : ""}
           ${chosenGame === "hl" ? hlSettingsHtml() : ""}
           ${chosenGame === "duell" ? duSettingsHtml() : ""}
           ${chosenGame === "frage" ? fqSettingsHtml() : ""}
@@ -1271,6 +1320,7 @@
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: hlOpts });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
+      if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
       if (chosenGame === "duell") return send({ type: "start", game: "duell", opts: duOpts });
       if (chosenGame === "frage") return send({ type: "start", game: "frage", opts: fqOpts });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
@@ -1452,7 +1502,7 @@
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
     return ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
-      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml })[key] || rulesHtml;
+      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
   let rulesOpen = false; // Gastgeber: Spielauswahl oder „So geht's“ des gewählten Spiels
@@ -1483,7 +1533,7 @@
   // cur = gewählte Spielart; Gäste sehen die Auswahl nur (readOnly), wählen kann der Gastgeber
   function modeSwitchHtml(cur = chosenGame, readOnly = false) {
     const grp = GAMES.find((g) => g.key === groupOf(cur));
-    return `<div class="field"><span>${readOnly ? "Spielarten (wählt der Gastgeber)" : "Spielart"}</span><div class="modeswitch ${readOnly ? "ro" : ""}" role="radiogroup">${grp.modes.map((k) => {
+    return `<div class="field"><span>${readOnly ? "Spielarten (wählt der Gastgeber)" : "Spielart"}</span><div class="modeswitch ${readOnly ? "ro" : ""}" style="--n:${grp.modes.length}" role="radiogroup">${grp.modes.map((k) => {
       const g = GAMES.find((x) => x.key === k);
       return `<${readOnly ? "div" : "button type=\"button\""} class="modebtn ${cur === k ? "on" : ""}" style="--gc:${g.color}" ${readOnly ? "" : `data-mode="${k}"`} role="radio" aria-checked="${cur === k}">
         <span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b><small>${esc(g.desc)}</small>${readOnly && cur === k ? `<span class="mode-now">gewählt</span>` : ""}</${readOnly ? "div" : "button"}>`;
@@ -1526,7 +1576,7 @@
       const playing = groupOf(view.game) === tile.key, wished = myWish && groupOf(myWish) === tile.key;
       return `<div class="field"><div class="pick-head"><span>So geht's</span>
           <button type="button" class="linkbtn" data-infoback style="--gc:${tile.color}">‹ Zurück zu allen Spielen</button></div>
-        ${modes ? `<div class="info-tabs">${modes.map((k) => { const g = GAMES.find((x) => x.key === k);
+        ${modes ? `<div class="info-tabs" style="--n:${modes.length}">${modes.map((k) => { const g = GAMES.find((x) => x.key === k);
           return `<button type="button" class="info-tab ${k === key ? "on" : ""}" style="--gc:${g.color}" data-infomode="${k}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span>${esc(g.name)}</button>`; }).join("")}</div>` : ""}
         ${rulesViewHtml(key)}
         <div class="info-actions">${playing ? `<span class="gt-wish now">wird gerade gespielt</span>`
@@ -1598,9 +1648,14 @@
       return `<div class="field"><span>Regionen (wählt der Gastgeber)</span><div class="setlist">${regs.join("")}</div></div>
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
+    if (QZ.MODES[view.game] && lb.quiz) {
+      const det = view.game === "umriss" ? esc(LAND.REGION_NAMES[lb.quiz.region] || "Europa") + " · " + esc((QZ.LEVELS[lb.quiz.level] || QZ.LEVELS.gemischt).name)
+        : esc((QZ.THEMES[lb.quiz.theme] || QZ.THEMES.mix).name);
+      return `<p class="muted small">${det} · ${lb.quiz.rounds} Runden</p>`;
+    }
     if (view.game === "querbeet" && lb.qb) {
       return `${qbGamesHtml(lb.qb.off, true)}
-        <p class="muted small">${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[8]).name)} · Platz 1 = ${QB.POINTS[0]} Partypunkte, Platz 2 = ${QB.POINTS[1]}, Platz 3 = ${QB.POINTS[2]}, sonst 1 · Finale zählt doppelt</p>`;
+        <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[8]).name)} · Platz 1 = ${QB.POINTS[0]} Partypunkte, Platz 2 = ${QB.POINTS[1]}, Platz 3 = ${QB.POINTS[2]}, sonst 1 · Finale zählt doppelt</p>`;
     }
     if (view.game === "land" && lb.land) {
       const maps = LAND.REGION_KEYS.map((k) => row(lb.land.region === k, esc(LAND.REGION_NAMES[k]), "", true));
@@ -1668,6 +1723,19 @@
       if (!(await askConfirm("Gespielte Orte vergessen?", "Danach sind in allen Regionen wieder alle Orte neu.", "Vergessen"))) return;
       S.geoSeen = {}; store.set("s10-geo-seen", {}); publish(); toast("Speicher gelöscht – alle Orte sind wieder neu.", "ok");
     };
+    const qbJ = app.querySelector("#qb-joker");
+    if (qbJ) qbJ.onchange = () => { qbOpts.joker = qbJ.value === "1"; store.set("s10-qb", qbOpts); publish(); };
+    const qbT = app.querySelector("#qb-theme");
+    if (qbT) qbT.onchange = () => { qbOpts.theme = qbT.value; store.set("s10-qb", qbOpts); publish(); };
+    [["#quiz-rounds", "rounds"], ["#quiz-theme", "theme"], ["#quiz-region", "region"], ["#quiz-level", "level"]].forEach(([id, k]) => {
+      const el = app.querySelector(id);
+      if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
+    });
+    const qzx = app.querySelector("#quiz-reset");
+    if (qzx) qzx.onclick = async () => {
+      if (!(await askConfirm("Gespielte vergessen?", "Danach sind bei Schätzen, Hinweis für Hinweis und Umriss-Rätsel wieder alle Fragen neu.", "Vergessen"))) return;
+      S.quizSeen = {}; store.set("s10-quiz-seen", {}); publish(); toast("Speicher gelöscht – alles wieder neu.", "ok");
+    };
     const qbL = app.querySelector("#qb-length");
     if (qbL) qbL.onchange = () => { qbOpts.length = Number(qbL.value); store.set("s10-qb", qbOpts); publish(); };
     app.querySelectorAll("[data-qbgame]").forEach((cb) => cb.onchange = () => {
@@ -1729,11 +1797,33 @@
         return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
           <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.short)}</span></label>`; }).join("")}</div></div>`;
   }
+  function quizSettingsHtml(mode) {
+    const um = mode === "umriss";
+    if (um && !needLandData()) return `<p class="muted">Länderkarte wird geladen …</p><button id="start" class="btn primary big" disabled>Spiel starten</button>`;
+    const sel = (id, obj, val) => `<select id="${id}">${Object.entries(obj).map(([k, t]) => `<option value="${k}" ${String(val) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>`;
+    const o = { theme: QZ.THEMES[quizOpts.theme] ? quizOpts.theme : "mix", region: QZ.UMRISS_REGIONS.includes(quizOpts.region) ? quizOpts.region : "europa",
+      level: QZ.LEVELS[quizOpts.level] ? quizOpts.level : "gemischt" };
+    const nw = QZ.countNew(S && S.quizSeen, mode, o);
+    const regions = Object.fromEntries(QZ.UMRISS_REGIONS.map((k) => [k, { name: `${LAND.REGION_NAMES[k]} (${QZ.pool("umriss", { region: k, level: "gemischt" }).length})` }]));
+    const levels = Object.fromEntries(Object.entries(QZ.LEVELS).map(([k, l]) => [k, { name: `${l.name} (${QZ.pool("umriss", { region: o.region, level: k }).length})` }]));
+    const themes = Object.fromEntries(Object.entries(QZ.THEMES).map(([k, t]) => [k, { name: `${t.name} (${QZ.pool(mode, { theme: k }).length})` }]));
+    return `${um ? `<label class="field"><span>Karte</span>${sel("quiz-region", regions, o.region)}</label>
+        <label class="field"><span>Schwierigkeit</span>${sel("quiz-level", levels, o.level)}</label>` : `<label class="field"><span>Fragen</span>${sel("quiz-theme", themes, o.theme)}</label>`}
+      <label class="field"><span>Runden</span><select id="quiz-rounds">${QZ.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(quizOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
+      <p class="muted small geo-new">${nw.fresh === nw.total ? `Alle ${nw.total} sind neu.` : `Noch ${nw.fresh} von ${nw.total} neu – gespielte kommen erst wieder, wenn alle durch sind.`}
+        ${nw.fresh < nw.total ? `<button id="quiz-reset" class="btn ghost sm">Gespielte vergessen</button>` : ""}</p>
+      <button id="start" class="btn primary big" ${view.players.length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
+      ${view.players.length < 2 ? `<p class="muted small">Du kannst auch allein starten, um es auszuprobieren.</p>` : ""}`;
+  }
   function qbSettingsHtml() {
     const n = view.players.filter((p) => p.connected).length;
     const games = QB.eligible(qbOpts.off, n);
-    return `<label class="field"><span>Länge</span><select id="qb-length">${Object.entries(QB.LENGTHS).map(([k, l]) =>
-        `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+    return `<div class="row2"><label class="field"><span>Länge</span><select id="qb-length">${Object.entries(QB.LENGTHS).map(([k, l]) =>
+        `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${k} Etappen</option>`).join("")}</select></label>
+      <label class="field"><span>Thema</span><select id="qb-theme">${Object.entries(QB.THEMES).map(([k, t]) =>
+        `<option value="${k}" ${(qbOpts.theme || "mix") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label></div>
+      <label class="field"><span>Joker</span><select id="qb-joker"><option value="1" ${qbOpts.joker !== false ? "selected" : ""}>Mit Joker – jeder darf eine Etappe doppelt zählen lassen</option>
+        <option value="0" ${qbOpts.joker === false ? "selected" : ""}>Ohne Joker</option></select></label>
       ${qbGamesHtml(qbOpts.off, false)}
       <p class="muted small">Jede Etappe ist eine Kurzfassung. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>
       <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Querbeet starten</button>
@@ -1869,12 +1959,41 @@
         <li>Es kommen nur die wichtigsten Städte und ein paar Orte dran, die man von oben gut erkennt. Sie wiederholen sich erst, wenn alle dran waren.</li>
       </ul>
     </details>`;
+  const schaetzenRulesHtml = `
+    <details class="rules"><summary>Regeln: Schätzen</summary>
+      <ul>
+        <li>Eine Frage mit einer Zahl als Antwort, z. B. „Wie hoch ist der Ortler?“. Alle schätzen gleichzeitig (45 Sekunden).</li>
+        <li>Wer am nächsten dran ist, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Liegt man auf 1 % genau, gibt es einen Volltreffer-Bonus (+1).</li>
+        <li>Kommazahlen mit Komma eingeben (z. B. 9,1). Tausenderpunkte sind erlaubt (1.370).</li>
+        <li>Fragen: gemischt, nur Südtirol oder ohne Südtirol. Gespielte Fragen kommen erst wieder, wenn alle dran waren.</li>
+      </ul>
+    </details>`;
+  const hinweisRulesHtml = `
+    <details class="rules"><summary>Regeln: Hinweis für Hinweis</summary>
+      <ul>
+        <li>Gesucht ist ein Begriff, eine Person oder ein Ort. Alle 8 Sekunden kommt ein neuer, leichterer Hinweis – fünf insgesamt.</li>
+        <li>Jeder hat <b>nur einen Versuch</b>. Wer beim 1. Hinweis richtig liegt, bekommt 5 Punkte, beim 2. Hinweis 4 … beim 5. Hinweis 1 Punkt.</li>
+        <li>Kleine Tippfehler werden verziehen.</li>
+      </ul>
+    </details>`;
+  const umrissRulesHtml = `
+    <details class="rules"><summary>Regeln: Umriss-Rätsel</summary>
+      <ul>
+        <li>Man sieht nur den Umriss eines Landes – oder eines Bundeslandes, einer Region oder eines Kantons. Welches Gebiet ist das?</li>
+        <li>Jeder hat einen Versuch (30 Sekunden). Richtig = 2 Punkte, wer als Erster richtig liegt, bekommt +1.</li>
+        <li>Karten: Europa, Welt, deutsche und österreichische Bundesländer, italienische Regionen, Schweizer Kantone.</li>
+        <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Gebiete, „Profi“ nur die schwereren, „Gemischt“ alle. Sehr kleine Gebiete kommen nicht vor.</li>
+      </ul>
+    </details>`;
   const qbRulesHtml = `
     <details class="rules"><summary>Regeln: Querbeet</summary>
       <ul>
         <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 1 Karte Schlaue Zehn, 3 Orte bei „Wo liegt das?“, 1 Buchstabe Stadt, Land, Fluss).</li>
         <li>Pro Etappe zählt nur die Platzierung: Platz 1 bekommt ${QB.POINTS[0]} Partypunkte, Platz 2 ${QB.POINTS[1]}, Platz 3 ${QB.POINTS[2]}, alle anderen 1. Bei Gleichstand bekommen alle die höhere Punktzahl.</li>
         <li>Die letzte Etappe ist das Finale und zählt doppelt.</li>
+        <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Partie. Vor einer Etappe gesetzt, zählen deine Partypunkte dieser Etappe doppelt (nicht im Finale).</li>
+        <li><b>Thema:</b> „Südtirol“ oder „Welt“ wählt passende Inhalte für alle Etappen, „Gemischt“ alles durcheinander.</li>
+        <li>Bei der Siegerehrung gibt es Auszeichnungen, z. B. Kartenleser, Wandelndes Lexikon oder Aufholjagd.</li>
         <li>Zwischen den Etappen gibt es eine Pause mit Zwischenstand und einer kurzen Erklärung des nächsten Spiels. Weiter geht es, wenn alle „Bereit“ getippt haben.</li>
         <li>Listen-Duell und Antwort sucht Frage sind nur dabei, wenn ihr genau zu zweit seid.</li>
       </ul>
@@ -3215,13 +3334,158 @@
     setTimeout(() => map.invalidateSize(), 50);
   }
 
+  // ---------- Schätzen · Hinweis für Hinweis · Umriss-Rätsel ----------
+  let quizRendered = null, quizSent = null, quizMine = null, quizDeadline = 0, quizHintAt = 0;
+  const quizFmt = (n) => Number(n).toLocaleString("de-DE", { maximumFractionDigits: 3 });
+  function quizChips(v, st) {
+    return v.players.map((p, i) => {
+      const done = st.step === "ask" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
+      const mark = st.step === "ask" ? (done ? "✓" : "…") : done ? "✓" : "";
+      return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
+        <span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
+    }).join("");
+  }
+  // Umriss als SVG: Hauptteil plus nahe Inseln (keine weit entfernten Überseegebiete)
+  function umrissSvg(code) {
+    const D = window.SCHLAU10_LAND; if (!D) return "";
+    const c = D.countries.concat(D.subs || []).find((x) => x.c === code); if (!c) return "";
+    const ctr = (flat) => { let a = 0, b = 0, k = 0; for (let i = 0; i < flat.length; i += 2) { a += flat[i]; b += flat[i + 1]; k++; } return [a / k, b / k]; };
+    let big = c.g[0]; c.g.forEach((p) => { if (p[0].length > big[0].length) big = p; });
+    const [la0, ln0] = ctr(big[0]);
+    const polys = c.g.filter((p) => { const [la, ln] = ctr(p[0]); return Math.abs(la - la0) < 14 && Math.abs(ln - ln0) < 22; });
+    const k = Math.cos(la0 * Math.PI / 180);
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    const pathOf = (flat) => { let d = ""; for (let i = 0; i < flat.length; i += 2) { const x = flat[i + 1] * k, y = -flat[i];
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); d += (i ? "L" : "M") + x.toFixed(3) + " " + y.toFixed(3); } return d + "Z"; };
+    const d = polys.map((p) => p.map(pathOf).join("")).join("");
+    const w = x1 - x0, h = y1 - y0, pad = Math.max(w, h) * 0.06;
+    return `<svg class="umriss-svg" viewBox="${(x0 - pad).toFixed(3)} ${(y0 - pad).toFixed(3)} ${(w + 2 * pad).toFixed(3)} ${(h + 2 * pad).toFixed(3)}" preserveAspectRatio="xMidYMid meet">
+      <path d="${d}" fill="#ffd24d" fill-opacity=".9" stroke="#fff6cf" stroke-width="${(Math.max(w, h) / 220).toFixed(4)}" fill-rule="evenodd" stroke-linejoin="round"/></svg>`;
+  }
+  function quizHintsHtml(st) {
+    const it = st.item; if (!it || !it.hints) return "";
+    return `<ol class="quiz-hints">${it.hints.map((h, i) => `<li class="${i === it.hints.length - 1 && st.step === "ask" ? "new" : ""}"><span class="qh-n">${i + 1}</span>${esc(h)}</li>`).join("")}</ol>`;
+  }
+  function quizResultsHtml(v, st) {
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const rows = v.players.filter((p) => st.result[p.id]).map((p) => ({ p, r: st.result[p.id] })).sort((a, b) => b.r.points - a.r.points);
+    return rows.map(({ p, r }) => {
+      let what;
+      if (st.mode === "schaetzen") what = r.given == null ? "nicht geschätzt" : `${quizFmt(r.given)}${st.item.unit ? " " + esc(st.item.unit) : ""} <span class="muted small">(${r.diff > 0 ? "+" : ""}${quizFmt(r.diff)})</span>${r.exact ? " 🎯" : ""}`;
+      else what = r.given == null ? "keine Antwort" : `${r.ok ? "✓" : "✗"} ${esc(r.given)}${st.mode === "hinweis" && r.ok ? ` <span class="muted small">(${r.hint}. Hinweis)</span>` : ""}${r.fast ? " ⚡" : ""}`;
+      return `<div class="geo-res ${st.ready[p.id] ? "done" : ""}" style="--pc:${colorOf(p.id)}"><span class="pdot ${p.connected ? "" : "off"}"></span>
+        <span class="geo-score-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${st.ready[p.id] ? ` <span class="geo-mark">✓</span>` : ""}</span>
+        <span class="small">${what}</span><b>+${r.points}</b><span class="geo-total" title="Gesamt">${st.total[p.id] || 0}</span></div>`;
+    }).join("");
+  }
+  function quizSubmit() {
+    const st = view && view.quiz, inp = app.querySelector("#quiz-in");
+    if (!st || st.step !== "ask" || quizSent === st.round || !inp || !inp.value.trim()) return;
+    if (st.mode === "schaetzen" && !isFinite(QZ.parseNum(inp.value))) { toast("Bitte eine Zahl eingeben (Kommazahlen mit Komma).", "bad"); return; }
+    quizSent = st.round; quizMine = inp.value.trim();
+    send({ type: "quizAnswer", round: st.round, text: quizMine });
+    quizAskFoot();
+  }
+  // Eingabe oder „Deine Antwort … warte“ – ohne den Rest neu zu zeichnen
+  function quizAskFoot() {
+    const st = view && view.quiz, f = app.querySelector(".quiz-foot");
+    if (!st || !f || quizSent !== st.round) return;
+    f.innerHTML = `<p class="quiz-sent">Deine ${st.mode === "schaetzen" ? "Schätzung" : "Antwort"}: <b>${esc(quizMine || "")}${st.mode === "schaetzen" && st.item.unit ? " " + esc(st.item.unit) : ""}</b> – warte auf die anderen …</p>`;
+  }
+  setInterval(() => {
+    const st = view && view.quiz;
+    if (!st || st.step !== "ask") return;
+    const el = document.getElementById("quiz-timer"), ms = Math.max(0, quizDeadline - Date.now());
+    if (el) { el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000); }
+    const nh = document.getElementById("quiz-nexthint");
+    if (nh && quizHintAt) { const left = Math.max(0, Math.ceil((quizHintAt - Date.now()) / 1000)); nh.textContent = left ? `nächster Hinweis in ${left} s` : "gleich kommt der nächste Hinweis …"; }
+    if (ms <= 300) quizSubmit(); // Eingetipptes bei Zeitablauf abgeben
+  }, 250);
+  function renderQuiz() {
+    const v = view, st = v.quiz;
+    if (!st) return;
+    const head = (inner) => `<main class="screen game slf geo quiz"><header class="top topbar">${headBrandHtml(st.mode)}
+        <div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>${statusBarHtml()}<section class="slf-main quiz-main">${inner}</section></main>`;
+    if (st.mode === "umriss" && !needLandData()) { quizRendered = null; app.innerHTML = head(`<div class="panel"><p class="muted">Länderkarte wird geladen …</p></div>`); return; }
+    quizDeadline = st.endsIn != null ? Date.now() + st.endsIn : 0;
+    quizHintAt = st.item && st.item.nextIn != null ? Date.now() + st.item.nextIn : 0;
+    const key = v.code + ":" + st.round + ":" + st.step;
+    if (quizRendered === key && app.querySelector(".quiz-main")) {
+      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = quizChips(v, st);
+      const hl = app.querySelector(".quiz-hintbox"); if (hl && st.mode === "hinweis" && hl.dataset.n !== String(st.item.hints.length)) {
+        hl.dataset.n = st.item.hints.length; hl.querySelector(".quiz-hints").outerHTML = quizHintsHtml(st);
+        const pts = app.querySelector("#quiz-pts"); if (pts) pts.textContent = 6 - st.item.hints.length;
+      }
+      const rs = app.querySelector(".geo-results"); if (rs && st.result) rs.innerHTML = quizResultsHtml(v, st);
+      if (st.step === "reveal") { const rb = app.querySelector("#quiz-ready"); if (rb) rb.textContent = st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Weiter"; }
+      return;
+    }
+    if (st.step === "ask" && (!quizRendered || !quizRendered.startsWith(v.code + ":" + st.round + ":"))) { quizSent = null; quizMine = null; }
+    if (st.step === "ask" && st.submitted.includes(myId) && quizSent !== st.round) { quizSent = st.round; }
+    quizRendered = key;
+    const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const label = `<span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "umriss" ? " · " + esc(LAND.REGION_NAMES[st.region] || "") : ""}</span>`;
+    let main;
+    if (st.step === "final") {
+      const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0)), medal = ["🥇", "🥈", "🥉"];
+      main = `<div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((p) => (st.winners || []).includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"}!</b>
+          <div class="banner-actions"><button id="quiz-restart" class="btn primary">Nochmal spielen</button>${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final">${ranking.map((p, i) => `<div class="slf-rank" style="--pc:${colorOf(p.id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
+          <span class="slf-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0} Punkte</b></div>`).join("")}
+          <p class="muted small">${esc(st.modeName)} · ${st.rounds} Runden</p></div>`;
+    } else {
+      const sent = quizSent === st.round, it = st.item || {};
+      let q = "";
+      if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>` : ""}`;
+      else if (st.mode === "hinweis") q = `<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Wer oder was ist gemeint?</div>`}
+          ${quizHintsHtml(st)}${st.step === "ask" ? `<p class="muted small">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte · <span id="quiz-nexthint"></span></p>` : ""}</div>`;
+      else q = `<div class="umriss-box">${umrissSvg(it.c)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Welches Gebiet ist das?</div>`}`;
+      const foot = st.step === "ask" ? `<div class="quiz-foot">${sent ? "" : `<form class="quiz-form" onsubmit="return false">
+          <input id="quiz-in" ${st.mode === "schaetzen" ? `inputmode="decimal" placeholder="Deine Schätzung"` : `placeholder="Deine Antwort"`} autocomplete="off" maxlength="60">
+          ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>
+          ${st.mode !== "schaetzen" ? `<p class="muted small quiz-note">Nur ein Versuch – kleine Tippfehler sind kein Problem.</p>` : `<p class="muted small quiz-note">Kommazahlen mit Komma, z. B. 9,1</p>`}`}</div>`
+        : `<div class="geo-results">${quizResultsHtml(v, st)}</div>
+           <div class="geo-actions"><button id="quiz-ready" class="btn primary">${st.ready[myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Weiter"}</button>
+             ${isHost ? `<button id="quiz-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+      main = `<div class="geo-bar">${label}<div class="geo-scores">${quizChips(v, st)}</div>
+          ${st.step === "ask" ? `<div id="quiz-timer" class="slf-timer">${Math.ceil((st.endsIn || 0) / 1000)} s</div>` : ""}</div>
+        <div class="panel quiz-card">${q}${foot}</div>`;
+    }
+    app.innerHTML = head(main);
+    const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
+    on("#leave", leave); on("#invite", invite);
+    on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
+    on("#quiz-go", quizSubmit);
+    on("#quiz-ready", () => send({ type: "quizReady" }));
+    on("#quiz-next", () => send({ type: "quizNext" }));
+    on("#quiz-restart", () => send({ type: "quizRestart" }));
+    on("#toLobby", () => send({ type: "lobby" }));
+    const inp = app.querySelector("#quiz-in");
+    if (inp) { inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); quizSubmit(); } }; if (matchMedia("(pointer: fine)").matches) inp.focus(); }
+    quizAskFoot();
+  }
+
   // ---------- Querbeet ----------
   const qbGame = (k) => GAMES.find((g) => g.key === k) || GAMES[0];
   const qbFmt = (n) => Number(n || 0).toLocaleString("de-DE");
+  // Joker-Feld neben der nächsten Etappe: setzen / zurücknehmen (nicht im Finale), wer ihn hier schon gesetzt hat
+  function qbJokerHtml(q, isFinal) {
+    if (!q.jokerOn || !view.players.some((p) => p.id === myId)) return "";
+    const next = q.idx + 1, mine = q.joker[myId];
+    const others = Object.keys(q.joker).filter((id) => q.joker[id] === next && id !== myId).map((id) => esc((view.players.find((p) => p.id === id) || { name: "?" }).name));
+    const who = others.length ? `<small class="qbj-who">Hier auch: ${others.join(", ")}</small>` : "";
+    const box = (cls, inner, attr = "") => `<button type="button" class="qb-jbox ${cls}" ${attr}><span class="qbj-card" aria-hidden="true">🃏</span><span class="qbj-txt">${inner}</span></button>`;
+    let b;
+    if (isFinal) b = box("off", `<b>Kein Joker</b><small>Das Finale zählt ohnehin doppelt</small>`, "disabled");
+    else if (mine === next) b = box("set", `<b>Joker gesetzt</b><small>Diese Etappe zählt für dich doppelt · tippen zum Zurücknehmen</small>`, `data-qbjoker="off"`);
+    else if (mine != null) b = box("off", `<b>Joker verbraucht</b><small>Schon in Etappe ${mine + 1} eingesetzt</small>`, "disabled");
+    else b = box("", `<b>Joker setzen</b><small>Diese Etappe zählt für dich doppelt – einmal pro Partie</small>`, `data-qbjoker="on"`);
+    return `<div class="qbn-joker">${b}${who}</div>`;
+  }
   function qbReadyBtnHtml(q, label) {
     const ids = view.players.filter((p) => p.connected).map((p) => p.id), n = ids.filter((id) => q.ready[id]).length;
     return `<button class="btn primary" data-qb="ready">${q.ready[myId] ? `Bereit ✓ – warte auf die anderen (${n}/${ids.length})` : label}</button>
-      ${isHost ? `<button class="btn ghost sm" data-qb="go">Als Gastgeber sofort weiter</button>` : ""}`;
+      ${isHost ? `<button class="btn ghost sm" data-qb="go">Sofort weiter</button>` : ""}`;
   }
   // Leiste unten während einer Etappe: wo man steht, und am Ende der Etappe „Weiter zum Zwischenstand“
   const qbBarEl = document.createElement("div");
@@ -3254,7 +3518,7 @@
     const standings = (title) => `<div class="panel qb-standing"><h3>${title}</h3>${ranking.map((p, i) => {
       const place = ranking.findIndex((x) => (q.pts[x.id] || 0) === (q.pts[p.id] || 0));
       return `<div class="qb-row" style="--pc:${colorOf(p.id)}"><span class="qb-place">${medal[place] || place + 1 + "."}</span><span class="pdot"></span>
-        <span class="qb-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+        <span class="qb-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${q.jokerOn && q.step !== "final" && q.joker[p.id] == null ? ` <span class="qb-jk" title="Joker noch nicht eingesetzt">🃏</span>` : ""}</span>
         <span class="qb-bar"><i style="width:${Math.round(100 * (q.pts[p.id] || 0) / maxPts)}%"></i></span><b>${q.pts[p.id] || 0}</b></div>`;
     }).join("")}</div>`;
     const last = q.stages[q.stages.length - 1];
@@ -3263,16 +3527,18 @@
       const rows = Object.entries(x.res).sort((a, b) => a[1].place - b[1].place);
       return `<div class="panel qb-result" style="--gc:${g.color}"><div class="qb-head"><span class="gt-icon">${g.icon}</span><div><div class="game-label">${title}</div><b>${esc(g.name)}</b></div></div>
         ${rows.map(([id, r]) => `<div class="qb-row" style="--pc:${colorOf(id)}"><span class="qb-place">${medal[r.place - 1] || r.place + "."}</span><span class="pdot"></span>
-          <span class="qb-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${qbFmt(r.score)} ${x.game === "zehn" || x.game === "hl" || x.game === "land" ? "richtig" : "Punkte"}</span><b class="qb-plus">+${r.pts}</b></div>`).join("")}</div>`;
+          <span class="qb-name">${esc(nameOf(id))}${id === myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${qbFmt(r.score)} ${x.game === "zehn" || x.game === "hl" || x.game === "land" ? "richtig" : "Punkte"}</span><b class="qb-plus">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}+${r.pts}</b></div>`).join("")}</div>`;
     };
-    const nextCard = (n, isFinal) => { const g = qbGame(n.game);
-      return `<div class="panel qb-next" style="--gc:${g.color}"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}</div>
-        <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div>
-        <p>${esc(n.rule)}</p>${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div>`; };
+    const nextCard = (n, isFinal) => { const g = qbGame(n.game), jk = qbJokerHtml(q, isFinal);
+      return `<div class="panel qb-next ${jk ? "with-joker" : ""}" style="--gc:${g.color}">
+        <div class="qbn-info"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}</div>
+          <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div>
+          <p>${esc(n.rule)}</p></div>
+        ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div></div>`; };
     let main = "";
     if (q.step === "intro") {
       main = `<div class="panel qb-intro"><h2>Querbeet – ${q.n} Etappen</h2>
-          <p class="muted">Jede Etappe ist eine Kurzfassung eines Spiels. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>${path}</div>
+          <p class="muted">${q.theme !== "mix" ? `Thema: <b>${esc(QB.THEMES[q.theme].name)}</b>. ` : ""}Jede Etappe ist eine Kurzfassung eines Spiels. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.${q.jokerOn ? " Jeder hat einen 🃏 Joker: vor einer Etappe gesetzt, zählt sie für dich doppelt." : ""}</p>${path}</div>
         ${nextCard(q.next, false)}`;
     } else if (q.step === "break") {
       main = `${path}<div class="qb-grid">${stageRes(last, `Ergebnis Etappe ${q.stages.length}`)}${standings("Zwischenstand")}</div>${nextCard(q.next, q.lastDouble)}`;
@@ -3280,6 +3546,8 @@
       const w = ranking.filter((p) => (q.winners || []).includes(p.id));
       main = `<div class="banner win"><div class="trophy">🏆</div><b>${w.map((p) => esc(p.name)).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"} Querbeet!</b>
           <div class="banner-actions">${isHost ? `<button id="qb-restart" class="btn primary">Nochmal Querbeet</button><button id="toLobby" class="btn ghost">Zur Lobby</button>` : `<span class="muted">Der Gastgeber entscheidet, wie es weitergeht.</span>`}</div></div>
+        ${(q.titles || []).length ? `<div class="panel qb-titles"><h3>Auszeichnungen</h3><div class="qb-tgrid">${q.titles.map((t) => `<div class="qb-title"><b>${esc(t.name)}</b>
+          <span>${t.ids.map((id) => `<span style="color:${colorOf(id)}">${esc(nameOf(id))}</span>`).join(" & ")}</span><small class="muted">${esc(t.why)}</small></div>`).join("")}</div></div>` : ""}
         ${path}<div class="qb-grid">${standings("Endstand")}${stageRes(last, "Finale (doppelte Punkte)")}</div>
         <div class="panel qb-table"><h3>Alle Etappen</h3><div class="qb-scroll"><table><thead><tr><th></th>${q.stages.map((x, i) => `<th title="${esc(qbGame(x.game).name)}"><span class="gt-icon xs">${qbGame(x.game).icon}</span><small>${i + 1}</small></th>`).join("")}<th>Σ</th></tr></thead>
           <tbody>${ranking.map((p) => `<tr><td style="--pc:${colorOf(p.id)}"><span class="pdot"></span> ${esc(p.name)}</td>${q.stages.map((x) => `<td>${x.res[p.id] ? x.res[p.id].pts : "–"}</td>`).join("")}<td><b>${q.pts[p.id] || 0}</b></td></tr>`).join("")}</tbody></table></div></div>`;
@@ -3300,6 +3568,7 @@
     on("#qb-restart", () => send({ type: "qbRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
     app.querySelectorAll("[data-qb]").forEach((b) => b.onclick = () => send({ type: b.dataset.qb === "go" ? "qbGo" : "qbReady" }));
+    app.querySelectorAll("[data-qbjoker]").forEach((b) => b.onclick = () => send({ type: "qbJoker", on: b.dataset.qbjoker === "on" }));
   }
 
   // ---------- Länder finden ----------
