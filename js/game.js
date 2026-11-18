@@ -871,7 +871,8 @@
     camDock.classList.toggle("show", items.length > 0);
     // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
     // im großen Anruf-Fenster schwebt das eigene Bild nur bei genau einem Gegenüber, sonst ist es eine normale Kachel
-    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0 && !(camStage && remoteCams.size > 1));
+    // Bild-im-Bild nur bei genau einem Gegenüber (in der Lobby-Spalte wie bisher); bei mehreren ist das eigene Bild eine normale Kachel
+    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0 && !(remoteCams.size > 1 && !camDock.classList.contains("docked")));
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
@@ -892,6 +893,7 @@
         grip.onpointerup = () => { grip.onpointermove = null; const q = camDock.getBoundingClientRect(); store.set("s10-cam-pos", { rx: q.right / innerWidth, by: q.bottom / innerHeight }); };
       };
     }
+    dockGridLayout(items.length);
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
     const anyAudio = [...remoteCams].some(([id, st]) => st && st !== "failed" && st.getAudioTracks().length && (remoteMedia.get(id) || { mic: true }).mic);
     const ab = camDock.querySelector(".camaud"); ab.style.display = anyAudio ? "" : "none"; ab.textContent = camMuteAll ? "🔇" : "🔊";
@@ -914,6 +916,20 @@
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
     stageLayout();
     sendView();
+  }
+  // Kleines Kamerafenster im Spiel bei mehreren Gegenübern: Größe bleibt etwa wie bei einem Mitspieler,
+  // die Bilder werden kleiner und stehen im Raster (2 Spalten, ab 5 Bildern 3) – sonst wächst das Fenster über Knöpfe und Karten
+  function dockGridLayout(n) {
+    const box = camDock.querySelector(".camtiles");
+    if (!box) return;
+    const grid = !camStage && !camDock.classList.contains("docked") && remoteCams.size > 1;
+    camDock.classList.toggle("grid", grid);
+    if (!grid) { box.style.removeProperty("--bw"); return; }
+    const cols = n <= 4 ? 2 : 3, gap = 6, phone = innerWidth <= 640;
+    const W = camBig ? (phone ? 300 : 420) : (phone ? 170 : 250); // Gesamtbreite des Rasters
+    const tw = Math.floor((W - (cols - 1) * gap) / cols);
+    box.style.setProperty("--tw", tw + "px");
+    box.style.setProperty("--bw", cols * tw + (cols - 1) * gap + "px");
   }
   // Großes Anruf-Fenster: Spaltenzahl so wählen, dass die Kacheln möglichst groß werden (wie bei Videokonferenzen),
   // eine unvollständige letzte Reihe steht mittig; im Hochformat (Handy) sind die Kacheln hochkant
