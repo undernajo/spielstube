@@ -27,6 +27,19 @@ Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES
 
 Nach Änderungen an Skripten oder `style.css` einmal `./bump.sh` ausführen. Das erhöht die Versionsnummer `?v=` aller eigenen Dateien in `index.html`, damit Browser nichts Altes aus dem Zwischenspeicher nehmen (`./bump.sh 20` setzt eine bestimmte Nummer).
 
+## Testen
+
+`tests/smoke.js` spielt jedes Spiel einmal mit Gastgeber und Gast in Chrome an und meldet JavaScript-Fehler. Die Seite selbst braucht dafür nichts, nur der Test braucht Node und ein installiertes Chrome:
+
+```
+cd tests
+npm install        # einmalig
+npm test           # alle Spiele (dauert gut 2 Minuten)
+npm test -- watten schnapsen   # nur bestimmte Spiele
+```
+
+Der Test startet einen eigenen kleinen Webserver; die Spielzüge laufen wie beim echten Spielen über den öffentlichen MQTT-Server, es braucht also Internet. Ein anderes Chrome lässt sich mit `CHROME_PATH=…` angeben.
+
 ## Spiele
 
 Der Gastgeber wählt in der Lobby das Spiel:

@@ -1,0 +1,11 @@
+{
+  "name": "spielstube-tests",
+  "private": true,
+  "description": "Automatischer Durchlauf aller Spiele im Browser (nur zum Testen, die Seite selbst braucht keinen Build)",
+  "scripts": {
+    "test": "node smoke.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "23.11.1"
+  }
+}
