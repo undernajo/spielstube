@@ -6,8 +6,7 @@ Es braucht keinen eigenen Server. Die Spielzüge laufen über einen öffentliche
 ## Spielen
 
 1. Die Seite muss für beide erreichbar sein, am einfachsten so:
-   - **Netlify Drop:** Ordner auf https://app.netlify.com/drop ziehen und den Link teilen, oder
-   - **GitHub Pages:** Repo pushen und Pages aktivieren.
+   - **GitHub Pages:** Die Seite läuft über GitHub Pages, ein Push auf `main` veröffentlicht sie.
    - Lokal testen: `python3 -m http.server 8000` und http://localhost:8000 in zwei Fenstern öffnen.
 2. Einer klickt **Neue Spielstube eröffnen** und schickt den Link (`…?room=ABCDE`) oder den 5-stelligen Code.
 3. Der andere öffnet den Link (oder gibt den Code ein). Dann startet der Gastgeber das Spiel.
