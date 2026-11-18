@@ -42,7 +42,7 @@
     if (!st) return;
     const seated = st.seats.includes(G.myId);
     const priv = seated && G.wattenPriv && G.wattenPriv.roundNo === st.round ? G.wattenPriv : null;
-    const key = v.code + ":" + st.gid + ":" + st.mode + ":" + st.round + ":" + st.step + ":" + (priv ? priv.hand.length : "-") + ":" + JSON.stringify(st.done || st.said || {}) + (st.mode === "stich" ? ":" + st.turn + ":" + st.trick.length + ":" + (priv && priv.playable ? priv.playable.length : "-") : "")
+    const key = v.code + ":" + st.gid + ":" + st.mode + ":" + st.round + ":" + st.step + ":" + (priv ? priv.hand.length : "-") + ":" + JSON.stringify(st.done || st.said || {}) + (st.mode === "stich" ? ":" + JSON.stringify(st.ready || {}) + ":" + st.turn + ":" + st.trick.length + ":" + (priv && priv.playable ? priv.playable.length : "-") : "")
       + (st.mode === "bus" ? ":" + st.q + ":" + st.revealed + ":" + JSON.stringify(st.pick || {}) + ":" + JSON.stringify(st.guessed || {}) + ":" + JSON.stringify(st.status || {}) : "");
     if (kgRendered === key && app.querySelector(".kg-main")) {
       const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = kgChips(v, st);
@@ -124,7 +124,7 @@
       <main class="screen game slf geo kg-main">
         <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
-        <section class="slf-main">${st.step !== "final" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
+        <section class="slf-main">${st.step !== "final" && st.mode !== "stich" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
@@ -158,13 +158,15 @@
     return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark end">21</span></div>`;
   }
   let busMine = null, stMine = null;
-  // Stichhaltig: Trumpf, Spielerleiste (Ansage / Stiche), Ansage-Knöpfe, Stich in der Mitte, eigene Hand
+  // Stichhaltig: Kopfzeile (Runde, Trumpf, Ansagen-Bilanz), ein Kasten je Spieler (Punkte, Ansage als Kreise, was noch fehlt),
+  // Stich mit festen Plätzen in Spielreihenfolge, darunter „Du bist dran“ und die eigene Hand
   const ST_SUIT = { herz: "Herz", laub: "Laub", eichel: "Eichel", schelle: "Schelle" };
   function stichMainHtml(v, st, colorOf, nameOf, readyBtn) {
     const seated = st.seats.includes(G.myId), gk = st.gid + ":st:" + st.round;
     kgOutcomeDelay = 0;
     const priv = seated && G.wattenPriv && G.wattenPriv.roundNo === st.round && G.wattenPriv.hand ? G.wattenPriv : null;
     const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+    const you = (id) => (id === G.myId ? " <em>(du)</em>" : "");
     // Ansagen werden nacheinander aufgedeckt (einmal, beim ersten Zeigen)
     const ba = st.bids ? kgAnim(`${gk}:bids`, 500, 600 + st.seats.length * 400 + 800) : null;
     const bidDelay = (i) => (ba ? ba.d + i * 400 : null);
@@ -172,63 +174,93 @@
     if (ba && ba.first) kgSound(st.seats.length, 400, 500);
     const ta = st.trumpCard ? kgAnim(`${gk}:trump`, 150, 1100) : null;
     if (ta && ta.first) kgSound(1, 0, 150);
-    const trump = `<div class="st-trump">${st.trumpCard ? kgCard(st.trumpCard, "mid", "", ta ? "flip" : "", ta ? ta.d : 0) : `<span class="st-notrump">–</span>`}
-        <div><div class="game-label">Trumpf</div><b class="st-trumpname">${st.trump ? ST_SUIT[st.trump] : "kein Trumpf"}</b>
-        <div class="muted small">${plural(st.n, "Karte", "Karten")} pro Spieler · ${plural(st.n, "Stich", "Stiche")} zu holen</div></div></div>`;
-    const players = `<div class="st-players">${st.seats.map((id, i) => {
-      const said = st.bids ? `<b class="${lateAttr(bidDelay(i))}">${st.bids[id]}</b>` : `<b>${st.said[id] ? "✓" : "…"}</b>`;
-      const hit = st.bids && st.tricks[id] === st.bids[id], over = st.bids && st.tricks[id] > st.bids[id];
-      return `<div class="st-p ${st.step === "play" && st.turn === id ? "turn" : ""} ${id === G.myId ? "me" : ""}" style="--pc:${colorOf(id)}">
-          <div class="st-pn"><span class="pdot"></span><b>${esc(nameOf(id))}${id === G.myId ? " (du)" : ""}</b>${id === st.lead && st.step !== "reveal" ? `<span class="st-lead" title="spielt in dieser Runde an">▶</span>` : ""}</div>
-          <div class="st-pstat"><span>Ansage ${said}</span><span class="${st.bids && st.step !== "bid" ? (over ? "over" : hit ? "hit" : "") : ""}">Stiche <b>${st.tricks[id]}</b></span></div></div>`;
-    }).join("")}</div>`;
+
+    // Kopfzeile: Runde · Trumpf · Ansagen-Bilanz (bleibt während des Spiels stehen)
+    const sum = st.bids ? st.seats.reduce((x, id) => x + st.bids[id], 0) : 0;
+    const balance = !st.bids ? `<span class="st-bal">${st.seats.filter((id) => st.said[id]).length} von ${st.seats.length} haben angesagt</span>`
+      : `<span class="st-bal ${sum > st.n ? "over" : sum < st.n ? "under" : "even"} ${lateAttr(ba ? ba.d + st.seats.length * 400 : null)}" title="${sum > st.n ? "Mehr angesagt als Stiche da sind – mindestens einer geht leer aus" : sum < st.n ? "Weniger angesagt als Stiche da sind – jemand bekommt ungewollt einen" : "Die Ansagen können für alle aufgehen"}">
+          <b>${sum}</b> angesagt · <b>${st.n}</b> zu holen · ${sum > st.n ? "zu viele" : sum < st.n ? "zu wenige" : "geht auf"}</span>`;
+    const head = `<div class="st-head">
+        <span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds} · ${plural(st.n, "Karte", "Karten")}</span>
+        <span class="st-trumpchip">${st.trumpCard ? kgCard(st.trumpCard, "mini", "", ta ? "flip" : "", ta ? ta.d : 0) : ""}<span>Trumpf <b>${st.trump ? ST_SUIT[st.trump] : "keiner"}</b></span></span>
+        ${balance}</div>`;
+
     if (st.step === "reveal") {
       const rows = st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points).map((id) => { const r = st.result[id], ok = r.bid === r.got;
-        return `<div class="kg-res ${ok ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span>
-          <span class="muted small">Ansage ${r.bid} · Stiche ${r.got} ${ok ? "✓ genau getroffen" : `✗ ${Math.abs(r.bid - r.got)} daneben`}</span><span></span><b class="qb-plus ${r.points < 0 ? "minus" : ""}">${r.points > 0 ? "+" : ""}${r.points}</b></div>`; }).join("");
-      return `<div class="panel kg-table">${trump}<div class="kg-results">${rows}</div>${readyBtn}</div>`;
+        return `<div class="kg-res ${ok ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${you(id)}</span>
+          <span class="muted small">Ansage ${r.bid} · Stiche ${r.got} ${ok ? "✓ genau getroffen" : `✗ ${Math.abs(r.bid - r.got)} daneben`}</span>
+          <span class="st-rtotal">gesamt ${st.total[id] || 0}${st.ready[id] ? ' · <span class="st-ready">bereit ✓</span>' : ""}</span>
+          <b class="qb-plus ${r.points < 0 ? "minus" : ""}">${r.points > 0 ? "+" : ""}${r.points}</b></div>`; }).join("");
+      return `<div class="panel kg-table st-table">${head}<div class="kg-results">${rows}</div>${readyBtn}</div>`;
     }
-    // Mitte: Ansage, Aufdecken der Ansagen oder der laufende Stich
+
+    // Spieler-Kästen: Punkte, Ansage als Kreise (gefüllt = geholt, rot = zu viel), was noch fehlt
+    const seats = `<div class="st-seats">${st.seats.map((id, i) => {
+      // während der fertige Stich gezeigt wird, zählt er schon für den Gewinner (das Spiel bucht ihn erst beim Einsammeln)
+      const pending = st.step === "trick" && st.lastTrick && st.lastTrick.winner === id ? 1 : 0;
+      const bid = st.bids ? st.bids[id] : null, got = (st.tricks[id] || 0) + pending, turn = st.step === "play" && st.turn === id;
+      const leads = (st.step === "bid" || st.step === "bidShow") && id === st.lead;
+      let goal, state = "", cls = "";
+      if (bid == null) { goal = `<span class="st-wait">${st.said[id] ? "✓ angesagt" : "überlegt …"}</span>`; }
+      else {
+        const dots = Array.from({ length: Math.max(bid, got) }, (_, k) => `<i class="${k < Math.min(got, bid) ? "got" : k >= bid ? "extra" : ""}"></i>`).join("");
+        goal = `<span class="st-goal ${lateAttr(bidDelay(i))}"><span class="st-dots">${dots}</span><b>${got}/${bid}</b></span>`;
+        const need = bid - got;
+        cls = need < 0 ? "over" : need === 0 ? "hit" : "";
+        state = need > 0 ? `braucht noch ${need}` : need === 0 ? (bid === 0 ? "will keinen Stich" : "✓ genug – keinen mehr!") : `${-need} zu viel`;
+      }
+      return `<div class="st-seat ${turn ? "turn" : ""} ${id === G.myId ? "me" : ""} ${cls}" style="--pc:${colorOf(id)}">
+          <div class="st-sname"><span class="pdot"></span><b>${id === G.myId ? "Du" : esc(nameOf(id))}</b>${turn ? '<span class="st-tag turn">am Zug</span>' : leads ? '<span class="st-tag">spielt an</span>' : ""}<span class="st-total" title="Punkte bisher">${st.total[id] || 0}</span></div>
+          ${goal}<div class="st-state">${state}</div></div>`;
+    }).join("")}</div>`;
+
     let center = "";
     if (st.step === "bid") {
       const mine = stMine && stMine.gid === st.gid && stMine.r === st.round && st.said[G.myId] ? stMine.bid : null;
-      const leadTxt = st.lead === G.myId ? "<b>Du spielst als Erste(r) aus</b>" : `<b style="color:${colorOf(st.lead)}">${esc(nameOf(st.lead))}</b> spielt als Erste(r) aus`;
-      center = seated ? `<div class="kg-goal"><b>Wie viele Stiche machst du?</b><span class="st-leadinfo">▶ ${leadTxt}</span><span class="muted small">Alle sagen gleichzeitig und geheim an – umentscheiden geht, bis alle angesagt haben.</span></div>
+      const leadTxt = st.lead === G.myId ? "Du spielst an" : `<b style="color:${colorOf(st.lead)}">${esc(nameOf(st.lead))}</b> spielt an`;
+      center = seated ? `<div class="st-ask"><b>Wie viele Stiche machst du?</b><span class="muted small">${leadTxt} · alle sagen gleichzeitig und geheim an, umentscheiden geht bis zum Schluss</span></div>
           <div class="st-say">${Array.from({ length: st.n + 1 }, (_, k) => `<button type="button" class="bus-choice ${mine === k ? "on" : ""}" data-say="${k}"><b>${k}</b><small>${k === 1 ? "Stich" : "Stiche"}</small></button>`).join("")}</div>`
         : `<p class="muted">Die anderen sagen an …</p>`;
     } else if (st.step === "bidShow") {
-      const sum = st.seats.reduce((a, id) => a + st.bids[id], 0);
-      const verdict = sum > st.n ? `Zusammen ${sum} angesagt – aber nur ${plural(st.n, "Stich", "Stiche")} da. Da geht jemand leer aus!`
+      center = `<p class="st-msg ${lateAttr(ba ? ba.d + st.seats.length * 400 + 300 : null)}">${sum > st.n ? `Zusammen ${sum} angesagt – aber nur ${plural(st.n, "Stich", "Stiche")} da. Da geht jemand leer aus!`
         : sum < st.n ? `Zusammen ${sum} angesagt – ${plural(st.n - sum, "Stich bleibt", "Stiche bleiben")} übrig. Wer schnappt ${st.n - sum === 1 ? "ihn" : "sie"} sich ungewollt?`
-        : `Zusammen genau ${sum} angesagt – das kann für alle aufgehen!`;
-      center = `<div class="kg-goal"><b>Die Ansagen</b></div>
-        <div class="st-bidshow">${st.seats.map((id, i) => `<div class="st-bubble ${lateAttr(bidDelay(i))}" style="--pc:${colorOf(id)}"><b>${st.bids[id]}</b><span>${esc(nameOf(id))}</span></div>`).join("")}</div>
-        <p class="st-verdict ${lateAttr(ba ? ba.d + st.seats.length * 400 + 300 : null)}">${verdict}</p>`;
+        : `Zusammen genau ${sum} angesagt – das kann für alle aufgehen!`}</p>`;
     } else {
-      const tr = st.step === "trick" ? st.lastTrick.cards : st.trick, winner = st.step === "trick" ? st.lastTrick.winner : null;
+      // Stich: feste Plätze in Spielreihenfolge ab dem, der anspielt; offene Plätze gestrichelt, der nächste leuchtet
+      const done = st.step === "trick", tr = done ? st.lastTrick.cards : st.trick, winner = done ? st.lastTrick.winner : null;
+      const starter = tr.length ? tr[0].id : st.turn, s0 = Math.max(0, st.seats.indexOf(starter));
+      const order = done ? tr.map((t) => t.id) : st.seats.slice(s0).concat(st.seats.slice(0, s0));
       let dealt = 0;
-      const cards = tr.map((t) => { const a = kgAnim(`${gk}:t:${t.card}`, 0, 600); if (a && a.first) dealt++;
-        return `<div class="st-tc ${winner === t.id ? "win" : ""}" style="--pc:${colorOf(t.id)}">${kgCard(t.card, "mid", "", a ? "deal" : "", a ? a.d : 0)}<span>${esc(nameOf(t.id))}</span></div>`; }).join("");
+      const slots = order.map((id) => {
+        const t = tr.find((x) => x.id === id);
+        if (!t) return `<div class="st-slot ${id === st.turn ? "next" : ""}" style="--pc:${colorOf(id)}"><span class="st-empty">${id === st.turn ? "…" : ""}</span><span class="st-sn">${id === G.myId ? "Du" : esc(nameOf(id))}</span></div>`;
+        const a = kgAnim(`${gk}:t:${t.card}`, 0, 600); if (a && a.first) dealt++;
+        return `<div class="st-slot played ${winner === id ? "win" : ""}" style="--pc:${colorOf(id)}">${kgCard(t.card, "mid", "", a ? "deal" : "", a ? a.d : 0)}<span class="st-sn">${id === G.myId ? "Du" : esc(nameOf(id))}</span></div>`;
+      }).join("");
       kgSound(dealt, 0, 0);
       const led = st.trick.length ? st.trick[0].card.split("-")[0] : null;
       const mustFollow = st.turn === G.myId && led && priv && priv.playable.length && priv.playable.length < priv.hand.length && priv.playable.every((c) => c.startsWith(led + "-"));
-      const msg = st.step === "trick" ? `<b style="color:${colorOf(winner)}">${esc(nameOf(winner))}</b> holt den Stich!`
-        : st.turn === G.myId ? `<b>Du bist dran</b> – ${st.trick.length ? (mustFollow ? `du musst ${ST_SUIT[led]} bedienen` : "spiel eine Karte") : "spiel an"}`
-        : `${esc(nameOf(st.turn))} ist dran …`;
-      center = `<div class="st-trick ${st.step === "trick" ? "done" : ""}">${cards || `<span class="muted small">Noch keine Karte im Stich</span>`}</div>
-        <p class="st-msg ${st.step === "trick" ? "kg-late" : ""}" style="--d:400ms">${msg}</p>`;
+      const ledInfo = !done && led ? `<span class="st-led">angespielt: <b>${ST_SUIT[led]}</b></span>` : "";
+      const msg = done ? `<p class="st-msg kg-late" style="--d:400ms"><b style="color:${colorOf(winner)}">${esc(nameOf(winner))}</b> holt den Stich!</p>`
+        : st.turn === G.myId ? `<p class="st-yourturn">Du bist dran – ${st.trick.length ? (mustFollow ? `du musst <b>${ST_SUIT[led]}</b> bedienen` : "spiel eine Karte") : "spiel an"}</p>`
+        : `<p class="st-msg muted"><b style="color:${colorOf(st.turn)}">${esc(nameOf(st.turn))}</b> ist dran …</p>`;
+      center = `<div class="st-trick ${done ? "done" : ""}">${slots}${ledInfo}</div>${msg}`;
     }
+
     // eigene Hand: am Rundenanfang fliegen die Karten heran; spielbare Karten sind anklickbar
     let fresh = 0;
     const myTurn = st.step === "play" && st.turn === G.myId;
-    const hand = priv ? `<div class="kg-hand st-hand">${priv.hand.map((c) => {
+    const myBid = st.bids && seated ? st.bids[G.myId] : null;
+    const myGot = (st.tricks[G.myId] || 0) + (st.step === "trick" && st.lastTrick && st.lastTrick.winner === G.myId ? 1 : 0);
+    const handHead = priv ? `<div class="st-handhead">Deine Karten${myBid != null ? ` · Ziel <b>${plural(myBid, "Stich", "Stiche")}</b>, geholt <b>${myGot}</b>` : ""}</div>` : "";
+    const hand = priv ? `${handHead}<div class="kg-hand st-hand ${myTurn ? "active" : ""}">${priv.hand.map((c) => {
       const a = kgAnim(`${gk}:h:${c}`, fresh * 160, 900); if (a && a.first) fresh++;
       const can = myTurn && priv.playable.includes(c);
       return kgCard(c, `big ${can ? "pickable" : myTurn ? "off" : ""}`, can ? `data-stp="1" data-card="${c}" role="button" tabindex="0"` : "", a ? "flip" : "", a ? a.d : 0);
     }).join("")}</div>` : seated ? "" : `<p class="muted">Du schaust zu.</p>`;
     kgSound(fresh, 160, 0);
     // beim Ansagen erst die eigenen Karten zeigen, dann die Knöpfe – zum Überlegen
-    return `<div class="panel kg-table st-table">${trump}${players}${st.step === "bid" ? hand + center : center + hand}</div>`;
+    return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
   }
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
   function busMainHtml(v, st, colorOf, nameOf) {
