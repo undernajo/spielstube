@@ -75,9 +75,9 @@
           : `<div class="muted small">Nicht wörtlich gleich – ${esc(nameOf(st.asker))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
       const r = st.result, iWon = !r.voided && r.winner === G.myId, cp = st.complaint;
-      const G = iGuess ? null : esc(nameOf(st.guesser)), A = iAsk ? null : esc(nameOf(st.asker));
-      const reason = { right: G ? `${G} wusste die Antwort.` : "Du wusstest die Antwort.", wrong: G ? `${G} lag daneben.` : "Du lagst daneben.",
-        time: G ? `${G} hat nicht rechtzeitig geantwortet.` : "Du hast nicht rechtzeitig geantwortet.",
+      const gName = iGuess ? null : esc(nameOf(st.guesser)), A = iAsk ? null : esc(nameOf(st.asker));
+      const reason = { right: gName ? `${gName} wusste die Antwort.` : "Du wusstest die Antwort.", wrong: gName ? `${gName} lag daneben.` : "Du lagst daneben.",
+        time: gName ? `${gName} hat nicht rechtzeitig geantwortet.` : "Du hast nicht rechtzeitig geantwortet.",
         noq: A ? `${A} ist keine Frage eingefallen.` : "Dir ist keine Frage eingefallen.", pass: A ? `${A} hat gepasst.` : "Du hast gepasst." }[r.why];
       const ok = r.why === "right";
       body = `${bubble}<div class="fq-compare">
