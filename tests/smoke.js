@@ -14,7 +14,7 @@ const puppeteer = require("puppeteer-core");
 
 const ROOT = path.resolve(__dirname, "..");
 const ALL = ["zehn", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage",
-  "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "wl", "querbeet"];
+  "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "wl", "alm", "querbeet"];
 const GAMES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -92,7 +92,7 @@ async function playGame(browser, base, game) {
     await guest.click("#join");
 
     let started = false;
-    for (let i = 0; i < 80 && !started; i++) {
+    for (let i = 0; i < 160 && !started; i++) { // bis 40 s: der öffentliche Server reicht den Beitritt manchmal langsam weiter
       await sleep(250);
       started = await host.evaluate(() => {
         const b = document.querySelector("#start");
