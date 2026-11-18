@@ -1050,16 +1050,18 @@ textarea { resize: vertical; font: inherit; }
 #camback { position: fixed; inset: 0; z-index: 4400; background: rgba(8, 6, 25, .78); display: none; }
 #camback.show { display: block; }
 #camdock.stage { position: fixed !important; left: 50% !important; top: 50% !important; right: auto !important; bottom: auto !important;
-  transform: translate(-50%, -50%); width: min(94vw, 1100px); max-width: none; z-index: 4500; padding: 10px; border-radius: 18px;
+  transform: translate(-50%, -50%); width: auto; max-width: 96vw; z-index: 4500; padding: 10px; border-radius: 18px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, .55); }
 #camdock.stage .camhead { cursor: default; font-size: 1rem; padding: 2px 4px 8px; }
-#camdock.stage .camtiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 10px; }
-#camdock.stage .camtile { width: 100% !important; aspect-ratio: 16 / 10; max-height: 76vh; }
+/* Kachelgröße und Spaltenzahl berechnet stageLayout() in game.js so, dass alle Bilder möglichst groß ins Fenster passen */
+#camdock.stage .camtiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+#camdock.stage .camtile { width: var(--tw, 300px) !important; aspect-ratio: var(--ta, 16 / 9); max-height: none; }
+#camdock.stage:not(.pip) .camtile.self { order: 99; } /* im Raster: die anderen zuerst, das eigene Bild zuletzt */
 #camdock.stage .camname { font-size: .95rem; padding: 3px 10px; }
 #camdock.stage.pip .camtile.self { position: absolute; right: 12px; bottom: 12px; width: 22% !important; max-width: 240px; min-width: 110px; aspect-ratio: 4 / 3; }
 #camdock.stage .camtile.novideo .caminit { font-size: 4rem; }
 #camdock.stage .cambtns button { font-size: 1rem; }
-@media (max-width: 640px) { #camdock.stage .camtile { aspect-ratio: 3 / 4; max-height: 72vh; } #camdock.stage.pip .camtile.self { width: 30% !important; min-width: 90px; } }
+@media (max-width: 640px) { #camdock.stage.pip .camtile.self { width: 30% !important; min-width: 90px; } }
 /* Mitspieler-Bild immer gleich groß – egal ob die eigene Kamera an ist (Bild-im-Bild) oder nicht */
 #camdock:not(.pip) .camtile:not(.self) { width: 220px; }
 #camdock.big:not(.pip) .camtile:not(.self) { width: 340px; }

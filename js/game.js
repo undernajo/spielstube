@@ -870,7 +870,8 @@
     for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); }
     camDock.classList.toggle("show", items.length > 0);
     // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
-    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0);
+    // im großen Anruf-Fenster schwebt das eigene Bild nur bei genau einem Gegenüber, sonst ist es eine normale Kachel
+    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0 && !(camStage && remoteCams.size > 1));
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
@@ -911,7 +912,36 @@
     document.body.style.setProperty("--cam-w", camCorner ? camDock.offsetWidth + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
+    stageLayout();
     sendView();
+  }
+  // Großes Anruf-Fenster: Spaltenzahl so wählen, dass die Kacheln möglichst groß werden (wie bei Videokonferenzen),
+  // eine unvollständige letzte Reihe steht mittig; im Hochformat (Handy) sind die Kacheln hochkant
+  function stageLayout() {
+    const box = camDock.querySelector(".camtiles");
+    if (!box) return;
+    if (!camStage) { box.style.width = ""; return; }
+    const pip = camDock.classList.contains("pip");
+    const n = [...box.children].filter((t) => !(pip && t.classList.contains("self"))).length;
+    if (!n) return;
+    const cs = getComputedStyle(camDock), num = (k) => parseFloat(cs[k]) || 0;
+    const padX = num("paddingLeft") + num("paddingRight") + num("borderLeftWidth") + num("borderRightWidth");
+    const padY = num("paddingTop") + num("paddingBottom") + num("borderTopWidth") + num("borderBottomWidth");
+    const head = camDock.querySelector(".camhead"), gap = 10;
+    const W = Math.min(innerWidth * 0.96, 1600) - padX, H = innerHeight * 0.92 - padY - (head ? head.offsetHeight : 0);
+    const ratio = innerWidth < innerHeight ? 3 / 4 : 16 / 9;
+    const opts = [];
+    for (let cols = 1; cols <= n; cols++) {
+      const rows = Math.ceil(n / cols);
+      opts.push({ cols, w: Math.min((W - (cols - 1) * gap) / cols, ((H - (rows - 1) * gap) / rows) * ratio) });
+    }
+    // fast gleich große Kacheln (bis 10 % kleiner): lieber die breitere Anordnung statt einer schmalen Säule
+    const maxW = Math.max(...opts.map((o) => o.w));
+    const best = opts.filter((o) => o.w >= maxW * 0.9).sort((a, b) => b.cols * b.w - a.cols * a.w)[0];
+    const tw = Math.max(80, Math.floor(best.w));
+    box.style.setProperty("--tw", tw + "px");
+    box.style.setProperty("--ta", String(ratio));
+    box.style.width = best.cols * tw + (best.cols - 1) * gap + "px"; // Fenster schmiegt sich an die Kacheln
   }
   // In der Lobby (am Computer) sitzt das Kamerafenster fest in der linken Spalte statt über den Einstellungen zu schweben
   function camDockPlace() {
@@ -925,8 +955,9 @@
       camDock.querySelectorAll("video").forEach((v) => { if (v.srcObject) v.play().catch(() => {}); });
     }
     camDock.classList.toggle("docked", dock);
-    if (!dock) renderCamDock();
-    else {
+    // immer neu zeichnen – auch beim Zurückwechseln in die Lobby-Spalte, sonst bleibt die Anordnung des großen Fensters hängen
+    renderCamDock();
+    if (dock) {
       camDock.classList.remove("stage"); camBack.classList.remove("show");
       const sz = camDock.querySelector(".camsize"); if (sz) { sz.textContent = "⤢"; sz.title = "Großes Anruf-Fenster öffnen"; } document.body.style.setProperty("--cam-h", "0px"); document.body.style.setProperty("--cam-w", "0px");
     } // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
