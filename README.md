@@ -25,7 +25,7 @@ Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES
 - `img/`: Symbole
 - `entwuerfe/`: lokale Gestaltungsentwürfe, nicht im Repo (steht in `.gitignore`)
 
-Nach Änderungen die Versionsnummer `?v=` in `index.html` bei allen eigenen Skripten und `style.css` erhöhen, damit Browser nichts Altes aus dem Zwischenspeicher nehmen.
+Nach Änderungen an Skripten oder `style.css` einmal `./bump.sh` ausführen. Das erhöht die Versionsnummer `?v=` aller eigenen Dateien in `index.html`, damit Browser nichts Altes aus dem Zwischenspeicher nehmen (`./bump.sh 20` setzt eine bestimmte Nummer).
 
 ## Spiele
 
