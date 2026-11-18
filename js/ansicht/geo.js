@@ -94,8 +94,9 @@
           ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
           <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
         </div>
-        ${oben ? `<div class="oben-grid"><div class="geo-wrap oben-pic"><div id="oben-pic" class="geo-map"></div><span class="oben-tag">Von oben</span></div>
-          <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
+        ${oben ? `<div class="oben-grid"><div class="geo-wrap oben-pic"><div id="oben-pic" class="geo-map"></div><span class="oben-tag"><b>1</b> Gesucht: ${esc(st.place.kind)}</span></div>
+          <span class="oben-arrow" aria-hidden="true"></span>
+          <div class="geo-wrap oben-pic oben-target"><div id="geo-map" class="geo-map"></div><span class="oben-tag"><b>2</b> Hier auf der Karte antippen</span></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
     } else if (st.step === "reveal") {
       main = `
         <div class="geo-bar">

@@ -458,13 +458,25 @@ textarea { resize: vertical; font: inherit; }
 }
 .geo-new { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: -2px 0 10px; }
 /* Von oben */
-.oben-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* links das gesuchte Bild (1), rechts die Karte zum Antippen (2), dazwischen ein Pfeil */
+.oben-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .oben-pic { position: relative; }
 .oben-pic .geo-map { cursor: default; }
-.oben-tag { position: absolute; top: 10px; left: 10px; z-index: 500; background: rgba(20,16,50,.85); color: #fff; font-weight: 600; font-size: .8rem;
-  padding: 3px 10px; border-radius: 999px; pointer-events: none; }
+.oben-target .geo-map { cursor: crosshair; }
+.oben-target { border-color: var(--accent); }
+.oben-tag { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; align-items: center; gap: 8px;
+  background: rgba(20,16,50,.9); color: #fff; font-weight: 700; font-size: .95rem; white-space: nowrap;
+  padding: 5px 14px 5px 6px; border-radius: 999px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+.oben-tag b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #1a1530; font-size: .8rem; }
+.oben-arrow { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 600; width: 44px; height: 44px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--accent); color: #1a1530; font-size: 1.5rem; font-weight: 800; pointer-events: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,.45); }
+.oben-arrow::before { content: "→"; }
 @media (max-width: 760px) {
   .oben-grid { grid-template-columns: 1fr; gap: 8px; }
+  .oben-arrow { width: 34px; height: 34px; font-size: 1.15rem; }
+  .oben-arrow::before { content: "↓"; }
+  .oben-tag { font-size: .85rem; }
   .oben-grid .geo-map { height: max(220px, calc((100vh - 300px) / 2)); }
 }
 /* Höher oder tiefer */
