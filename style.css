@@ -558,6 +558,9 @@ textarea { resize: vertical; font: inherit; }
 .wcard.going { transform: translateY(-24px); opacity: .6; }
 .wtrick { display: flex; justify-content: center; align-items: flex-end; gap: 18px; min-height: 140px; flex-wrap: wrap; }
 .wtrick.empty { align-items: center; }
+/* Rundenergebnis in der Tischmitte (Schnapsen) */
+.wtrick.wresult { align-items: center; }
+.wtrick.wresult .banner { margin: 0; width: 100%; max-width: 480px; box-shadow: 0 8px 28px rgba(0,0,0,.35); }
 .wtrick.last .wcard { opacity: .7; width: clamp(50px, 12vw, 80px); }
 .wplayed { display: grid; justify-items: center; gap: 2px; }
 .wplayed .muted { color: #cfe7d8; }

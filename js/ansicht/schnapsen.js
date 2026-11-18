@@ -142,13 +142,12 @@
           <section class="wtable">
             <div class="wtop">${combo}${myTurn ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}${talon}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${augen(opp)}</span><div class="whand opp">${oppCards}</div></div>
-            ${table}
+            ${action && !xHold ? `<div class="wtrick wresult">${action}</div>` : table}
             ${myTurn ? turnBadge : ""}${hint ? `<p class="whint">${hint}</p>` : ""}${decide}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${augen(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
             <div class="geo-bar wblock-wrap">${block}</div>
-            <section class="waction">${action}</section>
             ${schHelpHtml(st, opt, myTurn)}
           </aside>
         </div>
