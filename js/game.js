@@ -672,37 +672,114 @@
   const camOK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection);
   let camStream = null, camOpen = true, camOn = false, micOn = false, camMuteAll = false;
   const pcOut = new Map(), pcIn = new Map(), remoteCams = new Map(), iceWait = new Map();
+  const remoteMedia = new Map(); // ID → { cam, mic }: was der andere gerade eingeschaltet hat (Spuren bleiben bestehen, auch wenn aus)
   function rtcSend(to, msg) { if (mq && roomTopic) sendSealed(T("rtc/" + to), { ...msg, from: myId }, { qos: 1 }); }
-  // Kamera und Mikrofon getrennt schaltbar; bei jeder Änderung wird die Verbindung zu allen neu aufgebaut
-  async function mediaSet(wantCam, wantMic) {
-    let next = null;
-    if (wantCam || wantMic) {
-      try {
-        next = await navigator.mediaDevices.getUserMedia({
-          // HD-Auflösung, damit das Bild auch im großen Anruf-Fenster scharf ist; bei schwacher Leitung regelt der Browser selbst herunter
-          video: wantCam ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 }, facingMode: "user" } : false,
-          audio: wantMic ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true } : false });
-      } catch (e) { toast(wantMic && !wantCam ? "Mikrofon nicht verfügbar oder nicht erlaubt." : "Kamera/Mikrofon nicht verfügbar oder nicht erlaubt.", "bad"); return; }
+  // Kamera und Mikrofon getrennt schaltbar. Ein- und Ausschalten tauscht nur die jeweilige Spur aus (replaceTrack):
+  // die Verbindungen zu den anderen bleiben stehen, das andere (Bild oder Ton) läuft ohne Unterbrechung weiter.
+  const MEDIA = {
+    // HD aufnehmen, damit das Bild im großen Anruf-Fenster scharf ist; verschickt wird je nach Ansicht des Empfängers kleiner (siehe QUALITY)
+    video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 }, facingMode: "user" },
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+  };
+  function mediaError(e, kind) {
+    const what = kind === "audio" ? "Mikrofon" : "Kamera", n = e && e.name;
+    if (n === "NotAllowedError" || n === "SecurityError") return `Zugriff auf ${what} verweigert. Erlauben kannst du es im Browser über das Schloss- bzw. Kamera-Symbol neben der Adresse – danach nochmal tippen.`;
+    if (n === "NotFoundError" || n === "OverconstrainedError") return kind === "audio" ? "Kein Mikrofon gefunden." : "Keine Kamera gefunden.";
+    if (n === "NotReadableError" || n === "AbortError") return `${what} wird gerade von einer anderen App benutzt. Dort schließen und nochmal versuchen.`;
+    return `${what} nicht verfügbar.`;
+  }
+  const liveTrack = (kind) => (camStream ? camStream.getTracks().find((t) => t.kind === kind && t.readyState === "live") : null) || null;
+  // Spur einer Art in allen ausgehenden Verbindungen tauschen; fehlt dort ein passender Kanal, wird nur diese Verbindung neu aufgebaut
+  async function swapTrack(kind, track) {
+    for (const [id, pc] of [...pcOut]) {
+      const tr = pc.getTransceivers().find((x) => x.receiver && x.receiver.track && x.receiver.track.kind === kind);
+      if (tr && tr.sender) { try { await tr.sender.replaceTrack(track); if (track && kind === "video") applyQuality(id); continue; } catch {} }
+      if (track) { pc.close(); pcOut.delete(id); rtcSend(id, { t: "bye" }); }
     }
+  }
+  let mediaBusy = false;
+  async function mediaToggle(kind) {
+    if (mediaBusy) return;
+    mediaBusy = true;
+    try {
+      const isOn = kind === "video" ? camOn : micOn;
+      if (isOn) { // ausschalten: Spur beenden (Kamera-Lämpchen geht aus), Verbindungen bleiben
+        const t = liveTrack(kind); if (t) { t.stop(); camStream.removeTrack(t); }
+        if (kind === "video") camOn = false; else micOn = false;
+        if (!camOn && !micOn) return mediaOff();
+        await swapTrack(kind, null);
+      } else {
+        let t;
+        try { t = (await navigator.mediaDevices.getUserMedia({ [kind]: MEDIA[kind] })).getTracks()[0]; }
+        catch (e) { toast(mediaError(e, kind), "bad"); return; }
+        if (!camStream) camStream = new MediaStream();
+        camStream.addTrack(t);
+        if (kind === "video") camOn = true; else micOn = true;
+        camOpen = true;
+        await swapTrack(kind, t);
+      }
+      sendMediaState(); camSync(); renderCamDock(); render();
+    } finally { mediaBusy = false; }
+  }
+  // beides aus: alles beenden und die Verbindungen schließen
+  function mediaOff() {
     if (camStream) camStream.getTracks().forEach((t) => t.stop());
-    camStream = next; camOn = !!wantCam; micOn = !!wantMic;
+    camStream = null; camOn = micOn = false;
     for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
     pcOut.clear(); camOpen = true;
-    camSync(); renderCamDock(); render();
+    renderCamDock(); render();
   }
-  const camToggle = () => mediaSet(!camOn, micOn);
-  const micToggle = () => mediaSet(camOn, !micOn);
+  const camToggle = () => mediaToggle("video");
+  const micToggle = () => mediaToggle("audio");
+  const mediaState = () => ({ cam: camOn, mic: micOn });
+  function sendMediaState() { for (const id of pcOut.keys()) rtcSend(id, { t: "media", ...mediaState() }); }
+
+  // Bildqualität je Empfänger: Jeder meldet, wie groß er das Bild gerade sieht; geschickt wird nur so viel, wie dort ankommt.
+  // Die Kamera nimmt weiter in HD auf – verkleinert wird nur beim Versenden, im laufenden Betrieb und ohne Neuaufbau.
+  const QUALITY = {
+    closed: { active: false },                                         // Kamerafenster zugeklappt: Bild pausieren (Ton läuft weiter)
+    small: { height: 180, maxBitrate: 250000, maxFramerate: 15 },      // kleines Kamerafenster im Spiel
+    big: { height: 360, maxBitrate: 600000, maxFramerate: 24 },        // vergrößert im Spiel / Spalte in der Lobby
+    stage: { height: 720, maxBitrate: 1500000, maxFramerate: 30 },     // großes Anruf-Fenster in der Lobby
+  };
+  const isQ = (q) => typeof q === "string" && Object.prototype.hasOwnProperty.call(QUALITY, q);
+  const wantQ = new Map(); // Empfänger-ID → gewünschte Stufe
+  async function applyQuality(id) {
+    const pc = pcOut.get(id), t = liveTrack("video");
+    if (!pc || !t) return;
+    const tr = pc.getTransceivers().find((x) => x.sender && x.sender.track === t);
+    if (!tr) return;
+    const p = tr.sender.getParameters();
+    if (!p.encodings || !p.encodings.length) return; // noch nicht ausgehandelt – wird nach der Antwort nachgeholt
+    const q = QUALITY[wantQ.get(id)] || QUALITY.small, e = p.encodings[0];
+    e.active = q.active !== false;
+    if (q.height) {
+      const h = (t.getSettings && t.getSettings().height) || 720;
+      e.scaleResolutionDownBy = Math.max(1, h / q.height); e.maxBitrate = q.maxBitrate; e.maxFramerate = q.maxFramerate;
+    }
+    try { await tr.sender.setParameters(p); } catch { /* ältere Browser: dann bleibt es bei voller Qualität */ }
+  }
+  // was ich selbst gerade sehe, allen melden, deren Bild ich empfange (nur bei Änderung)
+  const myQ = () => !camOpen ? "closed" : camStage ? "stage" : (camBig || camDock.classList.contains("docked")) ? "big" : "small";
+  const sentQ = new Map();
+  function sendView() {
+    const q = myQ();
+    for (const id of pcIn.keys()) if (sentQ.get(id) !== q) { sentQ.set(id, q); rtcSend(id, { t: "view", q }); }
+  }
+  const forgetPeer = (id) => { remoteMedia.delete(id); sentQ.delete(id); };
   const camPeers = () => (view && view.players ? view.players.filter((p) => p.id !== myId && p.connected).map((p) => p.id) : []);
   async function camSync() {
     const ps = camPeers();
-    for (const id of [...remoteCams.keys()]) if (!ps.includes(id)) { const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); renderCamDock(); }
+    for (const id of [...remoteCams.keys()]) if (!ps.includes(id)) { const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock(); }
+    for (const id of [...wantQ.keys()]) if (!ps.includes(id)) wantQ.delete(id);
     if (!camStream || !mq || !roomTopic) return;
     for (const [id, pc] of pcOut) if (!ps.includes(id) || pc.connectionState === "failed" || pc.connectionState === "closed") { pc.close(); pcOut.delete(id); }
     for (const id of ps) if (!pcOut.has(id)) {
       const pc = new RTCPeerConnection(RTC_CFG); pcOut.set(id, pc);
-      camStream.getTracks().forEach((t) => pc.addTrack(t, camStream));
+      // für Bild und Ton je einen Kanal – auch wenn eines gerade aus ist, damit späteres Einschalten nur die Spur tauscht
+      for (const kind of ["audio", "video"]) { const t = liveTrack(kind); if (t) pc.addTrack(t, camStream); else pc.addTransceiver(kind, { direction: "sendonly", streams: [camStream] }); }
       pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "out", c: e.candidate.toJSON() }); };
-      try { await pc.setLocalDescription(await pc.createOffer()); rtcSend(id, { t: "offer", sdp: pc.localDescription.sdp }); } catch { pcOut.delete(id); }
+      try { await pc.setLocalDescription(await pc.createOffer()); rtcSend(id, { t: "offer", sdp: pc.localDescription.sdp, ...mediaState() }); } catch { pcOut.delete(id); }
     }
   }
   setInterval(camSync, 4000);
@@ -717,20 +794,30 @@
     try {
       if (m.t === "offer") { // jemand schickt mir sein Kamerabild
         const old = pcIn.get(id); if (old) old.close();
+        remoteMedia.set(id, { cam: m.cam !== false, mic: m.mic !== false }); sentQ.delete(id);
         const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc);
         pc.ontrack = (e) => { remoteCams.set(id, e.streams[0] || new MediaStream([e.track])); renderCamDock(); };
         pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "in", c: e.candidate.toJSON() }); };
         pc.onconnectionstatechange = () => { if (pc.connectionState === "failed" && pcIn.get(id) === pc) { remoteCams.set(id, "failed"); renderCamDock(); } };
         await pc.setRemoteDescription({ type: "offer", sdp: m.sdp }); await flushIce("in:" + id, pc);
         await pc.setLocalDescription(await pc.createAnswer());
-        rtcSend(id, { t: "answer", sdp: pc.localDescription.sdp });
+        const q = myQ(); sentQ.set(id, q);
+        rtcSend(id, { t: "answer", sdp: pc.localDescription.sdp, q }); // gleich mitteilen, wie groß ich das Bild sehe
       } else if (m.t === "answer") {
         const pc = pcOut.get(id);
-        if (pc && pc.signalingState === "have-local-offer") { await pc.setRemoteDescription({ type: "answer", sdp: m.sdp }); await flushIce("out:" + id, pc); }
+        if (pc && pc.signalingState === "have-local-offer") {
+          await pc.setRemoteDescription({ type: "answer", sdp: m.sdp }); await flushIce("out:" + id, pc);
+          if (isQ(m.q)) wantQ.set(id, m.q);
+          applyQuality(id);
+        }
+      } else if (m.t === "view") { // der andere sieht mein Bild jetzt größer oder kleiner
+        if (isQ(m.q)) { wantQ.set(id, m.q); applyQuality(id); }
+      } else if (m.t === "media") { // der andere hat Kamera oder Mikrofon ein-/ausgeschaltet
+        remoteMedia.set(id, { cam: !!m.cam, mic: !!m.mic }); renderCamDock();
       } else if (m.t === "ice" && m.c) {
         if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c); else await addIce("out:" + id, pcOut.get(id), m.c);
       } else if (m.t === "bye") {
-        const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); renderCamDock();
+        const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
       }
     } catch (e) { /* einzelne Fehler beim Verbindungsaufbau ignorieren – camSync versucht es erneut */ }
   }
@@ -766,8 +853,9 @@
       tile.classList.remove("failed");
       if (vid.srcObject !== stream) { vid.srcObject = stream; const pl = vid.play(); if (pl && pl.catch) pl.catch(() => camNeedTap(true)); }
     }
-    const hasVideo = stream && stream !== "failed" && stream.getVideoTracks().some((t) => t.readyState === "live");
-    const hasAudio = stream && stream !== "failed" && stream.getAudioTracks().length > 0;
+    const md = id === "me" ? mediaState() : remoteMedia.get(id) || { cam: true, mic: true };
+    const hasVideo = stream && stream !== "failed" && md.cam && stream.getVideoTracks().some((t) => t.readyState === "live");
+    const hasAudio = stream && stream !== "failed" && md.mic && stream.getAudioTracks().length > 0;
     tile.classList.toggle("novideo", !hasVideo && stream !== "failed");
     tile.querySelector(".caminit").textContent = (label || "?").charAt(0).toUpperCase();
     vid.classList.toggle("mirror", !!mirror);
@@ -804,7 +892,7 @@
       };
     }
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
-    const anyAudio = [...remoteCams.values()].some((st) => st && st !== "failed" && st.getAudioTracks().length);
+    const anyAudio = [...remoteCams].some(([id, st]) => st && st !== "failed" && st.getAudioTracks().length && (remoteMedia.get(id) || { mic: true }).mic);
     const ab = camDock.querySelector(".camaud"); ab.style.display = anyAudio ? "" : "none"; ab.textContent = camMuteAll ? "🔇" : "🔊";
     camDock.classList.toggle("big", camBig && !camStage);
     camDock.classList.toggle("stage", camStage);
@@ -823,6 +911,7 @@
     document.body.style.setProperty("--cam-w", camCorner ? camDock.offsetWidth + 16 + "px" : "0px");
     const box = camDock.querySelector(".camtiles");
     items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
+    sendView();
   }
   // In der Lobby (am Computer) sitzt das Kamerafenster fest in der linken Spalte statt über den Einstellungen zu schweben
   function camDockPlace() {
@@ -841,6 +930,7 @@
       camDock.classList.remove("stage"); camBack.classList.remove("show");
       const sz = camDock.querySelector(".camsize"); if (sz) { sz.textContent = "⤢"; sz.title = "Großes Anruf-Fenster öffnen"; } document.body.style.setProperty("--cam-h", "0px"); document.body.style.setProperty("--cam-w", "0px");
     } // in der Lobby liegt die Kamera in der Spalte – Hinweise ganz unten
+    sendView();
   }
   addEventListener("resize", () => camDockPlace());
   // Browser blockieren Ton manchmal, bis man einmal tippt
