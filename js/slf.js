@@ -4,6 +4,9 @@
 // (jeder kann fremde Antworten per Daumen anzweifeln; bei Mehrheit kippt die Wertung) → nächste Runde.
 (function (root) {
   const LETTERS = "ABDEFGHIKLMNOPRSTUVWZ".split(""); // ohne C, J, Q, X, Y
+  // „Leicht“: nur Buchstaben, mit denen in fast jeder Kategorie viele Wörter beginnen (ohne E, I, N, O, U, V, Z)
+  const LETTER_SETS = { alle: { name: "Alle Buchstaben", desc: "ohne C, J, Q, X, Y", letters: LETTERS },
+    leicht: { name: "Nur leichte Buchstaben", desc: "A B D F G H K L M P R S T W", letters: "ABDFGHKLMPRSTW".split("") } };
   const SPIN_MS = 2600; // so lange dreht sich der Buchstabe, bevor geschrieben wird
   const PRESETS = {
     klassisch: { name: "Klassisch", cats: ["Stadt", "Land", "Fluss", "Name", "Tier", "Beruf"] },
@@ -49,13 +52,14 @@
     const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 10) ? rn : 5; // free: Querbeet
     const timer = TIMERS[opts.timer] ? opts.timer : "stopp";
     const preset = opts.preset === "eigene" || PRESETS[opts.preset] ? opts.preset : "klassisch";
+    const letters = LETTER_SETS[opts.letters] ? opts.letters : "alle";
     const random = preset === "zufall" ? PRESETS.zufall.random : 0;
     // bei „Jede Runde neu“ optional einige Klassiker fest dabei (Querbeet: 2 Klassiker + 4 Zufall)
     const classics = random ? Math.max(0, Math.min(Math.floor(Number(opts.classics) || 0), random)) : 0;
     s.game = "slf"; s.phase = "slf";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.slf = {
-      opts: { preset, custom: clean(opts.custom, 400), rounds, timer, surprise: !!opts.surprise },
+      opts: { preset, custom: clean(opts.custom, 400), rounds, timer, surprise: !!opts.surprise, letters },
       baseCats: random ? [] : categoriesFrom({ preset, custom: opts.custom }), random, classics, surprise: !random && !!opts.surprise,
       cats: [], surpriseCat: null, catsUsed: [], rounds, timer, round: 0, used: [], total: {}, history: [],
     };
@@ -92,8 +96,9 @@
   function nextRound(s, now) {
     const st = s.slf;
     st.round++;
-    const free = LETTERS.filter((l) => !st.used.includes(l));
-    st.letter = shuffle(free.length ? free : LETTERS.slice())[0];
+    const set = (LETTER_SETS[st.opts.letters] || LETTER_SETS.alle).letters;
+    const free = set.filter((l) => !st.used.includes(l));
+    st.letter = shuffle(free.length ? free : set.slice())[0];
     st.used.push(st.letter);
     st.cats = st.random ? drawRandomCats(st) : st.baseCats.slice();
     st.surpriseCat = null;
@@ -276,5 +281,5 @@
     return out;
   }
 
-  root.S10Slf = { start, apply, tick, publicState, PRESETS, POOL, TIMERS, ROUND_CHOICES, SPIN_MS, firstLetter, categoriesFrom };
+  root.S10Slf = { start, apply, tick, publicState, PRESETS, POOL, LETTER_SETS, TIMERS, ROUND_CHOICES, SPIN_MS, firstLetter, categoriesFrom };
 })(typeof window !== "undefined" ? window : globalThis);

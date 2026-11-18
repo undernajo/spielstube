@@ -36,7 +36,8 @@
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
   // Schwierigkeit für die Spiele mit Stufen (Wo liegt das?, Länder finden, Umriss-Rätsel); „Gemischt“ = bisheriges Verhalten
-  const LEVELS = { leicht: { name: "Leicht", desc: "nur bekannte Orte und Länder" }, gemischt: { name: "Gemischt", desc: "bekannte und schwere" }, profi: { name: "Profi", desc: "nur schwere" } };
+  // (Höher oder tiefer: deutliche bzw. knappe Vergleiche; Stadt, Land, Fluss bei „Leicht“ nur leichte Buchstaben)
+  const LEVELS = { leicht: { name: "Leicht", desc: "bekannte Orte, deutliche Vergleiche, leichte Buchstaben" }, gemischt: { name: "Gemischt", desc: "wie es kommt" }, profi: { name: "Profi", desc: "schwere Orte, knappe Vergleiche" } };
   // Auszeichnungen bei der Siegerehrung (je Art von Spiel)
   const KIND_TITLES = { karte: "🧭 Kartenleser", wissen: "📚 Wandelndes Lexikon", wort: "✍️ Wortakrobat", karten: "🎴 Kartenhai" };
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -76,7 +77,7 @@
     const pro = level === "profi";
     switch (game) {
       case "zehn": return st ? { sets: ["suedtirol"] } : {};
-      case "hl": return st ? { cats: 1, only: HL_ST } : w ? { cats: 1, not: HL_ST } : { cats: 1 };
+      case "hl": return { ...(st ? { cats: 1, only: HL_ST } : w ? { cats: 1, not: HL_ST } : { cats: 1 }), level: LEVELS[level] ? level : "gemischt" };
       case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: LEVELS[level] ? level : "gemischt", rounds: 3, timer: "t60" };
       case "oben": return { mode: "oben", rounds: 2 };
       case "land": { // österreichische Bundesländer haben auf „Profi“ nur 4 Gebiete – zu wenig für 5 Runden
@@ -90,7 +91,7 @@
       case "stich": return { mode: "stich", rounds: 3 };
       case "bus": return { mode: "bus", rounds: 1 };
       // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien
-      case "slf": return st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" };
+      case "slf": return { ...(st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };
     }

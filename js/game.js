@@ -89,7 +89,7 @@
   let landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-land") || {});
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
-  let hlOpts = Object.assign({ length: "mittel", theme: "mix" }, store.get("s10-hl") || {});
+  let hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt" }, store.get("s10-hl") || {});
   // Höher oder tiefer: Kategorien mit Südtirol-Bezug (für „Ohne Südtirol“; „Nur Südtirol“ wären zu wenige Kategorien)
   const HL_ST = ["suedtirolBerge", "gemeinden"];
   const HL_THEMES = { mix: "Gemischt", allgemein: "Ohne Südtirol" };
@@ -120,7 +120,7 @@
   const groupOf = (key) => { const g = GAMES.find((x) => x.key === key); return g ? g.group || g.key : key; };
   const isMode = (key) => GAMES.some((g) => g.key === key && g.group);
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes) ? store.get("s10-game") : "zehn";
-  let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
+  let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true, letters: "alle" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
@@ -485,8 +485,10 @@
     const lvl = o.level && o.level !== "gemischt" && QB.LEVELS[o.level] ? ` · ${QB.LEVELS[o.level].name}` : "";
     if (st.game === "geo") return `${D.short} · ${(GEODATA[o.region] || {}).name || ""}${lvl}`;
     if (st.game === "land") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}${lvl}`;
-    if (st.game === "slf") return o.preset === "zufall" ? `${D.short} · ${o.classics ? `${o.classics} Klassiker + ${SLF.PRESETS.zufall.random - o.classics} zufällige Kategorien` : "Kategorien zufällig"}`
-      : `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“`;
+    const easyL = o.letters === "leicht" ? " · leichte Buchstaben" : "";
+    if (st.game === "slf") return o.preset === "zufall" ? `${D.short} · ${o.classics ? `${o.classics} Klassiker + ${SLF.PRESETS.zufall.random - o.classics} zufällige Kategorien` : "Kategorien zufällig"}${easyL}`
+      : `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“${easyL}`;
+    if (st.game === "hl" && lvl) return `${D.short}${lvl}`;
     if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}${lvl}`;
     if ((st.game === "schaetzen" || st.game === "hinweis") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
     return D.short;
@@ -515,10 +517,10 @@
     if (S.phase === "lobby") view.lobby = {
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
-      slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false },
+      slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
-      hl: { length: hlOpts.length, theme: hlOpts.theme },
+      hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
       kg: { rounds: Number(kgOpts.rounds), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
@@ -1426,7 +1428,7 @@
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
-      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
+      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
       if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
@@ -1736,6 +1738,8 @@
         <label class="field"><span>Runden</span><select id="slf-rounds">${SLF.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(slfOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         <label class="field"><span>Zeit</span><select id="slf-timer">${Object.entries(SLF.TIMERS).map(([k, t]) => `<option value="${k}" ${slfOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>
       </div>
+      <label class="field"><span>Buchstaben</span><select id="slf-letters">${Object.entries(SLF.LETTER_SETS).map(([k, l]) =>
+        `<option value="${k}" ${(SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle") === k ? "selected" : ""}>${esc(l.name)} (${esc(l.desc)})</option>`).join("")}</select></label>
       ${slfOpts.preset === "zufall" ? "" : `<label class="setopt ${slfOpts.surprise !== false ? "on" : ""}"><input type="checkbox" id="slf-surprise" ${slfOpts.surprise !== false ? "checked" : ""}>
         <span class="setname">🎁 Jede Runde eine Überraschungskategorie dazu</span><span></span></label>`}
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
@@ -1776,7 +1780,7 @@
       const list = lb.slf.preset === "zufall" ? "Jede Runde neue Kategorien" : (lb.slf.cats || []).map(esc).join(" · ");
       return `${slfPresetTilesHtml(lb.slf.preset, true)}
         ${list ? `<p class="muted small">${list}</p>` : ""}
-        <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}${lb.slf.preset !== "zufall" && lb.slf.surprise ? " · mit Überraschungskategorie 🎁" : ""}</p>`;
+        <p class="muted small">${lb.slf.rounds} Runden · ${esc((SLF.TIMERS[lb.slf.timer] || SLF.TIMERS.stopp).name)}${lb.slf.letters === "leicht" ? " · nur leichte Buchstaben" : ""}${lb.slf.preset !== "zufall" && lb.slf.surprise ? " · mit Überraschungskategorie 🎁" : ""}</p>`;
     }
     if ((view.game === "geo" || view.game === "oben") && lb.geo) {
       if (view.game === "oben") {
@@ -1816,7 +1820,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
     }
     if (view.game === "hl" && lb.hl) {
-      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche</p>`;
+      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -1855,6 +1859,8 @@
     if (ti) ti.onchange = () => { slfOpts.timer = ti.value; saveOpts(); publish(); };
     const su = app.querySelector("#slf-surprise");
     if (su) su.onchange = () => { slfOpts.surprise = su.checked; saveOpts(); publish(); };
+    const sl = app.querySelector("#slf-letters");
+    if (sl) sl.onchange = () => { slfOpts.letters = sl.value; saveOpts(); publish(); };
     app.querySelectorAll("[data-slfpreset]").forEach((b) => b.onclick = () => { slfOpts.preset = b.dataset.slfpreset; saveOpts(); publish(); });
     const wp = app.querySelector("#wl-pack");
     if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
@@ -1914,6 +1920,8 @@
     if (hlL) hlL.onchange = () => { hlOpts.length = hlL.value; store.set("s10-hl", hlOpts); publish(); };
     const hlT = app.querySelector("#hl-theme");
     if (hlT) hlT.onchange = () => { hlOpts.theme = hlT.value; store.set("s10-hl", hlOpts); publish(); };
+    const hlLv = app.querySelector("#hl-level");
+    if (hlLv) hlLv.onchange = () => { hlOpts.level = hlLv.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
@@ -1980,7 +1988,7 @@
         `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${k} Etappen</option>`).join("")}</select></label>
       <label class="field"><span>Thema</span><select id="qb-theme">${Object.entries(QB.THEMES).map(([k, t]) =>
         `<option value="${k}" ${(qbOpts.theme || "mix") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label></div>
-      <label class="field"><span>Schwierigkeit <small class="muted">· Wo liegt das?, Länder finden, Umriss-Rätsel</small></span><select id="qb-level">${Object.entries(QB.LEVELS).map(([k, t]) =>
+      <label class="field"><span>Schwierigkeit <small class="muted">· Landkarten-Spiele, Höher oder tiefer, Stadt, Land, Fluss</small></span><select id="qb-level">${Object.entries(QB.LEVELS).map(([k, t]) =>
         `<option value="${k}" ${(QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt") === k ? "selected" : ""}>${esc(t.name)} – ${esc(t.desc)}</option>`).join("")}</select></label>
       <label class="field"><span>Joker</span><select id="qb-joker"><option value="1" ${qbOpts.joker !== false ? "selected" : ""}>Mit Joker – jeder darf eine Etappe doppelt zählen lassen</option>
         <option value="0" ${qbOpts.joker === false ? "selected" : ""}>Ohne Joker</option></select></label>
@@ -2015,6 +2023,8 @@
         `<option value="${k}" ${hlOpts.length === k ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       <label class="field"><span>Kategorien</span><select id="hl-theme">${Object.entries(HL_THEMES).map(([k, n]) =>
         `<option value="${k}" ${hlOpts.theme === k ? "selected" : ""}>${n} (${hlCatCount(k)})</option>`).join("")}</select></label>
+      <label class="field"><span>Schwierigkeit</span><select id="hl-level">${Object.entries(HL.LEVELS).map(([k, l]) =>
+        `<option value="${k}" ${(HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
@@ -2190,7 +2200,7 @@
         <li>Die letzte Etappe ist das Finale und zählt doppelt.</li>
         <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Partie. Vor einer Etappe gesetzt, zählen deine Partypunkte dieser Etappe doppelt (nicht im Finale).</li>
         <li><b>Thema:</b> „Südtirol“ oder „Welt“ wählt passende Inhalte für alle Etappen, „Gemischt“ alles durcheinander.</li>
-        <li><b>Schwierigkeit:</b> gilt für Wo liegt das?, Länder finden und das Umriss-Rätsel – „Leicht“ nur bekannte Orte und Länder, „Profi“ nur schwere, „Gemischt“ beides.</li>
+        <li><b>Schwierigkeit:</b> „Leicht“ = bekannte Orte und Länder, deutliche Unterschiede bei Höher oder tiefer und nur leichte Buchstaben bei Stadt, Land, Fluss; „Profi“ = nur schwere Orte und Länder und möglichst knappe Vergleiche; „Gemischt“ = wie es kommt.</li>
         <li>Bei der Siegerehrung gibt es Auszeichnungen, z. B. Kartenleser, Wandelndes Lexikon oder Aufholjagd.</li>
         <li>Zwischen den Etappen gibt es eine Pause mit Zwischenstand und einer kurzen Erklärung des nächsten Spiels. Weiter geht es, wenn alle „Bereit“ getippt haben.</li>
         <li>Listen-Duell und Antwort sucht Frage sind nur dabei, wenn ihr genau zu zweit seid.</li>

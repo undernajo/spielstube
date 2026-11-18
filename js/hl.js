@@ -2,6 +2,9 @@
 (function (root) {
   const LENGTHS = { kurz: { name: "Kurz – 3 Kategorien", cats: 3 }, mittel: { name: "Mittel – 5 Kategorien", cats: 5 }, lang: { name: "Lang – 8 Kategorien", cats: 8 } };
   const PER_CAT = 6;        // so viele Vergleiche pro Kategorie
+  // Schwierigkeit: Abstand der verglichenen Werte. „Gemischt“ = bisher (keine einseitigen Paare, höchstens ein ganz knappes)
+  const LEVELS = { leicht: { name: "Leicht", desc: "deutliche Unterschiede" }, gemischt: { name: "Gemischt", desc: "mal deutlich, mal knapp" },
+    profi: { name: "Profi", desc: "möglichst knappe Vergleiche" } };
   const REVEAL_MS = 3500;   // so lange bleibt die Auflösung stehen, dann geht es automatisch weiter
   const data = () => root.SCHLAU10_HL || {};
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -13,9 +16,27 @@
     const r = Math.max(a, b) / Math.min(a, b);
     return r < 1.08 ? "close" : r > 15 ? "easy" : "ok";
   }
+  // Abstand zweier Werte: Jahre als Differenz, sonst als Verhältnis (größerer durch kleineren)
+  const gap = (cat, a, b) => cat.year ? Math.abs(a - b) : Math.max(a, b) / Math.min(a, b);
+  // „Leicht“: deutlich verschieden (ab 1,5-fach bzw. 15 Jahre), aber nicht absurd einseitig
+  const clearGap = (cat, a, b) => { const g = gap(cat, a, b); return cat.year ? g >= 15 && g <= 80 : g >= 1.5 && g <= 15; };
+  // „Profi“: nach jedem Begriff einer der zwei Werte, die ihm am nächsten liegen (so knapp, wie die Kategorie es hergibt)
+  function pickClose(cat) {
+    const n = Math.min(PER_CAT + 1, cat.items.length), v = (i) => cat.items[i][1];
+    const pool = shuffle(cat.items.map((_, i) => i)), out = [pool.shift()];
+    while (out.length < n) {
+      const last = v(out[out.length - 1]);
+      const cand = pool.filter((i) => v(i) !== last).sort((x, y) => gap(cat, last, v(x)) - gap(cat, last, v(y)));
+      if (!cand.length) break;
+      const pick = cand[Math.floor(Math.random() * Math.min(2, cand.length))];
+      out.push(pool.splice(pool.indexOf(pick), 1)[0]);
+    }
+    return out;
+  }
   // Kette von Begriffen ziehen: nie gleiche Werte nebeneinander, keine viel zu einseitigen Paare,
-  // höchstens ein ganz knapper Vergleich pro Kategorie
-  function pickItems(cat) {
+  // höchstens ein ganz knapper Vergleich pro Kategorie (bei „Leicht“ nur deutliche Unterschiede)
+  function pickItems(cat, level) {
+    if (level === "profi") return pickClose(cat);
     const n = Math.min(PER_CAT + 1, cat.items.length), v = (i) => cat.items[i][1];
     for (let attempt = 0; attempt < 400; attempt++) {
       const strict = attempt < 300; // zur Not einseitige Paare erlauben
@@ -24,6 +45,7 @@
       while (out.length < n) {
         const last = v(out[out.length - 1]);
         const k = pool.findIndex((i) => {
+          if (level === "leicht" && strict) return clearGap(cat, last, v(i));
           const kind = pairKind(cat, last, v(i));
           return kind === "ok" || (kind === "close" && close === 0) || (!strict && kind === "easy");
         });
@@ -46,13 +68,14 @@
   function start(s, opts, now) {
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "mittel";
+    const level = LEVELS[opts.level] ? opts.level : "gemischt";
     const n = Number.isInteger(opts.cats) && opts.cats > 0 ? opts.cats : LENGTHS[length].cats; // Querbeet: 1 Kategorie
     // Querbeet-Themenabend: nur bestimmte Kategorien (only) oder ohne (not)
     const allKeys = Object.keys(data()).filter((k) => (!Array.isArray(opts.only) || opts.only.includes(k)) && (!Array.isArray(opts.not) || !opts.not.includes(k)));
     const keys = shuffle(allKeys.length ? allKeys : Object.keys(data())).slice(0, n);
     s.game = "hl"; s.phase = "hl";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.hl = { opts: { length }, cats: keys, ci: -1, total: {}, history: [] };
+    s.hl = { opts: { length, level }, cats: keys, ci: -1, total: {}, history: [] };
     s.players.forEach((p) => { s.hl.total[p.id] = 0; p.waiting = false; p.status = "active"; });
     nextCat(s, now);
   }
@@ -61,7 +84,7 @@
     const st = s.hl;
     st.ci++;
     if (st.ci >= st.cats.length) { st.step = "final"; return; }
-    st.items = pickItems(data()[st.cats[st.ci]]);
+    st.items = pickItems(data()[st.cats[st.ci]], st.opts.level);
     st.pos = 1; st.chain = [];
     beginGuess(st);
   }
@@ -151,5 +174,5 @@
     return out;
   }
 
-  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS };
+  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS, LEVELS };
 })(typeof window !== "undefined" ? window : globalThis);
