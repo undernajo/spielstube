@@ -1904,14 +1904,20 @@ body.qb-play .banner.win .trophy { display: none; }
 .alm-rot { margin: 0; }
 .alm-looking { font-size: .9rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .alm-dicerow { display: flex; gap: 10px; justify-content: center; }
-.alm-die { width: 86px; height: 92px; border-radius: 16px; border: 3px solid transparent; display: grid; place-content: center; text-align: center;
-  background: #fbf6ea; color: #1a1530; font-weight: 800; box-shadow: 0 4px 0 rgba(0, 0, 0, .35); }
-.alm-die.pick { cursor: pointer; }
-.alm-die .big { font: 700 1.8rem Fredoka, sans-serif; line-height: 1; } .alm-die .num { font: 700 1.6rem Fredoka, sans-serif; line-height: 1.05; }
-.alm-die small { font-size: .7rem; }
-.alm-die.g { background: var(--wiese); } .alm-die.w { background: var(--wald); color: #fff; } .alm-die.f { background: var(--fels); }
-.alm-die.b { background: var(--bach); color: #fff; } .alm-die.sun { background: #ffe27a; }
-.alm-die.storm { background: #2b2552; color: #ffcc33; }
+/* Würfel: Feldgrafik als Fläche, Zahl auf hellem Plättchen (wie ein Würfelauge), Name in der Leiste unten */
+.alm-die { position: relative; width: 86px; height: 92px; border-radius: 16px; border: 3px solid rgba(255, 255, 255, .55); overflow: hidden;
+  display: grid; place-items: center; background-size: cover; background-position: center; color: #1a1530;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(0, 0, 0, .15); }
+.alm-die.pick { cursor: pointer; transition: transform .12s; }
+@media (hover: hover) { .alm-die.pick:hover { transform: translateY(-2px); } }
+.alm-die .num { display: grid; place-items: center; width: 42px; height: 42px; margin-top: -12px; border-radius: 12px; background: rgba(255, 252, 242, .93);
+  font: 700 1.75rem Fredoka, sans-serif; line-height: 1; box-shadow: 0 2px 4px rgba(0, 0, 0, .3); }
+.alm-die small { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 3px; font: 800 .72rem Nunito, sans-serif; text-align: center;
+  background: rgba(20, 16, 50, .62); color: #fff; letter-spacing: .2px; }
+.alm-die.storm { border-color: rgba(255, 204, 51, .5); cursor: not-allowed; }
+.alm-die.storm small { color: #ffcc33; }
+/* kleine Feldbilder auf den Gelände-Knöpfen (Sonne) */
+.alm-swatch { display: inline-block; width: 18px; height: 18px; margin-right: 6px; border-radius: 4px; vertical-align: -4px; background-size: cover; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
 .alm-die.on { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 0 0 4px rgba(255, 200, 61, .35), 0 6px 0 rgba(0, 0, 0, .35); }
 .alm-task { font-weight: 800; font-size: 1.05rem; }
 .alm-stormnote { color: #ffcc33; font-weight: 700; }

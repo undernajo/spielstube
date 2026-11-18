@@ -5,7 +5,6 @@
   } = G;
   const ALM = window.S10Alm;
   const NAMES = ALM.NAMES;
-  const ICON = { g: "🌿", w: "🌲", f: "🪨", b: "💧", sun: "☀️" };
 
   // eigene Auswahl in der laufenden Woche (nur lokal, bis „Ankreuzen“)
   let almSel = { key: null, di: null, terrain: null, cells: [] };
@@ -68,11 +67,22 @@
       <path d="M17 12 L13.2 18.3 L16 17.2 L18 19 L20.3 16.4Z" fill="#fff"/><path d="M26 14 L23.6 18 L25.5 17.3 L27.8 17.8Z" fill="#fff"/>
       <path d="M17 3.5 V12 M14.4 6.2 H19.6" stroke="#5b3a22" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   };
-  // Hintergrundbilder einmal als CSS anlegen: .acell.g.v0 … .acell.b.v2
+  // Würfelbilder: Sonne (goldener Himmel) und Gewitter (Wolke mit Blitz); Gelände-Würfel zeigen die Feldgrafik
+  const DIE_SVG = {
+    sun: svg40(`<rect width="40" height="40" fill="url(#sw)"/><g transform="translate(20 17)">${Array.from({ length: 12 }, (_, k) =>
+      `<path d="M0 -8.5 L1.6 -14 L-1.6 -14Z" fill="#ffb21f" transform="rotate(${k * 30})"/>`).join("")}<circle r="7.5" fill="#ffcf3a" stroke="#f0a210" stroke-width="1"/></g>`,
+      `<radialGradient id="sw" cx=".5" cy=".4" r=".75"><stop offset="0" stop-color="#fff4c4"/><stop offset="1" stop-color="#ffd95c"/></radialGradient>`),
+    storm: svg40(`<rect width="40" height="40" fill="url(#tw)"/><path d="M8 13 a6 6 0 0 1 6 -6 a8 8 0 0 1 15 2 a5 5 0 0 1 3 9 H11 a5 5 0 0 1 -3 -5Z" fill="#59587a"/>
+      <path d="M21 15.5 L16 24 H20.5 L18 30.5 L26.5 19.5 H21.8 L24.5 15.5Z" fill="#ffcc33" stroke="#c98f00" stroke-width=".6" stroke-linejoin="round"/>`,
+      grad("tw", "#3a3766", "#1f1c40")),
+  };
+  const dataUri = (x) => `url("data:image/svg+xml,${encodeURIComponent(x.replace(/\s+/g, " "))}")`;
+  // Hintergrundbilder einmal als CSS anlegen: .acell.g.v0 … .acell.b.v2, Würfel .alm-die.g … und kleine Gelände-Knöpfe
   (() => {
     const el = document.createElement("style"); el.id = "alm-tiles";
-    el.textContent = Object.entries(TILE_SVG).map(([t, vs]) => vs.map((x, k) =>
-      `.acell.${t}.v${k}{background-image:url("data:image/svg+xml,${encodeURIComponent(x.replace(/\s+/g, " "))}");background-size:cover}`).join("")).join("");
+    el.textContent = Object.entries(TILE_SVG).map(([t, vs]) => vs.map((x, k) => `.acell.${t}.v${k}{background-image:${dataUri(x)};background-size:cover}`).join("")
+        + `.alm-die.${t},.alm-swatch.${t}{background-image:${dataUri(vs[1])}}`).join("")
+      + Object.entries(DIE_SVG).map(([t, x]) => `.alm-die.${t}{background-image:${dataUri(x)}}`).join("");
     document.head.appendChild(el);
   })();
   const variant = (i) => (i * 7 + Math.floor(i / 11) * 3) % 3;
@@ -176,8 +186,8 @@
       const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: iDone ? [] : almSel.cells, soon: iDone ? [] : soon, fresh: lookId !== G.myId ? pend(lookId) : [] });
 
       // Würfel und Aufgabe
-      const dieHtml = (x, i) => x.storm ? `<div class="alm-die storm" title="Gewitter – nicht nutzbar"><div class="big">⚡</div><small>Gewitter</small></div>`
-        : `<div class="alm-die ${x.t} ${mine && !iDone ? "pick" : ""} ${almSel.di === i && mine ? "on" : ""}" ${mine && !iDone ? `data-adi="${i}"` : ""}><div class="big">${ICON[x.t]}</div><div class="num">${x.n}</div><small>${x.t === "sun" ? "Sonne" : NAMES[x.t]}</small></div>`;
+      const dieHtml = (x, i) => x.storm ? `<div class="alm-die storm" title="Gewitter – nicht nutzbar"><small>Gewitter</small></div>`
+        : `<div class="alm-die ${x.t} ${mine && !iDone ? "pick" : ""} ${almSel.di === i && mine ? "on" : ""}" ${mine && !iDone ? `data-adi="${i}"` : ""} title="${x.t === "sun" ? "Sonne – beliebiges Gelände" : NAMES[x.t]}: bis zu ${x.n} ${x.n === 1 ? "Feld" : "Felder"}"><span class="num">${x.n}</span><small>${x.t === "sun" ? "Sonne" : NAMES[x.t]}</small></div>`;
       const stormNow = st.dice.some((x) => x.storm);
       let task = "", msg = "", actions = "";
       if (!seated) task = `<p class="muted">Du schaust zu – tippe unten auf ein Tal, um es groß zu sehen.</p>`;
@@ -185,9 +195,10 @@
         const wait = st.seats.filter((id) => !st.done.includes(id) && (v.players.find((p) => p.id === id) || {}).connected);
         task = `<div class="alm-task">✓ Erledigt – ${wait.length ? `warte auf ${wait.map((id) => esc(nameOf(v, id))).join(", ")} …` : "gleich geht's weiter …"}</div>`;
       } else {
-        const sunPick = d && d.t === "sun" ? `<div class="choice alm-sun">${["g", "w", "f", "b"].map((t) => `<button class="btn sm ${almSel.terrain === t ? "on" : ""}" data-asun="${t}">${ICON[t]} ${NAMES[t]}</button>`).join("")}</div>` : "";
+        const sunPick = d && d.t === "sun" ? `<div class="choice alm-sun">${["g", "w", "f", "b"].map((t) => `<button class="btn sm ${almSel.terrain === t ? "on" : ""}" data-asun="${t}"><i class="alm-swatch ${t}"></i>${NAMES[t]}</button>`).join("")}</div>` : "";
         task = terrain ? `${sunPick}<div class="alm-task">Kreuze bis zu ${max} ${max === 1 ? "Feld" : "Felder"} ${NAMES[terrain]} an <span class="muted">(${almSel.cells.length}/${max})</span></div>`
-          : d && d.t === "sun" ? `${sunPick}<div class="alm-task">Welches Gelände soll die Sonne sein?</div>` : `<div class="alm-task">Nimm einen Würfel</div>`;
+          : d && d.t === "sun" ? `${sunPick}<div class="alm-task">Welches Gelände soll die Sonne sein?</div>`
+          : st.dice.every((x) => x.storm) ? `<div class="alm-task">Alle Würfel zeigen Gewitter – diese Woche bleibt nur ein Ruhetag.</div>` : `<div class="alm-task">Nimm einen Würfel</div>`;
         const pts = soon.reduce((a, k) => a + ALM.regionValue(k), 0), race = soon.filter((k) => ALM.SPECIAL.includes(k) && !st.claimed[k]).length;
         msg = !terrain || !almSel.cells.length ? "" : err ? `<div class="msg err">${esc(err)}</div>`
           : soon.length ? `<div class="msg alm-preview">Damit ${soon.length === 1 ? "wird eine Fläche" : `werden ${soon.length} Flächen`} fertig: +${pts} Punkte${race ? ` (+${race * ALM.BONUS.first}, wenn du diese Woche der/die Erste bist)` : ""}!</div>`
