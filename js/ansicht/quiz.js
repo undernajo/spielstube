@@ -20,6 +20,9 @@
         <span class="geo-score-name">${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
     }).join("");
   }
+  // Frage passend zur Art des Gebiets (Code ohne Bindestrich = Land, sonst Unterteilung mit Länderkürzel vorn)
+  const UMRISS_ART = { DE: "Welches deutsche Bundesland", AT: "Welches österreichische Bundesland", IT: "Welche italienische Region", CH: "Welcher Schweizer Kanton" };
+  const umrissFrage = (c) => (String(c).includes("-") ? UMRISS_ART[String(c).split("-")[0]] || "Welches Gebiet" : "Welches Land") + " ist das?";
   // Umriss als SVG: Hauptteil plus nahe Inseln (keine weit entfernten Überseegebiete)
   function umrissSvg(code) {
     const D = window.SCHLAU10_LAND; if (!D) return "";
@@ -136,7 +139,7 @@
       if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>${estLineHtml(v, st)}` : ""}`;
       else if (st.mode === "hinweis") q = `<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Wer oder was ist gemeint?</div>`}
           ${quizHintsHtml(st)}${st.step === "ask" ? `<p class="muted small">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte · <span id="quiz-nexthint"></span></p>` : ""}</div>`;
-      else q = `<div class="umriss-box">${umrissSvg(it.c)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Welches Gebiet ist das?</div>`}`;
+      else q = `<div class="umriss-box">${umrissSvg(it.c)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">${umrissFrage(it.c)}</div>`}`;
       const foot = st.step === "ask" ? `<div class="quiz-foot">${sent ? "" : `<form class="quiz-form" onsubmit="return false">
           <input id="quiz-in" ${st.mode === "schaetzen" ? `inputmode="decimal" placeholder="Deine Schätzung"` : `placeholder="Deine Antwort"`} autocomplete="off" maxlength="60">
           ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>
