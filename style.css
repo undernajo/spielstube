@@ -76,6 +76,7 @@ em { color: var(--muted); font-style: normal; font-size: .9em; }
 
 .rules { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 18px; }
 .rules summary { cursor: pointer; font-weight: 600; }
+.app-version { margin: 18px 0 0; text-align: center; font-size: .75rem; color: var(--muted); opacity: .6; }
 .rules ul { padding-left: 20px; color: #d6d1f3; line-height: 1.5; }
 
 /* ---------- Spiel ---------- */

@@ -1131,6 +1131,7 @@
           <p class="muted small">Eine Spielstube eröffnen, Freunde per Link einladen, in der Lobby das Spiel wählen. Die genauen Regeln stehen dort beim jeweiligen Spiel.</p>
         </details>
         ${reportsHtml()}
+        <p class="app-version">Version ${esc(ASSET_V)}</p>
       </main>`;
     bindReports(renderStart);
     const nameIn = app.querySelector("#name");
