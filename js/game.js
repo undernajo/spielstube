@@ -1100,6 +1100,7 @@
       </ul>
     </details>`;
 
+  let startActAt = 0; // letzter Klick auf Eröffnen/Beitreten/Fortsetzen
   function renderStart() {
     const saved = store.get("s10-host");
     const resumable = saved && saved.state && Date.now() - saved.ts < 24 * 3600e3;
@@ -1134,20 +1135,24 @@
         <p class="app-version">Version ${esc(ASSET_V)}</p>
       </main>`;
     bindReports(renderStart);
-    const nameIn = app.querySelector("#name");
+    // Felder erst beim Klick lesen: die Startseite wird beim Verbinden neu gezeichnet („Verbinde …“)
     const getName = () => {
-      const n = nameIn.value.trim();
-      if (!n) { errorMsg = "Bitte gib zuerst deinen Namen ein."; renderStart(); app.querySelector("#name").focus(); return null; }
+      const nameIn = app.querySelector("#name"), n = nameIn ? nameIn.value.trim() : myName;
+      if (!n) { errorMsg = "Bitte gib zuerst deinen Namen ein."; renderStart(); const f = app.querySelector("#name"); if (f) f.focus(); return null; }
       errorMsg = ""; myName = cleanName(n); store.set("s10-name", myName); return myName;
     };
+    // Doppelklick nicht zweimal ausführen (sonst zwei Beitritte oder zwei Stuben)
+    const once = (fn) => { if (Date.now() - startActAt < 1500) return; startActAt = Date.now(); fn(); };
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
-    on("#create", () => { const n = getName(); if (n) hostCreate(n); });
-    on("#resume", () => { const n = getName(); if (n) hostResume(saved); });
-    on("#joinUrl", () => { const n = getName(); if (n) guestJoin(code, n, urlBroker ?? 0, urlBroker !== null); });
+    on("#create", () => { const n = getName(); if (n) once(() => hostCreate(n)); });
+    on("#resume", () => { const n = getName(); if (n) once(() => hostResume(saved)); });
+    on("#joinUrl", () => { const n = getName(); if (n) once(() => guestJoin(code, n, urlBroker ?? 0, urlBroker !== null)); });
     const joinCode = () => {
-      const c = app.querySelector("#code").value.trim().toUpperCase();
+      const codeEl = app.querySelector("#code");
+      if (!codeEl) return;
+      const c = codeEl.value.trim().toUpperCase();
       if (!/^[A-Z]{5}$/.test(c)) { errorMsg = "Der Stuben-Code hat 5 Buchstaben."; return renderStart(); }
-      const n = getName(); if (n) guestJoin(c, n, 0, false);
+      const n = getName(); if (n) once(() => guestJoin(c, n, 0, false));
     };
     on("#join", joinCode);
     const codeIn = app.querySelector("#code");
