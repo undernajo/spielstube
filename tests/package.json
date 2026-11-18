@@ -3,9 +3,12 @@
   "private": true,
   "description": "Automatischer Durchlauf aller Spiele im Browser (nur zum Testen, die Seite selbst braucht keinen Build)",
   "scripts": {
-    "test": "node smoke.js"
+    "test": "node check.js && node smoke.js",
+    "check": "node check.js"
   },
   "devDependencies": {
+    "eslint-scope": "8.4.0",
+    "espree": "10.4.0",
     "puppeteer-core": "23.11.1"
   }
 }

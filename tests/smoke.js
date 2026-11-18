@@ -41,6 +41,27 @@ function serve() {
   return new Promise((r) => server.listen(0, "127.0.0.1", () => r(server)));
 }
 
+// Spiele, bei denen ein paar zufällige Klicks nicht weit genug kommen: gezielt eine ganze Runde durchspielen
+const DEEP = {
+  // Antwort sucht Frage: Frage stellen, nicht wortgleich antworten, Fragesteller entscheidet „Zählt“ → Auflösung muss erscheinen
+  async frage(host, guest, errs) {
+    const asker = (await host.evaluate(() => !!document.querySelector("#fq-q"))) ? host : guest, guesser = asker === host ? guest : host;
+    const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
+    if (!(await until(asker, "#fq-q"))) return errs.push("Antwort sucht Frage: kein Eingabefeld für die Frage");
+    // bei „3 Antworten zur Auswahl“ (Standard) zuerst eine Antwort wählen
+    if (await asker.evaluate(() => { const c = document.querySelector("[data-fqpick]"); if (c) c.click(); return !!c; })) await sleep(800);
+    await asker.type("#fq-q", "Was ist das für eine Testfrage?");
+    await asker.evaluate(() => document.querySelector(".fq-form").requestSubmit());
+    if (!(await until(guesser, "#fq-a"))) return errs.push("Antwort sucht Frage: Antwortfeld erscheint nicht");
+    await guesser.type("#fq-a", "etwas ganz anderes");
+    await guesser.evaluate(() => document.querySelector(".fq-aform").requestSubmit());
+    if (!(await until(asker, "[data-fqjudge]"))) return errs.push("Antwort sucht Frage: Knöpfe „Zählt / Zählt nicht“ erscheinen nicht");
+    await asker.evaluate(() => document.querySelector('[data-fqjudge="1"]').click());
+    for (const [p, who] of [[asker, "Fragesteller"], [guesser, "Antwortender"]])
+      if (!(await until(p, "#fq-next"))) errs.push(`Antwort sucht Frage: nach „Zählt“ keine Auflösung beim ${who}`);
+  },
+};
+
 async function playGame(browser, base, game) {
   const errs = [];
   const ctxHost = await browser.createBrowserContext(), ctxGuest = await browser.createBrowserContext();
@@ -81,6 +102,7 @@ async function playGame(browser, base, game) {
     }
     if (!started) return { started, errs: [...errs, "Spiel ließ sich nicht starten (Gast nicht angekommen?)"] };
     await sleep(4000);
+    if (DEEP[game]) { await DEEP[game](host, guest, errs); return { started, errs }; }
     // ein paar Spielknöpfe antippen (nicht Verlassen, Lobby usw.)
     for (const p of [guest, host]) {
       await p.evaluate(() => {
