@@ -783,6 +783,25 @@ textarea { resize: vertical; font: inherit; }
 .top.topbar .gtitle b { white-space: nowrap; }
 .top.topbar .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 @media (max-width: 640px) { .top.topbar .meta { white-space: normal; } }
+/* Handy: Kopfzeile kompakt – oben Haus, Spiel und Infos in einer Zeile, darunter die Knöpfe gleichmäßig verteilt */
+@media (max-width: 640px) {
+  .screen.game { padding-top: 8px; }
+  .top.topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "brand title meta" "act act act";
+    align-items: center; gap: 6px 8px; padding: 6px 8px; margin-bottom: 10px; border-radius: 14px; }
+  .top.topbar .brand { grid-area: brand; flex: none; }
+  .top.topbar .brand .brand-name { display: none; }
+  .top.topbar .gtitle { grid-area: title; min-width: 0; gap: 6px; }
+  .top.topbar .gtitle .gt-icon { width: 28px; height: 28px; flex: none; }
+  .top.topbar .gtitle b { font-size: 1.05rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* Querbeet-Etappe: Abzeichen braucht Platz neben dem Titel, die Infos rutschen in eine eigene Zeile */
+  .top.topbar:has(.qb-tag) { grid-template-areas: "brand title title" "meta meta meta" "act act act"; }
+  .top.topbar:has(.qb-tag) .meta { max-width: none; text-align: left; -webkit-line-clamp: 1; }
+  .top.topbar .meta { grid-area: meta; max-width: 42vw; font-size: .72rem; line-height: 1.25; text-align: right;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .top.topbar .meta:empty { display: none; }
+  .top.topbar .top-actions { grid-area: act; gap: 6px; }
+  .top.topbar .top-actions .btn { flex: 1 1 0; min-width: 0; padding: 5px 0; min-height: 32px; }
+}
 /* Lobby: einzelne letzte Spielkachel über die ganze Breite */
 .gamegrid .gametile:last-child:nth-child(odd) { grid-column: 1 / -1; }
 /* Stadt, Land, Fluss & Wellenlänge: Spieler als kompakte Pillen statt großer Kästen */
