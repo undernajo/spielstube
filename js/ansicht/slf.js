@@ -103,6 +103,7 @@
       slfUpdDone(st);
       return;
     }
+    const fresh = slfRendered !== key; // Kacheln nur bei neuer Kategorie einblenden, nicht bei „bereit“ oder Stimmen
     slfRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     let main = "";
@@ -145,7 +146,7 @@
             <h3>${cat === st.surpriseCat ? "🎁 " : ""}${esc(cat)}</h3>
             <div class="slf-dots">${st.cats.map((c, i) => `<span class="${i < ci ? "done" : i === ci ? "cur" : ""}"></span>`).join("")}</div></div>
         </div>
-        <div class="slf-cards">${cards}</div>
+        <div class="slf-cards ${fresh ? "enter" : ""}">${cards}</div>
         <p class="muted small slf-hint">Tippe 👎, wenn eine Antwort nicht gilt – stimmt die Mehrheit der anderen dagegen, zählt sie nicht.</p>
         <div class="slf-actions">
           <button id="slf-ready" class="btn ${iReady ? "ghost" : "primary"} big">${iReady ? "Warte auf die anderen … (zurücknehmen)" : !last ? "Weiter zur nächsten Kategorie" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde"}</button>

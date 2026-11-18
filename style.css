@@ -1663,8 +1663,8 @@ body.qb-play .banner.win .trophy { display: none; }
 .slf-dots span.done { background: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 .slf-dots span.cur { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
 .slf-cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); }
-.slf-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--pc);
-  animation: slf-in .35s ease-out both; }
+.slf-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 16px; background: var(--panel); border: 1px solid var(--line); border-top: 4px solid var(--pc); }
+.slf-cards.enter .slf-card { animation: slf-in .35s ease-out both; }
 .slf-card:nth-child(2) { animation-delay: .08s; } .slf-card:nth-child(3) { animation-delay: .16s; } .slf-card:nth-child(4) { animation-delay: .24s; }
 .slf-card:nth-child(5) { animation-delay: .32s; } .slf-card:nth-child(n+6) { animation-delay: .4s; }
 @keyframes slf-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
