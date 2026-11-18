@@ -19,7 +19,8 @@ Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES
 ## Ordner
 
 - `index.html`, `style.css`: Einstieg und Gestaltung
-- `js/`: Spiellogik, ein Skript pro Spiel; `game.js` hält alles zusammen (Verbindung, Lobby, Zehnkampf)
+- `js/`: Spiellogik, ein Skript pro Spiel; `game.js` hält alles zusammen (Verbindung, Lobby, Zehnkampf); `symbole.js`: gezeichnete Spielsymbole
+- `js/ansicht/`: Darstellung der einzelnen Spiele; jede Datei bekommt von `game.js` den gemeinsamen Kontext `G` (Helfer wie `esc`, `send`, `render` und aktuelle Werte wie `G.view`, `G.myId`)
 - `data/`: Inhalte der Spiele (`*-data.js`, Orte, Länderkarte); `data/fragen/`: Zehnkampf-Karten
 - `img/`: Symbole
 - `entwuerfe/`: lokale Gestaltungsentwürfe, nicht im Repo (steht in `.gitignore`)
