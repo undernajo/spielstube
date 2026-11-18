@@ -25,11 +25,11 @@ Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES
 - `img/`: Symbole
 - `entwuerfe/`: lokale Gestaltungsentwürfe, nicht im Repo (steht in `.gitignore`)
 
-Nach Änderungen an Skripten oder `style.css` einmal `./bump.sh` ausführen. Das erhöht die Versionsnummer `?v=` aller eigenen Dateien in `index.html`, damit Browser nichts Altes aus dem Zwischenspeicher nehmen (`./bump.sh 20` setzt eine bestimmte Nummer).
+Vor jedem Push (also jeder Veröffentlichung) einmal `./bump.sh` ausführen. Das erhöht die Versionsnummer `?v=` aller eigenen Dateien in `index.html` um eins, damit Browser nichts Altes aus dem Zwischenspeicher nehmen; dieselbe Nummer steht unten auf der Startseite. So zählt sie die Veröffentlichungen (`./bump.sh 20` setzt eine bestimmte Nummer).
 
 ## Testen
 
-`tests/smoke.js` spielt jedes Spiel einmal mit Gastgeber und Gast in Chrome an und meldet JavaScript-Fehler. Die Seite selbst braucht dafür nichts, nur der Test braucht Node und ein installiertes Chrome:
+`npm test` prüft zuerst ohne Browser den Code der Ansichten (`tests/check.js`, z. B. dass keine Ansicht den gemeinsamen Kontext `G` überdeckt). Danach spielt `tests/smoke.js` jedes Spiel einmal mit Gastgeber und Gast in Chrome an und meldet JavaScript-Fehler; bei Antwort sucht Frage wird eine ganze Runde bis zur Auflösung durchgespielt. Die Seite selbst braucht dafür nichts, nur der Test braucht Node und ein installiertes Chrome:
 
 ```
 cd tests
