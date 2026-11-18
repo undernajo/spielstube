@@ -35,6 +35,8 @@
   const mixOf = (off) => Object.keys(MIXES).find((k) => { const o = mixOff(k); return o.length === off.length && o.every((x) => off.includes(x)); }) || null;
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
+  // Schwierigkeit für die Spiele mit Stufen (Wo liegt das?, Länder finden, Umriss-Rätsel); „Gemischt“ = bisheriges Verhalten
+  const LEVELS = { leicht: { name: "Leicht", desc: "nur bekannte Orte und Länder" }, gemischt: { name: "Gemischt", desc: "bekannte und schwere" }, profi: { name: "Profi", desc: "nur schwere" } };
   // Auszeichnungen bei der Siegerehrung (je Art von Spiel)
   const KIND_TITLES = { karte: "🧭 Kartenleser", wissen: "📚 Wandelndes Lexikon", wort: "✍️ Wortakrobat", karten: "🎴 Kartenhai" };
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -47,7 +49,7 @@
 
   // Reihenfolge: jedes Spiel etwa gleich oft (aus einem „Beutel“ ziehen), nie dasselbe Spiel und möglichst
   // nicht dieselbe Art zweimal hintereinander
-  function buildPlan(games, n, theme) {
+  function buildPlan(games, n, theme, level) {
     const out = [];
     let bag = [];
     for (let i = 0; i < n; i++) {
@@ -62,22 +64,26 @@
       }
       out.push(bag.splice(k, 1)[0]);
     }
-    return out.map((game) => ({ game, opts: stageOpts(game, theme) }));
+    return out.map((game) => ({ game, opts: stageOpts(game, theme, level) }));
   }
 
   // Kurzfassung je Spiel – großzügige Zeiten, damit es nicht hektisch wird; theme: mix | suedtirol | welt
   const HL_ST = ["suedtirolBerge", "gemeinden"];
-  function stageOpts(game, theme) {
+  function stageOpts(game, theme, level) {
     const st = theme === "suedtirol", w = theme === "welt";
+    // „Gemischt“: Weltkarte bei Ländern/Umrissen leicht (sonst zu viele unbekannte Kleinstaaten); „Leicht“/„Profi“ gelten überall
+    const lv = (region) => level === "leicht" || level === "profi" ? level : region === "welt" ? "leicht" : "gemischt";
+    const pro = level === "profi";
     switch (game) {
       case "zehn": return st ? { sets: ["suedtirol"] } : {};
       case "hl": return st ? { cats: 1, only: HL_ST } : w ? { cats: 1, not: HL_ST } : { cats: 1 };
-      case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: "gemischt", rounds: 3, timer: "t60" };
+      case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: LEVELS[level] ? level : "gemischt", rounds: 3, timer: "t60" };
       case "oben": return { mode: "oben", rounds: 2 };
-      case "land": { const region = pick(st ? ["it", "at", "it", "europa"] : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", "de", "at", "it"]);
-        return { region, level: region === "welt" ? "leicht" : "gemischt", rounds: 5, timer: "t30" }; }
+      case "land": { // österreichische Bundesländer haben auf „Profi“ nur 4 Gebiete – zu wenig für 5 Runden
+        const region = pick(st ? (pro ? ["it", "it", "europa"] : ["it", "at", "it", "europa"]) : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", "de", ...(pro ? [] : ["at"]), "it"]);
+        return { region, level: lv(region), rounds: 5, timer: "t30" }; }
       case "umriss": { const region = pick(st ? ["it", "at"] : w ? ["welt", "europa"] : ["europa", "welt", "de", "at", "it"]);
-        return { mode: "umriss", region, level: region === "welt" ? "leicht" : "gemischt", rounds: 4 }; }
+        return { mode: "umriss", region, level: lv(region), rounds: 4 }; }
       case "schaetzen": return { mode: "schaetzen", rounds: 3, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "hinweis": return { mode: "hinweis", rounds: 2, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "siebzehn": return { mode: "siebzehn", rounds: 3 };
@@ -94,10 +100,11 @@
   function create(opts, players) {
     const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 8;
     const theme = THEMES[opts && opts.theme] ? opts.theme : "mix";
+    const level = LEVELS[opts && opts.level] ? opts.level : "gemischt";
     const games = eligible(opts && opts.off, players);
     if (!games.length) return null;
     const joker = !(opts && opts.joker === false);
-    return { opts: { length, off: (opts && opts.off) || [], theme, joker }, plan: buildPlan(games, length, theme), idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false,
+    return { opts: { length, off: (opts && opts.off) || [], theme, level, joker }, plan: buildPlan(games, length, theme, level), idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false,
       joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Partie, nicht im Finale)
   }
 
@@ -168,5 +175,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { LENGTHS, POINTS, STAGES, ORDER, THEMES, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { LENGTHS, POINTS, STAGES, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

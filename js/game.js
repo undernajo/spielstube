@@ -481,11 +481,13 @@
   function qbDetail(st) {
     if (!st) return "";
     const D = QB.STAGES[st.game], o = st.opts || {};
-    if (st.game === "geo") return `${D.short} · ${(GEODATA[o.region] || {}).name || ""}`;
-    if (st.game === "land") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
+    // Stufe nur nennen, wenn sie von „Gemischt“ abweicht (z. B. „5 Gebiete · Europa · Profi“)
+    const lvl = o.level && o.level !== "gemischt" && QB.LEVELS[o.level] ? ` · ${QB.LEVELS[o.level].name}` : "";
+    if (st.game === "geo") return `${D.short} · ${(GEODATA[o.region] || {}).name || ""}${lvl}`;
+    if (st.game === "land") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}${lvl}`;
     if (st.game === "slf") return o.preset === "zufall" ? `${D.short} · ${o.classics ? `${o.classics} Klassiker + ${SLF.PRESETS.zufall.random - o.classics} zufällige Kategorien` : "Kategorien zufällig"}`
       : `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“`;
-    if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
+    if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}${lvl}`;
     if ((st.game === "schaetzen" || st.game === "hinweis") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
     return D.short;
   }
@@ -517,7 +519,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme },
-      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", joker: qbOpts.joker !== false },
+      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
       kg: { rounds: Number(kgOpts.rounds), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
@@ -1794,7 +1796,7 @@
     }
     if (view.game === "querbeet" && lb.qb) {
       return `${qbGamesHtml(lb.qb.off, true)}
-        <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[8]).name)} · Platz 1 = ${QB.POINTS[0]} Partypunkte, Platz 2 = ${QB.POINTS[1]}, Platz 3 = ${QB.POINTS[2]}, sonst 1 · Finale zählt doppelt</p>`;
+        <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · Schwierigkeit: ${esc((QB.LEVELS[lb.qb.level] || QB.LEVELS.gemischt).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[8]).name)} · Platz 1 = ${QB.POINTS[0]} Partypunkte, Platz 2 = ${QB.POINTS[1]}, Platz 3 = ${QB.POINTS[2]}, sonst 1 · Finale zählt doppelt</p>`;
     }
     if (view.game === "land" && lb.land) {
       const maps = LAND.REGION_KEYS.map((k) => row(lb.land.region === k, esc(LAND.REGION_NAMES[k]), "", true));
@@ -1869,6 +1871,8 @@
     if (qbJ) qbJ.onchange = () => { qbOpts.joker = qbJ.value === "1"; store.set("s10-qb", qbOpts); publish(); };
     const qbT = app.querySelector("#qb-theme");
     if (qbT) qbT.onchange = () => { qbOpts.theme = qbT.value; store.set("s10-qb", qbOpts); publish(); };
+    const qbLv = app.querySelector("#qb-level");
+    if (qbLv) qbLv.onchange = () => { qbOpts.level = qbLv.value; store.set("s10-qb", qbOpts); publish(); };
     const kgR = app.querySelector("#kg-rounds");
     if (kgR) kgR.onchange = () => { kgOpts.rounds = Number(kgR.value); store.set("s10-kg", kgOpts); publish(); };
     const kgB = app.querySelector("#kg-busrounds");
@@ -1976,6 +1980,8 @@
         `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${k} Etappen</option>`).join("")}</select></label>
       <label class="field"><span>Thema</span><select id="qb-theme">${Object.entries(QB.THEMES).map(([k, t]) =>
         `<option value="${k}" ${(qbOpts.theme || "mix") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label></div>
+      <label class="field"><span>Schwierigkeit <small class="muted">· Wo liegt das?, Länder finden, Umriss-Rätsel</small></span><select id="qb-level">${Object.entries(QB.LEVELS).map(([k, t]) =>
+        `<option value="${k}" ${(QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt") === k ? "selected" : ""}>${esc(t.name)} – ${esc(t.desc)}</option>`).join("")}</select></label>
       <label class="field"><span>Joker</span><select id="qb-joker"><option value="1" ${qbOpts.joker !== false ? "selected" : ""}>Mit Joker – jeder darf eine Etappe doppelt zählen lassen</option>
         <option value="0" ${qbOpts.joker === false ? "selected" : ""}>Ohne Joker</option></select></label>
       <div class="field"><span>Mischung je nach Stimmung</span><div class="qb-mixes">${Object.entries(QB.MIXES).map(([k, m]) =>
@@ -2184,6 +2190,7 @@
         <li>Die letzte Etappe ist das Finale und zählt doppelt.</li>
         <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Partie. Vor einer Etappe gesetzt, zählen deine Partypunkte dieser Etappe doppelt (nicht im Finale).</li>
         <li><b>Thema:</b> „Südtirol“ oder „Welt“ wählt passende Inhalte für alle Etappen, „Gemischt“ alles durcheinander.</li>
+        <li><b>Schwierigkeit:</b> gilt für Wo liegt das?, Länder finden und das Umriss-Rätsel – „Leicht“ nur bekannte Orte und Länder, „Profi“ nur schwere, „Gemischt“ beides.</li>
         <li>Bei der Siegerehrung gibt es Auszeichnungen, z. B. Kartenleser, Wandelndes Lexikon oder Aufholjagd.</li>
         <li>Zwischen den Etappen gibt es eine Pause mit Zwischenstand und einer kurzen Erklärung des nächsten Spiels. Weiter geht es, wenn alle „Bereit“ getippt haben.</li>
         <li>Listen-Duell und Antwort sucht Frage sind nur dabei, wenn ihr genau zu zweit seid.</li>
