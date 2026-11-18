@@ -1901,6 +1901,9 @@ body.qb-play .banner.win .trophy { display: none; }
 .ab.soon { background: #fff; color: #1a1530; box-shadow: 0 0 0 2px var(--accent); }
 .ab-flag { margin-left: 2px; }
 .alm-coords { display: flex; justify-content: space-between; font-size: .7rem; color: var(--muted); padding: 0 4px; }
+/* am PC begrenzt fitAlm() die Breite – Tal und Koordinaten bleiben mittig */
+.alm-board, .alm-coords { width: 100%; margin-inline: auto; }
+@media (min-width: 861px) { .screen.alm { padding-bottom: 12px; } }
 .alm-rot { margin: 0; }
 .alm-looking { font-size: .9rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .alm-dicerow { display: flex; gap: 10px; justify-content: center; }
@@ -1926,6 +1929,10 @@ body.qb-play .banner.win .trophy { display: none; }
 /* andere Täler klein */
 .alm-thumb { display: grid; gap: 4px; padding: 6px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc); color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
 .alm-tn { display: flex; align-items: center; gap: 5px; font-size: .8rem; font-weight: 700; } .alm-tn b { margin-left: auto; }
+.alm-tn i { font-style: normal; font-size: .75rem; } .alm-ok { color: #9be8c2; } .alm-wait { color: var(--muted); }
+/* Kopf des Würfelkastens (PC): Woche, Gewitter, eigene Punkte */
+.alm-dhead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.alm-mypts { font-size: .85rem; color: var(--muted); } .alm-mypts b { color: var(--ink); font-size: 1.05rem; }
 .alm-mini { display: grid; gap: 1px; border-radius: 6px; overflow: hidden; background: #0b0920; }
 .ac { aspect-ratio: 1; position: relative; }
 .ac.x::after { content: ""; position: absolute; inset: 22%; background: rgba(42, 29, 0, .75); border-radius: 2px; }

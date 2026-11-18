@@ -135,6 +135,7 @@
     const v = G.view, st = v.alm;
     if (!st) return;
     const seated = st.seats.includes(G.myId);
+    const desk = innerWidth > 860; // PC-Aufteilung: Infos in der rechten Spalte
     const key = v.code + ":" + st.week + ":" + st.step;
     if (almSel.key !== key) almSel = { key, di: null, terrain: null, cells: [] };
     if (st.step === "play" && almSent && almSent !== key) almSent = null;
@@ -206,12 +207,14 @@
         actions = `<div class="actions"><button class="btn primary" id="alm-go" ${terrain && almSel.cells.length && !err ? "" : "disabled"}>Ankreuzen</button>
           <button class="btn sm" id="alm-clear" ${almSel.cells.length ? "" : "disabled"}>Auswahl löschen</button><button class="btn sm" id="alm-rest">Ruhetag</button></div>`;
       }
-      const dice = `<section class="panel alm-dice"><div class="alm-dicerow">${st.dice.map(dieHtml).join("")}</div>
+      // am PC stehen Woche, Gewitter und die eigenen Punkte hier statt in der Leiste über dem Tal (mehr Höhe fürs Tal)
+      const head = desk ? `<div class="alm-dhead"><span class="game-label">Woche ${st.week} von ${st.weeks}</span>${stormTrack}${seated ? `<span class="alm-mypts">Deine Punkte <b>${pts(G.myId)}</b></span>` : ""}</div>` : "";
+      const dice = `<section class="panel alm-dice">${head}<div class="alm-dicerow">${st.dice.map(dieHtml).join("")}</div>
           ${stormNow && st.stormLimit ? `<div class="alm-stormnote">⚡ Gewitter! (${st.storms} von ${st.stormLimit})</div>` : ""}${task}${msg}${actions}</section>`;
 
       // die anderen Täler klein (antippen = groß ansehen)
       const others = st.seats.filter((id) => id !== lookId).map((id) => `<button type="button" class="alm-thumb" data-alook="${esc(id)}" style="--pc:${colorOf(v, id)}">
-          <span class="alm-tn"><span class="pdot"></span>${id === G.myId ? "Dein Tal" : esc(nameOf(v, id))}<b>${pts(id)}</b></span>${boardHtml(v, st, boardOf(id), { small: true, fresh: id !== G.myId ? pend(id) : [] })}</button>`).join("");
+          <span class="alm-tn"><span class="pdot ${(v.players.find((p) => p.id === id) || {}).connected ? "" : "off"}"></span>${id === G.myId ? "Dein Tal" : esc(nameOf(v, id))}${st.done.includes(id) ? '<i class="alm-ok" title="diese Woche fertig">✓</i>' : '<i class="alm-wait" title="überlegt noch">…</i>'}<b>${pts(id)}</b></span>${boardHtml(v, st, boardOf(id), { small: true, fresh: id !== G.myId ? pend(id) : [] })}</button>`).join("");
       main = `<div class="alm-layout">
           <section class="panel alm-boardbox">${!mine ? `<div class="alm-looking">Tal von <b style="color:${colorOf(v, lookId)}">${esc(nameOf(v, lookId))}</b>${seated ? ` · <button class="btn ghost sm" data-alook="${esc(G.myId)}">zurück zu meinem Tal</button>` : ""}</div>` : ""}${board}</section>
           ${dice}
@@ -224,11 +227,12 @@
         <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.lengthName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">
-          <div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>
+          ${desk && st.step !== "final" ? "" : `<div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>`}
           ${main}
         </section>
       </main>`;
 
+    fitAlm();
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
@@ -250,6 +254,33 @@
       if (k >= 0) almSel.cells.splice(k, 1); else if (x && almSel.cells.length < x.n) almSel.cells.push(i);
       renderAlm();
     });
+  }
+  // PC: Tal so groß, dass die ganze Spielseite ohne Scrollen ins Fenster passt (Breite folgt aus der verfügbaren Höhe);
+  // die kleinen Täler der anderen scrollen bei vielen Spielern in ihrer Spalte. Handy: unverändert (Seite scrollt).
+  function fitAlm() {
+    const bd = app.querySelector(".alm-board"), co = app.querySelector(".alm-coords"), others = app.querySelector(".alm-others");
+    const desk = innerWidth > 860;
+    const layout = app.querySelector(".alm-layout");
+    [bd, co].forEach((el) => { if (el) el.style.maxWidth = ""; });
+    if (others) { others.style.maxHeight = ""; others.style.overflowY = ""; }
+    if (layout) { layout.style.gridTemplateColumns = ""; layout.style.justifyContent = ""; }
+    if (!desk || !bd) return;
+    const top = bd.getBoundingClientRect().top + scrollY;
+    const reserve = 60; // Koordinatenzeile, Innenabstand und Rand des Kastens, Abstand unter dem Spielfeld
+    const h = Math.max(240, innerHeight - top - reserve);
+    const w = Math.floor((h * ALM.COLS) / ALM.ROWS);
+    [bd, co].forEach((el) => { if (el) el.style.maxWidth = w + "px"; });
+    // Kasten ums Tal so breit wie das Tal (kein leerer Rand), beide Spalten mittig
+    const box = app.querySelector(".alm-boardbox");
+    if (layout && box) {
+      const cs = getComputedStyle(box), pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+      layout.style.gridTemplateColumns = `minmax(0, ${w + pad}px) 320px`;
+      layout.style.justifyContent = "center";
+    }
+    if (others) {
+      others.style.maxHeight = Math.max(90, innerHeight - (others.getBoundingClientRect().top + scrollY) - 28) + "px";
+      others.style.overflowY = "auto";
+    }
   }
   addEventListener("resize", () => { if (G.view && G.view.phase === "alm") renderAlm(); });
 
