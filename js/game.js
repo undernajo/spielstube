@@ -219,7 +219,7 @@
     if (window.SCHLAU10_LAND) return true;
     if (!landLoading) {
       landLoading = document.createElement("script");
-      landLoading.src = "laender-data.js?v=" + ASSET_V;
+      landLoading.src = "data/laender-data.js?v=" + ASSET_V;
       landLoading.onload = () => { if (isHost && S) publish(); else render(); };
       landLoading.onerror = () => { landLoading.remove(); landLoading = null; toast("Die Länderkarte konnte nicht geladen werden – bitte neu laden.", "bad"); };
       document.head.appendChild(landLoading);

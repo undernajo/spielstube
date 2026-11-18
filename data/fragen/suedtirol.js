@@ -1,5 +1,5 @@
 // Fragen-Set „Südtirol“ – wird in der Lobby unter „Fragen“ ausgewählt.
-// Format wie in questions2.js; jede Karte bekommt automatisch set: "suedtirol".
+// Format wie in standard-2.js; jede Karte bekommt automatisch set: "suedtirol".
 window.SCHLAU10_CARDS.push(...[
 
   // ===================== Orte & Täler =====================

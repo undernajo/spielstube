@@ -17,6 +17,16 @@ Lädt er die Seite neu, kann er mit **Laufendes Spiel fortsetzen** weitermachen.
 
 Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES-GCM). Auch der Kanalname auf dem Server verrät den Code nicht. Nur wer den Code kennt, kann mitlesen oder mitspielen. Dafür muss die Seite über `https://` (z. B. GitHub Pages) oder `http://localhost` geöffnet werden.
 
+## Ordner
+
+- `index.html`, `style.css`: Einstieg und Gestaltung
+- `js/`: Spiellogik, ein Skript pro Spiel; `game.js` hält alles zusammen (Verbindung, Lobby, Zehnkampf)
+- `data/`: Inhalte der Spiele (`*-data.js`, Orte, Länderkarte); `data/fragen/`: Zehnkampf-Karten
+- `img/`: Symbole
+- `entwuerfe/`: lokale Gestaltungsentwürfe, nicht im Repo (steht in `.gitignore`)
+
+Nach Änderungen die Versionsnummer `?v=` in `index.html` bei allen eigenen Skripten und `style.css` erhöhen, damit Browser nichts Altes aus dem Zwischenspeicher nehmen.
+
 ## Spiele
 
 Der Gastgeber wählt in der Lobby das Spiel:
@@ -56,7 +66,7 @@ Wer passt, sichert seine Rundenpunkte. Gewonnen hat, wer zuerst die Zielpunktzah
 
 ## Eigene Fragen
 
-Die Karten stehen in `questions.js` bis `questions6.js` (Standard) und in `questions-<set>.js` für die übrigen Sets. Mit `emoji: true` an einer Karte werden die Begriffe groß und mit Emoji-Schrift dargestellt (wichtig für Flaggen unter Windows). Jede Karte hat genau 10 Antworten. Es gibt sechs Typen:
+Die Karten stehen in `data/fragen/`: `standard-*.js` für das Standard-Set, `<set>.js` (z. B. `suedtirol.js`) für die übrigen Sets. Mit `emoji: true` an einer Karte werden die Begriffe groß und mit Emoji-Schrift dargestellt (wichtig für Flaggen unter Windows). Jede Karte hat genau 10 Antworten. Es gibt sechs Typen:
 
 | Typ | Spielweise | Antwort im Code |
 |---|---|---|
@@ -69,4 +79,4 @@ Die Karten stehen in `questions.js` bis `questions6.js` (Standard) und in `quest
 
 Bei `choice` kann man als dritten Eintrag weitere Schreibweisen angeben, z. B. `["Mona Lisa", "Leonardo da Vinci", ["Leonardo", "da Vinci"]]`.
 Mit `names: true` an der Karte reicht bei Personen der Nachname.
-Allgemeine Varianten wie „USA“ und „Amerika“ stehen unten in `questions.js` unter `SCHLAU10_ALIASES`.
+Allgemeine Varianten wie „USA“ und „Amerika“ stehen unten in `data/fragen/standard-1.js` unter `SCHLAU10_ALIASES`.
