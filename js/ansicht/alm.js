@@ -204,8 +204,9 @@
         msg = !terrain || !almSel.cells.length ? "" : err ? `<div class="msg err">${esc(err)}</div>`
           : soon.length ? `<div class="msg alm-preview">Damit ${soon.length === 1 ? "wird eine Fläche" : `werden ${soon.length} Flächen`} fertig: +${pts} Punkte${race ? ` (+${race * ALM.BONUS.first}, wenn du diese Woche der/die Erste bist)` : ""}!</div>`
           : `<div class="msg ok">Passt – ankreuzen${almSel.cells.length < max ? " (oder noch mehr Felder wählen)" : ""}!</div>`;
-        actions = `<div class="actions"><button class="btn primary" id="alm-go" ${terrain && almSel.cells.length && !err ? "" : "disabled"}>Ankreuzen</button>
-          <button class="btn sm" id="alm-clear" ${almSel.cells.length ? "" : "disabled"}>Auswahl löschen</button><button class="btn sm" id="alm-rest">Ruhetag</button></div>`;
+        // Hauptknopf über die ganze Breite, darunter zwei gleich große Nebenknöpfe
+        actions = `<div class="alm-actions"><button class="btn primary alm-go" id="alm-go" ${terrain && almSel.cells.length && !err ? "" : "disabled"}>✓ Ankreuzen</button>
+          <button class="btn ghost" id="alm-clear" ${almSel.cells.length ? "" : "disabled"} title="Auswahl löschen">↺ Löschen</button><button class="btn ghost" id="alm-rest" title="diese Woche nichts ankreuzen">☕ Ruhetag</button></div>`;
       }
       // am PC stehen Woche, Gewitter und die eigenen Punkte hier statt in der Leiste über dem Tal (mehr Höhe fürs Tal)
       const head = desk ? `<div class="alm-dhead"><span class="game-label">Woche ${st.week} von ${st.weeks}</span>${stormTrack}${seated ? `<span class="alm-mypts">Deine Punkte <b>${pts(G.myId)}</b></span>` : ""}</div>` : "";
