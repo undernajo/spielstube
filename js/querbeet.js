@@ -19,15 +19,16 @@
     siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "3 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
     bus: { kind: "karten", name: "Busfahrt", short: "1 Runde, 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
     stich: { kind: "karten", name: "Stichhaltig", short: "3 Runden (1, 2, 3 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
+    alm: { kind: "wuerfel", name: "Almsommer", short: "6 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
-  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
     alle: { icon: "🎲", name: "Bunt gemischt", games: null },
     wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "hl", "schaetzen", "hinweis", "duell"] },
     welt: { icon: "🗺️", name: "Rund um die Welt", games: ["geo", "land", "umriss", "oben"] },
-    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage"] },
+    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm"] },
     karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
     kurz: { icon: "⚡", name: "Kurz & schnell", games: ["hl", "schaetzen", "bus", "siebzehn", "oben", "geo"] },
   };
@@ -92,6 +93,7 @@
       case "bus": return { mode: "bus", rounds: 1 };
       // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien
       case "slf": return { ...(st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
+      case "alm": return { weeks: 6, storms: 0 }; // Kurzsommer: 6 Wochen ohne Gewitter
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };
     }

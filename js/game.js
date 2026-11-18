@@ -34,7 +34,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon
+    zehnIcon, almIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -62,6 +62,7 @@
     { key: "schnapsen", group: "klassik", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Bummerl für Bummerl", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
+    { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen – wer holt am meisten aus seinem Tal?", icon: almIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -105,8 +106,10 @@
   let schOpts = Object.assign({ mode: "gemuetlich" }, store.get("s10-schnapsen") || {});
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
+  const ALM = window.S10Alm;
+  let almOpts = Object.assign({ length: "normal" }, store.get("s10-alm") || {});
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Kartenspiele", ["kartenrunde", "stich", "klassik"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten & Würfel", ["kartenrunde", "stich", "klassik", "alm"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
     const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
@@ -268,7 +271,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -323,6 +326,10 @@
     if (type === "start" && action.game === "slf") {
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
+    }
+    if (type === "start" && action.game === "alm") {
+      if (!host || S.phase !== "lobby") return false;
+      return ALM.start(S, action.opts);
     }
     if (type === "start" && action.game === "wl") {
       if (!host || S.phase !== "lobby") return false;
@@ -380,8 +387,9 @@
     if (type.startsWith("geo")) return S.phase === "geo" && GEO.apply(S, pid, action, host, now);
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
+    if (type.startsWith("alm")) return S.phase === "alm" && ALM.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -401,6 +409,7 @@
       case "frage": return !!S.frage && S.frage.step === "final" && !(S.frage.complaint && S.frage.complaint.state === "open");
       case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
       case "siebzehn": case "stich": case "bus": return !!S.karten && S.karten.step === "final";
+      case "alm": return !!S.alm && S.alm.step === "final";
     }
     return false;
   }
@@ -417,6 +426,7 @@
       case "frage": return all(S.frage.score);
       case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
       case "siebzehn": case "stich": case "bus": return all(S.karten.total);
+      case "alm": return all(ALM.publicState(S).totals);
     }
     return all({});
   }
@@ -437,13 +447,14 @@
       case "frage": ok = FQ.start(S, { ...o, free: true, avoid: store.get("s10-fq-seen") || [] }, now); break;
       case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
       case "siebzehn": case "stich": case "bus": ok = KG.start(S, { ...o, free: true }, now); break;
+      case "alm": ok = ALM.start(S, { ...o, free: true }); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null; S.alm = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -519,6 +530,7 @@
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
+      alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -544,6 +556,7 @@
     view.land = S.phase === "land" ? LAND.publicState(S, Date.now()) : null;
     view.quiz = S.phase === "quiz" ? QZ.publicState(S, Date.now()) : null;
     view.karten = S.phase === "karten" ? KG.publicState(S) : null;
+    view.alm = S.phase === "alm" ? ALM.publicState(S) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
@@ -1066,7 +1079,7 @@
     }
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else renderGame();
     camDockPlace();
     G.qbBarRender();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
@@ -1338,6 +1351,7 @@
           ${isMode(chosenGame) ? modeSwitchHtml() : ""}
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
+          ${chosenGame === "alm" ? almSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
           ${chosenGame === "querbeet" ? qbSettingsHtml() : ""}
@@ -1427,6 +1441,7 @@
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
+      if (chosenGame === "alm") return send({ type: "start", game: "alm", opts: almOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
@@ -1613,7 +1628,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ alm: almRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -1822,6 +1837,10 @@
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
     }
+    if (view.game === "alm" && lb.alm) {
+      const l = ALM.LENGTHS[lb.alm.length] || ALM.LENGTHS.normal;
+      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 1 bis 8 Spieler, alle gleichzeitig</p>`;
+    }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
       return `<div class="field"><span>Impuls-Pakete (wählt der Gastgeber)</span><div class="setlist">${packs.map(([k, n]) => row(lb.wl.pack === k, esc(n), "", true)).join("")}</div></div>
@@ -1864,6 +1883,8 @@
     app.querySelectorAll("[data-slfpreset]").forEach((b) => b.onclick = () => { slfOpts.preset = b.dataset.slfpreset; saveOpts(); publish(); });
     const wp = app.querySelector("#wl-pack");
     if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
+    const almL = app.querySelector("#alm-length");
+    if (almL) almL.onchange = () => { almOpts.length = almL.value; store.set("s10-alm", almOpts); publish(); };
     const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
     const gr = app.querySelector("#geo-region");
     if (gr) gr.onchange = () => { geoOpts.region = gr.value; saveGeo(); };
@@ -2225,6 +2246,21 @@
         <li>Bis zu 1000 Punkte pro Runde – je näher, desto mehr. Die Skala passt sich der Region an.</li>
         <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Orte, „Profi“ nur schwere, „Gemischt“ alle.</li>
         <li>Orte wiederholen sich erst, wenn alle der gewählten Auswahl einmal dran waren.</li>
+      </ul>
+    </details>`;
+  function almSettingsHtml() {
+    return `<label class="field"><span>Länge</span><select id="alm-length">${Object.entries(ALM.LENGTHS).map(([k, l]) =>
+        `<option value="${k}" ${(ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
+      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
+  }
+  const almRulesHtml = `
+    <details class="rules"><summary>Regeln: Almsommer</summary>
+      <ul>
+        <li>Jeder hat sein eigenes Tal (alle dasselbe). Jede Woche fallen <b>3 Würfel – für alle dieselben</b>. Jeder Würfel zeigt Gelände und Zahl. <b>Nimm einen</b> – auch denselben wie die anderen.</li>
+        <li>Kreuze <b>bis zu so viele</b> Felder dieses Geländes an – zusammenhängend und angrenzend an schon Angekreuztes. Du startest am Hof 🏡. ☀️ Sonne = beliebiges Gelände.</li>
+        <li><b>Jede Fläche hat eine Zahl.</b> Ist sie ganz angekreuzt, bekommst du diese Punkte. Flächen mit Hütte 🏠 oder Gipfel ⛰️ sind mehr wert – wer sie <b>als Erster</b> fertig hat, bekommt <b>+${ALM.BONUS.first}</b> (in derselben Woche alle).</li>
+        <li>Zeigt ein Würfel ⚡, gibt's ein Gewitter. <b>Beim 5. Gewitter ist der Sommer vorbei</b> – sonst nach 14 Wochen. Wer dann die meisten Punkte hat, gewinnt.</li>
+        <li>Alle spielen gleichzeitig; sobald alle angekreuzt haben, fallen die nächsten Würfel.</li>
       </ul>
     </details>`;
   function wlSettingsHtml() {

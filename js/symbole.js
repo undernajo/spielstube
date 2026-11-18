@@ -149,9 +149,20 @@
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${card(9, -10, true)}${card(33, 10, false)}</svg>`;
   }
 
+  // Almsommer: kleines Tal aus Geländefeldern (Gipfel, Wiese, Wald, Bach) mit zwei Kreuzen, davor ein Würfel mit „3“
+  function almIcon() {
+    const C = { f: "#9a98a6", g: "#8fcf6a", w: "#2f7a4a", b: "#4aa8e8" }, map = ["fgb", "ggb", "wgb"];
+    const tiles = map.map((row, r) => row.split("").map((t, c) => `<rect x="${8 + c * 14}" y="${8 + r * 14}" width="14" height="14" fill="${C[t]}" stroke="#1d3a1d" stroke-opacity=".35" stroke-width="1"/>`).join("")).join("");
+    const cross = (x, y) => `<path d="M${x - 4} ${y - 4} L${x + 4} ${y + 4} M${x + 4} ${y - 4} L${x - 4} ${y + 4}" stroke="#2a1d00" stroke-width="2.4" stroke-linecap="round"/>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g>${tiles}</g>
+      <path d="M10 20 L15 11 L20 20Z" fill="#f3f0ff" stroke="#5a5866" stroke-width="1"/>${cross(29, 29)}${cross(15, 29)}
+      <rect x="34" y="34" width="24" height="24" rx="5" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.6" transform="rotate(8 46 46)"/>
+      <text x="46" y="52.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#2a1d00" transform="rotate(8 46 46)">3</text></svg>`;
+  }
+
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon
+    zehnIcon, almIcon
   };
 })();
