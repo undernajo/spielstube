@@ -1879,15 +1879,16 @@ body.qb-play .banner.win .trophy { display: none; }
 .acell { position: relative; aspect-ratio: 1; display: grid; place-items: center; font-size: clamp(.9rem, 3.2vw, 1.4rem); border: 1px solid rgba(0, 0, 0, .18); }
 .acell.g, .ac.g { background: var(--wiese); } .acell.w, .ac.w { background: var(--wald); } .acell.f, .ac.f { background: var(--fels); }
 .acell.b, .ac.b { background: var(--bach); } .acell.h, .ac.h { background: var(--hof); }
-.acell.w::before { content: "🌲"; opacity: .35; font-size: .8em; }
-.acell.b::before { content: "〰"; opacity: .45; color: #fff; font-weight: 800; }
-.acell.f::before { content: "▲"; opacity: .18; color: #fff; font-size: .7em; }
-.acell .as { position: relative; z-index: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4)); }
+/* Feldgrafiken kommen als SVG-Hintergrund (js/ansicht/alm.js); Sonderfelder als Zeichnung im Feld */
+.acell .as { position: absolute; inset: 4%; z-index: 1; display: block; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35)); }
+.acell .asvg { width: 100%; height: 100%; display: block; }
+/* angekreuzt: leichter Papierschleier, damit das Kreuz auf den lebendigen Feldern gut lesbar bleibt */
+.acell.x::before { content: ""; position: absolute; inset: 0; background: rgba(255, 249, 232, .38); z-index: 1; }
 /* Flächengrenzen nur andeuten – ankreuzen darf man darüber hinweg */
 .acell.bt { border-top: 2px dashed rgba(20, 16, 50, .45); } .acell.bb { border-bottom: 2px dashed rgba(20, 16, 50, .45); }
 .acell.bl { border-left: 2px dashed rgba(20, 16, 50, .45); } .acell.br { border-right: 2px dashed rgba(20, 16, 50, .45); }
 .acell.x::after, .acell.sel::after { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; font: 700 clamp(1.3rem, 4.6vw, 2.2rem) Fredoka, sans-serif; z-index: 2; }
-.acell.x::after { color: var(--pen); opacity: .85; }
+.acell.x::after { color: var(--pen); opacity: .9; text-shadow: 0 0 3px rgba(255, 255, 255, .7); }
 .acell.sel::after { color: #b07800; opacity: .9; }
 .acell.done { box-shadow: inset 0 0 0 999px rgba(255, 210, 80, .28); }
 .acell.can { cursor: pointer; } .acell.can:hover { filter: brightness(1.12); }

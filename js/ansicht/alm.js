@@ -14,6 +14,71 @@
   let almLook = null;     // welches Tal groß gezeigt wird (eigenes oder angetipptes)
   let almConfetti = null;
 
+  // ---------- Feldgrafiken: illustrierte Wanderkarte (SVG, 40 × 40) ----------
+  // Je Gelände drei Varianten (nach Feldnummer gewählt), damit das Tal nicht wie Tapete aussieht.
+  // Details bleiben kontrastarm, damit Kreuze und Punktabzeichen darüber gut lesbar sind.
+  const svg40 = (inner, defs = "") => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" preserveAspectRatio="xMidYMid slice"><defs>${defs}</defs>${inner}</svg>`;
+  const grad = (id, a, b) => `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+  const tuft = (x, y, c = "#5d9c3f") => `<path d="M${x} ${y} l-1.6 -4.2 M${x} ${y} l0 -5 M${x} ${y} l1.6 -4.2" stroke="${c}" stroke-width="1.2" stroke-linecap="round" fill="none"/>`;
+  const flower = (x, y, petal) => `<g transform="translate(${x} ${y})">${[0, 72, 144, 216, 288].map((r) => `<circle cx="0" cy="-1.5" r="1.1" fill="${petal}" transform="rotate(${r})"/>`).join("")}<circle r=".9" fill="#ffd34d"/></g>`;
+  const spruce = (x, y, h) => { // Fichte mit Licht- (links) und Schattenseite (rechts)
+    const w = h * 0.62, t = (k) => y - h + k * h * 0.3;
+    const tier = (k, ww) => `<path d="M${x} ${t(k)} L${x - ww / 2} ${t(k) + h * 0.42} H${x + ww / 2}Z" fill="#1f5c36"/><path d="M${x} ${t(k)} L${x - ww / 2} ${t(k) + h * 0.42} H${x}Z" fill="#3d8f55"/>`;
+    return `<rect x="${x - 0.9}" y="${y - h * 0.12}" width="1.8" height="${h * 0.14}" fill="#5b3a22"/>${tier(0, w * 0.62)}${tier(1, w * 0.82)}${tier(2, w)}`;
+  };
+  const rock = (pts, light, dark) => { // Brocken: helle und dunkle Facette
+    const [a, b, c, d] = pts;
+    return `<path d="M${a} L${b} L${c}Z" fill="${light}"/><path d="M${a} L${c} L${d}Z" fill="${dark}"/>`;
+  };
+  const TILE_SVG = {
+    g: [
+      svg40(`<rect width="40" height="40" fill="url(#gw)"/><circle cx="7" cy="9" r=".8" fill="#c4ec9c"/><circle cx="31" cy="27" r=".8" fill="#c4ec9c"/>${tuft(11, 32)}${tuft(29, 15)}${flower(27, 31, "#fff")}`, grad("gw", "#a2dc78", "#7ec25a")),
+      svg40(`<rect width="40" height="40" fill="url(#gw)"/><circle cx="20" cy="6" r=".8" fill="#c4ec9c"/>${tuft(8, 17)}${tuft(31, 34)}${tuft(22, 26, "#6aab4a")}${flower(12, 30, "#f2a7d8")}`, grad("gw", "#9fda74", "#7bbf57")),
+      svg40(`<rect width="40" height="40" fill="url(#gw)"/><circle cx="33" cy="8" r=".8" fill="#c4ec9c"/><circle cx="6" cy="28" r=".8" fill="#c4ec9c"/>${tuft(18, 35)}${tuft(33, 22)}${flower(10, 12, "#fff")}${flower(24, 16, "#b9a7ff")}`, grad("gw", "#a4dd7b", "#80c45c")),
+    ],
+    w: [
+      svg40(`<rect width="40" height="40" fill="url(#ww)"/>${spruce(12, 30, 20)}${spruce(28, 37, 17)}`, grad("ww", "#4b9a5f", "#2d6d43")),
+      svg40(`<rect width="40" height="40" fill="url(#ww)"/>${spruce(9, 22, 14)}${spruce(22, 33, 18)}${spruce(33, 21, 13)}`, grad("ww", "#489559", "#2b6940")),
+      svg40(`<rect width="40" height="40" fill="url(#ww)"/>${spruce(25, 32, 24)}${spruce(9, 37, 14)}`, grad("ww", "#4d9c61", "#2e6f45")),
+    ],
+    f: [
+      svg40(`<rect width="40" height="40" fill="url(#fw)"/>${rock(["8 30", "15 16", "24 30", "16 33"], "#c8c6d1", "#7d7b88")}${rock(["24 22", "30 12", "36 24", "29 26"], "#bdbbc7", "#73717e")}<circle cx="6" cy="10" r="1" fill="#7f7d8a"/><circle cx="33" cy="34" r="1.2" fill="#7f7d8a"/>`, grad("fw", "#aeacb9", "#8d8b99")),
+      svg40(`<rect width="40" height="40" fill="url(#fw)"/>${rock(["10 24", "20 9", "31 26", "19 29"], "#c9c7d2", "#7a7885")}<circle cx="9" cy="34" r="1.1" fill="#7f7d8a"/><circle cx="14" cy="36" r=".8" fill="#7f7d8a"/><circle cx="31" cy="35" r="1" fill="#7f7d8a"/>`, grad("fw", "#acaab7", "#8b8997")),
+      svg40(`<rect width="40" height="40" fill="url(#fw)"/>${rock(["4 20", "10 10", "17 21", "10 23"], "#c4c2cd", "#777582")}${rock(["17 34", "25 20", "35 35", "25 37"], "#c9c7d2", "#7c7a87")}<circle cx="31" cy="9" r="1" fill="#7f7d8a"/>`, grad("fw", "#afadba", "#8e8c9a")),
+    ],
+    b: [0, 1, 2].map((k) => svg40(`<rect width="40" height="40" fill="url(#bw)"/>${[6 + k * 2, 17 + k * 2, 28 + k * 2].map((y, j) =>
+      `<path d="M-4 ${y} q5 -3.2 10 0 t10 0 t10 0 t10 0 t10 0" stroke="${j === 1 ? "#d7f0ff" : "#a8dcff"}" stroke-width="${j === 1 ? 1.6 : 1.2}" fill="none" stroke-linecap="round" opacity=".85"/>`).join("")}
+      <circle cx="${12 + k * 9}" cy="${11 + k * 3}" r=".9" fill="#fff" opacity=".8"/><circle cx="${30 - k * 6}" cy="${33 - k * 2}" r=".7" fill="#fff" opacity=".7"/>`, grad("bw", "#5dbcf2", "#3a93d6"))),
+  };
+  // Sonderfelder als eigene Zeichnung im Feld (Hof, Almhütte, Gipfel mit Kreuz)
+  const SYMBOL_SVG = {
+    hof: `<svg viewBox="0 0 40 40" class="asvg"><ellipse cx="20" cy="35" rx="15" ry="2.5" fill="#000" opacity=".15"/>
+      <rect x="9" y="22" width="22" height="12" fill="#f6efe2" stroke="#7a6a52" stroke-width=".8"/>
+      <rect x="8" y="14.5" width="24" height="8.5" fill="#9a6235" stroke="#5e3b1f" stroke-width=".8"/><path d="M8 19 H32" stroke="#6d4325" stroke-width="1"/>
+      <path d="M4 15.5 L20 6.5 L36 15.5Z" fill="#6a4a37" stroke="#3e2a1d" stroke-width=".9" stroke-linejoin="round"/>
+      <rect x="12" y="25" width="4" height="4" fill="#3a4a66"/><rect x="24" y="25" width="4" height="4" fill="#3a4a66"/>
+      <rect x="18" y="27" width="4" height="7" rx="1" fill="#6d4325"/><circle cx="13" cy="30" r=".9" fill="#e2453b"/><circle cx="15" cy="30" r=".9" fill="#e2453b"/><circle cx="25" cy="30" r=".9" fill="#e2453b"/><circle cx="27" cy="30" r=".9" fill="#e2453b"/></svg>`,
+    hut: `<svg viewBox="0 0 40 40" class="asvg"><ellipse cx="20" cy="34" rx="12" ry="2.2" fill="#000" opacity=".15"/>
+      <rect x="10" y="20" width="20" height="13" fill="#a8703f" stroke="#5e3b1f" stroke-width=".8"/>
+      ${[23.5, 27, 30.5].map((y) => `<path d="M10 ${y} H30" stroke="#7d4e28" stroke-width=".8"/>`).join("")}
+      <path d="M7 21 L20 11 L33 21Z" fill="#7b6a5d" stroke="#3e2f25" stroke-width=".9" stroke-linejoin="round"/>
+      <circle cx="15" cy="17.5" r="1.2" fill="#b3aca4"/><circle cx="24" cy="16.5" r="1.1" fill="#b3aca4"/>
+      <rect x="17.5" y="25" width="5" height="8" fill="#4a2f1a"/><rect x="24.5" y="23.5" width="3" height="3" fill="#ffd34d" opacity=".9"/></svg>`,
+    peak: `<svg viewBox="0 0 40 40" class="asvg"><path d="M3 35 L17 12 L22 19 L26 14 L38 35Z" fill="#7f7d8b"/><path d="M17 12 L22 19 L19 35 H3Z" fill="#a9a7b5"/>
+      <path d="M17 12 L13.2 18.3 L16 17.2 L18 19 L20.3 16.4Z" fill="#fff"/><path d="M26 14 L23.6 18 L25.5 17.3 L27.8 17.8Z" fill="#fff"/>
+      <path d="M17 3.5 V12 M14.4 6.2 H19.6" stroke="#5b3a22" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  };
+  // Hintergrundbilder einmal als CSS anlegen: .acell.g.v0 … .acell.b.v2
+  (() => {
+    const el = document.createElement("style"); el.id = "alm-tiles";
+    el.textContent = Object.entries(TILE_SVG).map(([t, vs]) => vs.map((x, k) =>
+      `.acell.${t}.v${k}{background-image:url("data:image/svg+xml,${encodeURIComponent(x.replace(/\s+/g, " "))}");background-size:cover}`).join("")).join("");
+    document.head.appendChild(el);
+  })();
+  const variant = (i) => (i * 7 + Math.floor(i / 11) * 3) % 3;
+  // Punktabzeichen einer Fläche: erstes Feld ohne Zeichnung (Hof, Hütte, Gipfel bleiben frei sichtbar)
+  const BADGE_CELL = Object.fromEntries(Object.entries(ALM.REGIONS).map(([k, cs]) =>
+    [k, cs.find((i) => !ALM.HUTS.includes(i) && !ALM.PEAKS.includes(i) && i !== ALM.START) ?? cs[0]]));
   const rotated = () => innerWidth < 560 && innerHeight > innerWidth;
 
   // Tal als Raster; opts: { interactive, marked, sel, hintFrom, small }
@@ -28,6 +93,7 @@
     const cells = order.map((i) => {
       const ter = ALM.TERRAIN[i], c = i % ALM.COLS, r = Math.floor(i / ALM.COLS), k = ALM.REGION[i];
       const sym = i === ALM.START ? "🏡" : ALM.HUTS.includes(i) ? "🏠" : ALM.PEAKS.includes(i) ? "⛰️" : "";
+      const symSvg = i === ALM.START ? SYMBOL_SVG.hof : ALM.HUTS.includes(i) ? SYMBOL_SVG.hut : ALM.PEAKS.includes(i) ? SYMBOL_SVG.peak : "";
       const fresh = o.fresh && o.fresh.includes(i);
       if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""}"></i>`;
       const edge = (j) => ALM.TERRAIN[j] === ter && ALM.REGION[j] !== k;
@@ -36,7 +102,7 @@
       const isMarked = marked.has(i), chosen = o.sel && o.sel.includes(i);
       const can = o.interactive && !isMarked && ter === o.terrain;
       const hint = can && !o.sel.length && ALM.neighbors(i).some((j) => marked.has(j));
-      const first = ALM.REGIONS[k] && ALM.REGIONS[k][0] === i;
+      const first = BADGE_CELL[k] === i;
       let badge = "";
       if (first) {
         const cl = st.claimed[k], race = ALM.SPECIAL.includes(k);
@@ -45,7 +111,7 @@
         badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${ALM.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
       }
       const name = `${String.fromCharCode(65 + c)}${r + 1} · ${NAMES[ter]}${sym === "🏠" ? " · Hütte" : sym === "⛰️" ? " · Gipfel" : ""}`;
-      return `<div class="acell ${ter} ${edges} ${isMarked && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${sym ? `<span class="as">${sym}</span>` : ""}</div>`;
+      return `<div class="acell ${ter} v${variant(i)} ${edges} ${isMarked && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${symSvg ? `<span class="as">${symSvg}</span>` : ""}</div>`;
     }).join("");
     const cols = o.small ? ALM.COLS : rot ? ALM.ROWS : ALM.COLS;
     return `<div class="${o.small ? "alm-mini" : "alm-board"}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cells}</div>`
