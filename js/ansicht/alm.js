@@ -196,9 +196,9 @@
         const wait = st.seats.filter((id) => !st.done.includes(id) && (v.players.find((p) => p.id === id) || {}).connected);
         task = `<div class="alm-task">✓ Erledigt – ${wait.length ? `warte auf ${wait.map((id) => esc(nameOf(v, id))).join(", ")} …` : "gleich geht's weiter …"}</div>`;
       } else {
-        const sunPick = d && d.t === "sun" ? `<div class="choice alm-sun">${["g", "w", "f", "b"].map((t) => `<button class="btn sm ${almSel.terrain === t ? "on" : ""}" data-asun="${t}"><i class="alm-swatch ${t}"></i>${NAMES[t]}</button>`).join("")}</div>` : "";
-        task = terrain ? `${sunPick}<div class="alm-task">Kreuze bis zu ${max} ${max === 1 ? "Feld" : "Felder"} ${NAMES[terrain]} an <span class="muted">(${almSel.cells.length}/${max})</span></div>`
-          : d && d.t === "sun" ? `${sunPick}<div class="alm-task">Welches Gelände soll die Sonne sein?</div>`
+        const sunPick = d && d.t === "sun" ? `<div class="alm-sunpick">${["g", "w", "f", "b"].map((t) => `<button type="button" class="alm-sunopt ${almSel.terrain === t ? "on" : ""}" data-asun="${t}"><i class="alm-swatch ${t}"></i><span>${NAMES[t]}</span></button>`).join("")}</div>` : "";
+        task = terrain ? `<div class="alm-task">Kreuze bis zu ${max} ${max === 1 ? "Feld" : "Felder"} ${NAMES[terrain]} an <span class="muted">(${almSel.cells.length}/${max})</span></div>${sunPick}`
+          : d && d.t === "sun" ? `<div class="alm-task">☀️ Welches Gelände soll die Sonne sein?</div>${sunPick}`
           : st.dice.every((x) => x.storm) ? `<div class="alm-task">Alle Würfel zeigen Gewitter – diese Woche bleibt nur ein Ruhetag.</div>` : `<div class="alm-task">Nimm einen Würfel</div>`;
         const pts = soon.reduce((a, k) => a + ALM.regionValue(k), 0), race = soon.filter((k) => ALM.SPECIAL.includes(k) && !st.claimed[k]).length;
         msg = !terrain || !almSel.cells.length ? "" : err ? `<div class="msg err">${esc(err)}</div>`

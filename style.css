@@ -1919,8 +1919,13 @@ body.qb-play .banner.win .trophy { display: none; }
   background: rgba(20, 16, 50, .62); color: #fff; letter-spacing: .2px; }
 .alm-die.storm { border-color: rgba(255, 204, 51, .5); cursor: not-allowed; }
 .alm-die.storm small { color: #ffcc33; }
-/* kleine Feldbilder auf den Gelände-Knöpfen (Sonne) */
-.alm-swatch { display: inline-block; width: 18px; height: 18px; margin-right: 6px; border-radius: 4px; vertical-align: -4px; background-size: cover; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
+/* Sonne: vier gleich große Gelände-Kacheln in einer Reihe (Feldbild + Name), gewählte mit gelbem Rahmen wie ein Würfel */
+.alm-sunpick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.alm-sunopt { display: grid; gap: 4px; justify-items: center; padding: 5px 4px 4px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel2);
+  color: var(--ink); font: 800 .78rem Nunito, sans-serif; cursor: pointer; transition: transform .12s, border-color .12s; }
+@media (hover: hover) { .alm-sunopt:hover { transform: translateY(-2px); border-color: #6b62b0; } }
+.alm-sunopt.on { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 3px rgba(255, 200, 61, .25); }
+.alm-swatch { display: block; width: 100%; aspect-ratio: 3 / 2; border-radius: 8px; background-size: cover; background-position: center; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
 .alm-die.on { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 0 0 4px rgba(255, 200, 61, .35), 0 6px 0 rgba(0, 0, 0, .35); }
 .alm-task { font-weight: 800; font-size: 1.05rem; }
 /* Knöpfe: „Ankreuzen“ über die ganze Breite, darunter „Auswahl löschen“ und „Ruhetag“ gleich groß nebeneinander */
@@ -1930,7 +1935,6 @@ body.qb-play .banner.win .trophy { display: none; }
 .alm-actions .btn:disabled { opacity: .4; }
 .alm-stormnote { color: #ffcc33; font-weight: 700; }
 .alm-preview { color: var(--accent); font-weight: 800; }
-.alm-sun .btn.on { border-color: var(--accent); color: var(--accent); }
 /* andere Täler klein */
 .alm-thumb { display: grid; gap: 4px; padding: 6px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc); color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
 .alm-tn { display: flex; align-items: center; gap: 5px; font-size: .8rem; font-weight: 700; } .alm-tn b { margin-left: auto; }
