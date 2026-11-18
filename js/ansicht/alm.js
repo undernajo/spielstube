@@ -28,7 +28,8 @@
     const cells = order.map((i) => {
       const ter = ALM.TERRAIN[i], c = i % ALM.COLS, r = Math.floor(i / ALM.COLS), k = ALM.REGION[i];
       const sym = i === ALM.START ? "🏡" : ALM.HUTS.includes(i) ? "🏠" : ALM.PEAKS.includes(i) ? "⛰️" : "";
-      if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== ALM.START ? "x" : ""} ${done.has(i) ? "done" : ""}"></i>`;
+      const fresh = o.fresh && o.fresh.includes(i);
+      if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""}"></i>`;
       const edge = (j) => ALM.TERRAIN[j] === ter && ALM.REGION[j] !== k;
       const edges = [r > 0 && edge(i - ALM.COLS) ? "bt" : "", r < ALM.ROWS - 1 && edge(i + ALM.COLS) ? "bb" : "",
         c > 0 && edge(i - 1) ? "bl" : "", c < ALM.COLS - 1 && edge(i + 1) ? "br" : ""].filter(Boolean).map((e) => (rot ? ROT[e] : e)).join(" ");
@@ -44,7 +45,7 @@
         badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${ALM.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
       }
       const name = `${String.fromCharCode(65 + c)}${r + 1} · ${NAMES[ter]}${sym === "🏠" ? " · Hütte" : sym === "⛰️" ? " · Gipfel" : ""}`;
-      return `<div class="acell ${ter} ${edges} ${isMarked && i !== ALM.START ? "x" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${sym ? `<span class="as">${sym}</span>` : ""}</div>`;
+      return `<div class="acell ${ter} ${edges} ${isMarked && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${sym ? `<span class="as">${sym}</span>` : ""}</div>`;
     }).join("");
     const cols = o.small ? ALM.COLS : rot ? ALM.ROWS : ALM.COLS;
     return `<div class="${o.small ? "alm-mini" : "alm-board"}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cells}</div>`
@@ -62,6 +63,11 @@
     if (almSel.key !== key) almSel = { key, di: null, terrain: null, cells: [] };
     if (st.step === "play" && almSent && almSent !== key) almSent = null;
     const iDone = seated && (st.done.includes(G.myId) || almSent === key);
+    // Kreuze der laufenden Woche: die der anderen erst sehen, wenn der eigene Zug gemacht ist (Zuschauer sehen alles)
+    const reveal = !seated || st.done.includes(G.myId) || st.step === "final";
+    const pend = (id) => (reveal || id === G.myId ? (st.pending && st.pending[id]) || [] : []);
+    const boardOf = (id) => new Set((st.boards[id] || []).concat(pend(id)));
+    const pts = (id) => (reveal ? st.totalsLive || st.totals : st.totals)[id] || 0;
     // neue Erstbonus-Meldungen kurz einblenden (nicht beim ersten Anzeigen)
     const last = st.news[st.news.length - 1], lastKey = last ? last.week + ":" + last.k : "";
     if (almNewsSeen !== null && lastKey && lastKey !== almNewsSeen) {
@@ -76,7 +82,7 @@
     // Spielerleiste: Punkte und wer diese Woche schon fertig ist
     const chips = st.seats.map((id) => `<span class="geo-score ${st.done.includes(id) ? "done" : ""}" style="--pc:${colorOf(v, id)}">
         <span class="pdot ${(v.players.find((p) => p.id === id) || {}).connected ? "" : "off"}"></span><span class="geo-score-name">${esc(nameOf(v, id))}${id === G.myId ? " <em>(du)</em>" : ""}</span>
-        <b>${st.totals[id] || 0}</b>${st.step === "play" ? `<span class="geo-mark">${st.done.includes(id) ? "✓" : "…"}</span>` : ""}</span>`).join("");
+        <b>${pts(id)}</b>${st.step === "play" ? `<span class="geo-mark">${st.done.includes(id) ? "✓" : "…"}</span>` : ""}</span>`).join("");
     const stormTrack = st.stormLimit ? `<span class="alm-storms" title="Beim ${st.stormLimit}. Gewitter ist der Sommer vorbei">⚡ ${Array.from({ length: st.stormLimit }, (_, k) => `<i class="${k < st.storms ? "on" : ""}"></i>`).join("")}</span>` : "";
 
     let main;
@@ -94,13 +100,14 @@
       // welches Tal groß? eigenes (wenn mitspielend), sonst angetipptes oder das erste
       const lookId = seated && (!almLook || almLook === G.myId) ? G.myId : st.seats.includes(almLook) ? almLook : st.seats[0];
       const mine = lookId === G.myId && seated;
-      const marked = new Set(st.boards[lookId]);
+      const marked = boardOf(lookId);
       const d = mine && !iDone && almSel.di != null ? st.dice[almSel.di] : null;
       const terrain = d && !d.storm ? (d.t === "sun" ? almSel.terrain : d.t) : null, max = d && !d.storm ? d.n : 0;
       const err = terrain && almSel.cells.length ? ALM.checkCells(marked, terrain, almSel.cells, max) : null;
       const soon = !err && almSel.cells.length ? Object.keys(ALM.REGIONS).filter((k) => ALM.REGIONS[k].some((i) => almSel.cells.includes(i))
         && ALM.REGIONS[k].every((i) => marked.has(i) || almSel.cells.includes(i))) : [];
-      const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: almSel.cells, soon });
+      // nach dem Abschicken erscheinen die eigenen Kreuze als normale Kreuze (nicht mehr als Auswahl)
+      const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: iDone ? [] : almSel.cells, soon: iDone ? [] : soon, fresh: lookId !== G.myId ? pend(lookId) : [] });
 
       // Würfel und Aufgabe
       const dieHtml = (x, i) => x.storm ? `<div class="alm-die storm" title="Gewitter – nicht nutzbar"><div class="big">⚡</div><small>Gewitter</small></div>`
@@ -127,7 +134,7 @@
 
       // die anderen Täler klein (antippen = groß ansehen)
       const others = st.seats.filter((id) => id !== lookId).map((id) => `<button type="button" class="alm-thumb" data-alook="${esc(id)}" style="--pc:${colorOf(v, id)}">
-          <span class="alm-tn"><span class="pdot"></span>${id === G.myId ? "Dein Tal" : esc(nameOf(v, id))}<b>${st.totals[id] || 0}</b></span>${boardHtml(v, st, new Set(st.boards[id]), { small: true })}</button>`).join("");
+          <span class="alm-tn"><span class="pdot"></span>${id === G.myId ? "Dein Tal" : esc(nameOf(v, id))}<b>${pts(id)}</b></span>${boardHtml(v, st, boardOf(id), { small: true, fresh: id !== G.myId ? pend(id) : [] })}</button>`).join("");
       main = `<div class="alm-layout">
           <section class="panel alm-boardbox">${!mine ? `<div class="alm-looking">Tal von <b style="color:${colorOf(v, lookId)}">${esc(nameOf(v, lookId))}</b>${seated ? ` · <button class="btn ghost sm" data-alook="${esc(G.myId)}">zurück zu meinem Tal</button>` : ""}</div>` : ""}${board}</section>
           ${dice}

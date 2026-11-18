@@ -2260,7 +2260,7 @@
         <li>Kreuze <b>bis zu so viele</b> Felder dieses Geländes an – zusammenhängend und angrenzend an schon Angekreuztes. Du startest am Hof 🏡. ☀️ Sonne = beliebiges Gelände.</li>
         <li><b>Jede Fläche hat eine Zahl.</b> Ist sie ganz angekreuzt, bekommst du diese Punkte. Flächen mit Hütte 🏠 oder Gipfel ⛰️ sind mehr wert – wer sie <b>als Erster</b> fertig hat, bekommt <b>+${ALM.BONUS.first}</b> (in derselben Woche alle).</li>
         <li>Zeigt ein Würfel ⚡, gibt's ein Gewitter. <b>Beim 5. Gewitter ist der Sommer vorbei</b> – sonst nach 14 Wochen. Wer dann die meisten Punkte hat, gewinnt.</li>
-        <li>Alle spielen gleichzeitig; sobald alle angekreuzt haben, fallen die nächsten Würfel.</li>
+        <li>Alle spielen gleichzeitig; sobald alle angekreuzt haben, fallen die nächsten Würfel. Was die anderen in einer Woche ankreuzen, siehst du erst nach deinem eigenen Zug – nicht abschauen 😉</li>
       </ul>
     </details>`;
   function wlSettingsHtml() {

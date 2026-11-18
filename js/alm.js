@@ -96,7 +96,8 @@
     if (!seats.length) return false;
     s.game = "alm"; s.phase = "alm";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.alm = { opts: { length }, weeks, stormLimit: storms, week: 0, storms: 0, seats, dice: null, step: "play", done: {},
+    // pending: Kreuze der laufenden Woche – erst am Wochenende ins Tal übernommen (die anderen sehen sie erst nach ihrem eigenen Zug)
+    s.alm = { opts: { length }, weeks, stormLimit: storms, week: 0, storms: 0, seats, dice: null, step: "play", done: {}, pending: {},
       boards: Object.fromEntries(seats.map((id) => [id, [START]])), extra: Object.fromEntries(seats.map((id) => [id, 0])),
       claimed: {}, news: [], endReason: "", winners: null };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -109,7 +110,7 @@
   function nextWeek(s) {
     const st = s.alm;
     if (st.week >= st.weeks) return finish(s, "weeks");
-    st.week++; st.done = {};
+    st.week++; st.done = {}; st.pending = {};
     // ohne Gewitter (kurzer Sommer) zeigen die Würfel auch kein ⚡
     st.dice = [0, 1, 2].map(() => (st.stormLimit && Math.random() < STORM_CHANCE ? { storm: true } : { t: rnd(TERRAIN_FACES), n: rnd(NUMBERS) }));
     if (st.stormLimit && st.dice.some((d) => d.storm)) {
@@ -127,6 +128,8 @@
   // Woche abschließen: Erstbonus für Hütten-/Gipfelflächen, die in dieser Woche zum ersten Mal jemand fertig hat
   function endWeek(s) {
     const st = s.alm, fresh = {};
+    for (const [id, cells] of Object.entries(st.pending)) st.boards[id] = st.boards[id].concat(cells);
+    st.pending = {};
     st.seats.forEach((id) => doneRegions(new Set(st.boards[id])).forEach((k) => {
       if (SPECIAL.includes(k) && !st.claimed[k]) (fresh[k] = fresh[k] || []).push(id);
     }));
@@ -157,7 +160,7 @@
         if (!d || d.storm) return false;
         const t = d.t === "sun" ? a.terrain : d.t, marked = new Set(st.boards[pid]);
         if (checkCells(marked, t, a.cells, d.n)) return false;
-        st.boards[pid] = st.boards[pid].concat(a.cells);
+        st.pending[pid] = a.cells.slice();
         st.done[pid] = { di: a.di, n: a.cells.length };
         tick(s);
         return true;
@@ -179,7 +182,9 @@
     if (!st) return null;
     return {
       step: st.step, week: st.week, weeks: st.weeks, storms: st.storms, stormLimit: st.stormLimit, dice: st.dice, seats: st.seats,
-      boards: st.boards, done: Object.keys(st.done), totals: Object.fromEntries(st.seats.map((id) => [id, total(st, id)])),
+      boards: st.boards, pending: st.pending || {}, done: Object.keys(st.done), totals: Object.fromEntries(st.seats.map((id) => [id, total(st, id)])),
+      // Punkte inklusive der Kreuze dieser Woche (nur für Spieler, die ihren Zug schon gemacht haben)
+      totalsLive: Object.fromEntries(st.seats.map((id) => [id, doneRegions(new Set(st.boards[id].concat((st.pending || {})[id] || []))).reduce((a, k) => a + regionValue(k), 0) + (st.extra[id] || 0)])),
       extra: st.extra, claimed: st.claimed, news: st.news.slice(-6), endReason: st.endReason, winners: st.winners,
       lengthName: LENGTHS[st.opts.length].name,
     };

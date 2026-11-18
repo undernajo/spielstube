@@ -1923,6 +1923,9 @@ body.qb-play .banner.win .trophy { display: none; }
 .ac { aspect-ratio: 1; position: relative; }
 .ac.x::after { content: ""; position: absolute; inset: 22%; background: rgba(42, 29, 0, .75); border-radius: 2px; }
 .ac.done { box-shadow: inset 0 0 0 99px rgba(255, 210, 80, .35); }
+/* Kreuze der laufenden Woche bei den anderen (erst nach dem eigenen Zug sichtbar) */
+.ac.new::after { background: #ff5a6a; }
+.acell.new::after { color: #c2185b; }
 /* Endstand */
 .alm-final { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .alm-fp { display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc); }
