@@ -483,7 +483,8 @@
     const D = QB.STAGES[st.game], o = st.opts || {};
     if (st.game === "geo") return `${D.short} · ${(GEODATA[o.region] || {}).name || ""}`;
     if (st.game === "land") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
-    if (st.game === "slf") return `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“`;
+    if (st.game === "slf") return o.preset === "zufall" ? `${D.short} · ${o.classics ? `${o.classics} Klassiker + ${SLF.PRESETS.zufall.random - o.classics} zufällige Kategorien` : "Kategorien zufällig"}`
+      : `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“`;
     if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}`;
     if ((st.game === "schaetzen" || st.game === "hinweis") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
     return D.short;

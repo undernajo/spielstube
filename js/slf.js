@@ -50,11 +50,13 @@
     const timer = TIMERS[opts.timer] ? opts.timer : "stopp";
     const preset = opts.preset === "eigene" || PRESETS[opts.preset] ? opts.preset : "klassisch";
     const random = preset === "zufall" ? PRESETS.zufall.random : 0;
+    // bei „Jede Runde neu“ optional einige Klassiker fest dabei (Querbeet: 2 Klassiker + 4 Zufall)
+    const classics = random ? Math.max(0, Math.min(Math.floor(Number(opts.classics) || 0), random)) : 0;
     s.game = "slf"; s.phase = "slf";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.slf = {
       opts: { preset, custom: clean(opts.custom, 400), rounds, timer, surprise: !!opts.surprise },
-      baseCats: random ? [] : categoriesFrom({ preset, custom: opts.custom }), random, surprise: !random && !!opts.surprise,
+      baseCats: random ? [] : categoriesFrom({ preset, custom: opts.custom }), random, classics, surprise: !random && !!opts.surprise,
       cats: [], surpriseCat: null, catsUsed: [], rounds, timer, round: 0, used: [], total: {}, history: [],
     };
     s.players.forEach((p) => { s.slf.total[p.id] = 0; p.waiting = false; p.status = "active"; });
@@ -71,13 +73,29 @@
     return out;
   }
 
+  // Klassische Kategorien für „Jede Runde neu“ mit festen Klassikern
+  const CLASSICS = ["Stadt", "Land", "Fluss", "Vorname", "Tier", "Beruf"];
+  function drawRandomCats(st) {
+    const n = st.classics || 0;
+    if (!n) return drawCats(st, st.random);
+    const used = new Set(st.catsUsed.map(low));
+    let free = CLASSICS.filter((c) => !used.has(low(c)));
+    if (free.length < n) free = CLASSICS.slice();
+    const fixed = shuffle(free.slice()).slice(0, n);
+    // der Zufallsteil kommt aus dem Rest des Topfs – ohne Klassiker
+    const tmp = { baseCats: CLASSICS, catsUsed: [...st.catsUsed, ...fixed] };
+    const rest = drawCats(tmp, st.random - n);
+    st.catsUsed = tmp.catsUsed; // enthält Klassiker und Zufall (oder wurde beim Leerlaufen des Topfs zurückgesetzt)
+    return [...fixed, ...rest];
+  }
+
   function nextRound(s, now) {
     const st = s.slf;
     st.round++;
     const free = LETTERS.filter((l) => !st.used.includes(l));
     st.letter = shuffle(free.length ? free : LETTERS.slice())[0];
     st.used.push(st.letter);
-    st.cats = st.random ? drawCats(st, st.random) : st.baseCats.slice();
+    st.cats = st.random ? drawRandomCats(st) : st.baseCats.slice();
     st.surpriseCat = null;
     if (st.surprise) { const c = drawCats(st, 1)[0]; if (c) { st.cats.push(c); st.surpriseCat = c; } }
     st.step = "writing";

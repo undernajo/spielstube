@@ -83,7 +83,8 @@
       case "siebzehn": return { mode: "siebzehn", rounds: 3 };
       case "stich": return { mode: "stich", rounds: 3 };
       case "bus": return { mode: "bus", rounds: 1 };
-      case "slf": return { preset: st ? "suedtirol" : pick(["klassisch", "gemischt", "spass", "suedtirol"]), rounds: 1, timer: "stopp" };
+      // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien
+      case "slf": return st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" };
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };
     }
