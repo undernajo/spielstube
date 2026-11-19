@@ -1991,3 +1991,27 @@ body.qb-play .banner.win .trophy { display: none; }
 .gc-det[open] > summary::before { transform: rotate(90deg); }
 .gc-body { display: grid; gap: 10px; padding-top: 8px; }
 .lobby.gc > .gc-det { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 2px 14px 12px; }
+
+/* Gäste am Handy: Kopfleiste einzeilig – Spiel, kurze Infos und die Knöpfe (Kamera, Mikro, Ton, Verlassen) in einer Zeile.
+   Einladen, Stuben-Code und Haus-Logo entfallen: das Organisatorische macht der Gastgeber. */
+@media (max-width: 640px) {
+  .s10-guest .top.topbar .stube-code, .s10-guest .top.topbar #invite, .s10-guest .top.topbar .brand { display: none; }
+  .s10-guest .top.topbar { grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; grid-template-areas: "title meta act"; padding: 5px 6px 5px 8px; }
+  .s10-guest .top.topbar:has(.qb-tag) { grid-template-areas: "title title act" "meta meta meta"; }
+  .s10-guest .top.topbar .meta { max-width: none; }
+  .s10-guest .top.topbar .top-actions { gap: 4px; }
+  .s10-guest .top.topbar .top-actions .btn { flex: none; width: 34px; min-height: 34px; padding: 0; }
+}
+
+/* Almsommer am Handy/Tablet: Hinweis und Knöpfe als feste Leiste am unteren Rand – Würfel wählen, Felder antippen, ankreuzen ohne Hin- und Herscrollen */
+.alm-bar { display: contents; }
+@media (max-width: 860px) {
+  .alm-bar:not(:empty) { display: grid; gap: 6px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--panel) 94%, transparent);
+    border-top: 1px solid var(--line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 -6px 18px #0006; }
+  .alm-bar .alm-actions { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 6px; max-width: 560px; margin: 0 auto; }
+  .alm-bar .alm-actions .alm-go { grid-column: auto; min-height: 44px; font-size: 1rem; }
+  .alm-bar .alm-actions .btn { min-height: 44px; padding: 6px 4px; font-size: .85rem; }
+  .alm-bar .msg { margin: 0; padding: 6px 10px; font-size: .85rem; text-align: center; max-width: 560px; width: 100%; justify-self: center; }
+  .screen.game.alm:has(.alm-bar:not(:empty)) { padding-bottom: 96px; }
+}

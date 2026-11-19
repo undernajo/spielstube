@@ -99,7 +99,7 @@
       <main class="screen game slf du fq">
         <header class="top topbar">
           ${headBrandHtml("frage")}
-          <div class="meta">Runde ${st.round} · bis ${st.target} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.round} · bis ${st.target}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

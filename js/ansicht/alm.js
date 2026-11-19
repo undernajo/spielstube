@@ -217,7 +217,7 @@
       // am PC stehen Woche, Gewitter und die eigenen Punkte hier statt in der Leiste über dem Tal (mehr Höhe fürs Tal)
       const head = desk ? `<div class="alm-dhead"><span class="game-label">Woche ${st.week} von ${st.weeks}</span>${stormTrack}${seated ? `<span class="alm-mypts">Deine Punkte <b>${pts(G.myId)}</b></span>` : ""}</div>` : "";
       const dice = `<section class="panel alm-dice">${head}<div class="alm-dicerow">${st.dice.map(dieHtml).join("")}</div>
-          ${stormNow && st.stormLimit ? `<div class="alm-stormnote">⚡ Gewitter! (${st.storms} von ${st.stormLimit})</div>` : ""}${task}${msg}${actions}</section>`;
+          ${stormNow && st.stormLimit ? `<div class="alm-stormnote">⚡ Gewitter! (${st.storms} von ${st.stormLimit})</div>` : ""}${task}<div class="alm-bar">${msg}${actions}</div></section>`;
 
       // die anderen Täler klein (antippen = groß ansehen)
       const others = st.seats.filter((id) => id !== lookId).map((id) => `<button type="button" class="alm-thumb" data-alook="${esc(id)}" style="--pc:${colorOf(v, id)}">
@@ -231,7 +231,7 @@
 
     app.innerHTML = `
       <main class="screen game alm">
-        <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.mapName)} · ${esc(st.lengthName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.mapName)} · ${esc(st.lengthName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">
           ${desk && st.step !== "final" ? "" : `<div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>`}

@@ -97,7 +97,7 @@
       <main class="screen game querbeet">
         <header class="top topbar">
           ${headBrandHtml("querbeet")}
-          <div class="meta">${q.step === "final" ? "Siegerehrung" : q.step === "intro" ? `${q.n} Etappen` : `Nach Etappe ${q.stages.length} von ${q.n}`} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${q.step === "final" ? "Siegerehrung" : q.step === "intro" ? `${q.n} Etappen` : `Nach Etappe ${q.stages.length} von ${q.n}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

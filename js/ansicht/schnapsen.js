@@ -10,6 +10,8 @@
   // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
   let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 }, xPrevAtout = null;
   // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
+  // Regeln: am Computer anfangs offen, am Handy zu (dort zählt der Spieltisch); danach gilt, was man selbst zuletzt gewählt hat
+  const xhelpOpen = () => { const o = store.get("s10-xhelp-open"); return o === true || (o == null && innerWidth > 640); };
   function schHelpHtml(st, opt, myTurn) {
     const sn = (su) => SCH.SUIT_NAMES[su];
     let tip;
@@ -21,7 +23,7 @@
       + (opt.tausch ? "Mit dem Trumpf-Unter kannst du die aufgedeckte Trumpfkarte holen. " : "")
       + "Wirf eine Karte aus – ein hohes Ass oder Zehner bringt viele Augen, ein Trumpf sticht alles andere.";
     return `<div class="wmode xhelp"><div class="xtip"><b>Was jetzt?</b> ${esc(tip)}</div>
-      <details ${store.get("s10-xhelp-open") === false ? "" : "open"}><summary>So geht Schnapsen</summary>
+      <details ${xhelpOpen() ? "open" : ""}><summary>So geht Schnapsen</summary>
       <ol>
         <li><b>Ziel:</b> Als Erster <b>66 Augen</b> sammeln. Augen bringen die Karten in deinen Stichen: Ass 11 · Zehner 10 · König 4 · Ober 3 · Unter 2.</li>
         <li><b>Stich:</b> Einer wirft aus, der andere wirft eine Karte dazu. Es gewinnt die höhere Karte derselben Farbe – oder ein <b>Trumpf</b> (${esc(sn(st.trump))}). Der Gewinner wirft als Nächster aus.</li>
@@ -134,7 +136,7 @@
       <main class="screen game slf geo watten">
         <header class="top topbar">
           ${headBrandHtml("schnapsen")}
-          <div class="meta">Runde ${st.roundNo} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.roundNo}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

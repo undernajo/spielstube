@@ -167,7 +167,7 @@
       <main class="screen game slf">
         <header class="top topbar">
           ${headBrandHtml("slf")}
-          <div class="meta">Runde ${st.round}/${st.rounds} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.round}/${st.rounds}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

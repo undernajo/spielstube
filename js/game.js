@@ -1050,6 +1050,16 @@
     if (busy && view && view.players && !view.players.some((p) => p.id !== myId)) return "";
     return `<div class="status ${busy ? "busy" : ""}">${esc(status)}</div>`;
   }
+  // Handy: Karten (Wo liegt das?, Von oben, Länder finden) so bemessen, dass die Seite genau auf den Bildschirm passt –
+  // sonst schiebt Wischen auf der Karte manchmal die Seite statt der Karte. Vor dem Anlegen der Leaflet-Karte aufrufen.
+  function fitGeoMaps() {
+    if (innerWidth > 640) return;
+    const maps = [...app.querySelectorAll(".geo-map")];
+    const over = document.documentElement.scrollHeight - innerHeight;
+    if (!maps.length || over <= 0) return;
+    const cut = Math.ceil(over / maps.length);
+    maps.forEach((m) => { m.style.height = Math.max(200, m.getBoundingClientRect().height - cut) + "px"; });
+  }
   function topActionsHtml() {
     return `<div class="top-actions">
       ${camOK ? `<button class="btn ghost sm ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera aus" : "Kamera an"}" aria-label="Kamera an/aus">📷</button>
@@ -1068,6 +1078,7 @@
   });
   let lastLobbyGame = null, lastPhase = null;
   function render() {
+    document.documentElement.classList.toggle("s10-guest", !!view && !isHost); // Gäste am Handy: Kopfleiste ohne Organisatorisches
     if (!view) return renderStart();
     if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
     lastPhase = view.phase;
@@ -1583,7 +1594,7 @@
       <main class="screen game">
         <header class="top topbar">
           ${headBrandHtml("zehn")}
-          <div class="meta">${setLabel(v.cardSet)}${v.qb ? "Querbeet-Etappe · 1 Karte" : `Runde ${v.round} · bis ${v.target}`} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${setLabel(v.cardSet)}${v.qb ? "Querbeet-Etappe · 1 Karte" : `Runde ${v.round} · bis ${v.target}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
@@ -2516,6 +2527,7 @@
     askConfirm,
     confetti,
     esc,
+    fitGeoMaps,
     headBrandHtml,
     invite,
     get isHost() { return isHost; }, set isHost(v) { isHost = v; },

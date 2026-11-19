@@ -66,7 +66,7 @@
       <main class="screen game slf du">
         <header class="top topbar">
           ${headBrandHtml("duell")}
-          <div class="meta">Runde ${st.round} · bis ${st.target} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.round} · bis ${st.target}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

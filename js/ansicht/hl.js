@@ -68,7 +68,7 @@
       <main class="screen game slf geo hl">
         <header class="top topbar">
           ${headBrandHtml("hl")}
-          <div class="meta">${st.step !== "final" ? `Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps} · ` : ""}Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${st.step !== "final" ? `Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps}` : ""}<span class="stube-code">${st.step !== "final" ? " · " : ""}Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

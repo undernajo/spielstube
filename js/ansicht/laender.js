@@ -126,7 +126,7 @@
       <main class="screen game slf geo land">
         <header class="top topbar">
           ${headBrandHtml("land")}
-          <div class="meta">${esc(st.regionName)} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${esc(st.regionName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
@@ -142,6 +142,7 @@
     on("#toLobby", () => send({ type: "lobby" }));
     const mapEl = app.querySelector("#land-map");
     if (!mapEl || !LF || !window.SCHLAU10_LAND.regions[st.region]) return;
+    G.fitGeoMaps();
     const D = window.SCHLAU10_LAND, reg = D.regions[st.region], wide = reg.dot > 12000; // Weltkarte: kleinere Kreise, genaueres Treffen
     const b = LF.latLngBounds(reg.bounds);
     const map = landMap = LF.map(mapEl, { zoomControl: true, attributionControl: true, renderer: LF.canvas({ tolerance: wide ? 1 : 3 }), zoomSnap: 0.25,

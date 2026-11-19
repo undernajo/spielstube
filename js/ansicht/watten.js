@@ -161,7 +161,7 @@
       <main class="screen game slf geo watten">
         <header class="top topbar">
           ${headBrandHtml("watten")}
-          <div class="meta">Runde ${st.roundNo} · bis ${st.target} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">Runde ${st.roundNo} · bis ${st.target}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

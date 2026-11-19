@@ -105,7 +105,7 @@
     if (!st) return;
     quizYear = st.mode === "schaetzen" && !!st.item && !st.item.unit;
     const head = (inner) => `<main class="screen game slf geo quiz"><header class="top topbar">${headBrandHtml(st.mode)}
-        <div class="meta">${esc(st.modeName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>${statusBarHtml()}<section class="slf-main quiz-main">${inner}</section></main>`;
+        <div class="meta">${esc(st.modeName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>${statusBarHtml()}<section class="slf-main quiz-main">${inner}</section></main>`;
     if (st.mode === "umriss" && !needLandData()) { quizRendered = null; app.innerHTML = head(`<div class="panel"><p class="muted">Länderkarte wird geladen …</p></div>`); return; }
     quizDeadline = st.endsIn != null ? Date.now() + st.endsIn : 0;
     quizHintAt = st.item && st.item.nextIn != null ? Date.now() + st.item.nextIn : 0;

@@ -123,7 +123,7 @@
       <main class="screen game slf geo ${oben ? "oben" : ""}">
         <header class="top topbar">
           ${headBrandHtml(oben ? "oben" : "geo")}
-          <div class="meta">${esc(st.regionName)} · Stube <b>${esc(v.code)}</b></div>
+          <div class="meta">${esc(st.regionName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
@@ -139,6 +139,7 @@
     on("#toLobby", () => send({ type: "lobby" }));
     const mapEl = app.querySelector("#geo-map");
     if (!mapEl || !LF) return;
+    G.fitGeoMaps();
     const map = geoMakeMap(mapEl, st.bounds);
     const picEl = app.querySelector("#oben-pic");
     if (picEl && st.pic) {

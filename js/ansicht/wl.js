@@ -116,7 +116,7 @@
       <main class="screen game slf wl">
         <header class="top topbar">
           ${headBrandHtml("wl")}
-          <div class="meta">Stube <b>${esc(v.code)}</b></div>
+          <div class="meta"><span class="stube-code">Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
