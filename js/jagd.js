@@ -11,8 +11,22 @@
 //     jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde). Meiste Punkte gewinnt.
 (function (root) {
   // ---------- Revier ----------
-  const MAP = ["fffffgfff", "fffggggff", "ffgggggff", "gggwwgggf", "ggwwwwggf", "wwwwggwww", "wwgggggww", "gggggwwgg", "ggwwwgfff"];
-  const N = 9, CELLS = N * N, T = MAP.join("").split("");
+  // Jagdgebiete (je 9 × 9, für alle Jäger einer Partie gleich): g Wiese, w Wald, f Fels
+  const MAPS = {
+    hochalm: { name: "Hochalm", desc: "oben Fels, in der Mitte Almwiesen, unten Wald",
+      rows: ["fffffgfff", "fffggggff", "ffgggggff", "gggwwgggf", "ggwwwwggf", "wwwwggwww", "wwgggggww", "gggggwwgg", "ggwwwgfff"] },
+    laerchenwald: { name: "Lärchenwald", desc: "dichter Wald mit Lichtungen, Felsen am Rand",
+      rows: ["wwwwgwwff", "wwwggwfff", "wwgggwwff", "wgggwwwwf", "wwgwwwggw", "fwwwwgggw", "ffwwwwgww", "fwwgwwwww", "wwgggwwww"] },
+    kar: { name: "Dolomitenkar", desc: "weites Felskar mit Geröll, unten Wiesen und Wald",
+      rows: ["fffffffff", "ffgfffgff", "fgggfgggf", "ffgffggff", "wfffffffw", "wwfggggww", "wwggwggww", "wgggwwggw", "wwgwwwgww"] },
+    bergwiesen: { name: "Bergwiesen", desc: "weite Almwiesen mit Waldinseln, Fels in den Ecken",
+      rows: ["ggggfffgg", "gggggffgg", "ggwgggggg", "gwwwggggw", "ggwgggwww", "gggggggwg", "fggwggggg", "ffgwwgggg", "fffgwwggf"] },
+  };
+  const N = 9, CELLS = N * N;
+  Object.values(MAPS).forEach((m) => { m.T = m.rows.join("").split(""); });
+  const mapOf = (m) => MAPS[m] || MAPS.hochalm;
+  const terrain = (m) => mapOf(m).T;
+  const MAP_LIST = Object.entries(MAPS).map(([id, m]) => ({ id, name: m.name, desc: m.desc }));
   const NAMES = { g: "Wiese", w: "Wald", f: "Fels" };
   const rc = (i) => [Math.floor(i / N), i % N], at = (r, c) => r * N + c;
   const nb4 = (i) => { const [r, c] = rc(i), o = []; if (r) o.push(i - N); if (r < N - 1) o.push(i + N); if (c) o.push(i - 1); if (c < N - 1) o.push(i + 1); return o; };
@@ -34,7 +48,8 @@
   const connected = (cells) => { if (!cells.length) return true; const seen = new Set([cells[0]]), q = [cells[0]];
     while (q.length) { const i = q.pop(); for (const j of nb4(i)) if (cells.includes(j) && !seen.has(j)) { seen.add(j); q.push(j); } } return seen.size === cells.length; };
   // passt das Tier hierhin? Gelände, zusammenhängend, kein anderes Tier auf oder direkt neben den Feldern
-  function fits(a, cells, occupied) {
+  function fits(a, cells, occupied, m) {
+    const T = terrain(m);
     if (!Array.isArray(cells) || cells.length !== a.len || new Set(cells).size !== cells.length || !connected(cells)) return false;
     for (const i of cells) {
       if (!Number.isInteger(i) || i < 0 || i >= CELLS) return false;
@@ -45,30 +60,31 @@
   }
   // alle möglichen Verstecke eines Tiers (zusammenhängende Formen auf passendem Gelände), einmal berechnet
   const PLACE = {};
-  function allPlacements(a) {
-    if (PLACE[a.id]) return PLACE[a.id];
+  function allPlacements(a, m) {
+    const key = (MAPS[m] ? m : "hochalm") + ":" + a.id, T = terrain(m);
+    if (PLACE[key]) return PLACE[key];
     const ok = (i) => !a.terr || T[i] === a.terr, seen = new Set(), out = [];
     const grow = (cells) => { const key = cells.slice().sort((x, y) => x - y).join(","); if (seen.has(key)) return; seen.add(key);
       if (cells.length === a.len) { out.push(cells.slice().sort((x, y) => x - y)); return; }
       for (const i of cells) for (const j of nb4(i)) if (ok(j) && !cells.includes(j)) grow(cells.concat(j)); };
     for (let i = 0; i < CELLS; i++) if (ok(i)) grow([i]);
-    return (PLACE[a.id] = out);
+    return (PLACE[key] = out);
   }
-  function validHide(h) {
+  function validHide(h, m) {
     if (!h || typeof h !== "object") return false;
     const occ = new Set();
     for (const a of ANIMALS.slice().sort((x, y) => y.len - x.len)) {
-      if (!fits(a, h[a.id], occ)) return false;
+      if (!fits(a, h[a.id], occ, m)) return false;
       h[a.id].forEach((i) => occ.add(i));
     }
     return true;
   }
-  function randomHide() {
+  function randomHide(m) {
     for (let tries = 0; tries < 500; tries++) {
       const occ = new Set(), hide = {};
       let ok = true;
       for (const a of ANIMALS.slice().sort((x, y) => y.len - x.len)) {
-        const opts = allPlacements(a).filter((c) => fits(a, c, occ));
+        const opts = allPlacements(a, m).filter((c) => fits(a, c, occ, m));
         if (!opts.length) { ok = false; break; }
         const c = opts[Math.floor(Math.random() * opts.length)]; hide[a.id] = c.slice(); c.forEach((i) => occ.add(i));
       }
@@ -84,13 +100,16 @@
   function start(s, opts) {
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "normal";
+    // Jagdgebiet: fest gewählt oder „zufall“ (bei „Nochmal jagen“ wird dann neu gelost)
+    const mapChoice = opts.map === "zufall" || MAPS[opts.map] ? opts.map : "hochalm";
+    const map = mapChoice === "zufall" ? Object.keys(MAPS)[Math.floor(Math.random() * Object.keys(MAPS).length)] : mapChoice;
     const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (seats.length < 2) return false;
     s.game = "jagd"; s.phase = "jagd";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     // Kreis: jeder jagt im Revier des nächsten (Anna → Berta → Chris → Anna); zu zweit jagt man beim anderen
     const target = Object.fromEntries(seats.map((id, k) => [id, seats[(k + 1) % seats.length]]));
-    s.jagd = { opts: { length }, rounds: LENGTHS[length].rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [], cur: [],
+    s.jagd = { opts: { length, map: mapChoice }, map, rounds: LENGTHS[length].rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [], cur: [],
       shots: Object.fromEntries(seats.map((id) => [id, {}])), pick: {}, scout: {}, pts: Object.fromEntries(seats.map((id) => [id, 0])),
       kills: [], last: [], news: [], endReason: "", winners: null };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -135,7 +154,7 @@
     if (!act.length) return false;
     if (st.step === "hide" && act.every((id) => st.ready[id])) {
       // wer (getrennt) noch nicht versteckt hat, bekommt ein zufälliges Versteck
-      st.seats.forEach((id) => { if (!st.hide[id]) { st.hide[id] = randomHide(); st.ready[id] = true; } });
+      st.seats.forEach((id) => { if (!st.hide[id]) { st.hide[id] = randomHide(st.map); st.ready[id] = true; } });
       st.step = "play"; st.round = 1; return true;
     }
     if (st.step === "play" && act.every((id) => st.pick[id] || !canShoot(st, id))) { endRound(s); return true; }
@@ -153,7 +172,7 @@
         if (st.step !== "hide" || !seated || st.ready[pid]) return false;
         const h = {};
         for (const an of ANIMALS) h[an.id] = Array.isArray(a.hide && a.hide[an.id]) ? a.hide[an.id].map(Number) : null;
-        if (!validHide(h)) return false;
+        if (!validHide(h, st.map)) return false;
         st.hide[pid] = h; st.ready[pid] = true;
         tick(s); return true;
       }
@@ -190,7 +209,7 @@
       step: st.step, round: st.round, rounds: LENGTHS[st.opts.length].open ? null : st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
       shots: st.shots, kills: st.kills, pts: st.pts, last: st.last, cur: st.cur || [], news: st.news.slice(-8), scoutUsed: Object.keys(st.scout),
       left: Object.fromEntries(st.seats.map((t) => [t, ANIMALS.filter((a) => !killed(st, t, a.id)).map((a) => a.id)])),
-      endReason: st.endReason, winners: st.winners, lengthName: LENGTHS[st.opts.length].name,
+      endReason: st.endReason, winners: st.winners, lengthName: LENGTHS[st.opts.length].name, map: st.map, mapName: mapOf(st.map).name,
       // am Ende alle Verstecke aufdecken
       reveal: st.step === "final" ? st.hide : null,
     };
@@ -202,5 +221,5 @@
     return { jagd: true, hide: st.hide[pid] || null, scout: st.scout[pid] || null, pick: st.pick[pid] || null, round: st.round };
   }
 
-  root.S10Jagd = { start, apply, tick, publicState, privateState, MAP, N, T, NAMES, ANIMALS, HIT, LENGTHS, nb4, area3, connected, fits, allPlacements, randomHide, validHide, ownerOf };
+  root.S10Jagd = { start, apply, tick, publicState, privateState, MAPS, MAP_LIST, terrain, N, NAMES, ANIMALS, HIT, LENGTHS, nb4, area3, connected, fits, allPlacements, randomHide, validHide, ownerOf };
 })(typeof window !== "undefined" ? window : globalThis);

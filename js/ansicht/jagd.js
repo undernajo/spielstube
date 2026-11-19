@@ -4,7 +4,8 @@
     PLAYER_COLORS, app, confetti, esc, headBrandHtml, invite, leave, send, sfx, statusBarHtml, toast, topActionsHtml
   } = G;
   const J = window.S10Jagd;
-  const { N, T, ANIMALS } = J;
+  const { N, ANIMALS } = J;
+  let T = J.terrain("hochalm"); // Gelände des gespielten Jagdgebiets (wird beim Zeichnen gesetzt)
   const AN = Object.fromEntries(ANIMALS.map((a) => [a.id, a]));
   const HINT = { fuchs: "1 Feld · überall · hinterlässt Spuren", hirsch: "2 Felder · Wald", gams: "3 Felder · Fels", murmel: "4 Felder · Wiese" };
 
@@ -168,6 +169,7 @@
   function renderJagd() {
     const v = G.view, st = v.jagd;
     if (!st) return;
+    T = J.terrain(st.map);
     const me = G.myId, seated = st.seats.includes(me), priv = G.wattenPriv && G.wattenPriv.jagd ? G.wattenPriv : null;
     const myHide = priv && priv.hide;
     const others = st.seats.filter((id) => id !== me);
@@ -217,7 +219,7 @@
 
     if (st.step === "hide") {
       if (seated && !st.ready.includes(me)) {
-        if (!draft || draft.key !== v.code + ":" + st.seats.join(",")) draft = { key: v.code + ":" + st.seats.join(","), hide: {}, sel: "murmel" };
+        if (!draft || draft.key !== v.code + ":" + st.seats.join(",") + ":" + st.map) draft = { key: v.code + ":" + st.seats.join(",") + ":" + st.map, hide: {}, sel: "murmel" };
         const a = AN[draft.sel], cur = draft.hide[a.id] || [];
         const all = ANIMALS.every((x) => complete(draft.hide, x));
         // PC: links das Revier in voller Höhe, rechts Tiere, Hinweis, Knöpfe; Handy: Tiere – Revier – Knöpfe untereinander
@@ -306,7 +308,7 @@
 
     app.innerHTML = `
       <main class="screen game jagd">
-        <header class="top topbar">${headBrandHtml("jagd")}<div class="meta">${esc(st.lengthName)}${st.step === "play" ? ` · Runde ${st.round}${st.rounds ? `/${st.rounds}` : ""}` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml("jagd")}<div class="meta">${esc(st.mapName)} · ${esc(st.lengthName)}${st.step === "play" ? ` · Runde ${st.round}${st.rounds ? `/${st.rounds}` : ""}` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">${st.step === "hide" ? `<div class="geo-bar jhidebar"><span class="game-label">Wild verstecken</span><div class="geo-scores">${chips}</div></div>` : ""}${main}</section>
         ${bar}
@@ -320,7 +322,7 @@
     on("#jg-restart", () => send({ type: "jgRestart" }));
     // Verstecken
     app.querySelectorAll("[data-jsel]").forEach((b) => b.onclick = () => { draft.sel = b.dataset.jsel; renderJagd(); });
-    on("#jg-rnd", () => { draft.hide = J.randomHide(); renderJagd(); });
+    on("#jg-rnd", () => { draft.hide = J.randomHide(st.map); renderJagd(); });
     on("#jg-clr", () => { delete draft.hide[draft.sel]; renderJagd(); });
     on("#jg-hide", () => send({ type: "jgHide", hide: draft.hide }));
     if (st.step === "hide" && draft && seated && !st.ready.includes(me)) app.querySelectorAll(".jsetup .jcell").forEach((c) => c.onclick = () => {

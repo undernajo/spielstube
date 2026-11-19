@@ -111,7 +111,8 @@
   let almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   const JG = window.S10Jagd;
-  let jagdOpts = Object.assign({ length: "normal" }, store.get("s10-jagd") || {});
+  let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
+  const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
   const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten, Würfel & Taktik", ["kartenrunde", "stich", "klassik", "alm", "jagd"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
   {
@@ -549,7 +550,7 @@
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
-      jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal" },
+      jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -1925,8 +1926,8 @@
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
     }
     if (view.game === "jagd" && lb.jagd) {
-      const l = JG.LENGTHS[lb.jagd.length] || JG.LENGTHS.normal;
-      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler · jeder jagt im Revier seines Nachbarn, alle gleichzeitig</p>`;
+      const l = JG.LENGTHS[lb.jagd.length] || JG.LENGTHS.normal, m = JG.MAP_LIST.find((x) => x.id === lb.jagd.map);
+      return `<p class="muted small">Jagdgebiet: ${m ? `<b>${esc(m.name)}</b> – ${esc(m.desc)}` : "<b>Zufall</b> – eines der Gebiete wird ausgelost"} · ${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler · jeder jagt im Revier seines Nachbarn, alle gleichzeitig</p>`;
     }
     if (view.game === "alm" && lb.alm) {
       const l = ALM.LENGTHS[lb.alm.length] || ALM.LENGTHS.normal;
@@ -1981,6 +1982,8 @@
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const jgL = app.querySelector("#jagd-length");
     if (jgL) jgL.onchange = () => { jagdOpts.length = jgL.value; store.set("s10-jagd", jagdOpts); publish(); };
+    const jgM = app.querySelector("#jagd-map");
+    if (jgM) jgM.onchange = () => { jagdOpts.map = jgM.value; store.set("s10-jagd", jagdOpts); publish(); };
     const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
     const gr = app.querySelector("#geo-region");
     if (gr) gr.onchange = () => { geoOpts.region = gr.value; saveGeo(); };
@@ -2353,15 +2356,17 @@
       <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
   function jagdSettingsHtml() {
-    const len = JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal";
-    return `<label class="field"><span>Länge</span><select id="jagd-length">${Object.entries(JG.LENGTHS).map(([k, l]) =>
+    const len = JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", mapSel = jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall";
+    return `<label class="field"><span>Jagdgebiet</span><select id="jagd-map"><option value="zufall" ${mapSel === "zufall" ? "selected" : ""}>🎲 Zufall – eines der Gebiete auslosen</option>
+        ${JG.MAP_LIST.map((m) => `<option value="${m.id}" ${mapSel === m.id ? "selected" : ""}>${esc(m.name)} – ${esc(m.desc)}</option>`).join("")}</select></label>
+      <label class="field"><span>Länge</span><select id="jagd-length">${Object.entries(JG.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${len === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${playing().length < 2 ? "disabled" : ""}>Spiel starten</button>`;
   }
   const jagdRulesHtml = `
     <details class="rules"><summary>Regeln: Auf der Jagd</summary>
       <ul>
-        <li>Jeder versteckt sein Wild im eigenen Revier (alle haben dasselbe Gelände): <b>Fuchs</b> (1 Feld, überall), <b>Hirschpaar</b> (2 Felder, Wald), <b>Gamsrudel</b> (3 Felder, Fels), <b>Murmeltier-Kolonie</b> (4 Felder, Wiese). Die Form ist frei, die Felder müssen aber zusammenhängen; verschiedene Tiere berühren sich nicht.</li>
+        <li>Jeder versteckt sein Wild im eigenen Revier – alle haben dasselbe Gelände (${JG.MAP_LIST.length} Jagdgebiete zur Wahl: ${JG.MAP_LIST.map((m) => m.name).join(", ")}): <b>Fuchs</b> (1 Feld, überall), <b>Hirschpaar</b> (2 Felder, Wald), <b>Gamsrudel</b> (3 Felder, Fels), <b>Murmeltier-Kolonie</b> (4 Felder, Wiese). Die Form ist frei, die Felder müssen aber zusammenhängen; verschiedene Tiere berühren sich nicht.</li>
         <li>Jeder jagt im <b>Revier seines Nachbarn</b> (im Kreis: Anna bei Berta, Berta bei Chris, Chris bei Anna; zu zweit beim anderen). Jede Runde schießen <b>alle gleichzeitig</b> einmal – ob du getroffen hast, siehst du sofort; die nächste Runde beginnt, wenn alle geschossen haben.</li>
         <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
         <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
