@@ -2015,6 +2015,9 @@
     app.querySelectorAll("[data-qbmix]").forEach((b) => b.onclick = () => { qbOpts.off = QB.mixOff(b.dataset.qbmix); store.set("s10-qb", qbOpts); publish(); });
     const qbAll = app.querySelector("#qb-all");
     if (qbAll) qbAll.onclick = () => { qbOpts.off = []; store.set("s10-qb", qbOpts); publish(); };
+    // alle angehakt: „Keine auswählen“ nimmt alle Haken weg (dann einzelne gezielt wieder anhaken)
+    const qbNone = app.querySelector("#qb-none");
+    if (qbNone) qbNone.onclick = () => { qbOpts.off = QB.ORDER.slice(); store.set("s10-qb", qbOpts); publish(); };
     const qbL = app.querySelector("#qb-length");
     if (qbL) qbL.onchange = () => { qbOpts.length = Number(qbL.value); store.set("s10-qb", qbOpts); publish(); };
     app.querySelectorAll("[data-qbgame]").forEach((cb) => cb.onchange = () => {
@@ -2072,7 +2075,8 @@
     const two = playing().length === 2, solo = playing().length < 2;
     const mx = QB.mixOf(off), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
     const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)${mxTxt}</span>`
-      : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>`;
+      : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>`
+        : `<button type="button" id="qb-none" class="linkbtn" style="--gc:var(--accent)">Keine auswählen</button>`}</div>`;
     return `<div class="field">${head}<div class="setlist qb-games ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = (D.two && !two) || (D.min2 && solo);
         return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
           <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.min2 && solo ? "ab 2 Spielern" : D.short)}</span></label>`; }).join("")}</div></div>`;
