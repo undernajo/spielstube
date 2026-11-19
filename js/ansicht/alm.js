@@ -111,7 +111,8 @@
       const symSvg = i === M.START ? SYMBOL_SVG.hof : M.HUTS.includes(i) ? SYMBOL_SVG.hut : M.PEAKS.includes(i) ? SYMBOL_SVG.peak : "";
       const fresh = o.fresh && o.fresh.includes(i);
       if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== M.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""}"></i>`;
-      const edge = (j) => M.TERRAIN[j] === ter && M.REGION[j] !== k;
+      // Flächengrenze: Nachbar gehört zu einer anderen Fläche (egal welches Gelände) – dort sitzt eine feine Fuge
+      const edge = (j) => M.REGION[j] !== k;
       const edges = [r > 0 && edge(i - M.COLS) ? "bt" : "", r < M.ROWS - 1 && edge(i + M.COLS) ? "bb" : "",
         c > 0 && edge(i - 1) ? "bl" : "", c < M.COLS - 1 && edge(i + 1) ? "br" : ""].filter(Boolean).map((e) => (rot ? ROT[e] : e)).join(" ");
       const isMarked = marked.has(i), chosen = o.sel && o.sel.includes(i);
