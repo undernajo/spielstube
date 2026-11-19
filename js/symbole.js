@@ -160,9 +160,21 @@
       <text x="46" y="52.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#2a1d00" transform="rotate(8 46 46)">3</text></svg>`;
   }
 
+  // Auf der Jagd: Hochsitz am Waldrand, davor eine Fuchsspur
+  function jagdIcon() {
+    const rung = (y, w) => `<path d="M${32 - w} ${y} H${32 + w}" stroke="#7a4e2a" stroke-width="2.2" stroke-linecap="round"/>`;
+    const paw = (x, y) => `<ellipse cx="${x}" cy="${y}" rx="1.6" ry="2.3" fill="#3a2a1a"/>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 40 L14 26 L20 40Z M44 40 L51 24 L58 40Z" fill="#2f7a4a"/><path d="M4 56 Q32 42 60 56 V60 H4Z" fill="#7cc95a"/>
+      <path d="M23 56 L27 27 M41 56 L37 27" stroke="#8a5a30" stroke-width="3.2" stroke-linecap="round"/>${rung(48, 8)}${rung(41, 7)}${rung(34, 6)}
+      <rect x="22" y="16" width="20" height="12" rx="1.5" fill="#a8703f" stroke="#5e3b1f" stroke-width="1.4"/><rect x="26" y="19.5" width="12" height="3.2" rx="1" fill="#2a1a0e"/>
+      <path d="M17 17.5 L32 7 L47 17.5Z" fill="#6a4a37" stroke="#3e2a1d" stroke-width="1.2" stroke-linejoin="round"/>
+      ${paw(49, 54)}${paw(53, 50)}${paw(9, 53)}${paw(13, 57)}</svg>`;
+  }
+
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon
+    zehnIcon, almIcon, jagdIcon
   };
 })();

@@ -34,7 +34,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon
+    zehnIcon, almIcon, jagdIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -63,6 +63,7 @@
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
     { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen – wer holt am meisten aus seinem Tal?", icon: almIcon() },
+    { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken, gleichzeitig schießen – wer hat die größte Strecke?", icon: jagdIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -109,8 +110,10 @@
   const ALM = window.S10Alm;
   let almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
+  const JG = window.S10Jagd;
+  let jagdOpts = Object.assign({ length: "normal" }, store.get("s10-jagd") || {});
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten & Würfel", ["kartenrunde", "stich", "klassik", "alm"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten, Würfel & Taktik", ["kartenrunde", "stich", "klassik", "alm", "jagd"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
     const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
@@ -272,7 +275,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -337,6 +340,10 @@
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
     }
+    if (type === "start" && action.game === "jagd") {
+      if (!host || S.phase !== "lobby") return false;
+      return JG.start(S, action.opts);
+    }
     if (type === "start" && action.game === "alm") {
       if (!host || S.phase !== "lobby") return false;
       return ALM.start(S, action.opts);
@@ -398,8 +405,9 @@
     if (type.startsWith("slf")) return S.phase === "slf" && SLF.apply(S, pid, action, host, now);
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type.startsWith("alm")) return S.phase === "alm" && ALM.apply(S, pid, action, host);
+    if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -541,6 +549,7 @@
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
+      jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -567,6 +576,7 @@
     view.quiz = S.phase === "quiz" ? QZ.publicState(S, Date.now()) : null;
     view.karten = S.phase === "karten" ? KG.publicState(S) : null;
     view.alm = S.phase === "alm" ? ALM.publicState(S) : null;
+    view.jagd = S.phase === "jagd" ? JG.publicState(S) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
@@ -584,7 +594,7 @@
     if (S.qb && S.qb.plan.some((p) => p.game === "land" || p.game === "umriss")) needLandData(); // Länderkarte rechtzeitig laden
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
-    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ, karten: KG }; // private Infos nur an den jeweiligen Spieler
+    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ, karten: KG, jagd: JG }; // private Infos nur an den jeweiligen Spieler
     if (CARD_GAMES[S.phase]) {
       // Hände nur privat verteilen: eigene direkt, Gäste über ihren eigenen Kanal
       const M = CARD_GAMES[S.phase];
@@ -1104,7 +1114,7 @@
     }
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else renderGame();
     camDockPlace();
     G.qbBarRender();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
@@ -1417,6 +1427,7 @@
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${chosenGame === "alm" ? almSettingsHtml() : ""}
+          ${chosenGame === "jagd" ? jagdSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
           ${chosenGame === "querbeet" ? qbSettingsHtml() : ""}
@@ -1514,6 +1525,7 @@
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "alm") return send({ type: "start", game: "alm", opts: almOpts });
+      if (chosenGame === "jagd") return send({ type: "start", game: "jagd", opts: jagdOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
@@ -1700,7 +1712,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ alm: almRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -1910,6 +1922,10 @@
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
     }
+    if (view.game === "jagd" && lb.jagd) {
+      const l = JG.LENGTHS[lb.jagd.length] || JG.LENGTHS.normal;
+      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler, alle schießen gleichzeitig</p>`;
+    }
     if (view.game === "alm" && lb.alm) {
       const l = ALM.LENGTHS[lb.alm.length] || ALM.LENGTHS.normal;
       const m = ALM.MAP_LIST.find((x) => x.id === lb.alm.map);
@@ -1961,6 +1977,8 @@
     if (almL) almL.onchange = () => { almOpts.length = almL.value; store.set("s10-alm", almOpts); publish(); };
     const almM = app.querySelector("#alm-map");
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
+    const jgL = app.querySelector("#jagd-length");
+    if (jgL) jgL.onchange = () => { jagdOpts.length = jgL.value; store.set("s10-jagd", jagdOpts); publish(); };
     const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
     const gr = app.querySelector("#geo-region");
     if (gr) gr.onchange = () => { geoOpts.region = gr.value; saveGeo(); };
@@ -2332,6 +2350,23 @@
         `<option value="${k}" ${(ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
+  function jagdSettingsHtml() {
+    const len = JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal";
+    return `<label class="field"><span>Länge</span><select id="jagd-length">${Object.entries(JG.LENGTHS).map(([k, l]) =>
+        `<option value="${k}" ${len === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
+      <button id="start" class="btn primary big" ${playing().length < 2 ? "disabled" : ""}>Spiel starten</button>`;
+  }
+  const jagdRulesHtml = `
+    <details class="rules"><summary>Regeln: Auf der Jagd</summary>
+      <ul>
+        <li>Jeder versteckt sein Wild im eigenen Revier (alle haben dasselbe Gelände): <b>Fuchs</b> (1 Feld, überall), <b>Hirschpaar</b> (2 Felder, Wald), <b>Gamsrudel</b> (3 Felder, Fels), <b>Murmeltier-Kolonie</b> (4 Felder, Wiese). Die Form ist frei, die Felder müssen aber zusammenhängen; verschiedene Tiere berühren sich nicht.</li>
+        <li>Jede Runde schießen <b>alle gleichzeitig</b> einmal – jeder wählt selbst, in wessen Revier. Erst wenn alle geschossen haben, werden die Schüsse aufgedeckt; sie sind für alle sichtbar.</li>
+        <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
+        <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
+        <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich in einem fremden Revier beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>
+        <li>Die Jagd endet, wenn nur noch ein Revier Wild hat, oder nach der Rundenzahl. Die größte Strecke (meiste Punkte) gewinnt.</li>
+      </ul>
+    </details>`;
   const almRulesHtml = `
     <details class="rules"><summary>Regeln: Almsommer</summary>
       <ul>

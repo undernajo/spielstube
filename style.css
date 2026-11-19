@@ -2094,3 +2094,56 @@ body.qb-play .banner.win .trophy { display: none; }
 .s10-paused #app main.screen > :not(header) { pointer-events: none; }
 .s10-paused #app main.screen > :not(header):not(.pause-note) input, .s10-paused #app main.screen .alm-bar { opacity: .6; }
 .chip.paused { opacity: .45; }
+
+/* ---------- Auf der Jagd ---------- */
+.jlayout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+.jlayout > * { min-width: 0; }
+.jside { display: grid; gap: 14px; }
+@media (max-width: 860px) { .jlayout { grid-template-columns: minmax(0, 1fr); } }
+.jboard { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border-radius: 12px; overflow: hidden; border: 3px solid #0b0920; background: #0b0920; user-select: none; touch-action: manipulation; width: 100%; margin-inline: auto; }
+.jtarget .jboard { max-width: min(100%, calc(100vh - 250px)); }
+.jboard.small { max-width: 300px; border-width: 2px; border-radius: 9px; }
+.jcell { position: relative; aspect-ratio: 1; background-size: cover; box-shadow: inset 0 0 0 .5px rgba(0, 0, 0, .25); }
+.jcell.can { cursor: crosshair; } .jcell.can:hover { filter: brightness(1.12); }
+.jsetup .jcell.can { cursor: pointer; }
+.jcell.cand { box-shadow: inset 0 0 0 3px var(--ok, #5fd38d); }
+.jcell.shot::before { content: ""; position: absolute; inset: 0; background: rgba(15, 12, 40, .5); z-index: 1; }
+.jcell.scouted::before { background: rgba(15, 12, 40, .25); }
+.jcell.hit::before { content: ""; position: absolute; inset: 0; background: rgba(255, 200, 61, .3); z-index: 1; }
+.jcell.down::before { content: ""; position: absolute; inset: 0; background: rgba(95, 211, 141, .28); z-index: 1; }
+.jico { position: absolute; inset: 8%; z-index: 2; display: grid; place-items: center; pointer-events: none; }
+.jico svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .4)); }
+.jico.ghost { opacity: .5; } .jico.track { inset: 22%; }
+.jbruch { position: absolute; right: -8%; bottom: -8%; width: 46% !important; height: 46% !important; }
+.jmark { position: absolute; inset: 0; z-index: 3; display: grid; place-items: center; pointer-events: none; font: 800 clamp(.7rem, 2.6vw, 1.3rem) Fredoka, sans-serif; }
+.jmark.star { color: #ffd84a; text-shadow: 0 0 3px rgba(0, 0, 0, .6); }
+/* Schuss ins Leere: kleiner heller Kreis in der Feldmitte */
+.jmark.jmiss::after { content: ""; width: 24%; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 255, 255, .75); box-shadow: 0 0 0 1.5px rgba(15, 12, 40, .5); }
+.jmark.hitx { color: #ff5c6c; text-shadow: 0 0 3px rgba(0, 0, 0, .6); } .jmark.aimx { color: #fff; font-size: clamp(1rem, 3.6vw, 1.8rem); text-shadow: 0 0 4px #000; }
+.jscope { position: absolute; top: 1px; right: 2px; z-index: 3; font-size: clamp(.55rem, 1.8vw, .8rem); pointer-events: none; }
+.jlast { position: absolute; inset: 2px; z-index: 3; border-radius: 4px; box-shadow: 0 0 0 2px var(--pc); pointer-events: none; }
+.jcell.aim { outline: 3px solid var(--accent); outline-offset: -4px; z-index: 4; }
+.jcell.picked { outline: 3px solid #fff; outline-offset: -4px; z-index: 4; }
+.jtabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+.jtab { flex: none; display: grid; gap: 2px; padding: 5px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2, #17133d); color: var(--ink); cursor: pointer; font: 700 .85rem Nunito, sans-serif; text-align: left; }
+.jtab.on { border-color: var(--pc); box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc) 45%, transparent); }
+.jtab-name { display: flex; align-items: center; gap: 6px; } .jtab-name i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); }
+.jtab-left { display: flex; gap: 2px; } .jtab-left span { width: 18px; height: 18px; } .jtab-left span svg { width: 100%; height: 100%; } .jtab-left span.gone { opacity: .25; filter: grayscale(1); }
+.jinfo { display: grid; gap: 8px; } .jhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.jtask { margin: 0; font-weight: 700; } .jlastline { margin: 0; line-height: 1.5; }
+.jmine h3, .jsetup h3, .jwait h3 { margin: 0 0 8px; font-size: 1rem; }
+.jsetup, .jwait { display: grid; gap: 10px; max-width: 560px; margin-inline: auto; width: 100%; }
+.janimals { display: flex; flex-wrap: wrap; gap: 6px; }
+.janimal { display: flex; align-items: center; gap: 6px; padding: 5px 9px 5px 5px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel2, #17133d); color: var(--ink); cursor: pointer; font: 700 .85rem Nunito, sans-serif; text-align: left; }
+.janimal svg { width: 28px; height: 28px; flex: none; } .janimal small { display: block; color: var(--muted); font-weight: 600; font-size: .7rem; }
+.janimal.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255, 200, 61, .25); } .janimal.ok:not(.on) { opacity: .6; }
+.jrow { display: flex; flex-wrap: wrap; gap: 8px; } .jrow .btn.primary { margin-left: auto; }
+.jbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; justify-content: center; gap: 8px; padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--panel) 94%, transparent); border-top: 1px solid var(--line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 -6px 18px #0006; }
+.jbar .btn { min-height: 44px; min-width: 140px; } .jbar .btn.on { border-color: var(--accent); color: var(--accent); }
+.screen.game.jagd:has(.jbar) { padding-bottom: 80px; }
+.jfinal { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 12px; }
+.jfp { display: grid; gap: 8px; border-top: 4px solid var(--pc); }
+.jfh { display: flex; align-items: center; gap: 8px; } .jfh b { flex: 1; } .jfh em { font-style: normal; color: var(--muted); font-weight: 600; } .jpts { font: 800 1.3rem Fredoka, sans-serif; }
+.jstrecke { display: flex; flex-wrap: wrap; gap: 3px; min-height: 26px; } .jstrecke span:not(.muted) { width: 26px; height: 26px; } .jstrecke svg { width: 100%; height: 100%; }
+.jfp .jboard.small { max-width: 100%; }

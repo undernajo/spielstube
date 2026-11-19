@@ -81,7 +81,8 @@
   // Hintergrundbilder einmal als CSS anlegen: .acell.g.v0 … .acell.b.v2, Würfel .alm-die.g … und kleine Gelände-Knöpfe
   (() => {
     const el = document.createElement("style"); el.id = "alm-tiles";
-    el.textContent = Object.entries(TILE_SVG).map(([t, vs]) => vs.map((x, k) => `.acell.${t}.v${k}{background-image:${dataUri(x)};background-size:cover}`).join("")
+    // .jcell: dieselben Geländegrafiken für das Revier bei „Auf der Jagd“
+    el.textContent = Object.entries(TILE_SVG).map(([t, vs]) => vs.map((x, k) => `.acell.${t}.v${k},.jcell.${t}.v${k}{background-image:${dataUri(x)};background-size:cover}`).join("")
         + `.alm-die.${t},.alm-swatch.${t}{background-image:${dataUri(vs[1])}}`).join("")
       + Object.entries(DIE_SVG).map(([t, x]) => `.alm-die.${t}{background-image:${dataUri(x)}}`).join("");
     document.head.appendChild(el);
