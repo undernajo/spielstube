@@ -38,45 +38,9 @@
 
   // ---------- Klänge (live erzeugt, im Audio-Kontext der Spielstube; 🔇 schaltet sie mit ab) ----------
   // Schuss mit kurzem Nachhall, ferner Schuss (in deinem Revier), Treffer, Fuchsspur, nichts, Jagdhorn, Hochsitz, neue Runde
-  let bus = null;
-  function snd(fn) {
-    sfx.audio((ctx) => {
-      if (!ctx) return;
-      if (!bus || bus.ctx !== ctx) {
-        const master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
-        // kurzer Nachhall (~0,5 s) aus abklingendem Rauschen – kein Echo
-        const len = Math.floor(ctx.sampleRate * 0.55), ir = ctx.createBuffer(2, len, ctx.sampleRate);
-        for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
-        const verb = ctx.createConvolver(); verb.buffer = ir;
-        const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2200;
-        const rev = ctx.createGain(); rev.gain.value = 0.55; rev.connect(verb); verb.connect(lp); lp.connect(master);
-        bus = { ctx, master, rev };
-      }
-      fn(ctx, ctx.currentTime);
-    });
-  }
-  function nbuf(ctx, sec) { const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * sec), ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
-  function envl(g, t, a, peak, dcy) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dcy); }
-  function noise(ctx, t, dur, { type = "lowpass", freq = 2000, q = 0.7, a = 0.002, peak = 0.6, sweepTo = null, rev = 0 } = {}) {
-    const s = ctx.createBufferSource(); s.buffer = nbuf(ctx, dur + 0.1);
-    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
-    if (sweepTo) f.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
-    const g = ctx.createGain(); envl(g, t, a, peak, dur);
-    s.connect(f); f.connect(g); g.connect(bus.master);
-    if (rev) { const e = ctx.createGain(); e.gain.value = rev; g.connect(e); e.connect(bus.rev); }
-    s.start(t); s.stop(t + a + dur + 0.1);
-  }
-  function tone(ctx, t, dur, { type = "sine", f0 = 440, f1 = null, a = 0.005, peak = 0.3, rev = 0, vib = 0, filter = null } = {}) {
-    const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t);
-    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
-    if (vib) { const l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = 5.5; lg.gain.value = vib; l.connect(lg); lg.connect(o.frequency); l.start(t); l.stop(t + a + dur + 0.05); }
-    const g = ctx.createGain(); envl(g, t, a, peak, dur);
-    let last = o;
-    if (filter) { const f = ctx.createBiquadFilter(); f.type = filter.type; f.frequency.setValueAtTime(filter.freq, t); if (filter.to) f.frequency.exponentialRampToValueAtTime(filter.to, t + (filter.at || dur)); f.Q.value = filter.q || 1; o.connect(f); last = f; }
-    last.connect(g); g.connect(bus.master);
-    if (rev) { const e = ctx.createGain(); e.gain.value = rev; g.connect(e); e.connect(bus.rev); }
-    o.start(t); o.stop(t + a + dur + 0.05);
-  }
+  // Bausteine (Ausgang, Nachhall, Rauschen, Töne) aus js/klang.js – gemeinsam mit Almsommer
+  const K = window.S10Klang, { nbuf, noise, tone } = K;
+  const snd = (fn) => K.play(sfx, fn);
   function horn(ctx, t, freq, dur, peak = 0.22) {
     tone(ctx, t, dur, { type: "sawtooth", f0: freq, a: 0.045, peak, vib: freq * 0.006, rev: 0.35, filter: { type: "lowpass", freq: 500, to: 2600, at: 0.08, q: 0.8 } });
     tone(ctx, t, dur, { type: "triangle", f0: freq / 2, a: 0.05, peak: peak * 0.5 });
@@ -99,14 +63,12 @@
     voegel: (d = 0) => snd((c, t0) => { const t = t0 + d;
       for (let k = 0; k < 9; k++) noise(c, t + 0.15 + k * 0.07, 0.05, { type: "bandpass", freq: 900 + k * 40, q: 1.5, peak: 0.16 * (1 - k / 11) }); }),
     hornKurz: (d = 0) => snd((c, t0) => { const t = t0 + d; horn(c, t, 440, 0.14); horn(c, t + 0.18, 440, 0.14); horn(c, t + 0.36, 587.33, 0.55); }),
-    hornLang: (d = 0) => snd((c, t0) => { let x = t0 + d;
-      [[293.66, 0.3], [369.99, 0.3], [440, 0.3], [587.33, 0.5], [440, 0.25], [587.33, 0.25], [739.99, 0.9]].forEach(([f, dd]) => { horn(c, x, f, dd); x += dd + 0.05; }); }),
     // Hochsitz: das Fernglas – weiches, aufsteigendes Rauschen und ein feiner Klick
     hochsitz: (d = 0) => snd((c, t0) => { const t = t0 + d, dur = 0.5;
       const s = c.createBufferSource(); s.buffer = nbuf(c, dur + 0.1);
       const f = c.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(500, t); f.frequency.exponentialRampToValueAtTime(2600, t + dur);
       const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.14, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      s.connect(f); f.connect(g); g.connect(bus.master); s.start(t); s.stop(t + dur + 0.1);
+      s.connect(f); f.connect(g); g.connect(K.out().master); s.start(t); s.stop(t + dur + 0.1);
       noise(c, t + 0.52, 0.012, { type: "highpass", freq: 3800, a: 0.001, peak: 0.18 }); }),
     // neue Runde: leiser Doppelton – du bist wieder dran
     runde: (d = 0) => snd((c, t0) => { const t = t0 + d; tone(c, t, 0.18, { f0: 660, peak: 0.12 }); tone(c, t + 0.13, 0.3, { f0: 990, peak: 0.1 }); }),
@@ -200,7 +162,9 @@
         // (sonst klingt er direkt nach dem eigenen Schuss wie eine Bestätigung); nach einem fernen Schuss erst, wenn der verklungen ist
         if (st.step === "play" && heard.step === "play" && st.round > heard.round && seated && !mineNow && Date.now() - shotAt > 2500) SND.runde(fernNow ? 0.9 : 0.2);
         // Ende der Jagd: langes Horn, nach dem letzten Treffer/kurzen Horn
-        if (st.step === "final" && heard.step !== "final") SND.hornLang(mineNow || fernNow ? 1.5 : 0.3);
+        // Ende der Jagd: Sieg- bzw. Niederlage-Ton der Spielstube (statt des langen Horns, das sich damit beißen würde) –
+        // nach dem letzten Treffer/kurzen Horn; Zuschauer hören nichts
+        if (st.step === "final" && heard.step !== "final" && seated) setTimeout(() => ((st.winners || []).includes(me) ? sfx.win() : sfx.lose()), mineNow || fernNow ? 1500 : 300);
         heard.round = st.round; heard.step = st.step;
       }
     }

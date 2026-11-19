@@ -14,6 +14,29 @@
   let almLook = null;     // welches Tal groß gezeigt wird (eigenes oder angetipptes)
   let almConfetti = null;
 
+  // ---------- Klänge (live erzeugt über js/klang.js; 🔇 schaltet sie mit ab) ----------
+  // Würfeln (ausrollen), Bleistift-Kreuz beim Anklicken eines Feldes, Fläche fertig
+  const K = window.S10Klang, { noise, tone } = K;
+  const snd = (fn) => K.play(sfx, fn);
+  // warmer Holz-Aufschlag eines Würfels
+  function tock(c, t, peak, f) {
+    tone(c, t, 0.07, { type: "triangle", f0: f, f1: f * 0.86, a: 0.0015, peak, rev: 0.3 });
+    tone(c, t, 0.045, { f0: f * 2.3, a: 0.001, peak: peak * 0.18 });
+    noise(c, t, 0.022, { type: "bandpass", freq: f * 1.9, q: 1.3, a: 0.001, peak: peak * 0.35 });
+  }
+  const SND = {
+    // drei Würfel springen auf den Holztisch – jeder Sprung kürzer und leiser, dann liegen sie
+    rollen: (d = 0) => snd((c, t0) => { const t = t0 + d;
+      [[0, 520], [0.05, 610], [0.11, 470]].forEach(([start, f]) => { let x = t + start, gap = 0.13 + Math.random() * 0.03, peak = 0.34;
+        for (let k = 0; k < 6; k++) { tock(c, x, peak, f * (0.96 + Math.random() * 0.08)); x += gap; gap *= 0.68; peak *= 0.62; } });
+      noise(c, t + 0.05, 0.55, { type: "bandpass", freq: 700, q: 0.8, a: 0.05, peak: 0.05 }); }),
+    // Bleistift-Kreuz beim Anklicken eines Feldes: zwei schnelle Striche
+    kreuze: (n = 1) => snd((c, t0) => { for (let k = 0; k < n; k++) [0, 0.13].forEach((d) => noise(c, t0 + k * 0.28 + d, 0.085, { type: "bandpass", freq: 3800, q: 1.4, a: 0.008, peak: 0.22, sweepTo: 5200 })); }),
+    // Fläche fertig: kleiner, heller Zweiklang
+    flaeche: (d = 0) => snd((c, t0) => { tone(c, t0 + d, 0.35, { type: "triangle", f0: 784, a: 0.005, peak: 0.12, rev: 0.4 }); tone(c, t0 + d + 0.11, 0.5, { type: "triangle", f0: 1175, a: 0.005, peak: 0.11, rev: 0.4 }); }),
+  };
+  let almHeard = null; // was schon erklungen ist (beim ersten Anzeigen nichts nachspielen)
+
   // ---------- Feldgrafiken: illustrierte Wanderkarte (SVG, 40 × 40) ----------
   // Je Gelände drei Varianten (nach Feldnummer gewählt), damit das Tal nicht wie Tapete aussieht.
   // Details bleiben kontrastarm, damit Kreuze und Punktabzeichen darüber gut lesbar sind.
@@ -162,6 +185,25 @@
       });
     }
     almNewsSeen = lastKey;
+    // ---- Klänge auslösen (nur Neues seit dem letzten Zeichnen) ----
+    {
+      const hk = v.code + ":" + st.seats.join(","), myDone = seated ? M.doneRegions(boardOf(G.myId)).length : 0;
+      if (!almHeard || almHeard.key !== hk) {
+        // Spielbeginn (Woche 1, noch nichts angekreuzt): die ersten Würfel hörbar fallen lassen
+        if (st.step === "play" && st.week === 1 && !st.done.length) SND.rollen();
+        almHeard = { key: hk, week: st.week, step: st.step, done: myDone };
+      } else {
+        if (st.week !== almHeard.week && st.step !== "final" || (st.step === "play" && almHeard.step === "final")) SND.rollen();
+        if (seated && myDone > almHeard.done) SND.flaeche(0.1);
+        if (st.step === "final" && almHeard.step !== "final") {
+          const last = st.week !== almHeard.week; // Sommer durchs letzte Gewitter vorbei: erst die letzten Würfel
+          if (last) SND.rollen();
+          // Sieg- bzw. Niederlage-Ton der Spielstube (nur für Mitspieler)
+          if (seated) setTimeout(() => ((st.winners || []).includes(G.myId) ? sfx.win() : sfx.lose()), last ? 1300 : 300);
+        }
+        almHeard.week = st.week; almHeard.step = st.step; almHeard.done = myDone;
+      }
+    }
 
     // Spielerleiste: Punkte und wer diese Woche schon fertig ist
     const chips = st.seats.map((id) => `<span class="geo-score ${st.done.includes(id) ? "done" : ""}" style="--pc:${colorOf(v, id)}">
@@ -260,7 +302,7 @@
     app.querySelectorAll("[data-alook]").forEach((b) => b.onclick = () => { almLook = b.dataset.alook; renderAlm(); });
     app.querySelectorAll(".acell.can").forEach((c) => c.onclick = () => {
       const i = Number(c.dataset.ai), k = almSel.cells.indexOf(i), x = st.dice[almSel.di];
-      if (k >= 0) almSel.cells.splice(k, 1); else if (x && almSel.cells.length < x.n) almSel.cells.push(i);
+      if (k >= 0) almSel.cells.splice(k, 1); else if (x && almSel.cells.length < x.n) { almSel.cells.push(i); SND.kreuze(1); } // Bleistiftstrich beim Ankreuzen eines Feldes
       renderAlm();
     });
   }
