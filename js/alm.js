@@ -9,23 +9,27 @@
 //
 // Abgestimmt per Simulation (4 Computerspieler): 14 Wochen / 5 Gewitter ≈ 12 Wochen im Schnitt, die Hälfte des Tals
 // wird angekreuzt; Erstbonus +2 belebt das Rennen, ohne dass der Führende davonzieht (bei +3 schon deutlich mehr).
+// Gipfel sind ein Langzeitziel: jede Gipfelfläche ist ein ganzes Felsmassiv (7–10 Felder) weit weg vom Hof. Wer gezielt
+// auf beide Gipfel geht, schafft das nur in etwa 4 von 10 Spielen und gewinnt nicht öfter als die anderen
+// (vorher: 3–4 Fels-Felder je Gipfel, beide Gipfel bis Woche 8 und deutlich zu oft der Sieg).
 (function (root) {
   // ---------- Die Täler (alle 11 × 8, damit Bedienung und Bildschirmaufteilung gleich bleiben) ----------
   // Gelände: g Wiese, w Wald, f Fels, b Bach, h Hof (Start). Flächen: gleicher Buchstabe = eine Fläche für die Wertung, H = Hof.
-  // Regeln für jedes Tal (geprüft): Hof grenzt an Wiese, Wald und Bach; Flächen 3–6 Felder, ein Gelände, zusammenhängend;
+  // Regeln für jedes Tal (geprüft): Hof grenzt an Wiese, Wald und Bach; Flächen 3–6 Felder (Gipfelmassive 7–10),
+  // ein Gelände, zusammenhängend;
   // 4 Hütten auf Wiesen, 2 Gipfel auf Fels; ähnliche Geländeanteile, damit die Würfel überall gleich gut passen.
   const MAP_DEFS = {
     hochtal: { name: "Hochtal", desc: "der Bach mitten durchs Tal, Gipfel in beiden oberen Ecken",
-      terrain: ["ffffggbgfff", "fffgggbggff", "fgggggbgggf", "gggggwbgggg", "wwggwwbggww", "wwwgghbgwww", "wwggggbggww", "wgggggbbggg"],
-      region: ["aaaaeexlccc", "bbbfeexlldd", "bggfffxlmmd", "ggghhpynmmm", "qqhhppynnss", "qqqiiHyntts", "rrjiikzoott", "rjjjkkzzooo"],
+      terrain: ["ffffggbgfff", "fffgggbgfff", "fgggggbgggf", "gggggwbgggg", "wwggwwbggww", "wwwgghbgwww", "wwggggbggww", "wgggggbbggg"],
+      region: ["aaaaeexlccc", "aaafeexlccc", "aggfffxlmmc", "ggghhpynmmm", "qqhhppynnss", "qqqiiHyntts", "rrjiikzoott", "rjjjkkzzooo"],
       huts: [[2, 2], [8, 2], [3, 7], [8, 6]], peaks: [[0, 0], [10, 0]], start: [5, 5] },
     bergsee: { name: "Bergsee", desc: "ein See in der Mitte, der Bach fließt zum Hof hinunter",
-      terrain: ["fffgggggfff", "ffgggbbggff", "fgggbbbbggf", "gggggbbgggg", "wwgggbgggww", "wwwggbggwww", "wwggwhgggww", "gggwwgggggw"],
-      region: ["aaaeefffccc", "bbgeexxffdd", "bgggxxyyhhd", "jjjkkzyiihh", "ppkkkziiiss", "qppllznntts", "qqllrHnnntt", "mmmrrooooot"],
+      terrain: ["fffgggggfff", "fffggbbgfff", "fgggbbbbggf", "gggggbbgggg", "wwgggbgggww", "wwwggbggwww", "wwggwhgggww", "gggwwgggggw"],
+      region: ["aaaeefffccc", "aaaeexxfccc", "agggxxyyhhc", "jjjkkzyiihh", "ppkkkziiiss", "qppllznntts", "qqllrHnnntt", "mmmrrooooot"],
       huts: [[3, 1], [8, 2], [2, 6], [7, 7]], peaks: [[1, 0], [9, 0]], start: [5, 6] },
-    waldhang: { name: "Waldhang", desc: "dichte Wälder an den Seiten, der Bach quer durchs untere Tal, ein Felsgrat mit zwei Gipfeln",
-      terrain: ["ggffffffggg", "gggffffgggw", "wgggffgggww", "wwggggggwww", "wwwwhggggww", "wwbbbbggggw", "gggggbbbggg", "gggggggbbbg"],
-      region: ["eeaaacccggg", "eefaacchhgr", "pfffachhhsr", "ppiiijjjssr", "pqqqHjjkksr", "qqxxxykkklr", "mmnnnyyzlll", "mmnnooozzzl"],
+    waldhang: { name: "Waldhang", desc: "dichte Wälder an den Seiten, der Bach quer durchs untere Tal, oben ein Felsgrat mit zwei Gipfeln und einem Joch dazwischen",
+      terrain: ["gffffgfffgg", "ggfffgfffgw", "wgfffgfffww", "wwggggggwww", "wwwwhggggww", "wwbbbbggggw", "gggggbbbggg", "gggggggbbbg"],
+      region: ["eaaaajcccgg", "eeaaajcccgr", "peaaajcccsr", "ppiiijjjssr", "pqqqHjjkksr", "qqxxxykkklr", "mmnnnyyzlll", "mmnnooozzzl"],
       huts: [[1, 1], [9, 1], [2, 7], [9, 6]], peaks: [[3, 0], [7, 0]], start: [4, 4] },
   };
   const NAMES = { g: "Wiese", w: "Wald", f: "Fels", b: "Bach", h: "Hof" };
