@@ -30,6 +30,9 @@
     <path d="M21 23 C18 27 19 33 22 33 C24 33 24 27 21 23Z"/><path d="M28 22 C25 26 26 32 29 32 C31 32 31 26 28 22Z"/></g></svg>`;
   const BRUCH = `<svg class="jbruch" viewBox="0 0 40 40"><path d="M8 32 L30 10" stroke="#2f6b2f" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M14 26 l-6 -2 M18 22 l-6 -3 M22 18 l-5 -4 M17 27 l1 6 M21 23 l2 6 M25 19 l3 5" stroke="#4c9a3c" stroke-width="2" stroke-linecap="round"/></svg>`;
+  // Zielfernrohr-Absehen als kleines Symbol (wie beim Zielen auf dem Spielfeld)
+  const RET = `<svg class="jret" viewBox="0 0 40 40" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round"><circle cx="20" cy="20" r="14" stroke-width="2.6"/>
+    <path d="M2 20H11.5M28.5 20H38M20 28.5V38" stroke-width="5"/><path d="M11.5 20H17.5M22.5 20H28.5M20 22.5V28.5M20 2V17.5" stroke-width="1.8"/></g><circle cx="20" cy="20" r="2.2" fill="#ffc83d"/></svg>`;
   const variant = (i) => (i * 7 + Math.floor(i / N) * 3) % 3;
 
   // ---------- Klänge (live erzeugt, im Audio-Kontext der Spielstube; 🔇 schaltet sie mit ab) ----------
@@ -246,7 +249,7 @@
       const canScout = seated && !iShot && !myScout && t && !mineView;
       const pickHere = priv && priv.pick && priv.pick.t === t ? priv.pick.i : null;
       const tabs = (seated ? [myT] : st.seats).map((id) => `<button type="button" class="jtab ${id === t ? "on" : ""}" data-jt="${id}" style="--pc:${colorOf(v, id)}">
-          <span class="jtab-name"><i></i>${seated ? `🎯 ${esc(gen(nameOf(v, id)))} Revier` : esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
+          <span class="jtab-name"><i></i>${seated ? `${RET} ${esc(gen(nameOf(v, id)))} Revier` : esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
         + (seated ? `<button type="button" class="jtab mine ${mineView ? "on" : ""}" data-jt="${esc(me)}" style="--pc:${colorOf(v, me)}"><span class="jtab-name">🏠 Dein Revier</span>
           <span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[me].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>` : "");
       // neueste Schüsse je Revier: aus dieser Runde, sonst aus der letzten
@@ -254,7 +257,7 @@
       const lastHere = recent(t);
       const mine = cur.find((x) => x.by === me), resTxt = (x) => (x.r === "hit" ? "Treffer" : x.r === "track" ? "🐾 Fuchsspur" : "nichts");
       const myKill = mine && st.kills.find((k) => k.round === st.round && k.by.includes(me) && k.cells.includes(mine.i));
-      const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `${mine ? (myKill ? `🎯 Treffer – ${AN[myKill.a].name} erlegt!` : mine.r === "hit" ? "🎯 Treffer!" : mine.r === "track" ? "🐾 Fuchsspur – der Fuchs ist direkt daneben." : "Nichts getroffen.") : "✓ Geschossen."} Warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
+      const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `${mine ? (myKill ? `${RET} Treffer – ${AN[myKill.a].name} erlegt!` : mine.r === "hit" ? `${RET} Treffer!` : mine.r === "track" ? "🐾 Fuchsspur – der Fuchs ist direkt daneben." : "Nichts getroffen.") : "✓ Geschossen."} Warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
         : aim.scope ? (fine() ? "🔭 Klick auf die Mitte des Bereichs (3×3), den du vom Hochsitz beobachten willst."
           : aim.sc != null ? "🔭 Dieser Bereich wird beobachtet – <b>nochmal auf die Mitte tippen</b> (oder „Beobachten“) bestätigt." : "🔭 Tippe die Mitte des Bereichs (3×3) an, den du vom Hochsitz beobachten willst.")
         : fine() ? `Klick auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier – damit schießt du.`
@@ -264,7 +267,7 @@
         ? `<button type="button" class="btn ghost" data-jact="scope">✕ Abbrechen</button>
           <button type="button" class="btn primary" data-jact="observe" ${aim.sc != null ? "" : "disabled"}>🔭 Beobachten</button>`
         : `<button type="button" class="btn ghost" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
-          ${fine() ? "" : `<button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>🎯 Schießen</button>`}`;
+          ${fine() ? "" : `<button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>${RET} Schießen</button>`}`;
       // PC: oben rechts, wer wo jagt, und die Knöpfe (Zuschauer: Reviere zum Durchblättern)
       const pickPanel = seated
         ? `<section class="panel jpick"><span class="game-label">Deine Jagd</span><p class="jwho">Du jagst in <b style="color:${colorOf(v, myT)}">${esc(gen(nameOf(v, myT)))}</b> Revier${st.seats.length > 2 ? ` · in deinem jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b>` : ""}.</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
@@ -292,7 +295,7 @@
       // Endstand: Jagdstrecke je Jäger, alle Reviere aufgedeckt
       if (confettiKey !== roundKey) { confettiKey = roundKey; if (st.winners && st.winners.includes(me)) confetti(); }
       const rank = st.seats.slice().sort((a, b) => (st.pts[b] || 0) - (st.pts[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy">🎯</div><b>${st.endReason === "leer" ? `${(st.cleared || []).map((id) => (id === me ? "Du" : esc(nameOf(v, id)))).join(" & ")} ${(st.cleared || []).length > 1 ? "haben" : (st.cleared || [])[0] === me ? "hast" : "hat"} ein Revier leergejagt – die Jagd ist aus!` : "Die Jagd ist vorbei!"}</b>
+      main = `<div class="banner win"><div class="trophy jtrophy">${RET}</div><b>${st.endReason === "leer" ? `${(st.cleared || []).map((id) => (id === me ? "Du" : esc(nameOf(v, id)))).join(" & ")} ${(st.cleared || []).length > 1 ? "haben" : (st.cleared || [])[0] === me ? "hast" : "hat"} ein Revier leergejagt – die Jagd ist aus!` : "Die Jagd ist vorbei!"}</b>
           <div>${st.winners.map((id) => esc(nameOf(v, id))).join(" & ")} ${st.winners.length > 1 ? "haben" : "hat"} die größte Strecke: ${st.pts[st.winners[0]]} ${st.pts[st.winners[0]] === 1 ? "Punkt" : "Punkte"}.</div>
           <div class="banner-actions"><button id="jg-restart" class="btn primary">Nochmal jagen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
         <div class="jfinal">${rank.map((id) => { const place = rank.filter((x) => (st.pts[x] || 0) > (st.pts[id] || 0)).length, kills = st.kills.filter((k) => k.by.includes(id));

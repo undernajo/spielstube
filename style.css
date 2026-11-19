@@ -2200,10 +2200,15 @@ body.qb-play .banner.win .trophy { display: none; }
 .jcell.scopehover:not(.scopearea) { --ha: rgba(255, 216, 74, .75); --ht: 0px; --hb: 0px; --hl: 0px; --hr: 0px; filter: brightness(1.1);
   box-shadow: inset 0 var(--ht) 0 0 var(--ha), inset 0 calc(-1 * var(--hb)) 0 0 var(--ha), inset var(--hl) 0 0 0 var(--ha), inset calc(-1 * var(--hr)) 0 0 0 var(--ha); }
 .jcell.sh-t { --ht: 3px; } .jcell.sh-b { --hb: 3px; } .jcell.sh-l { --hl: 3px; } .jcell.sh-r { --hr: 3px; }
-/* Anvisiertes Feld: Zielkreuz zeigt, dass ein zweiter Klick schießt */
-.jcell.aim::after { content: "🎯"; position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; font-size: clamp(1rem, 3.4vw, 1.9rem); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+/* Anvisiertes Feld: Zielfernrohr-Absehen (weiß mit dunklem Rand, gelber Punkt) – ein zweiter Klick schießt */
+.jcell.aim::after { content: ""; position: absolute; inset: 4%; z-index: 5; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E %3Cg fill='none' stroke='%231b1530' stroke-linecap='round' opacity='.6'%3E %3Ccircle cx='20' cy='20' r='14' stroke-width='3.6'/%3E %3Cpath d='M2 20H11.5M28.5 20H38M20 28.5V38' stroke-width='5.6'/%3E %3Cpath d='M11.5 20H17.5M22.5 20H28.5M20 22.5V28.5M20 2V17.5' stroke-width='2.8'/%3E %3C/g%3E %3Cg fill='none' stroke='%23fff' stroke-linecap='round'%3E %3Ccircle cx='20' cy='20' r='14' stroke-width='1.6'/%3E %3Cpath d='M2 20H11.5M28.5 20H38M20 28.5V38' stroke-width='3.4'/%3E %3Cpath d='M11.5 20H17.5M22.5 20H28.5M20 22.5V28.5M20 2V17.5' stroke-width='1'/%3E %3C/g%3E %3Ccircle cx='20' cy='20' r='1.6' fill='%23ffc83d' stroke='%231b1530' stroke-width='.6'/%3E %3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
 /* PC mit Maus: das Feld unter dem Mauszeiger zeigt schon das Zielkreuz – ein Klick schießt */
 @media (hover: hover) and (pointer: fine) {
   .jtarget:not(.scoping) .jcell.can:hover { box-shadow: inset 0 0 0 3px var(--accent); }
-  .jtarget:not(.scoping) .jcell.can:hover::after { content: "🎯"; position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; font-size: clamp(1rem, 3.4vw, 1.9rem); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+  .jtarget:not(.scoping) .jcell.can:hover::after { content: ""; position: absolute; inset: 4%; z-index: 5; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E %3Cg fill='none' stroke='%231b1530' stroke-linecap='round' opacity='.6'%3E %3Ccircle cx='20' cy='20' r='14' stroke-width='3.6'/%3E %3Cpath d='M2 20H11.5M28.5 20H38M20 28.5V38' stroke-width='5.6'/%3E %3Cpath d='M11.5 20H17.5M22.5 20H28.5M20 22.5V28.5M20 2V17.5' stroke-width='2.8'/%3E %3C/g%3E %3Cg fill='none' stroke='%23fff' stroke-linecap='round'%3E %3Ccircle cx='20' cy='20' r='14' stroke-width='1.6'/%3E %3Cpath d='M2 20H11.5M28.5 20H38M20 28.5V38' stroke-width='3.4'/%3E %3Cpath d='M11.5 20H17.5M22.5 20H28.5M20 22.5V28.5M20 2V17.5' stroke-width='1'/%3E %3C/g%3E %3Ccircle cx='20' cy='20' r='1.6' fill='%23ffc83d' stroke='%231b1530' stroke-width='.6'/%3E %3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); }
 }
+/* kleines Absehen-Symbol in Knöpfen, Reitern, Texten und im Endstand */
+.jret { width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex: none; }
+.jtab-name .jret { color: var(--ink); }
+.btn.primary .jret { color: #1a1530; }
+.jtrophy .jret { width: 54px; height: 54px; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .4)); }
