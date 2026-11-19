@@ -170,7 +170,7 @@
           <aside class="jside">
             ${pickPanel}
             <section class="panel jinfo">
-              <div class="jhead"><span class="game-label">Runde ${st.round} von ${st.rounds}</span>${seated ? `<span class="muted small">🔭 Hochsitz ${myScout ? "benutzt" : "frei"}</span>` : ""}</div>
+              <div class="jhead"><span class="game-label">Runde ${st.round}${st.rounds ? ` von ${st.rounds}` : ""}</span>${seated ? `<span class="muted small">🔭 Hochsitz ${myScout ? "benutzt" : "frei"}</span>` : ""}</div>
               <div class="geo-scores">${chips}</div>
               <p class="jtask">${task}</p>
               ${cur.length || st.last.length ? `<p class="muted small jlastline">${cur.length ? "Diese Runde" : "Letzte Runde"}: ${(cur.length ? cur : st.last).map((x) => `<b style="color:${colorOf(v, x.by)}">${esc(nameOf(v, x.by))}</b> → ${esc(nameOf(v, x.t))}: ${resTxt(x)}`).join(" · ")}</p>` : ""}
@@ -194,7 +194,7 @@
 
     app.innerHTML = `
       <main class="screen game jagd">
-        <header class="top topbar">${headBrandHtml("jagd")}<div class="meta">${esc(st.lengthName)}${st.step === "play" ? ` · Runde ${st.round}/${st.rounds}` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml("jagd")}<div class="meta">${esc(st.lengthName)}${st.step === "play" ? ` · Runde ${st.round}${st.rounds ? `/${st.rounds}` : ""}` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">${st.step === "hide" ? `<div class="geo-bar jhidebar"><span class="game-label">Wild verstecken</span><div class="geo-scores">${chips}</div></div>` : ""}${main}</section>
         ${bar}

@@ -6,7 +6,8 @@
 //     Murmeltier-Kolonie 4 (Wiese). Formen frei, aber zusammenhängend; verschiedene Tiere berühren sich nicht.
 //  2. Schuss: Treffer / 🐾 Fuchsspur (der Fuchs steht direkt daneben) / nichts – sofort aufgelöst und für alle sichtbar.
 //  3. Hochsitz: einmal pro Partie, kostet keinen Schuss – 3 × 3 beobachten (nur man selbst sieht das Ergebnis).
-//  4. Punkte: jeder Treffer +1, wer ein Tier fertig macht, erlegt es (+ Bonus je Tier). Ende nach der Rundenzahl oder sobald
+//  4. Punkte: jeder Treffer +1, wer ein Tier fertig macht, erlegt es (+ Bonus je Tier). Ende nach der Rundenzahl (kurz 12,
+//     lang 20; „ganze Jagd“ ohne Grenze) oder sobald
 //     jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde). Meiste Punkte gewinnt.
 (function (root) {
   // ---------- Revier ----------
@@ -26,7 +27,9 @@
     { id: "murmel", name: "Murmeltier-Kolonie", terr: "g", len: 4, kill: 4 },
   ];
   const HIT = 1;
-  const LENGTHS = { kurz: { name: "Kurze Jagd", rounds: 12, desc: "12 Runden" }, normal: { name: "Ganze Jagd", rounds: 20, desc: "20 Runden" } };
+  // ganze Jagd: bis jemand alles Wild seines Nachbarn erlegt hat (spätestens nach 81 Runden ist jedes Revier leer)
+  const LENGTHS = { kurz: { name: "Kurze Jagd", rounds: 12, desc: "12 Runden" }, normal: { name: "Lange Jagd", rounds: 20, desc: "20 Runden" },
+    ganz: { name: "Ganze Jagd", rounds: CELLS, open: true, desc: "bis einer alles Wild seines Nachbarn erlegt hat" } };
 
   const connected = (cells) => { if (!cells.length) return true; const seen = new Set([cells[0]]), q = [cells[0]];
     while (q.length) { const i = q.pop(); for (const j of nb4(i)) if (cells.includes(j) && !seen.has(j)) { seen.add(j); q.push(j); } } return seen.size === cells.length; };
@@ -184,7 +187,7 @@
     const st = s.jagd;
     if (!st) return null;
     return {
-      step: st.step, round: st.round, rounds: st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
+      step: st.step, round: st.round, rounds: LENGTHS[st.opts.length].open ? null : st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
       shots: st.shots, kills: st.kills, pts: st.pts, last: st.last, cur: st.cur || [], news: st.news.slice(-8), scoutUsed: Object.keys(st.scout),
       left: Object.fromEntries(st.seats.map((t) => [t, ANIMALS.filter((a) => !killed(st, t, a.id)).map((a) => a.id)])),
       endReason: st.endReason, winners: st.winners, lengthName: LENGTHS[st.opts.length].name,

@@ -2364,7 +2364,7 @@
         <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
         <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
         <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich im Revier deines Nachbarn beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>
-        <li>Die Jagd endet nach der Rundenzahl – oder sobald jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde). Die größte Strecke (meiste Punkte) gewinnt.</li>
+        <li>Die Jagd endet nach der Rundenzahl (kurz 12, lang 20) – oder sobald jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde); die <b>ganze Jagd</b> geht genau so lange. Die größte Strecke (meiste Punkte) gewinnt.</li>
       </ul>
     </details>`;
   const almRulesHtml = `
