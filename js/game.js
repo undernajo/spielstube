@@ -107,7 +107,8 @@
   let wattenPriv = null; // eigene Hand (bei Gästen privat vom Gastgeber geschickt)
   let wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
   const ALM = window.S10Alm;
-  let almOpts = Object.assign({ length: "normal" }, store.get("s10-alm") || {});
+  let almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
+  const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
   const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten & Würfel", ["kartenrunde", "stich", "klassik", "alm"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
   {
@@ -530,7 +531,7 @@
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
-      alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal" },
+      alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -1839,7 +1840,8 @@
     }
     if (view.game === "alm" && lb.alm) {
       const l = ALM.LENGTHS[lb.alm.length] || ALM.LENGTHS.normal;
-      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 1 bis 8 Spieler, alle gleichzeitig</p>`;
+      const m = ALM.MAP_LIST.find((x) => x.id === lb.alm.map);
+      return `<p class="muted small">Tal: ${m ? `<b>${esc(m.name)}</b> – ${esc(m.desc)}` : "<b>Zufall</b> – eines der Täler wird ausgelost"} · ${esc(l.name)} – ${esc(l.desc)} · 1 bis 8 Spieler, alle gleichzeitig</p>`;
     }
     if (view.game === "wl") {
       const packs = [["mix", "Alle gemischt", "alle Pakete durcheinander"]].concat(Object.entries(WL.PACKS).map(([k, p]) => [k, p.name, p.prompts.slice(0, 3).join(" · ") + " …"]));
@@ -1885,6 +1887,8 @@
     if (wp) wp.onchange = () => { wlOpts.pack = wp.value; store.set("s10-wl", wlOpts); publish(); };
     const almL = app.querySelector("#alm-length");
     if (almL) almL.onchange = () => { almOpts.length = almL.value; store.set("s10-alm", almOpts); publish(); };
+    const almM = app.querySelector("#alm-map");
+    if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const saveGeo = () => { store.set("s10-geo", geoOpts); publish(); };
     const gr = app.querySelector("#geo-region");
     if (gr) gr.onchange = () => { geoOpts.region = gr.value; saveGeo(); };
@@ -2249,14 +2253,17 @@
       </ul>
     </details>`;
   function almSettingsHtml() {
-    return `<label class="field"><span>Länge</span><select id="alm-length">${Object.entries(ALM.LENGTHS).map(([k, l]) =>
+    const mapSel = almMapOk(almOpts.map) ? almOpts.map : "zufall";
+    return `<label class="field"><span>Tal</span><select id="alm-map"><option value="zufall" ${mapSel === "zufall" ? "selected" : ""}>🎲 Zufall – eines der Täler auslosen</option>
+        ${ALM.MAP_LIST.map((m) => `<option value="${m.id}" ${mapSel === m.id ? "selected" : ""}>${esc(m.name)} – ${esc(m.desc)}</option>`).join("")}</select></label>
+      <label class="field"><span>Länge</span><select id="alm-length">${Object.entries(ALM.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${(ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
   const almRulesHtml = `
     <details class="rules"><summary>Regeln: Almsommer</summary>
       <ul>
-        <li>Jeder hat sein eigenes Tal (alle dasselbe). Jede Woche fallen <b>3 Würfel – für alle dieselben</b>. Jeder Würfel zeigt Gelände und Zahl. <b>Nimm einen</b> – auch denselben wie die anderen.</li>
+        <li>Jeder hat sein eigenes Tal (alle dasselbe – ${ALM.MAP_LIST.length} Täler zur Wahl: ${ALM.MAP_LIST.map((m) => m.name).join(", ")}). Jede Woche fallen <b>3 Würfel – für alle dieselben</b>. Jeder Würfel zeigt Gelände und Zahl. <b>Nimm einen</b> – auch denselben wie die anderen.</li>
         <li>Kreuze <b>bis zu so viele</b> Felder dieses Geländes an – zusammenhängend und angrenzend an schon Angekreuztes. Du startest am Hof 🏡. ☀️ Sonne = beliebiges Gelände.</li>
         <li><b>Jede Fläche hat eine Zahl.</b> Ist sie ganz angekreuzt, bekommst du diese Punkte. Flächen mit Hütte 🏠 oder Gipfel ⛰️ sind mehr wert – wer sie <b>als Erster</b> fertig hat, bekommt <b>+${ALM.BONUS.first}</b> (in derselben Woche alle).</li>
         <li>Zeigt ein Würfel ⚡, gibt's ein Gewitter. <b>Beim 5. Gewitter ist der Sommer vorbei</b> – sonst nach 14 Wochen. Wer dann die meisten Punkte hat, gewinnt.</li>

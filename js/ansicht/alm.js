@@ -4,6 +4,7 @@
     PLAYER_COLORS, app, confetti, esc, headBrandHtml, invite, leave, send, sfx, statusBarHtml, toast, topActionsHtml
   } = G;
   const ALM = window.S10Alm;
+  let M = ALM.map("hochtal"); // das gerade gespielte Tal (wird in renderAlm gesetzt)
   const NAMES = ALM.NAMES;
 
   // eigene Auswahl in der laufenden Woche (nur lokal, bis „Ankreuzen“)
@@ -86,46 +87,50 @@
     document.head.appendChild(el);
   })();
   const variant = (i) => (i * 7 + Math.floor(i / 11) * 3) % 3;
-  // Punktabzeichen einer Fläche: erstes Feld ohne Zeichnung (Hof, Hütte, Gipfel bleiben frei sichtbar)
-  const BADGE_CELL = Object.fromEntries(Object.entries(ALM.REGIONS).map(([k, cs]) =>
-    [k, cs.find((i) => !ALM.HUTS.includes(i) && !ALM.PEAKS.includes(i) && i !== ALM.START) ?? cs[0]]));
+  // Punktabzeichen einer Fläche: erstes Feld ohne Zeichnung (Hof, Hütte, Gipfel bleiben frei sichtbar) – je Tal einmal berechnet
+  const badgeCache = {};
+  const badgeCell = (k) => {
+    const c = badgeCache[M.id] || (badgeCache[M.id] = Object.fromEntries(Object.entries(M.REGIONS).map(([r, cs]) =>
+      [r, cs.find((i) => !M.HUTS.includes(i) && !M.PEAKS.includes(i) && i !== M.START) ?? cs[0]])));
+    return c[k];
+  };
   const rotated = () => innerWidth < 560 && innerHeight > innerWidth;
 
   // Tal als Raster; opts: { interactive, marked, sel, hintFrom, small }
   function boardHtml(v, st, marked, o) {
-    const done = new Set(ALM.doneRegions(marked).flatMap((k) => ALM.REGIONS[k]));
+    const done = new Set(M.doneRegions(marked).flatMap((k) => M.REGIONS[k]));
     const soon = o.soon || [];
     const rot = !o.small && rotated();
     const order = [];
-    if (!rot) for (let i = 0; i < ALM.TERRAIN.length; i++) order.push(i);
-    else for (let c = 0; c < ALM.COLS; c++) for (let r = ALM.ROWS - 1; r >= 0; r--) order.push(r * ALM.COLS + c);
+    if (!rot) for (let i = 0; i < M.TERRAIN.length; i++) order.push(i);
+    else for (let c = 0; c < M.COLS; c++) for (let r = M.ROWS - 1; r >= 0; r--) order.push(r * M.COLS + c);
     const ROT = { bt: "br", bb: "bl", bl: "bt", br: "bb" };
     const cells = order.map((i) => {
-      const ter = ALM.TERRAIN[i], c = i % ALM.COLS, r = Math.floor(i / ALM.COLS), k = ALM.REGION[i];
-      const sym = i === ALM.START ? "🏡" : ALM.HUTS.includes(i) ? "🏠" : ALM.PEAKS.includes(i) ? "⛰️" : "";
-      const symSvg = i === ALM.START ? SYMBOL_SVG.hof : ALM.HUTS.includes(i) ? SYMBOL_SVG.hut : ALM.PEAKS.includes(i) ? SYMBOL_SVG.peak : "";
+      const ter = M.TERRAIN[i], c = i % M.COLS, r = Math.floor(i / M.COLS), k = M.REGION[i];
+      const sym = i === M.START ? "🏡" : M.HUTS.includes(i) ? "🏠" : M.PEAKS.includes(i) ? "⛰️" : "";
+      const symSvg = i === M.START ? SYMBOL_SVG.hof : M.HUTS.includes(i) ? SYMBOL_SVG.hut : M.PEAKS.includes(i) ? SYMBOL_SVG.peak : "";
       const fresh = o.fresh && o.fresh.includes(i);
-      if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""}"></i>`;
-      const edge = (j) => ALM.TERRAIN[j] === ter && ALM.REGION[j] !== k;
-      const edges = [r > 0 && edge(i - ALM.COLS) ? "bt" : "", r < ALM.ROWS - 1 && edge(i + ALM.COLS) ? "bb" : "",
-        c > 0 && edge(i - 1) ? "bl" : "", c < ALM.COLS - 1 && edge(i + 1) ? "br" : ""].filter(Boolean).map((e) => (rot ? ROT[e] : e)).join(" ");
+      if (o.small) return `<i class="ac ${ter} ${marked.has(i) && i !== M.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""}"></i>`;
+      const edge = (j) => M.TERRAIN[j] === ter && M.REGION[j] !== k;
+      const edges = [r > 0 && edge(i - M.COLS) ? "bt" : "", r < M.ROWS - 1 && edge(i + M.COLS) ? "bb" : "",
+        c > 0 && edge(i - 1) ? "bl" : "", c < M.COLS - 1 && edge(i + 1) ? "br" : ""].filter(Boolean).map((e) => (rot ? ROT[e] : e)).join(" ");
       const isMarked = marked.has(i), chosen = o.sel && o.sel.includes(i);
       const can = o.interactive && !isMarked && ter === o.terrain;
-      const hint = can && !o.sel.length && ALM.neighbors(i).some((j) => marked.has(j));
-      const first = BADGE_CELL[k] === i;
+      const hint = can && !o.sel.length && M.neighbors(i).some((j) => marked.has(j));
+      const first = badgeCell(k) === i;
       let badge = "";
       if (first) {
-        const cl = st.claimed[k], race = ALM.SPECIAL.includes(k);
+        const cl = st.claimed[k], race = M.SPECIAL.includes(k);
         const mine = cl && cl.ids.includes(G.myId);
         const flag = cl ? `<b class="ab-flag" title="Erstbonus: ${esc(cl.ids.map((id) => nameOf(v, id)).join(" & "))}">${mine ? "🏆" : "🚩"}</b>` : "";
-        badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${ALM.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
+        badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${M.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
       }
       const name = `${String.fromCharCode(65 + c)}${r + 1} · ${NAMES[ter]}${sym === "🏠" ? " · Hütte" : sym === "⛰️" ? " · Gipfel" : ""}`;
-      return `<div class="acell ${ter} v${variant(i)} ${edges} ${isMarked && i !== ALM.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${symSvg ? `<span class="as">${symSvg}</span>` : ""}</div>`;
+      return `<div class="acell ${ter} v${variant(i)} ${edges} ${isMarked && i !== M.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${symSvg ? `<span class="as">${symSvg}</span>` : ""}</div>`;
     }).join("");
-    const cols = o.small ? ALM.COLS : rot ? ALM.ROWS : ALM.COLS;
+    const cols = o.small ? M.COLS : rot ? M.ROWS : M.COLS;
     return `<div class="${o.small ? "alm-mini" : "alm-board"}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cells}</div>`
-      + (o.small ? "" : `<div class="alm-coords">${rot ? Array.from({ length: ALM.ROWS }, (_, k) => `<span>${ALM.ROWS - k}</span>`).join("") : Array.from({ length: ALM.COLS }, (_, c) => `<span>${String.fromCharCode(65 + c)}</span>`).join("")}</div>
+      + (o.small ? "" : `<div class="alm-coords">${rot ? Array.from({ length: M.ROWS }, (_, k) => `<span>${M.ROWS - k}</span>`).join("") : Array.from({ length: M.COLS }, (_, c) => `<span>${String.fromCharCode(65 + c)}</span>`).join("")}</div>
         ${rot ? `<p class="muted small alm-rot">Das Tal ist gedreht: die Gipfel sind rechts.</p>` : ""}`);
   }
   const nameOf = (v, id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
@@ -134,6 +139,7 @@
   function renderAlm() {
     const v = G.view, st = v.alm;
     if (!st) return;
+    M = ALM.map(st.map);
     const seated = st.seats.includes(G.myId);
     const desk = innerWidth > 860; // PC-Aufteilung: Infos in der rechten Spalte
     const key = v.code + ":" + st.week + ":" + st.step;
@@ -149,7 +155,7 @@
     const last = st.news[st.news.length - 1], lastKey = last ? last.week + ":" + last.k : "";
     if (almNewsSeen !== null && lastKey && lastKey !== almNewsSeen) {
       st.news.filter((n) => n.week === last.week).forEach((n) => {
-        const kind = ALM.REGIONS[n.k].some((i) => ALM.PEAKS.includes(i)) ? "⛰️ Gipfelfläche" : "🏠 Hüttenfläche";
+        const kind = M.REGIONS[n.k].some((i) => M.PEAKS.includes(i)) ? "⛰️ Gipfelfläche" : "🏠 Hüttenfläche";
         const who = n.ids.map((id) => (id === G.myId ? "Du" : nameOf(v, id))).join(" & ");
         toast(`${kind}: ${who} ${n.ids.length > 1 || n.ids[0] === G.myId ? "wart" : "war"} zuerst fertig – +${ALM.BONUS.first}!`.replace("Du wart", "Du warst"));
       });
@@ -172,7 +178,7 @@
         <div class="alm-final">${rank.map((id, i) => `<div class="alm-fp" style="--pc:${colorOf(v, id)}">
             <div class="alm-fh"><span>${(() => { const place = rank.filter((x) => (st.totals[x] || 0) > (st.totals[id] || 0)).length; return medal[place] || place + 1 + "."; })()}</span><b>${esc(nameOf(v, id))}${id === G.myId ? " (du)" : ""}</b><b class="alm-ft">${st.totals[id]}</b></div>
             ${boardHtml(v, st, new Set(st.boards[id]), { small: true })}
-            <div class="muted small">${ALM.doneRegions(new Set(st.boards[id])).length} Flächen${st.extra[id] ? ` · Erstboni +${st.extra[id]}` : ""}</div></div>`).join("")}</div>`;
+            <div class="muted small">${M.doneRegions(new Set(st.boards[id])).length} Flächen${st.extra[id] ? ` · Erstboni +${st.extra[id]}` : ""}</div></div>`).join("")}</div>`;
     } else {
       // welches Tal groß? eigenes (wenn mitspielend), sonst angetipptes oder das erste
       const lookId = seated && (!almLook || almLook === G.myId) ? G.myId : st.seats.includes(almLook) ? almLook : st.seats[0];
@@ -180,9 +186,9 @@
       const marked = boardOf(lookId);
       const d = mine && !iDone && almSel.di != null ? st.dice[almSel.di] : null;
       const terrain = d && !d.storm ? (d.t === "sun" ? almSel.terrain : d.t) : null, max = d && !d.storm ? d.n : 0;
-      const err = terrain && almSel.cells.length ? ALM.checkCells(marked, terrain, almSel.cells, max) : null;
-      const soon = !err && almSel.cells.length ? Object.keys(ALM.REGIONS).filter((k) => ALM.REGIONS[k].some((i) => almSel.cells.includes(i))
-        && ALM.REGIONS[k].every((i) => marked.has(i) || almSel.cells.includes(i))) : [];
+      const err = terrain && almSel.cells.length ? M.checkCells(marked, terrain, almSel.cells, max) : null;
+      const soon = !err && almSel.cells.length ? Object.keys(M.REGIONS).filter((k) => M.REGIONS[k].some((i) => almSel.cells.includes(i))
+        && M.REGIONS[k].every((i) => marked.has(i) || almSel.cells.includes(i))) : [];
       // nach dem Abschicken erscheinen die eigenen Kreuze als normale Kreuze (nicht mehr als Auswahl)
       const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: iDone ? [] : almSel.cells, soon: iDone ? [] : soon, fresh: lookId !== G.myId ? pend(lookId) : [] });
 
@@ -200,7 +206,7 @@
         task = terrain ? `<div class="alm-task">Kreuze bis zu ${max} ${max === 1 ? "Feld" : "Felder"} ${NAMES[terrain]} an <span class="muted">(${almSel.cells.length}/${max})</span></div>${sunPick}`
           : d && d.t === "sun" ? `<div class="alm-task">☀️ Welches Gelände soll die Sonne sein?</div>${sunPick}`
           : st.dice.every((x) => x.storm) ? `<div class="alm-task">Alle Würfel zeigen Gewitter – diese Woche bleibt nur ein Ruhetag.</div>` : `<div class="alm-task">Nimm einen Würfel</div>`;
-        const pts = soon.reduce((a, k) => a + ALM.regionValue(k), 0), race = soon.filter((k) => ALM.SPECIAL.includes(k) && !st.claimed[k]).length;
+        const pts = soon.reduce((a, k) => a + M.regionValue(k), 0), race = soon.filter((k) => M.SPECIAL.includes(k) && !st.claimed[k]).length;
         msg = !terrain || !almSel.cells.length ? "" : err ? `<div class="msg err">${esc(err)}</div>`
           : soon.length ? `<div class="msg alm-preview">Damit ${soon.length === 1 ? "wird eine Fläche" : `werden ${soon.length} Flächen`} fertig: +${pts} Punkte${race ? ` (+${race * ALM.BONUS.first}, wenn du diese Woche der/die Erste bist)` : ""}!</div>`
           : `<div class="msg ok">Passt – ankreuzen${almSel.cells.length < max ? " (oder noch mehr Felder wählen)" : ""}!</div>`;
@@ -225,7 +231,7 @@
 
     app.innerHTML = `
       <main class="screen game alm">
-        <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.lengthName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.mapName)} · ${esc(st.lengthName)} · Stube <b>${esc(v.code)}</b></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">
           ${desk && st.step !== "final" ? "" : `<div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>`}
@@ -269,7 +275,7 @@
     const top = bd.getBoundingClientRect().top + scrollY;
     const reserve = 60; // Koordinatenzeile, Innenabstand und Rand des Kastens, Abstand unter dem Spielfeld
     const h = Math.max(240, innerHeight - top - reserve);
-    const w = Math.floor((h * ALM.COLS) / ALM.ROWS);
+    const w = Math.floor((h * M.COLS) / M.ROWS);
     [bd, co].forEach((el) => { if (el) el.style.maxWidth = w + "px"; });
     // Kasten ums Tal so breit wie das Tal (kein leerer Rand), beide Spalten mittig
     const box = app.querySelector(".alm-boardbox");

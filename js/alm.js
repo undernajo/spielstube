@@ -10,51 +10,67 @@
 // Abgestimmt per Simulation (4 Computerspieler): 14 Wochen / 5 Gewitter ≈ 12 Wochen im Schnitt, die Hälfte des Tals
 // wird angekreuzt; Erstbonus +2 belebt das Rennen, ohne dass der Führende davonzieht (bei +3 schon deutlich mehr).
 (function (root) {
-  // ---------- Das Tal (11 × 8) ----------
-  // Gelände: g Wiese, w Wald, f Fels, b Bach, h Hof (Start)
-  const TERRAIN_ROWS = [
-    "ffffggbgfff",
-    "fffgggbggff",
-    "fgggggbgggf",
-    "gggggwbgggg",
-    "wwggwwbggww",
-    "wwwgghbgwww",
-    "wwggggbggww",
-    "wgggggbbggg",
-  ];
-  // Flächen (gleicher Buchstabe = eine Fläche für die Wertung); x/y/z = drei Bachabschnitte, H = Hof
-  const REGION_ROWS = [
-    "aaaaeexlccc",
-    "bbbfeexlldd",
-    "bggfffxlmmd",
-    "ggghhpynmmm",
-    "qqhhppynnss",
-    "qqqiiHyntts",
-    "rrjiikzoott",
-    "rjjjkkzzooo",
-  ];
-  const COLS = TERRAIN_ROWS[0].length, ROWS = TERRAIN_ROWS.length;
-  const at = (c, r) => r * COLS + c;
-  const HUTS = [at(2, 2), at(8, 2), at(3, 7), at(8, 6)];   // C3, I3, D8, I7
-  const PEAKS = [at(0, 0), at(10, 0)];                     // A1, K1
-  const START = at(5, 5);                                  // F6 (Hof: grenzt an Wald, Wiese und Bach)
-  const TERRAIN = TERRAIN_ROWS.join("").split("");
-  const REGION = REGION_ROWS.join("").split("");
-  const NAMES = { g: "Wiese", w: "Wald", f: "Fels", b: "Bach", h: "Hof" };
-  const REGIONS = {}; // Buchstabe -> Felder (ohne Hof)
-  REGION.forEach((k, i) => { if (k !== "H") (REGIONS[k] = REGIONS[k] || []).push(i); });
-  const neighbors = (i) => {
-    const c = i % COLS, r = Math.floor(i / COLS), out = [];
-    if (c > 0) out.push(i - 1); if (c < COLS - 1) out.push(i + 1); if (r > 0) out.push(i - COLS); if (r < ROWS - 1) out.push(i + COLS);
-    return out;
+  // ---------- Die Täler (alle 11 × 8, damit Bedienung und Bildschirmaufteilung gleich bleiben) ----------
+  // Gelände: g Wiese, w Wald, f Fels, b Bach, h Hof (Start). Flächen: gleicher Buchstabe = eine Fläche für die Wertung, H = Hof.
+  // Regeln für jedes Tal (geprüft): Hof grenzt an Wiese, Wald und Bach; Flächen 3–6 Felder, ein Gelände, zusammenhängend;
+  // 4 Hütten auf Wiesen, 2 Gipfel auf Fels; ähnliche Geländeanteile, damit die Würfel überall gleich gut passen.
+  const MAP_DEFS = {
+    hochtal: { name: "Hochtal", desc: "der Bach mitten durchs Tal, Gipfel in beiden oberen Ecken",
+      terrain: ["ffffggbgfff", "fffgggbggff", "fgggggbgggf", "gggggwbgggg", "wwggwwbggww", "wwwgghbgwww", "wwggggbggww", "wgggggbbggg"],
+      region: ["aaaaeexlccc", "bbbfeexlldd", "bggfffxlmmd", "ggghhpynmmm", "qqhhppynnss", "qqqiiHyntts", "rrjiikzoott", "rjjjkkzzooo"],
+      huts: [[2, 2], [8, 2], [3, 7], [8, 6]], peaks: [[0, 0], [10, 0]], start: [5, 5] },
+    bergsee: { name: "Bergsee", desc: "ein See in der Mitte, der Bach fließt zum Hof hinunter",
+      terrain: ["fffgggggfff", "ffgggbbggff", "fgggbbbbggf", "gggggbbgggg", "wwgggbgggww", "wwwggbggwww", "wwggwhgggww", "gggwwgggggw"],
+      region: ["aaaeefffccc", "bbgeexxffdd", "bgggxxyyhhd", "jjjkkzyiihh", "ppkkkziiiss", "qppllznntts", "qqllrHnnntt", "mmmrrooooot"],
+      huts: [[3, 1], [8, 2], [2, 6], [7, 7]], peaks: [[1, 0], [9, 0]], start: [5, 6] },
+    waldhang: { name: "Waldhang", desc: "dichte Wälder an den Seiten, der Bach quer durchs untere Tal, ein Felsgrat mit zwei Gipfeln",
+      terrain: ["ggffffffggg", "gggffffgggw", "wgggffgggww", "wwggggggwww", "wwwwhggggww", "wwbbbbggggw", "gggggbbbggg", "gggggggbbbg"],
+      region: ["eeaaacccggg", "eefaacchhgr", "pfffachhhsr", "ppiiijjjssr", "pqqqHjjkksr", "qqxxxykkklr", "mmnnnyyzlll", "mmnnooozzzl"],
+      huts: [[1, 1], [9, 1], [2, 7], [9, 6]], peaks: [[3, 0], [7, 0]], start: [4, 4] },
   };
-
-  // ---------- Wertung ----------
+  const NAMES = { g: "Wiese", w: "Wald", f: "Fels", b: "Bach", h: "Hof" };
   const BONUS = { hut: 2, peak: 5, first: 2 }; // Zusatzpunkte einer Fläche je Hütte / Gipfel; Erstbonus auf Hütten- und Gipfelflächen
-  const regionValue = (k) => REGIONS[k].length + BONUS.hut * REGIONS[k].filter((i) => HUTS.includes(i)).length
-    + BONUS.peak * REGIONS[k].filter((i) => PEAKS.includes(i)).length;
-  const SPECIAL = Object.keys(REGIONS).filter((k) => REGIONS[k].some((i) => HUTS.includes(i) || PEAKS.includes(i)));
-  const doneRegions = (marked) => Object.keys(REGIONS).filter((k) => REGIONS[k].every((i) => marked.has(i)));
+
+  // Tal aufbauen: alles, was mit Feldern rechnet, hängt am Tal
+  function buildMap(id) {
+    const d = MAP_DEFS[id];
+    const COLS = d.terrain[0].length, ROWS = d.terrain.length, at = (c, r) => r * COLS + c;
+    const TERRAIN = d.terrain.join("").split(""), REGION = d.region.join("").split("");
+    const HUTS = d.huts.map(([c, r]) => at(c, r)), PEAKS = d.peaks.map(([c, r]) => at(c, r)), START = at(...d.start);
+    const REGIONS = {}; // Buchstabe -> Felder (ohne Hof)
+    REGION.forEach((k, i) => { if (k !== "H") (REGIONS[k] = REGIONS[k] || []).push(i); });
+    const neighbors = (i) => {
+      const c = i % COLS, r = Math.floor(i / COLS), out = [];
+      if (c > 0) out.push(i - 1); if (c < COLS - 1) out.push(i + 1); if (r > 0) out.push(i - COLS); if (r < ROWS - 1) out.push(i + COLS);
+      return out;
+    };
+    // Wert einer Fläche: Felder + Zusatzpunkte je Hütte / Gipfel (steht auf der Karte)
+    const regionValue = (k) => REGIONS[k].length + BONUS.hut * REGIONS[k].filter((i) => HUTS.includes(i)).length
+      + BONUS.peak * REGIONS[k].filter((i) => PEAKS.includes(i)).length;
+    const SPECIAL = Object.keys(REGIONS).filter((k) => REGIONS[k].some((i) => HUTS.includes(i) || PEAKS.includes(i)));
+    const doneRegions = (marked) => Object.keys(REGIONS).filter((k) => REGIONS[k].every((i) => marked.has(i)));
+    // Zug prüfen (auch in der Ansicht nutzbar): marked = Set der angekreuzten Felder
+    function checkCells(marked, t, cells, max) {
+      if (!NAMES[t] || t === "h") return "Bitte ein Gelände für die Sonne wählen.";
+      if (!Array.isArray(cells) || !cells.length) return "Mindestens ein Feld ankreuzen.";
+      if (cells.length > max) return `Höchstens ${max} ${max === 1 ? "Feld" : "Felder"}.`;
+      const set = new Set(cells);
+      if (set.size !== cells.length) return "Jedes Feld nur einmal.";
+      for (const i of cells) {
+        if (!Number.isInteger(i) || i < 0 || i >= TERRAIN.length) return "Ungültiges Feld.";
+        if (marked.has(i)) return "Das Feld ist schon angekreuzt.";
+        if (TERRAIN[i] !== t) return `Nur ${NAMES[t]}-Felder.`;
+      }
+      const seen = new Set([cells[0]]), q = [cells[0]];
+      while (q.length) { const i = q.pop(); for (const j of neighbors(i)) if (set.has(j) && !seen.has(j)) { seen.add(j); q.push(j); } }
+      if (seen.size !== cells.length) return "Die Felder müssen zusammenhängen.";
+      if (!cells.some((i) => neighbors(i).some((j) => marked.has(j)))) return "Die Felder müssen an schon Angekreuztes grenzen.";
+      return null;
+    }
+    return { id, name: d.name, desc: d.desc, COLS, ROWS, TERRAIN, REGION, REGIONS, HUTS, PEAKS, START, SPECIAL, neighbors, regionValue, doneRegions, checkCells };
+  }
+  const MAPS = Object.fromEntries(Object.keys(MAP_DEFS).map((id) => [id, buildMap(id)]));
+  const map = (id) => MAPS[id] || MAPS.hochtal;
 
   // ---------- Würfel ----------
   const TERRAIN_FACES = ["g", "g", "w", "f", "b", "sun"]; // Wiese doppelt (häufigstes Gelände), Sonne = beliebiges Gelände
@@ -66,29 +82,13 @@
   };
   const rnd = (a) => a[Math.floor(Math.random() * a.length)];
 
-  // Zug prüfen (auch in der Ansicht nutzbar): Brett = Set der angekreuzten Felder
-  function checkCells(marked, t, cells, max) {
-    if (!NAMES[t] || t === "h") return "Bitte ein Gelände für die Sonne wählen.";
-    if (!Array.isArray(cells) || !cells.length) return "Mindestens ein Feld ankreuzen.";
-    if (cells.length > max) return `Höchstens ${max} ${max === 1 ? "Feld" : "Felder"}.`;
-    const set = new Set(cells);
-    if (set.size !== cells.length) return "Jedes Feld nur einmal.";
-    for (const i of cells) {
-      if (!Number.isInteger(i) || i < 0 || i >= TERRAIN.length) return "Ungültiges Feld.";
-      if (marked.has(i)) return "Das Feld ist schon angekreuzt.";
-      if (TERRAIN[i] !== t) return `Nur ${NAMES[t]}-Felder.`;
-    }
-    const seen = new Set([cells[0]]), q = [cells[0]];
-    while (q.length) { const i = q.pop(); for (const j of neighbors(i)) if (set.has(j) && !seen.has(j)) { seen.add(j); q.push(j); } }
-    if (seen.size !== cells.length) return "Die Felder müssen zusammenhängen.";
-    if (!cells.some((i) => neighbors(i).some((j) => marked.has(j)))) return "Die Felder müssen an schon Angekreuztes grenzen.";
-    return null;
-  }
-
   // ---------- Spielablauf ----------
   function start(s, opts) {
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "normal";
+    // Tal: fest gewählt oder „zufall“ (bei „Nochmal spielen“ wird dann neu gelost)
+    const mapChoice = opts.map === "zufall" || MAP_DEFS[opts.map] ? opts.map : "hochtal";
+    const mapId = mapChoice === "zufall" ? rnd(Object.keys(MAP_DEFS)) : mapChoice;
     // Querbeet: eigene Wochenzahl / ohne Gewitter (free)
     const weeks = opts.free && Number.isInteger(opts.weeks) && opts.weeks > 0 && opts.weeks <= 20 ? opts.weeks : LENGTHS[length].weeks;
     const storms = opts.free && Number.isInteger(opts.storms) && opts.storms >= 0 ? opts.storms : LENGTHS[length].storms;
@@ -97,15 +97,15 @@
     s.game = "alm"; s.phase = "alm";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     // pending: Kreuze der laufenden Woche – erst am Wochenende ins Tal übernommen (die anderen sehen sie erst nach ihrem eigenen Zug)
-    s.alm = { opts: { length }, weeks, stormLimit: storms, week: 0, storms: 0, seats, dice: null, step: "play", done: {}, pending: {},
-      boards: Object.fromEntries(seats.map((id) => [id, [START]])), extra: Object.fromEntries(seats.map((id) => [id, 0])),
+    s.alm = { opts: { length, map: mapChoice }, map: mapId, weeks, stormLimit: storms, week: 0, storms: 0, seats, dice: null, step: "play", done: {}, pending: {},
+      boards: Object.fromEntries(seats.map((id) => [id, [MAPS[mapId].START]])), extra: Object.fromEntries(seats.map((id) => [id, 0])),
       claimed: {}, news: [], endReason: "", winners: null };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
     nextWeek(s);
     return true;
   }
 
-  const total = (st, id) => doneRegions(new Set(st.boards[id])).reduce((a, k) => a + regionValue(k), 0) + (st.extra[id] || 0);
+  const total = (st, id, cells) => { const M = map(st.map); return M.doneRegions(new Set(cells || st.boards[id])).reduce((a, k) => a + M.regionValue(k), 0) + (st.extra[id] || 0); };
 
   function nextWeek(s) {
     const st = s.alm;
@@ -127,11 +127,11 @@
 
   // Woche abschließen: Erstbonus für Hütten-/Gipfelflächen, die in dieser Woche zum ersten Mal jemand fertig hat
   function endWeek(s) {
-    const st = s.alm, fresh = {};
+    const st = s.alm, fresh = {}, M = map(st.map);
     for (const [id, cells] of Object.entries(st.pending)) st.boards[id] = st.boards[id].concat(cells);
     st.pending = {};
-    st.seats.forEach((id) => doneRegions(new Set(st.boards[id])).forEach((k) => {
-      if (SPECIAL.includes(k) && !st.claimed[k]) (fresh[k] = fresh[k] || []).push(id);
+    st.seats.forEach((id) => M.doneRegions(new Set(st.boards[id])).forEach((k) => {
+      if (M.SPECIAL.includes(k) && !st.claimed[k]) (fresh[k] = fresh[k] || []).push(id);
     }));
     for (const [k, ids] of Object.entries(fresh)) {
       st.claimed[k] = { ids, week: st.week };
@@ -159,7 +159,7 @@
         const d = st.dice[a.di];
         if (!d || d.storm) return false;
         const t = d.t === "sun" ? a.terrain : d.t, marked = new Set(st.boards[pid]);
-        if (checkCells(marked, t, a.cells, d.n)) return false;
+        if (map(st.map).checkCells(marked, t, a.cells, d.n)) return false;
         st.pending[pid] = a.cells.slice();
         st.done[pid] = { di: a.di, n: a.cells.length };
         tick(s);
@@ -181,15 +181,16 @@
     const st = s.alm;
     if (!st) return null;
     return {
-      step: st.step, week: st.week, weeks: st.weeks, storms: st.storms, stormLimit: st.stormLimit, dice: st.dice, seats: st.seats,
+      map: st.map, mapName: map(st.map).name, step: st.step, week: st.week, weeks: st.weeks, storms: st.storms, stormLimit: st.stormLimit, dice: st.dice, seats: st.seats,
       boards: st.boards, pending: st.pending || {}, done: Object.keys(st.done), totals: Object.fromEntries(st.seats.map((id) => [id, total(st, id)])),
       // Punkte inklusive der Kreuze dieser Woche (nur für Spieler, die ihren Zug schon gemacht haben)
-      totalsLive: Object.fromEntries(st.seats.map((id) => [id, doneRegions(new Set(st.boards[id].concat((st.pending || {})[id] || []))).reduce((a, k) => a + regionValue(k), 0) + (st.extra[id] || 0)])),
+      totalsLive: Object.fromEntries(st.seats.map((id) => [id, total(st, id, st.boards[id].concat((st.pending || {})[id] || []))])),
       extra: st.extra, claimed: st.claimed, news: st.news.slice(-6), endReason: st.endReason, winners: st.winners,
       lengthName: LENGTHS[st.opts.length].name,
     };
   }
 
-  root.S10Alm = { start, apply, tick, publicState, checkCells, regionValue, doneRegions, neighbors,
-    COLS, ROWS, TERRAIN, REGION, REGIONS, HUTS, PEAKS, START, NAMES, SPECIAL, BONUS, LENGTHS };
+  // map(id): Tal mit Feldern und Rechenfunktionen; MAP_LIST für die Auswahl in der Lobby
+  const MAP_LIST = Object.entries(MAP_DEFS).map(([id, d]) => ({ id, name: d.name, desc: d.desc }));
+  root.S10Alm = { start, apply, tick, publicState, map, MAP_LIST, NAMES, BONUS, LENGTHS };
 })(typeof window !== "undefined" ? window : globalThis);

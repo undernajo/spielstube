@@ -93,7 +93,7 @@
       case "bus": return { mode: "bus", rounds: 1 };
       // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien
       case "slf": return { ...(st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
-      case "alm": return { weeks: 6, storms: 0 }; // Kurzsommer: 6 Wochen ohne Gewitter
+      case "alm": return { weeks: 6, storms: 0, map: "zufall" }; // Kurzsommer: 6 Wochen ohne Gewitter, Tal ausgelost
       case "duell": return { target: 2, timer: "45" };
       case "frage": return { target: 2, write: "0", answer: "0" };
     }
