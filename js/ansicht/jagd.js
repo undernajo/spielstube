@@ -331,8 +331,9 @@
     });
     // Zielen & Schießen
     app.querySelectorAll("[data-jt]").forEach((b) => b.onclick = () => { aim.t = b.dataset.jt; aim.i = null; renderJagd(); });
-    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; renderJagd(); });
-    const observe = () => { if (aim.sc == null) return; SND.hochsitz(); send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd(); };
+    // Hochsitz-Klang beim Hinaufsteigen (Knopf), nicht erst beim Beobachten; Abbrechen bleibt still
+    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; if (aim.scope) SND.hochsitz(); renderJagd(); });
+    const observe = () => { if (aim.sc == null) return; send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd(); };
     const fire = () => { if (aim.i == null) return; sentKey = roundKey; shotAt = Date.now(); SND.schuss(); send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); renderJagd(); };
     app.querySelectorAll('[data-jact="observe"]').forEach((b) => b.onclick = observe);
     app.querySelectorAll('[data-jact="shoot"]').forEach((b) => b.onclick = fire);
