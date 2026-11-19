@@ -2213,3 +2213,60 @@ body.qb-play .banner.win .trophy { display: none; }
 .jtab-name .jret { color: var(--ink); }
 .btn.primary .jret { color: #1a1530; }
 .jtrophy .jret { width: 54px; height: 54px; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .4)); }
+
+/* Busfahren am Handy: alles für einen Tipp auf einen Bildschirm – schmale Stationsleiste, Wertereihe als Zeile,
+   flachere Antwortkacheln, Aussteigen als schmale Zeile, etwas kleinere Karten */
+@media (max-width: 640px) {
+  .kg-bus .slf-main { gap: 6px; }
+  .kg-bus .geo-bar { padding: 8px 10px; gap: 6px; }
+  .kg-bus .geo-bar .geo-scores { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+  .kg-bus .kg-table.bus { gap: 6px; padding: 6px 10px 8px; }
+  .kg-bus .bus-ladder { max-width: none; }
+  .kg-bus .bus-stop { flex: 1 1 0; width: auto; min-width: 0; padding: 3px 0; border-radius: 9px; }
+  .kg-bus .bus-stop span { display: none; }
+  .kg-bus .bus-stop b { font-size: .9rem; }
+  .kg-bus .bus-road { min-width: 3px; flex: 0 0 6px; }
+  .kg-bus .bus-q.with-scale { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .kg-bus .bus-q-main { gap: 8px; }
+  .kg-bus .bus-question h3 { font-size: 1.02rem; }
+  .kg-bus .bus-qnote { font-size: .72rem; }
+  .kg-bus .bus-scale { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 4px; padding: 4px 8px; font-size: .68rem; min-width: 0; }
+  .kg-bus .bus-scale span { padding: 0 3px; }
+  .kg-bus .bus-scale .bs-end { font-size: .58rem; }
+  .kg-bus .bus-scale .bs-end:first-child::after { content: " ›"; } .kg-bus .bus-scale .bs-end:last-child::before { content: "› "; }
+  .kg-bus .kg-table .bus-q-main > .bus-choices { justify-items: stretch; width: 100%; gap: 8px; }
+  .kg-bus .bus-choice { min-height: 54px; padding: 6px 6px; gap: 2px; border-radius: 13px; width: 100%; }
+  .kg-bus .bus-ico { font-size: 1.15rem; } .kg-bus .bus-suit { width: 24px; height: 24px; }
+  .kg-bus .bus-choice b { font-size: .95rem; } .kg-bus .bus-choice small { font-size: .64rem; }
+  .kg-bus .kg-table .bus-q-main > .bus-or { display: none; }
+  .kg-bus .bus-exit { padding: 6px 12px; gap: 10px; border-radius: 13px; }
+  .kg-bus .bus-exit .bus-ico { font-size: 1.1rem; }
+  .kg-bus .bus-exit span:last-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+  .kg-bus .bus-exit small { font-size: .74rem; }
+  .kg-bus .kg-table .bus-q-main > .bus-stakes { display: flex; justify-content: center; gap: 6px; font-size: .72rem; flex-wrap: nowrap; }
+  .kg-bus .bus-stakes span { padding: 2px 8px; white-space: nowrap; }
+  .kg-bus .bus-players { margin-top: 0; gap: 5px; }
+  .kg-bus .bus-player { padding: 5px 10px; gap: 3px; }
+  .kg-bus .bus-player .kg-card.big { width: 46px; }
+  .kg-bus .bus-player .kg-card.mid { width: 34px; }
+  .kg-bus .kg-hand { gap: 5px; }
+}
+/* einzeilige Spieler-Chips (Busfahren, Jagd am Handy) dürfen ihre Spalte nicht verbreitern – sie scrollen selbst seitlich */
+.kg-bus .slf-main > *, .kg-bus .geo-bar, .jlayout > *, .jside, .jinfo { min-width: 0; }
+.kg-bus .geo-bar .geo-scores, .jinfo .geo-scores { min-width: 0; max-width: 100%; }
+/* Busfahren am Handy: Runde steht in der Kopfzeile, die Station zeigt die Stationsleiste – die Zeile darüber spart sich die Beschriftung */
+.kg-meta-round { display: none; }
+@media (max-width: 640px) {
+  .kg-bus .top.topbar .meta { font-size: 0; white-space: nowrap; overflow: visible; } /* „Busfahrt“ steht schon links – nur die Runde zeigen */
+  .kg-bus .kg-meta-round { display: inline-grid; justify-items: end; font-size: .72rem; line-height: 1.15; }
+  .kg-bus .kg-meta-round b { font-size: .9rem; color: var(--text, #fff); }
+  .kg-bus .geo-bar .game-label { display: none; }
+  .kg-bus .geo-bar { padding: 6px 8px; }
+  .kg-bus .bus-question h3 { font-size: .96rem; line-height: 1.2; }
+}
+@media (max-width: 640px) {
+  /* „Welche Farbe?“: vier Antworten in einer Reihe (mit Farbsymbol), etwas weniger Abstand oben */
+  .kg-bus .kg-table .bus-q-main > .bus-choices.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .kg-bus .bus-choices.four .bus-choice b { font-size: .8rem; }
+  .kg-bus.screen.game { padding-top: 6px; }
+}

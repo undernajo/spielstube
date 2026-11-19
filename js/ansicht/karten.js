@@ -124,8 +124,8 @@
       main = stichMainHtml(v, st, colorOf, nameOf, readyBtn);
     }
     app.innerHTML = `
-      <main class="screen game slf geo kg-main">
-        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
+      <main class="screen game slf geo kg-main kg-${st.mode}">
+        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}${st.mode === "bus" && st.step !== "final" ? `<span class="kg-meta-round"><span>Runde</span> <b>${st.round}/${st.rounds}</b></span>` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">${st.step !== "final" && st.mode !== "stich" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
       </main>`;
