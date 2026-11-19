@@ -2147,3 +2147,48 @@ body.qb-play .banner.win .trophy { display: none; }
 .jfh { display: flex; align-items: center; gap: 8px; } .jfh b { flex: 1; } .jfh em { font-style: normal; color: var(--muted); font-weight: 600; } .jpts { font: 800 1.3rem Fredoka, sans-serif; }
 .jstrecke { display: flex; flex-wrap: wrap; gap: 3px; min-height: 26px; } .jstrecke span:not(.muted) { width: 26px; height: 26px; } .jstrecke svg { width: 100%; height: 100%; }
 .jfp .jboard.small { max-width: 100%; }
+/* Jagd ohne Scrollen: PC zeigt das eigene Revier rechts, am Handy ist es ein eigener Reiter */
+.jtab.mine { display: none; }
+.screen.game.jagd .slf-main { gap: 10px; }
+.jtarget { padding: 10px 12px 12px; } .jtabs { padding-bottom: 6px; }
+@media (max-width: 860px) {
+  .jtab.mine { display: grid; }
+  .jmine { display: none; }
+  .jinfo { padding: 10px 12px; gap: 6px; }
+  .jinfo .geo-scores { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+  .jtask { font-size: .92rem; } .jlastline { font-size: .78rem; line-height: 1.35; }
+  .jtab { padding: 4px 8px; } .jtab-left span { width: 16px; height: 16px; }
+}
+/* Verstecken kompakt (passt ohne Scrollen) */
+.jsetup { gap: 8px; } .jsetup h3 { margin: 0; } .jhint { margin: 0; }
+.janimals { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.jsetup .jrow { display: grid; grid-template-columns: 1fr 1fr 1.4fr; } .jsetup .jrow .btn { min-height: 42px; padding: 8px 6px; margin: 0; }
+@media (max-width: 860px) {
+  .jhidebar { display: none; }
+  .jsetup { padding: 10px 12px; } .jsetup h3 { font-size: .95rem; }
+  .janimals { grid-template-columns: 1fr 1fr; gap: 5px; }
+  .janimal { padding: 4px 6px 4px 4px; font-size: .78rem; } .janimal svg { width: 24px; height: 24px; } .janimal small { font-size: .64rem; }
+  .jhint { font-size: .78rem; line-height: 1.3; }
+}
+/* Jagd am PC: Reviere wählen und Knöpfe rechts, links das Revier in voller Fensterhöhe */
+.jpick { display: grid; gap: 8px; }
+.jtabs-side { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; overflow: visible; padding: 0; }
+.jacts { display: grid; grid-template-columns: 1fr 1.3fr; gap: 8px; } .jacts .btn { min-height: 44px; }
+@media (min-width: 861px) {
+  .jlayout { grid-template-columns: minmax(0, 1fr) 360px; }
+  .jtabs-top, .jbar { display: none; }
+  .jtab.mine { display: none; }
+  .screen.game.jagd:has(.jbar) { padding-bottom: 0; }
+}
+@media (max-width: 860px) { .jpick { display: none; } }
+/* Verstecken am PC: Revier links in voller Höhe, rechts Tiere, Hinweis, Knöpfe und wer schon fertig ist */
+.jsready { display: none; }
+@media (min-width: 861px) {
+  .jsetup { max-width: none; grid-template-columns: minmax(0, 1fr) 360px; grid-template-areas: "board head" "board btns"; grid-template-rows: auto 1fr; align-items: start; column-gap: 18px; }
+  .jsetup .jshead { grid-area: head; display: grid; gap: 10px; }
+  .jsetup .jsboard { grid-area: board; }
+  .jsetup .jsbtns { grid-area: btns; grid-template-columns: 1fr 1fr; } .jsetup .jsbtns .btn.primary { grid-column: 1 / -1; min-height: 48px; }
+  .janimals { grid-template-columns: 1fr; }
+  .jhidebar { display: none; }
+  .jsready { display: flex; flex-wrap: wrap; justify-content: flex-start; }
+}

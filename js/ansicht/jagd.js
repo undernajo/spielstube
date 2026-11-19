@@ -100,12 +100,14 @@
         if (!draft || draft.key !== v.code + ":" + st.seats.join(",")) draft = { key: v.code + ":" + st.seats.join(","), hide: {}, sel: "murmel" };
         const a = AN[draft.sel], cur = draft.hide[a.id] || [];
         const all = ANIMALS.every((x) => complete(draft.hide, x));
-        main = `<section class="panel jsetup">
+        // PC: links das Revier in voller Höhe, rechts Tiere, Hinweis, Knöpfe; Handy: Tiere – Revier – Knöpfe untereinander
+        main = `<section class="panel jsetup"><div class="jshead">
             <h3>Versteck dein Wild</h3>
             <div class="janimals">${ANIMALS.map((x) => `<button type="button" class="janimal ${x.id === draft.sel ? "on" : ""} ${complete(draft.hide, x) ? "ok" : ""}" data-jsel="${x.id}">${ICON[x.id]}<span>${x.name}<small>${HINT[x.id]}${complete(draft.hide, x) ? " · ✓" : (draft.hide[x.id] || []).length ? ` · ${draft.hide[x.id].length}/${x.len}` : ""}</small></span></button>`).join("")}</div>
-            <p class="muted small">${a.name}: ${cur.length}/${a.len} – tippe grün umrandete Felder. Die Gruppe darf jede Form haben, muss aber zusammenhängen; verschiedene Tiere berühren sich nicht. Nochmal tippen nimmt ein Feld weg.</p>
-            ${boardHtml(v, { hide: draft.hide, cand: (i) => canAdd(draft.hide, a, i), click: () => true })}
-            <div class="jrow"><button type="button" class="btn ghost" id="jg-rnd">🎲 Zufällig</button><button type="button" class="btn ghost" id="jg-clr" ${cur.length ? "" : "disabled"}>↺ ${esc(a.name)} neu</button>
+            <p class="muted small jhint"><b>${a.name}: ${cur.length}/${a.len}</b> – grün umrandete Felder antippen. Form frei, aber zusammenhängend; nochmal tippen nimmt ein Feld weg.</p>
+            <div class="geo-scores jsready">${chips}</div></div>
+            <div class="jsboard">${boardHtml(v, { hide: draft.hide, cand: (i) => canAdd(draft.hide, a, i), click: () => true })}</div>
+            <div class="jrow jsbtns"><button type="button" class="btn ghost" id="jg-rnd">🎲 Zufällig</button><button type="button" class="btn ghost" id="jg-clr" ${cur.length ? "" : "disabled"} title="${esc(a.name)} neu verstecken">↺ Neu</button>
               <button type="button" class="btn primary" id="jg-hide" ${all ? "" : "disabled"}>✓ Versteckt</button></div>
           </section>`;
       } else {
@@ -117,24 +119,34 @@
     } else if (st.step === "play") {
       if (aim.key !== roundKey) aim = { key: roundKey, t: aim.t, i: null, scope: false };
       const targets = others.filter((t) => st.left[t].length);
-      if (!targets.includes(aim.t)) aim.t = targets[0] || null;
+      if (!targets.includes(aim.t) && !(aim.t === me && seated)) aim.t = targets[0] || null;
+      const mineView = seated && aim.t === me; // Handy: eigenes Revier als eigener Reiter
       const iShot = seated && (st.picked.includes(me) || sentKey === roundKey);
       const t = aim.t, myScout = priv && priv.scout;
       const scoutHere = myScout && myScout.t === t ? myScout : null;
-      const canScout = seated && !iShot && !myScout && t;
+      const canScout = seated && !iShot && !myScout && t && !mineView;
       const pickHere = priv && priv.pick && priv.pick.t === t ? priv.pick.i : null;
       const tabs = (seated ? targets : st.seats).map((id) => `<button type="button" class="jtab ${id === t ? "on" : ""}" data-jt="${id}" style="--pc:${colorOf(v, id)}">
-          <span class="jtab-name"><i></i>${esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("");
+          <span class="jtab-name"><i></i>${esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
+        + (seated ? `<button type="button" class="jtab mine ${mineView ? "on" : ""}" data-jt="${esc(me)}" style="--pc:${colorOf(v, me)}"><span class="jtab-name">🏠 Dein Revier</span>
+          <span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[me].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>` : "");
       const lastHere = st.last.filter((x) => x.t === t);
-      const task = !seated ? "Du schaust zu." : iShot ? `✓ Geschossen – warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
+      const task = !seated ? "Du schaust zu." : mineView ? "Dein Revier – hier schießen die anderen. Wähle ein fremdes Revier zum Schießen." : iShot ? `✓ Geschossen – warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
         : aim.scope ? "🔭 Wähle die Mitte des Bereichs (3×3), den du vom Hochsitz beobachtest." : aim.i != null ? `Ziel: ${esc(nameOf(v, t))}s Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(nameOf(v, t))}s Revier.`;
+      // Knöpfe: am Handy als feste Leiste unten, am PC in der rechten Spalte (das Revier bekommt dann die volle Höhe)
+      const acts = seated && !iShot ? `<button type="button" class="btn ghost ${aim.scope ? "on" : ""}" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
+          <button type="button" class="btn primary" data-jact="shoot" ${aim.i != null && !aim.scope ? "" : "disabled"}>🎯 Schießen</button>` : "";
+      // PC: Reviere zum Auswählen und die Knöpfe oben in der rechten Spalte
+      const pickPanel = `<section class="panel jpick"><span class="game-label">${seated ? "In welches Revier schießt du?" : "Reviere"}</span><div class="jtabs jtabs-side">${tabs}</div>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`;
       main = `<div class="jlayout">
           <section class="panel jtarget">
-            <div class="jtabs">${tabs}</div>
-            ${t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: pickHere, aim: iShot ? null : aim,
+            <div class="jtabs jtabs-top">${tabs}</div>
+            ${mineView ? boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: st.last.filter((x) => x.t === me) })
+              : t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: pickHere, aim: iShot ? null : aim,
               click: (i) => seated && !iShot && (aim.scope || !st.shots[t][i]) }) : `<p class="muted">Kein Revier mit Wild mehr.</p>`}
           </section>
           <aside class="jside">
+            ${pickPanel}
             <section class="panel jinfo">
               <div class="jhead"><span class="game-label">Runde ${st.round} von ${st.rounds}</span>${seated ? `<span class="muted small">🔭 Hochsitz ${myScout ? "benutzt" : "frei"}</span>` : ""}</div>
               <div class="geo-scores">${chips}</div>
@@ -144,8 +156,7 @@
             ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: st.last.filter((x) => x.t === me), small: true })}</section>` : ""}
           </aside>
         </div>`;
-      if (seated && !iShot) bar = `<div class="jbar"><button type="button" class="btn ghost ${aim.scope ? "on" : ""}" id="jg-scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
-          <button type="button" class="btn primary" id="jg-shoot" ${aim.i != null && !aim.scope ? "" : "disabled"}>🎯 Schießen</button></div>`;
+      if (acts) bar = `<div class="jbar">${acts}</div>`;
     } else {
       // Endstand: Jagdstrecke je Jäger, alle Reviere aufgedeckt
       if (confettiKey !== roundKey) { confettiKey = roundKey; if (st.winners && st.winners.includes(me)) confetti(); }
@@ -163,10 +174,11 @@
       <main class="screen game jagd">
         <header class="top topbar">${headBrandHtml("jagd")}<div class="meta">${esc(st.lengthName)}${st.step === "play" ? ` · Runde ${st.round}/${st.rounds}` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
-        <section class="slf-main">${st.step === "hide" ? `<div class="geo-bar"><span class="game-label">Wild verstecken</span><div class="geo-scores">${chips}</div></div>` : ""}${main}</section>
+        <section class="slf-main">${st.step === "hide" ? `<div class="geo-bar jhidebar"><span class="game-label">Wild verstecken</span><div class="geo-scores">${chips}</div></div>` : ""}${main}</section>
         ${bar}
       </main>`;
 
+    fitJagd();
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
@@ -188,14 +200,46 @@
     });
     // Zielen & Schießen
     app.querySelectorAll("[data-jt]").forEach((b) => b.onclick = () => { aim.t = b.dataset.jt; aim.i = null; renderJagd(); });
-    on("#jg-scope", () => { aim.scope = !aim.scope; renderJagd(); });
-    on("#jg-shoot", () => { if (aim.i == null) return; sentKey = roundKey; send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); sfx.tap && sfx.tap(); renderJagd(); });
+    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; renderJagd(); });
+    app.querySelectorAll('[data-jact="shoot"]').forEach((b) => b.onclick = () => { if (aim.i == null) return; sentKey = roundKey; send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); if (sfx.tap) sfx.tap(); renderJagd(); });
     app.querySelectorAll(".jtarget .jcell.can").forEach((c) => c.onclick = () => {
       const i = Number(c.dataset.ji);
       if (aim.scope) { aim.scope = false; send({ type: "jgScout", t: aim.t, i }); return renderJagd(); }
       aim.i = aim.i === i ? null : i; renderJagd();
     });
   }
+
+  // Ohne Scrollen: Reviere so groß, wie die Fensterhöhe erlaubt (unter dem Revier bleibt Platz für die feste Knopfleiste)
+  function fitJagd() {
+    const bar = app.querySelector(".jbar"), barH = bar ? bar.offsetHeight : 0, phone = innerWidth <= 860;
+    const fit = (board, below, min = 200) => {
+      if (!board) return;
+      board.style.maxWidth = "";
+      const top = board.getBoundingClientRect().top + scrollY, room = innerHeight - top - barH - below;
+      board.style.maxWidth = Math.max(min, Math.floor(room)) + "px";
+    };
+    // Spalte für Spalte nachmessen: ragt ihr Kasten über den Fensterrand, das Revier darin um genau so viel verkleinern
+    const trim = (board, min = 200) => {
+      if (!board || !board.style.maxWidth) return;
+      const box = board.closest(".panel") || board, over = box.getBoundingClientRect().bottom + 12 - (innerHeight - barH);
+      if (over > 0) board.style.maxWidth = Math.max(min, parseInt(board.style.maxWidth, 10) - Math.ceil(over)) + "px";
+    };
+    // Handy: unter dem großen Revier stehen noch die Infos
+    const info = app.querySelector(".jinfo");
+    const target = app.querySelector(".jtarget .jboard"), mine = app.querySelector(".jmine .jboard");
+    fit(target, phone && info ? info.offsetHeight + 40 : 30);
+    if (!phone) fit(mine, 30, 120); // eigenes Revier rechts darf bei kleinen Fenstern auch klein werden
+    const setup = app.querySelector(".jsetup .jboard"), wait = app.querySelector(".jwait .jboard");
+    fit(setup, phone ? (app.querySelector(".jsetup .jrow") || { offsetHeight: 0 }).offsetHeight + 40 : 30);
+    fit(wait, 30);
+    if (phone && target && info) { const over = info.getBoundingClientRect().bottom + 12 - (innerHeight - barH); if (over > 0) target.style.maxWidth = Math.max(200, parseInt(target.style.maxWidth, 10) - Math.ceil(over)) + "px"; }
+    else trim(target);
+    trim(mine, 120);
+    // Verstecken/Warten: nur eine Spalte – dort zählt der Überstand der ganzen Seite
+    const pageOver = document.documentElement.scrollHeight - innerHeight;
+    [setup, wait].forEach((b) => { if (b && b.style.maxWidth && pageOver > 0) b.style.maxWidth = Math.max(200, parseInt(b.style.maxWidth, 10) - pageOver - 2) + "px"; });
+  }
+  addEventListener("resize", () => { if (G.view && G.view.phase === "jagd") fitJagd(); });
 
   return { renderJagd };
 });
