@@ -1146,6 +1146,8 @@
     const play = (fn) => { if (muted || !ctx) return; if (ctx.state === "suspended") ctx.resume(); try { fn(); } catch {} };
     return {
       get muted() { return muted; },
+      // eigene Klänge eines Spiels (z. B. Auf der Jagd) im selben Audio-Kontext – stumm geschaltet passiert nichts
+      audio: (fn) => play(() => fn(ctx)),
       toggle() { muted = !muted; store.set("s10-muted", muted); if (!muted) { unlock(); this.turn(); } },
       // bewusst sparsam: nur wenn man gebraucht wird und am Spielende
       turn: () => play(() => { tone(880, 0, 0.14, "sine", 0.12); tone(1175, 0.15, 0.24, "sine", 0.12); }),
