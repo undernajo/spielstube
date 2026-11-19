@@ -2073,8 +2073,10 @@ body.qb-play .banner.win .trophy { display: none; }
 }
 
 /* ---------- Pausieren: in der Stube bleiben, aber nicht mitspielen ---------- */
-.plist li .pl-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.plist li .pl-right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: none; }
+/* wird es zu eng (Gastgeber + Pause-Knopf), rutschen Abzeichen und Knöpfe rechtsbündig in eine zweite Zeile */
+.plist li { flex-wrap: wrap; row-gap: 6px; }
+.plist li .pl-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plist li .pl-right { margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .plist li .pl-right .host-tag, .plist li .pl-right .kick { margin-left: 0; }
 .plist li.paused .pl-name, .plist li.paused .dot { opacity: .5; }
 .pause-tag { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }

@@ -1452,7 +1452,7 @@
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             <h3>Spieler</h3>
             <ul class="plist">${view.players.map((p, i) => `<li class="${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span><span class="pl-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
-              <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
+              <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused && p.id !== myId ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
             ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
