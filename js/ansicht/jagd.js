@@ -344,16 +344,14 @@
       const box = board.closest(".panel") || board, over = box.getBoundingClientRect().bottom + 12 - (innerHeight - barH);
       if (over > 0) board.style.maxWidth = Math.max(min, parseInt(board.style.maxWidth, 10) - Math.ceil(over)) + "px";
     };
-    // Handy: unter dem großen Revier stehen noch die Infos
-    const info = app.querySelector(".jinfo");
     const target = app.querySelector(".jtarget .jboard"), mine = app.querySelector(".jmine .jboard");
-    fit(target, phone && info ? info.offsetHeight + 40 : 30);
+    // Handy: das Revier zum Schießen nutzt immer die ganze Breite (auch wenn unten die Knopfleiste steht)
+    if (!phone) fit(target, 30); else if (target) target.style.maxWidth = "";
     if (!phone) fit(mine, 30, 120); // eigenes Revier rechts darf bei kleinen Fenstern auch klein werden
     const setup = app.querySelector(".jsetup .jboard"), wait = app.querySelector(".jwait .jboard");
     fit(setup, phone ? (app.querySelector(".jsetup .jrow") || { offsetHeight: 0 }).offsetHeight + 40 : 30);
     fit(wait, 30);
-    if (phone && target && info) { const over = info.getBoundingClientRect().bottom + 12 - (innerHeight - barH); if (over > 0) target.style.maxWidth = Math.max(200, parseInt(target.style.maxWidth, 10) - Math.ceil(over)) + "px"; }
-    else trim(target);
+    if (!phone) trim(target);
     trim(mine, 120);
     // Verstecken/Warten: nur eine Spalte – dort zählt der Überstand der ganzen Seite
     const pageOver = document.documentElement.scrollHeight - innerHeight;
