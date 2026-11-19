@@ -24,6 +24,16 @@
         <li><b>Punkte:</b> 2, Bieten +1 (abgelehnt = bisheriger Wert). Gestrichen ab ${st.target - 2}: kein Bieten; bei mind. 4 Rückstand des anderen gehen 4 – halten oder gehen (Gegner +2).</li>
       </ul></details>`;
   }
+  // Handy: Punkteblock zugeklappt, sichtbar bleibt eine Zeile „Bert 3 : 5 Anna · bis 15“ (antippen = ganzer Block)
+  let scoreOpen = false;
+  function scoreFold(block, line) {
+    if (innerWidth > 640) return block;
+    return `<details class="wfold" ${scoreOpen ? "open" : ""}><summary>${line}</summary>${block}</details>`;
+  }
+  function bindScoreFold() {
+    const d = G.app.querySelector(".wfold");
+    if (d) d.ontoggle = () => { scoreOpen = d.open; };
+  }
   function renderWatten() {
     const v = G.view, st = v.watten;
     if (!st) return;
@@ -174,12 +184,13 @@
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
-            <div class="geo-bar wblock-wrap">${wattBlock()}${ann}</div>
+            <div class="geo-bar wblock-wrap">${scoreFold(wattBlock(), `${esc(nameOf(self))}${self === me ? " <em>(du)</em>" : ""} <b>${st.scores[self]}</b> : <b>${st.scores[opp]}</b> ${esc(nameOf(opp))}<span class="muted"> · bis ${st.target}</span>`)}${ann}</div>
             <section class="waction">${action}</section>
             ${wattenModeHtml(st)}
           </aside>
         </div>
       </main>`;
+    bindScoreFold();
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
@@ -221,7 +232,9 @@
   }
 
   return {
+    bindScoreFold,
     renderWatten,
+    scoreFold,
     stackHands,
     wBack,
     wCard,

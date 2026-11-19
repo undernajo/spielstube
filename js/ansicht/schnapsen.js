@@ -149,11 +149,12 @@
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${augen(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
-            <div class="geo-bar wblock-wrap">${block}</div>
+            <div class="geo-bar wblock-wrap">${G.scoreFold(block, `${esc(nameOf(self))}${self === me ? " <em>(du)</em>" : ""} <b>${st.score[self]}</b> : <b>${st.score[opp]}</b> ${esc(nameOf(opp))}<span class="muted"> · bis ${st.target}</span>`)}</div>
             ${schHelpHtml(st, opt, myTurn)}
           </aside>
         </div>
       </main>`;
+    G.bindScoreFold();
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });

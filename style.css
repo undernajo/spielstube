@@ -2015,3 +2015,52 @@ body.qb-play .banner.win .trophy { display: none; }
   .alm-bar .msg { margin: 0; padding: 6px 10px; font-size: .85rem; text-align: center; max-width: 560px; width: 100%; justify-self: center; }
   .screen.game.alm:has(.alm-bar:not(:empty)) { padding-bottom: 96px; }
 }
+
+/* Stadt, Land, Fluss am Handy: schlanke Zeilen – kleine Überschrift direkt über dem Feld, ohne eigenen Kasten */
+@media (max-width: 640px) {
+  .slf-form { gap: 8px; }
+  .slf-field { gap: 2px; padding: 0; background: none; border: 0; border-radius: 0; }
+  .slf-field span { font-size: .78rem; padding-left: 4px; }
+  .slf-field input { font-size: 1.1rem; padding: 9px 12px; }
+  .slf-field.surprise { background: none; }
+  .slf-field.surprise input { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+}
+
+/* Watten/Schnapsen am Handy: Punktestand als eine Zeile, der ganze Block zum Aufklappen */
+.wfold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
+  font-size: 1rem; padding: 2px 4px; }
+.wfold > summary::-webkit-details-marker { display: none; }
+.wfold > summary b { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.wfold > summary em { font-style: normal; color: var(--muted); font-size: .85em; }
+.wfold > summary::after { content: "▸"; color: var(--accent); margin-left: 4px; transition: transform .15s; }
+.wfold[open] > summary::after { transform: rotate(90deg); }
+.wfold[open] > summary { margin-bottom: 8px; }
+
+/* Siebzehn und Vier am Handy ab Runde 2: Kartenwerte zum Aufklappen */
+.kg-valfold { margin-top: 10px; text-align: center; }
+.kg-valfold > summary { cursor: pointer; color: var(--muted); font-size: .85rem; font-weight: 700; list-style: none; }
+.kg-valfold > summary::-webkit-details-marker { display: none; }
+.kg-valfold > summary::before { content: "▸ "; color: var(--accent); }
+.kg-valfold[open] > summary::before { content: "▾ "; }
+.kg-valfold .kg-scale { display: inline-grid; margin-top: 6px; }
+
+/* Zehnkampf am Handy: Spieler als schlanke Chips in einer Reihe – wer am Zug ist, leuchtet; Rundenpunkte klein daneben */
+@media (max-width: 640px) {
+  .screen.game .players { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+  .screen.game .players .chip { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-width: 1px; border-radius: 999px; }
+  .screen.game .players .chip.turn { box-shadow: 0 0 0 3px rgba(255, 200, 61, .2); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+  .screen.game .players .chip-l1 { gap: 5px; }
+  .screen.game .players .chip-name { font-size: .9rem; max-width: 9em; }
+  .screen.game .players .chip-score b { font-size: 1rem; }
+  .screen.game .players .chip-score small, .screen.game .players .bar, .screen.game .players .chip-l2 .badge { display: none; }
+  .screen.game .players .chip-l2 { min-height: 0; font-size: .75rem; }
+  .screen.game .players .chip-l2:not(:has(.rpts:not(:empty))) { display: none; }
+}
+
+/* Almsommer am Handy/Tablet: Würfel und Tal in einem gemeinsamen Kasten (oben würfeln, direkt darunter ankreuzen) */
+@media (max-width: 860px) {
+  .alm-layout { row-gap: 0; }
+  .alm-layout > .alm-dice { border-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; padding-bottom: 8px; }
+  .alm-layout > .alm-boardbox { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; padding-top: 4px; }
+  .alm-layout > .alm-others { margin-top: 14px; }
+}

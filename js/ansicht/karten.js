@@ -98,8 +98,11 @@
         kgSound(sounds, 380, 0);
         const valuesBox = `<div class="bus-scale kg-scale" aria-label="Kartenwerte"><span class="bs-end">Werte</span>${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
           .map(([n, v]) => `<span><em>${n}</em><b>${v}</b></span>`).join("")}<span class="kg-feuer">2 Asse = 🔥</span></div>`;
-        main = `<div class="panel kg-table"><div class="kg-goal"><b>Ziel: so nah wie möglich an 21 – aber nicht darüber!</b></div>
-          <div class="bus-q with-scale"><div class="bus-q-main">${mine}</div>${valuesBox}</div></div>
+        // Handy ab der 2. Runde: Ziel ist bekannt, die Werte gibt's zum Aufklappen – der Tisch bleibt übersichtlich
+        const brief = innerWidth <= 640 && st.round > 1;
+        main = `<div class="panel kg-table">${brief ? "" : `<div class="kg-goal"><b>Ziel: so nah wie möglich an 21 – aber nicht darüber!</b></div>`}
+          ${brief ? `<div class="bus-q-main">${mine}</div><details class="kg-valfold"><summary>Kartenwerte</summary>${valuesBox}</details>`
+            : `<div class="bus-q with-scale"><div class="bus-q-main">${mine}</div>${valuesBox}</div>`}</div>
           ${others ? `<div class="kg-opps">${others}</div>` : ""}`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte

@@ -130,7 +130,7 @@
     }).join("");
     const cols = o.small ? M.COLS : rot ? M.ROWS : M.COLS;
     return `<div class="${o.small ? "alm-mini" : "alm-board"}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cells}</div>`
-      + (o.small ? "" : `<div class="alm-coords">${rot ? Array.from({ length: M.ROWS }, (_, k) => `<span>${M.ROWS - k}</span>`).join("") : Array.from({ length: M.COLS }, (_, c) => `<span>${String.fromCharCode(65 + c)}</span>`).join("")}</div>
+      + (o.small ? "" : `${rot ? "" : `<div class="alm-coords">${Array.from({ length: M.COLS }, (_, c) => `<span>${String.fromCharCode(65 + c)}</span>`).join("")}</div>`}
         ${rot ? `<p class="muted small alm-rot">Das Tal ist gedreht: die Gipfel sind rechts.</p>` : ""}`);
   }
   const nameOf = (v, id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
@@ -141,7 +141,6 @@
     if (!st) return;
     M = ALM.map(st.map);
     const seated = st.seats.includes(G.myId);
-    const desk = innerWidth > 860; // PC-Aufteilung: Infos in der rechten Spalte
     const key = v.code + ":" + st.week + ":" + st.step;
     if (almSel.key !== key) almSel = { key, di: null, terrain: null, cells: [] };
     if (st.step === "play" && almSent && almSent !== key) almSent = null;
@@ -214,8 +213,9 @@
         actions = `<div class="alm-actions"><button class="btn primary alm-go" id="alm-go" ${terrain && almSel.cells.length && !err ? "" : "disabled"}>✓ Ankreuzen</button>
           <button class="btn ghost" id="alm-clear" ${almSel.cells.length ? "" : "disabled"} title="Auswahl löschen">↺ Löschen</button><button class="btn ghost" id="alm-rest" title="diese Woche nichts ankreuzen">☕ Ruhetag</button></div>`;
       }
-      // am PC stehen Woche, Gewitter und die eigenen Punkte hier statt in der Leiste über dem Tal (mehr Höhe fürs Tal)
-      const head = desk ? `<div class="alm-dhead"><span class="game-label">Woche ${st.week} von ${st.weeks}</span>${stormTrack}${seated ? `<span class="alm-mypts">Deine Punkte <b>${pts(G.myId)}</b></span>` : ""}</div>` : "";
+      // Woche, Gewitter und die eigenen Punkte stehen im Würfelkasten statt in einer eigenen Leiste (mehr Höhe fürs Tal);
+      // die Punkte der anderen zeigen die kleinen Täler
+      const head = `<div class="alm-dhead"><span class="game-label">Woche ${st.week}/${st.weeks}</span>${stormTrack}${seated ? `<span class="alm-mypts">Deine Punkte <b>${pts(G.myId)}</b></span>` : ""}</div>`;
       const dice = `<section class="panel alm-dice">${head}<div class="alm-dicerow">${st.dice.map(dieHtml).join("")}</div>
           ${stormNow && st.stormLimit ? `<div class="alm-stormnote">⚡ Gewitter! (${st.storms} von ${st.stormLimit})</div>` : ""}${task}<div class="alm-bar">${msg}${actions}</div></section>`;
 
@@ -234,7 +234,7 @@
         <header class="top topbar">${headBrandHtml("alm")}<div class="meta">${esc(st.mapName)} · ${esc(st.lengthName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">
-          ${desk && st.step !== "final" ? "" : `<div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>`}
+          ${st.step !== "final" ? "" : `<div class="geo-bar"><span class="game-label">${st.step === "final" ? "Endstand" : `Woche ${st.week} von ${st.weeks}`}</span>${stormTrack}<div class="geo-scores">${chips}</div></div>`}
           ${main}
         </section>
       </main>`;
