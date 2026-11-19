@@ -39,7 +39,7 @@
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
   const GAMES = [
-    { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
+    { key: "querbeet", color: "#ff8a5c", name: "Stubenmeisterschaft", short: "Meisterschaft", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Zehnkampf", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
     { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Früh raten lohnt sich", icon: hinweisIcon() },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
@@ -1637,7 +1637,7 @@
       <main class="screen game">
         <header class="top topbar">
           ${headBrandHtml("zehn")}
-          <div class="meta">${setLabel(v.cardSet)}${v.qb ? "Querbeet-Etappe · 1 Karte" : `Runde ${v.round} · bis ${v.target}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta">${setLabel(v.cardSet)}${v.qb ? "Meisterschafts-Etappe · 1 Karte" : `Runde ${v.round} · bis ${v.target}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
@@ -1863,9 +1863,9 @@
     const g = GAMES.find((x) => x.key === key) || GAMES[0];
     // In Querbeet steht die Etappe als kleines Abzeichen neben dem Spielnamen (statt einer Leiste, die etwas überdecken könnte)
     const q = view && view.qb, inStage = q && q.cur && !q.done && view.phase !== "querbeet" && view.phase !== "lobby";
-    const qbTag = inStage ? `<span class="qb-tag" title="Querbeet · Etappe ${q.idx + 1} von ${q.n}${q.idx === q.n - 1 ? " · Finale, zählt doppelt" : ""}">🧩 Etappe ${q.idx + 1}/${q.n}${q.idx === q.n - 1 ? " · Finale ×2" : ""}</span>` : "";
+    const qbTag = inStage ? `<span class="qb-tag" title="Stubenmeisterschaft · Etappe ${q.idx + 1} von ${q.n}${q.idx === q.n - 1 ? " · Finale, zählt doppelt" : ""}">🧩 Etappe ${q.idx + 1}/${q.n}${q.idx === q.n - 1 ? " · Finale ×2" : ""}</span>` : "";
     return `<div class="brand" title="Spielstube">${LOGO}</div>
-      <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b>${qbTag}</div>`;
+      <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${g.short ? `<span class="nm-long">${esc(g.name)}</span><span class="nm-short">${esc(g.short)}</span>` : esc(g.name)}</b>${qbTag}</div>`;
   }
   function gameBannerHtml() {
     const g = GAMES.find((x) => x.key === view.game) || GAMES[0];
@@ -2124,7 +2124,7 @@
         `<button type="button" class="qb-mix ${QB.mixOf(qbOpts.off) === k ? "on" : ""}" data-qbmix="${k}">${m.icon} ${esc(m.name)}</button>`).join("")}</div></div>
       ${qbGamesHtml(qbOpts.off, false)}
       <p class="muted small">Jede Etappe ist eine Kurzfassung. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>
-      <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Querbeet starten</button>
+      <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Meisterschaft starten</button>
       ${!games.length ? `<p class="err small">Bitte mindestens ein Spiel auswählen.</p>` : ""}`;
   }
   function landSettingsHtml() {
@@ -2321,7 +2321,7 @@
       </ul>
     </details>`;
   const qbRulesHtml = `
-    <details class="rules"><summary>Regeln: Querbeet</summary>
+    <details class="rules"><summary>Regeln: Stubenmeisterschaft</summary>
       <ul>
         <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 1 Karte Zehnkampf, 3 Orte bei „Wo liegt das?“, 1 Buchstabe Stadt, Land, Fluss).</li>
         <li>Pro Etappe zählt nur die Platzierung: Platz 1 bekommt ${QB.POINTS[0]} Partypunkte, Platz 2 ${QB.POINTS[1]}, Platz 3 ${QB.POINTS[2]}, alle anderen 1. Bei Gleichstand bekommen alle die höhere Punktzahl.</li>

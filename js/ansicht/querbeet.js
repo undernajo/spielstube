@@ -38,7 +38,7 @@
     const g = qbGame(q.cur.game), fin = q.idx === q.n - 1;
     qbBarEl.className = "on" + (q.done ? " done" : "");
     qbBarEl.style.setProperty("--gc", "#ff8a5c");
-    qbBarEl.innerHTML = `<span class="qb-chip"><span class="gt-icon xs" aria-hidden="true">${qbGame("querbeet").icon}</span><b>Querbeet</b>
+    qbBarEl.innerHTML = `<span class="qb-chip"><span class="gt-icon xs" aria-hidden="true">${qbGame("querbeet").icon}</span><b>Meisterschaft</b>
         <span class="muted">Etappe ${q.idx + 1}/${q.n}${fin ? " · Finale ×2" : ""}</span></span>
       ${q.done ? `<span class="qb-done">Etappe geschafft!</span>${qbReadyBtnHtml(q, fin ? "Zur Siegerehrung" : "Weiter zum Zwischenstand")}`
         : `<span class="qb-cur muted small">${esc(g.name)} · ${esc(q.cur.detail)}</span>`}`;
@@ -78,15 +78,15 @@
         ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div></div>`; };
     let main = "";
     if (q.step === "intro") {
-      main = `<div class="panel qb-intro"><h2>Querbeet – ${q.n} Etappen</h2>
-          <p class="muted">${q.theme !== "mix" ? `Thema: <b>${esc(QB.THEMES[q.theme].name)}</b>. ` : ""}Jede Etappe ist eine Kurzfassung eines Spiels. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.${q.jokerOn ? " Jeder hat einen 🃏 Joker: vor einer Etappe gesetzt, zählt sie für dich doppelt." : ""}</p>${path}</div>
+      main = `<div class="panel qb-intro"><h2>Stubenmeisterschaft</h2>
+          <p class="muted"><b>${q.n} Etappen.</b> ${q.theme !== "mix" ? `Thema: <b>${esc(QB.THEMES[q.theme].name)}</b>. ` : ""}Jede Etappe ist eine Kurzfassung eines Spiels. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.${q.jokerOn ? " Jeder hat einen 🃏 Joker: vor einer Etappe gesetzt, zählt sie für dich doppelt." : ""}</p>${path}</div>
         ${nextCard(q.next, false)}`;
     } else if (q.step === "break") {
       main = `${path}<div class="qb-grid">${stageRes(last, `Ergebnis Etappe ${q.stages.length}`)}${standings("Zwischenstand")}</div>${nextCard(q.next, q.lastDouble)}`;
     } else {
       const w = ranking.filter((p) => (q.winners || []).includes(p.id));
-      main = `<div class="banner win"><div class="trophy">🏆</div><b>${w.map((p) => esc(p.name)).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"} Querbeet!</b>
-          <div class="banner-actions">${G.isHost ? `<button id="qb-restart" class="btn primary">Nochmal Querbeet</button><button id="toLobby" class="btn ghost">Zur Lobby</button>` : `<span class="muted">Der Gastgeber entscheidet, wie es weitergeht.</span>`}</div></div>
+      main = `<div class="banner win"><div class="trophy">🏆</div><b>${w.map((p) => esc(p.name)).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"} die Stubenmeisterschaft!</b>
+          <div class="banner-actions">${G.isHost ? `<button id="qb-restart" class="btn primary">Neue Meisterschaft</button><button id="toLobby" class="btn ghost">Zur Lobby</button>` : `<span class="muted">Der Gastgeber entscheidet, wie es weitergeht.</span>`}</div></div>
         ${(q.titles || []).length ? `<div class="panel qb-titles"><h3>Auszeichnungen</h3><div class="qb-tgrid">${q.titles.map((t) => `<div class="qb-title"><b>${esc(t.name)}</b>
           <span>${t.ids.map((id) => `<span style="color:${colorOf(id)}">${esc(nameOf(id))}</span>`).join(" & ")}</span><small class="muted">${esc(t.why)}</small></div>`).join("")}</div></div>` : ""}
         ${path}<div class="qb-grid">${standings("Endstand")}${stageRes(last, "Finale (doppelte Punkte)")}</div>

@@ -2433,3 +2433,7 @@ body.qb-play .banner.win .trophy { display: none; }
   :is(.lobby-host, .lobby-guest) .gamegrid .gametile { grid-template-areas: "icon name name wish" "icon desc two two"; }
   :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-two { align-self: center; }
 }
+/* lange Spielnamen in der Kopfzeile: am Handy die Kurzform („Meisterschaft“) */
+.gtitle .nm-short { display: none; }
+@media (max-width: 640px) { .gtitle .nm-long { display: none; } .gtitle .nm-short { display: inline; } }
+@media (max-width: 640px) { .top.topbar:has(.nm-short) .meta { display: none; } } /* Etappen stehen in der Übersicht darunter */
