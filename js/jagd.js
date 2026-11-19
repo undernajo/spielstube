@@ -109,7 +109,9 @@
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     // Kreis: jeder jagt im Revier des nächsten (Anna → Berta → Chris → Anna); zu zweit jagt man beim anderen
     const target = Object.fromEntries(seats.map((id, k) => [id, seats[(k + 1) % seats.length]]));
-    s.jagd = { opts: { length, map: mapChoice }, map, rounds: LENGTHS[length].rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [], cur: [],
+    // Querbeet: eigene Rundenzahl (free)
+    const rounds = opts.free && Number.isInteger(opts.rounds) && opts.rounds > 0 && opts.rounds <= CELLS ? opts.rounds : LENGTHS[length].rounds;
+    s.jagd = { opts: { length, map: mapChoice }, free: !!opts.free, map, rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [], cur: [],
       shots: Object.fromEntries(seats.map((id) => [id, {}])), pick: {}, scout: {}, pts: Object.fromEntries(seats.map((id) => [id, 0])),
       kills: [], last: [], news: [], endReason: "", winners: null };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -206,10 +208,10 @@
     const st = s.jagd;
     if (!st) return null;
     return {
-      step: st.step, round: st.round, rounds: LENGTHS[st.opts.length].open ? null : st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
+      step: st.step, round: st.round, rounds: LENGTHS[st.opts.length].open && st.rounds === CELLS ? null : st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
       shots: st.shots, kills: st.kills, pts: st.pts, last: st.last, cur: st.cur || [], news: st.news.slice(-8), scoutUsed: Object.keys(st.scout),
       left: Object.fromEntries(st.seats.map((t) => [t, ANIMALS.filter((a) => !killed(st, t, a.id)).map((a) => a.id)])),
-      endReason: st.endReason, winners: st.winners, lengthName: LENGTHS[st.opts.length].name, map: st.map, mapName: mapOf(st.map).name,
+      endReason: st.endReason, winners: st.winners, lengthName: st.free ? `${st.rounds} Runden` : LENGTHS[st.opts.length].name, map: st.map, mapName: mapOf(st.map).name,
       // am Ende alle Verstecke aufdecken
       reveal: st.step === "final" ? st.hide : null,
     };

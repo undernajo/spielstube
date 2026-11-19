@@ -1296,7 +1296,8 @@ textarea { resize: vertical; font: inherit; }
 body.qb-play { padding-bottom: 70px; }
 /* In Querbeet geht es nicht über „Nochmal spielen“ / „Nächste Runde“ weiter, sondern über die Leiste */
 body.qb-play #next, body.qb-play #restart, body.qb-play #slf-restart, body.qb-play #hl-restart, body.qb-play #fq-restart,
-body.qb-play #du-restart, body.qb-play #geo-restart, body.qb-play #land-restart, body.qb-play #quiz-restart, body.qb-play #kg-restart, body.qb-play #toLobby { display: none !important; }
+body.qb-play #du-restart, body.qb-play #geo-restart, body.qb-play #land-restart, body.qb-play #quiz-restart, body.qb-play #kg-restart,
+body.qb-play #alm-restart, body.qb-play #jg-restart, body.qb-play #toLobby { display: none !important; }
 #qbbar .qb-chip, #qbbar .qb-chip .muted { white-space: nowrap; }
 @media (max-width: 640px) {
   /* Handy: während der Etappe nur ein kleines Abzeichen unten rechts */

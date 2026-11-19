@@ -429,6 +429,7 @@
       case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
       case "siebzehn": case "stich": case "bus": return !!S.karten && S.karten.step === "final";
       case "alm": return !!S.alm && S.alm.step === "final";
+      case "jagd": return !!S.jagd && S.jagd.step === "final";
     }
     return false;
   }
@@ -446,6 +447,7 @@
       case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
       case "siebzehn": case "stich": case "bus": return all(S.karten.total);
       case "alm": return all(ALM.publicState(S).totals);
+      case "jagd": return all(S.jagd.pts);
     }
     return all({});
   }
@@ -467,13 +469,14 @@
       case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
       case "siebzehn": case "stich": case "bus": ok = KG.start(S, { ...o, free: true }, now); break;
       case "alm": ok = ALM.start(S, { ...o, free: true }); break;
+      case "jagd": ok = JG.start(S, { ...o, free: true }); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null; S.alm = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -2066,13 +2069,13 @@
   }
   // Liste der Querbeet-Spiele: beim Gastgeber zum Anhaken, bei Gästen gleich aussehend, aber nur zum Ansehen
   function qbGamesHtml(off, readOnly) {
-    const two = playing().length === 2;
+    const two = playing().length === 2, solo = playing().length < 2;
     const mx = QB.mixOf(off), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
     const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)${mxTxt}</span>`
       : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>`;
-    return `<div class="field">${head}<div class="setlist qb-games ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = D.two && !two;
+    return `<div class="field">${head}<div class="setlist qb-games ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = (D.two && !two) || (D.min2 && solo);
         return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
-          <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.short)}</span></label>`; }).join("")}</div></div>`;
+          <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.min2 && solo ? "ab 2 Spielern" : D.short)}</span></label>`; }).join("")}</div></div>`;
   }
   function quizSettingsHtml(mode) {
     const um = mode === "umriss";
