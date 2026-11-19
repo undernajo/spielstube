@@ -1345,6 +1345,37 @@
     if (onlyTwo && n > 2) return `<p class="muted small">Es spielen die ersten beiden, die anderen schauen zu.</p>`;
     return "";
   }
+  // Gäste am Handy: kompakte Lobby – oben eine Leiste (Code, Mitspieler, Kamera/Mikro/Einladen/Verlassen), dann groß das
+  // gewählte Spiel; Einstellungen, Regeln und die Spielübersicht zum Wünschen zum Aufklappen. Das Organisatorische macht der Gastgeber.
+  const compactGuest = () => !isHost && innerWidth <= 640;
+  const gcOpen = { set: false, rules: false, more: false };
+  let gcLast = null;
+  addEventListener("resize", () => { const c = compactGuest(); if (view && view.phase === "lobby" && gcLast !== null && c !== gcLast) renderLobby(); });
+  function compactGuestLobbyHtml() {
+    const host = view.players.find((p) => p.id === view.hostId);
+    const chips = view.players.map((p, i) => `<span class="gc-chip ${p.connected ? "" : "off"}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><i></i>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? " 👑" : ""}</span>`).join("");
+    const det = (key, label, body) => body ? `<details class="gc-det" data-gc="${key}" ${gcOpen[key] ? "open" : ""}><summary>${label}</summary><div class="gc-body">${body}</div></details>` : "";
+    return `
+      <main class="screen lobby lobby-guest gc">
+        <div class="panel gc-bar">
+          <div class="gc-top"><button type="button" class="gc-code" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>
+            <span class="gc-btns">${camOK ? `<button class="btn ghost sm ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}" aria-label="Kamera">📷</button>
+              <button class="btn ghost sm ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}" aria-label="Mikrofon">🎤</button>` : ""}
+              <input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn ghost sm" title="Mitspieler einladen" aria-label="Mitspieler einladen">🔗</button>
+              <button id="leave" class="btn ghost sm" title="Stube verlassen" aria-label="Verlassen">✕</button></span></div>
+          <div class="gc-chips">${chips}</div>
+          ${status ? `<p class="err">${esc(status)}</p>` : ""}
+        </div>
+        <section class="panel gc-now">
+          ${gameBannerHtml()}
+          <p class="gc-wait">⏳ Warte, bis ${host ? `<b>${esc(host.name)}</b>` : "der Gastgeber"} das Spiel startet …</p>
+          ${det("set", "Einstellungen ansehen", guestSettingsHtml())}
+          ${det("rules", "So geht's", rulesViewHtml(view.game))}
+        </section>
+        ${det("more", guestInfo ? "Spiele ansehen & wünschen" : "Alle Spiele ansehen & wünschen", guestGamesHtml())}
+        ${reportsHtml()}
+      </main>`;
+  }
   function renderLobby() {
     const isFile = location.protocol === "file:";
     const settings = !isHost ? "" : `
@@ -1373,7 +1404,12 @@
     // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
     // Scroll-Stellung der Spalten merken: die Lobby wird bei jeder Änderung neu gezeichnet (z. B. nach einem Wunsch)
     const keepScroll = [...app.querySelectorAll(".lobby .lobby-col")].map((c) => c.scrollTop), keepY = scrollY;
-    app.innerHTML = `
+    gcLast = compactGuest();
+    if (gcLast) {
+      if (guestInfo) gcOpen.more = true; // Erklärung eines Spiels offen → Bereich aufgeklappt lassen
+      app.innerHTML = compactGuestLobbyHtml();
+      app.querySelectorAll("[data-gc]").forEach((d) => d.addEventListener("toggle", () => { gcOpen[d.dataset.gc] = d.open; }));
+    } else app.innerHTML = `
       <main class="screen lobby ${isHost ? "lobby-host" : "lobby-guest"}">
         <h1 class="logo small">${LOGO}</h1>
         <div class="lobby-cols">

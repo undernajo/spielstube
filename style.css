@@ -1970,3 +1970,24 @@ body.qb-play .banner.win .trophy { display: none; }
 .setlist.qb-games .setopt input { grid-row: 1 / span 2; align-self: center; width: 18px; height: 18px; }
 .setlist.qb-games .setname { grid-column: 2; font-size: .9rem; line-height: 1.2; overflow-wrap: anywhere; }
 .setlist.qb-games .setcount { grid-column: 2; text-align: left; font-size: .72rem; line-height: 1.25; white-space: normal; }
+
+/* ---------- Gäste am Handy: kompakte Lobby ---------- */
+.lobby.gc { display: grid; gap: 10px; padding-top: 10px; }
+.gc-bar { display: grid; gap: 8px; padding: 10px 12px; }
+.gc-top { display: flex; align-items: center; gap: 8px; }
+.gc-code { font: 700 1.15rem Fredoka, sans-serif; letter-spacing: .18em; color: var(--accent); background: none; border: 1px dashed var(--line); border-radius: 10px; padding: 4px 10px; cursor: pointer; }
+.gc-btns { margin-left: auto; display: flex; gap: 6px; }
+.gc-btns .btn { min-width: 38px; padding: 6px 8px; }
+.gc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.gc-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px 2px 6px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); font-size: .85rem; font-weight: 700; }
+.gc-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); }
+.gc-chip.off { opacity: .5; } .gc-chip em { font-style: normal; font-weight: 600; color: var(--muted); }
+.gc-now { display: grid; gap: 10px; }
+.gc-wait { margin: 0; color: var(--muted); }
+.gc-det { border-top: 1px solid var(--line); }
+.gc-det > summary { cursor: pointer; padding: 10px 2px 2px; font-weight: 700; list-style: none; display: flex; align-items: center; gap: 8px; }
+.gc-det > summary::-webkit-details-marker { display: none; }
+.gc-det > summary::before { content: "▸"; color: var(--accent); transition: transform .15s; }
+.gc-det[open] > summary::before { transform: rotate(90deg); }
+.gc-body { display: grid; gap: 10px; padding-top: 8px; }
+.lobby.gc > .gc-det { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 2px 14px 12px; }
