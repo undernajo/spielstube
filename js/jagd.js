@@ -4,7 +4,7 @@
 // Regeln:
 //  1. Revier 9 × 9, Gelände für alle gleich. Wild: Fuchs 1 Feld (überall), Hirschpaar 2 (Wald), Gamsrudel 3 (Fels),
 //     Murmeltier-Kolonie 4 (Wiese). Formen frei, aber zusammenhängend; verschiedene Tiere berühren sich nicht.
-//  2. Schuss: Treffer / 🐾 Fuchsspur (der Fuchs steht direkt daneben) / nichts. Alle Schüsse sind für alle sichtbar.
+//  2. Schuss: Treffer / 🐾 Fuchsspur (der Fuchs steht direkt daneben) / nichts – sofort aufgelöst und für alle sichtbar.
 //  3. Hochsitz: einmal pro Partie, kostet keinen Schuss – 3 × 3 beobachten (nur man selbst sieht das Ergebnis).
 //  4. Punkte: jeder Treffer +1, wer ein Tier fertig macht, erlegt es (+ Bonus je Tier). Ende nach der Rundenzahl oder sobald
 //     jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde). Meiste Punkte gewinnt.
@@ -87,7 +87,7 @@
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     // Kreis: jeder jagt im Revier des nächsten (Anna → Berta → Chris → Anna); zu zweit jagt man beim anderen
     const target = Object.fromEntries(seats.map((id, k) => [id, seats[(k + 1) % seats.length]]));
-    s.jagd = { opts: { length }, rounds: LENGTHS[length].rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [],
+    s.jagd = { opts: { length }, rounds: LENGTHS[length].rounds, round: 0, seats, target, step: "hide", hide: {}, ready: {}, cleared: [], cur: [],
       shots: Object.fromEntries(seats.map((id) => [id, {}])), pick: {}, scout: {}, pts: Object.fromEntries(seats.map((id) => [id, 0])),
       kills: [], last: [], news: [], endReason: "", winners: null };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -103,25 +103,24 @@
     const best = Math.max(...st.seats.map((id) => st.pts[id] || 0));
     st.winners = st.seats.filter((id) => (st.pts[id] || 0) === best);
   }
-  // Runde auflösen: alle Schüsse gleichzeitig aufdecken, Punkte vergeben, erlegtes Wild feststellen
+  // Schuss sofort auflösen (jedes Revier hat nur einen Schützen – das Ergebnis verrät niemandem etwas):
+  // Treffer +1, ist das Tier damit ganz getroffen, ist es erlegt (+ Bonus)
+  function shoot(s, pid, t, i) {
+    const st = s.jagd, r = resolveShot(st.hide[t], i);
+    st.shots[t][i] = { r, by: [pid], round: st.round };
+    if (r === "hit") st.pts[pid] = (st.pts[pid] || 0) + HIT;
+    st.cur.push({ by: pid, t, i, r });
+    const a = ANIMALS.find((x) => (st.hide[t][x.id] || []).includes(i));
+    if (a && !killed(st, t, a.id) && st.hide[t][a.id].every((c) => st.shots[t][c] && st.shots[t][c].r === "hit")) {
+      st.pts[pid] = (st.pts[pid] || 0) + a.kill;
+      st.kills.push({ t, a: a.id, cells: st.hide[t][a.id].slice(), by: [pid], round: st.round });
+      st.news.push({ round: st.round, t, a: a.id, by: [pid], pts: a.kill + HIT });
+    }
+  }
+  // Runde abschließen, wenn alle geschossen haben: Ende prüfen, sonst nächste Runde
   function endRound(s) {
-    const st = s.jagd, last = [];
-    for (const [pid, p] of Object.entries(st.pick)) {
-      const board = st.shots[p.t], r = resolveShot(st.hide[p.t], p.i);
-      if (board[p.i]) board[p.i].by.push(pid); else board[p.i] = { r, by: [pid], round: st.round };
-      if (r === "hit") st.pts[pid] = (st.pts[pid] || 0) + HIT;
-      last.push({ by: pid, t: p.t, i: p.i, r });
-    }
-    // Tiere, die mit dieser Runde ganz getroffen sind: erlegt – gutgeschrieben allen, die diese Runde darauf geschossen haben
-    for (const t of st.seats) for (const a of ANIMALS) {
-      const cells = (st.hide[t] || {})[a.id];
-      if (!cells || killed(st, t, a.id) || !cells.every((i) => st.shots[t][i] && st.shots[t][i].r === "hit")) continue;
-      const by = [...new Set(last.filter((x) => x.t === t && cells.includes(x.i)).map((x) => x.by))];
-      by.forEach((id) => { st.pts[id] = (st.pts[id] || 0) + a.kill; });
-      st.kills.push({ t, a: a.id, cells: cells.slice(), by, round: st.round });
-      st.news.push({ round: st.round, t, a: a.id, by, pts: a.kill + HIT });
-    }
-    st.last = last; st.pick = {};
+    const st = s.jagd;
+    st.last = st.cur; st.cur = []; st.pick = {};
     st.cleared = st.seats.filter((pid) => !hasWild(st, st.target[pid])); // wer das Revier seines Nachbarn leergejagt hat
     if (st.cleared.length) return finish(s, "leer");
     if (st.round >= st.rounds) return finish(s, "runden");
@@ -160,6 +159,7 @@
         const t = st.target[pid], i = Number(a.i);
         if (!validTarget(st, pid, t, i) || st.shots[t][i]) return false;
         st.pick[pid] = { t, i };
+        shoot(s, pid, t, i);
         tick(s); return true;
       }
       case "jgScout": { // Hochsitz: kostet keinen Schuss, Ergebnis nur für den Spieler selbst
@@ -185,7 +185,7 @@
     if (!st) return null;
     return {
       step: st.step, round: st.round, rounds: st.rounds, seats: st.seats, target: st.target, cleared: st.cleared || [], ready: Object.keys(st.ready), picked: Object.keys(st.pick),
-      shots: st.shots, kills: st.kills, pts: st.pts, last: st.last, news: st.news.slice(-8), scoutUsed: Object.keys(st.scout),
+      shots: st.shots, kills: st.kills, pts: st.pts, last: st.last, cur: st.cur || [], news: st.news.slice(-8), scoutUsed: Object.keys(st.scout),
       left: Object.fromEntries(st.seats.map((t) => [t, ANIMALS.filter((a) => !killed(st, t, a.id)).map((a) => a.id)])),
       endReason: st.endReason, winners: st.winners, lengthName: LENGTHS[st.opts.length].name,
       // am Ende alle Verstecke aufdecken

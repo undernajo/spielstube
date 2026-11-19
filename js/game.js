@@ -2360,7 +2360,7 @@
     <details class="rules"><summary>Regeln: Auf der Jagd</summary>
       <ul>
         <li>Jeder versteckt sein Wild im eigenen Revier (alle haben dasselbe Gelände): <b>Fuchs</b> (1 Feld, überall), <b>Hirschpaar</b> (2 Felder, Wald), <b>Gamsrudel</b> (3 Felder, Fels), <b>Murmeltier-Kolonie</b> (4 Felder, Wiese). Die Form ist frei, die Felder müssen aber zusammenhängen; verschiedene Tiere berühren sich nicht.</li>
-        <li>Jeder jagt im <b>Revier seines Nachbarn</b> (im Kreis: Anna bei Berta, Berta bei Chris, Chris bei Anna; zu zweit beim anderen). Jede Runde schießen <b>alle gleichzeitig</b> einmal; aufgedeckt wird, wenn alle geschossen haben.</li>
+        <li>Jeder jagt im <b>Revier seines Nachbarn</b> (im Kreis: Anna bei Berta, Berta bei Chris, Chris bei Anna; zu zweit beim anderen). Jede Runde schießen <b>alle gleichzeitig</b> einmal – ob du getroffen hast, siehst du sofort; die nächste Runde beginnt, wenn alle geschossen haben.</li>
         <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
         <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
         <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich im Revier deines Nachbarn beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>

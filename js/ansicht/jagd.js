@@ -34,7 +34,7 @@
 
   // ---------- lokaler Zustand ----------
   let draft = null;        // Verstecken: { key, hide: {tier: [felder]}, sel }
-  let aim = { key: null, t: null, i: null, scope: false }; // Zielen in der laufenden Runde
+  let aim = { key: null, t: null, i: null, scope: false, sc: null }; // Zielen in der laufenden Runde
   let sentKey = null;      // Runde, für die schon geschossen wurde
   let newsSeen = null, confettiKey = null;
 
@@ -70,6 +70,11 @@
       if (lastAt[i]) { cls.push("last"); inner += `<span class="jlast" style="--pc:${colorOf(v, lastAt[i][0])}"></span>`; }
       if (o.pick === i) { cls.push("picked"); inner += `<span class="jmark aimx">⌖</span>`; }
       if (o.aim && o.aim.i === i) cls.push("aim");
+      if (o.scopeArea && o.scopeArea.includes(i)) { // ein gemeinsamer Rahmen um den ganzen Bereich: Kanten nur außen
+        cls.push("scopearea");
+        const r = Math.floor(i / N), c = i % N, inA = (rr, cc) => rr >= 0 && rr < N && cc >= 0 && cc < N && o.scopeArea.includes(rr * N + cc);
+        if (!inA(r - 1, c)) cls.push("sa-t"); if (!inA(r + 1, c)) cls.push("sa-b"); if (!inA(r, c - 1)) cls.push("sa-l"); if (!inA(r, c + 1)) cls.push("sa-r");
+      }
       if (o.cand && o.cand(i)) cls.push("cand");
       if (o.click && o.click(i)) cls.push("can");
       cells += `<div class="${cls.join(" ")}" data-ji="${i}">${inner}</div>`;
@@ -118,7 +123,7 @@
             ${myHide ? boardHtml(v, { hide: myHide, small: true }) : ""}</section>`;
       }
     } else if (st.step === "play") {
-      if (aim.key !== roundKey) aim = { key: roundKey, t: aim.t, i: null, scope: false };
+      if (aim.key !== roundKey) aim = { key: roundKey, t: aim.t, i: null, scope: false, sc: null };
       // Nachbar-Jagd: jeder schießt nur im Revier des Nächsten im Kreis; Zuschauer können alle Reviere ansehen
       const myT = seated ? st.target[me] : null, hunter = seated ? st.seats.find((id) => st.target[id] === me) : null;
       if (seated) { if (aim.t !== myT && aim.t !== me) aim.t = myT; }
@@ -133,12 +138,19 @@
           <span class="jtab-name"><i></i>${seated ? `🎯 ${esc(gen(nameOf(v, id)))} Revier` : esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
         + (seated ? `<button type="button" class="jtab mine ${mineView ? "on" : ""}" data-jt="${esc(me)}" style="--pc:${colorOf(v, me)}"><span class="jtab-name">🏠 Dein Revier</span>
           <span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[me].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>` : "");
-      const lastHere = st.last.filter((x) => x.t === t);
-      const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `✓ Geschossen – warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
-        : aim.scope ? "🔭 Wähle die Mitte des Bereichs (3×3), den du vom Hochsitz beobachtest." : aim.i != null ? `Ziel: ${esc(gen(nameOf(v, t)))} Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier.`;
+      // neueste Schüsse je Revier: aus dieser Runde, sonst aus der letzten
+      const cur = st.cur || [], recent = (rv) => { const c = cur.filter((x) => x.t === rv); return c.length ? c : st.last.filter((x) => x.t === rv); };
+      const lastHere = recent(t);
+      const mine = cur.find((x) => x.by === me), resTxt = (x) => (x.r === "hit" ? "Treffer" : x.r === "track" ? "🐾 Fuchsspur" : "nichts");
+      const myKill = mine && st.kills.find((k) => k.round === st.round && k.by.includes(me) && k.cells.includes(mine.i));
+      const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `${mine ? (myKill ? `🎯 Treffer – ${AN[myKill.a].name} erlegt!` : mine.r === "hit" ? "🎯 Treffer!" : mine.r === "track" ? "🐾 Fuchsspur – der Fuchs ist direkt daneben." : "Nichts getroffen.") : "✓ Geschossen."} Warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
+        : aim.scope ? (aim.sc != null ? "🔭 Dieser Bereich wird beobachtet – „Beobachten“ bestätigt, oder tippe eine andere Mitte an." : "🔭 Tippe die Mitte des Bereichs (3×3) an, den du vom Hochsitz beobachten willst.") : aim.i != null ? `Ziel: ${esc(gen(nameOf(v, t)))} Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier.`;
       // Knöpfe: am Handy als feste Leiste unten, am PC in der rechten Spalte (das Revier bekommt dann die volle Höhe)
-      const acts = seated && !iShot ? `<button type="button" class="btn ghost ${aim.scope ? "on" : ""}" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
-          <button type="button" class="btn primary" data-jact="shoot" ${aim.i != null && !aim.scope ? "" : "disabled"}>🎯 Schießen</button>` : "";
+      const acts = !seated || iShot ? "" : aim.scope
+        ? `<button type="button" class="btn ghost" data-jact="scope">✕ Abbrechen</button>
+          <button type="button" class="btn primary" data-jact="observe" ${aim.sc != null ? "" : "disabled"}>🔭 Beobachten</button>`
+        : `<button type="button" class="btn ghost" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
+          <button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>🎯 Schießen</button>`;
       // PC: oben rechts, wer wo jagt, und die Knöpfe (Zuschauer: Reviere zum Durchblättern)
       const pickPanel = seated
         ? `<section class="panel jpick"><span class="game-label">Deine Jagd</span><p class="jwho">Du jagst in <b style="color:${colorOf(v, myT)}">${esc(gen(nameOf(v, myT)))}</b> Revier${st.seats.length > 2 ? ` · in deinem jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b>` : ""}.</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
@@ -146,8 +158,8 @@
       main = `<div class="jlayout">
           <section class="panel jtarget">
             <div class="jtabs jtabs-top">${tabs}</div>
-            ${mineView ? boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: st.last.filter((x) => x.t === me) })
-              : t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: pickHere, aim: iShot ? null : aim,
+            ${mineView ? boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me) })
+              : t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: iShot ? null : pickHere, aim: iShot || aim.scope ? null : aim, scopeArea: aim.scope && aim.sc != null ? J.area3(aim.sc) : null,
               click: (i) => seated && !iShot && (aim.scope || !st.shots[t][i]) }) : `<p class="muted">Kein Revier mit Wild mehr.</p>`}
           </section>
           <aside class="jside">
@@ -156,9 +168,9 @@
               <div class="jhead"><span class="game-label">Runde ${st.round} von ${st.rounds}</span>${seated ? `<span class="muted small">🔭 Hochsitz ${myScout ? "benutzt" : "frei"}</span>` : ""}</div>
               <div class="geo-scores">${chips}</div>
               <p class="jtask">${task}</p>
-              ${st.last.length ? `<p class="muted small jlastline">Letzte Runde: ${st.last.map((x) => `<b style="color:${colorOf(v, x.by)}">${esc(nameOf(v, x.by))}</b> → ${esc(nameOf(v, x.t))}: ${x.r === "hit" ? "Treffer" : x.r === "track" ? "🐾 Fuchsspur" : "nichts"}`).join(" · ")}</p>` : ""}
+              ${cur.length || st.last.length ? `<p class="muted small jlastline">${cur.length ? "Diese Runde" : "Letzte Runde"}: ${(cur.length ? cur : st.last).map((x) => `<b style="color:${colorOf(v, x.by)}">${esc(nameOf(v, x.by))}</b> → ${esc(nameOf(v, x.t))}: ${resTxt(x)}`).join(" · ")}</p>` : ""}
             </section>
-            ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: st.last.filter((x) => x.t === me), small: true })}</section>` : ""}
+            ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me), small: true })}</section>` : ""}
           </aside>
         </div>`;
       if (acts) bar = `<div class="jbar">${acts}</div>`;
@@ -205,13 +217,31 @@
     });
     // Zielen & Schießen
     app.querySelectorAll("[data-jt]").forEach((b) => b.onclick = () => { aim.t = b.dataset.jt; aim.i = null; renderJagd(); });
-    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; renderJagd(); });
+    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; renderJagd(); });
+    app.querySelectorAll('[data-jact="observe"]').forEach((b) => b.onclick = () => {
+      if (aim.sc == null) return;
+      send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd();
+    });
     app.querySelectorAll('[data-jact="shoot"]').forEach((b) => b.onclick = () => { if (aim.i == null) return; sentKey = roundKey; send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); if (sfx.tap) sfx.tap(); renderJagd(); });
     app.querySelectorAll(".jtarget .jcell.can").forEach((c) => c.onclick = () => {
       const i = Number(c.dataset.ji);
-      if (aim.scope) { aim.scope = false; send({ type: "jgScout", t: aim.t, i }); return renderJagd(); }
+      if (aim.scope) { aim.sc = i; return renderJagd(); } // Hochsitz: Mitte wählen, „Beobachten“ bestätigt
       aim.i = aim.i === i ? null : i; renderJagd();
     });
+    // PC: im Hochsitz-Modus zeigt schon das Überfahren mit der Maus den 3×3-Bereich (ohne neu zu zeichnen)
+    const tb = app.querySelector(".jtarget .jboard");
+    if (tb && aim.scope) {
+      const SIDES = ["sh-t", "sh-b", "sh-l", "sh-r"];
+      const mark = (c) => { tb.querySelectorAll(".scopehover").forEach((x) => x.classList.remove("scopehover", ...SIDES));
+        if (c == null) return;
+        const area = J.area3(c);
+        area.forEach((i) => { const el = tb.querySelector(`[data-ji="${i}"]`); if (!el) return;
+          el.classList.add("scopehover");
+          if (!area.includes(i - N)) el.classList.add("sh-t"); if (!area.includes(i + N)) el.classList.add("sh-b");
+          if (i % N === 0 || !area.includes(i - 1)) el.classList.add("sh-l"); if (i % N === N - 1 || !area.includes(i + 1)) el.classList.add("sh-r"); }); };
+      tb.onmouseover = (e) => { const c = e.target.closest(".jcell"); if (c) mark(Number(c.dataset.ji)); };
+      tb.onmouseleave = () => mark(null);
+    }
   }
 
   // Ohne Scrollen: Reviere so groß, wie die Fensterhöhe erlaubt (unter dem Revier bleibt Platz für die feste Knopfleiste)
