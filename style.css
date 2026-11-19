@@ -1962,3 +1962,11 @@ body.qb-play .banner.win .trophy { display: none; }
 .alm-fp { display: grid; gap: 6px; padding: 10px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--pc); }
 .alm-fh { display: flex; align-items: center; gap: 8px; } .alm-ft { margin-left: auto; font-size: 1.2rem; }
 @media (max-width: 480px) { .alm-die { width: 76px; height: 84px; } }
+
+/* Querbeet „Mit dabei“: zweispaltige, kompakte Häkchen-Kacheln – Häkchen links, Name, darunter klein die Kurzfassung */
+.setlist.qb-games { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.setlist.qb-games .setopt { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; align-items: start; align-content: center; column-gap: 8px; row-gap: 1px; padding: 7px 9px; }
+.setlist.qb-games .setopt:last-child:nth-child(odd) { grid-column: 1 / -1; } /* einzelne letzte Kachel über die ganze Breite */
+.setlist.qb-games .setopt input { grid-row: 1 / span 2; align-self: center; width: 18px; height: 18px; }
+.setlist.qb-games .setname { grid-column: 2; font-size: .9rem; line-height: 1.2; overflow-wrap: anywhere; }
+.setlist.qb-games .setcount { grid-column: 2; text-align: left; font-size: .72rem; line-height: 1.25; white-space: normal; }
