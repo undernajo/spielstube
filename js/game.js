@@ -1527,6 +1527,9 @@
     });
     const all = app.querySelector("#setall");
     if (all) all.onclick = () => { chosenSets = L.SET_KEYS.slice(); store.set("s10-sets", chosenSets); publish(); };
+    // alle angehakt: „Keine auswählen“ nimmt alle Haken weg (dann gezielt einzelne Sets anhaken)
+    const none = app.querySelector("#setnone");
+    if (none) none.onclick = () => { chosenSets = []; store.set("s10-sets", chosenSets); publish(); };
     if (start) start.onclick = () => {
       if (chosenGame === "slf") return send({ type: "start", game: "slf", opts: slfOpts });
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
@@ -2440,7 +2443,8 @@
     const count = (k) => CARDS.filter((c) => (c.set || "standard") === k).length;
     const fresh = (sets) => (S ? L.unseenCount(CARDS, sets, S.seen) : null);
     const total = cur.reduce((n, k) => n + count(k), 0);
-    return `<div class="field"><div class="pick-head"><span>Fragen – beliebig kombinierbar</span>${cur.length < L.SET_KEYS.length ? `<button type="button" id="setall" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>
+    return `<div class="field"><div class="pick-head"><span>Fragen – beliebig kombinierbar</span>${cur.length < L.SET_KEYS.length ? `<button type="button" id="setall" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>`
+      : `<button type="button" id="setnone" class="linkbtn" style="--gc:var(--accent)">Keine auswählen</button>`}</div>
       <div class="setlist">${L.SET_KEYS.map((k) => {
         const on = cur.includes(k), f = fresh([k]);
         return `<label class="setopt ${on ? "on" : ""}"><input type="checkbox" value="${k}" ${on ? "checked" : ""}>
