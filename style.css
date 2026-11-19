@@ -2437,3 +2437,11 @@ body.qb-play .banner.win .trophy { display: none; }
 .gtitle .nm-short { display: none; }
 @media (max-width: 640px) { .gtitle .nm-long { display: none; } .gtitle .nm-short { display: inline; } }
 @media (max-width: 640px) { .top.topbar:has(.nm-short) .meta { display: none; } } /* Etappen stehen in der Übersicht darunter */
+
+/* Almsommer: Würfel-Animation – Zwischenseiten beim Rollen liegen als Deckblatt über dem Würfel; Akzente nach dem Liegen */
+.alm-die.rolling { pointer-events: none; }
+.alm-die .die-face { position: absolute; inset: 0; width: auto; height: auto; border: 0; border-radius: 0; box-shadow: none; }
+.alm-die.die-flash::after { content: ""; position: absolute; inset: 0; background: #fff6c2; animation: die-flash .5s ease-out forwards; pointer-events: none; }
+@keyframes die-flash { 0% { opacity: .85; } 100% { opacity: 0; } }
+.alm-die.die-glow { animation: die-glow 1s ease-out; }
+@keyframes die-glow { 0%, 100% { box-shadow: 0 4px 0 rgba(0, 0, 0, .35); } 30% { box-shadow: 0 0 22px 6px rgba(255, 200, 61, .75), 0 4px 0 rgba(0, 0, 0, .35); } }

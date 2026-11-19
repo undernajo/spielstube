@@ -24,18 +24,102 @@
     tone(c, t, 0.045, { f0: f * 2.3, a: 0.001, peak: peak * 0.18 });
     noise(c, t, 0.022, { type: "bandpass", freq: f * 1.9, q: 1.3, a: 0.001, peak: peak * 0.35 });
   }
+  // Sprünge der drei Würfel (gemeinsam für Klang und Animation): Start 0 / 0,05 / 0,11 s, Abstand 0,13–0,16 s, jeder ×0,68,
+  // jeder Aufprall leiser (peak) und der Bogen davor niedriger (h, in px)
+  function dicePlan() {
+    return [[0, 520], [0.05, 610], [0.11, 470]].map(([start, f]) => {
+      const hits = []; let x = start, gap = 0.13 + Math.random() * 0.03, peak = 0.34, h = 26;
+      for (let k = 0; k < 6; k++) { hits.push({ t: x, peak, h, f: f * (0.96 + Math.random() * 0.08) }); x += gap; gap *= 0.68; peak *= 0.62; h *= 0.6; }
+      return hits;
+    });
+  }
   const SND = {
     // drei Würfel springen auf den Holztisch – jeder Sprung kürzer und leiser, dann liegen sie
-    rollen: (d = 0) => snd((c, t0) => { const t = t0 + d;
-      [[0, 520], [0.05, 610], [0.11, 470]].forEach(([start, f]) => { let x = t + start, gap = 0.13 + Math.random() * 0.03, peak = 0.34;
-        for (let k = 0; k < 6; k++) { tock(c, x, peak, f * (0.96 + Math.random() * 0.08)); x += gap; gap *= 0.68; peak *= 0.62; } });
+    rollen: (d = 0, plan = dicePlan()) => snd((c, t0) => { const t = t0 + d;
+      plan.forEach((hits) => hits.forEach((x) => tock(c, t + x.t, x.peak, x.f)));
       noise(c, t + 0.05, 0.55, { type: "bandpass", freq: 700, q: 0.8, a: 0.05, peak: 0.05 }); }),
     // Bleistift-Kreuz beim Anklicken eines Feldes: zwei schnelle Striche
     kreuze: (n = 1) => snd((c, t0) => { for (let k = 0; k < n; k++) [0, 0.13].forEach((d) => noise(c, t0 + k * 0.28 + d, 0.085, { type: "bandpass", freq: 3800, q: 1.4, a: 0.008, peak: 0.22, sweepTo: 5200 })); }),
     // Fläche fertig: kleiner, heller Zweiklang
     flaeche: (d = 0) => snd((c, t0) => { tone(c, t0 + d, 0.35, { type: "triangle", f0: 784, a: 0.005, peak: 0.12, rev: 0.4 }); tone(c, t0 + d + 0.11, 0.5, { type: "triangle", f0: 1175, a: 0.005, peak: 0.11, rev: 0.4 }); }),
   };
+  // ---------- Würfel-Animation (Variante B): fallen, hüpfen im Takt des Klangs, Seiten wechseln beim Rollen, dann liegen ----------
+  // Hängt an einer festen Startzeit: wird während des Wurfs neu gezeichnet, läuft sie an derselben Stelle weiter.
+  const ROLL_FALL = 0.26; // Fallzeit bis zum ersten Aufprall (s)
+  const ROLL_FACES = ["g", "g", "w", "f", "b", "sun"];
+  let almRoll = null; // { start (ms), plan, flick: [[{t, f}]], land: [s], total: [s], acc: [] }
+  const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function almThrow(wait) {
+    const plan = dicePlan();
+    SND.rollen(wait + ROLL_FALL, plan);
+    const land = plan.map((h) => ROLL_FALL + h[3].t), total = plan.map((h) => ROLL_FALL + h[h.length - 1].t + 0.27);
+    // zufällige Zwischenseiten: erst schnell, dann langsamer (Abstand ×1,16), nie zweimal dieselbe
+    const flick = land.map((l) => { const out = []; let t = 0, gap = 0.05, last = "";
+      while (t < l - 0.04) { let f; do { f = Math.random() < 0.08 ? { storm: true } : { t: ROLL_FACES[Math.floor(Math.random() * 6)], n: 1 + Math.floor(Math.random() * 5) }; } while ((f.t || "s") + f.n === last);
+        last = (f.t || "s") + f.n; out.push({ t, f }); t += gap; gap *= 1.16; }
+      return out; });
+    almRoll = { start: Date.now() + wait * 1000, plan, flick, land, total, acc: [] };
+    almRollApply();
+  }
+  const faceHtml = (f) => f.storm ? `<small>Gewitter</small>` : `<span class="num">${f.n}</span><small>${f.t === "sun" ? "Sonne" : NAMES[f.t]}</small>`;
+  function almRollApply() {
+    if (!almRoll) return;
+    const r = almRoll, dice = [...app.querySelectorAll(".alm-dice .alm-dicerow > .alm-die")];
+    if (Date.now() - r.start > Math.max(...r.total) * 1000 + 100) { almRoll = null; return; }
+    dice.forEach((d, i) => {
+      if (d._roll === r || !r.plan[i]) return;
+      d._roll = r;
+      const hits = r.plan[i], total = r.total[i], at = (t) => Math.min(1, t / total), spin = i % 2 ? 26 : -26;
+      let kf;
+      if (reduceMotion()) kf = [{ opacity: 0 }, { offset: at(ROLL_FALL + hits[0].t), opacity: 1 }, { opacity: 1 }];
+      else {
+        kf = [{ offset: 0, transform: `translateY(-70px) rotate(${-spin}deg) scale(.92)`, opacity: 0 }];
+        if (hits[0].t > 0) kf.push({ offset: at(hits[0].t), transform: `translateY(-70px) rotate(${-spin}deg) scale(.92)`, opacity: 0 });
+        kf.push({ offset: at(hits[0].t + 0.06), opacity: 1 });
+        hits.forEach((x, k) => {
+          const fr = k / (hits.length - 1), rot = -spin * (1 - fr) * (1 - fr) * 0.5;
+          kf.push({ offset: at(ROLL_FALL + x.t), transform: `translateY(0) rotate(${rot}deg) scale(${1 + 0.07 * (1 - fr)}, ${1 - 0.1 * (1 - fr)})`, easing: "cubic-bezier(.2,.6,.4,1)" });
+          const nx = hits[k + 1];
+          if (nx) kf.push({ offset: at(ROLL_FALL + (x.t + nx.t) / 2), transform: `translateY(${-x.h}px) rotate(${rot * 0.7}deg) scale(1)`, easing: "cubic-bezier(.5,0,.8,.6)" });
+        });
+        kf.push({ offset: 1, transform: "none" });
+        kf.forEach((k) => { if (k.opacity === undefined) k.opacity = 1; });
+      }
+      const a = d.animate(kf, { duration: total * 1000, fill: "backwards" });
+      a.currentTime = Date.now() - r.start; // negativ = noch nicht gestartet (Zweiklang klingt noch)
+    });
+    if (!r.loop) { r.loop = true; requestAnimationFrame(rollTick); }
+  }
+  // Seitenwechsel und Akzente – auf die jeweils aktuellen Würfel-Elemente (nach Neuzeichnen neu gefunden)
+  function rollTick() {
+    const r = almRoll; if (!r) return;
+    const t = (Date.now() - r.start) / 1000;
+    [...app.querySelectorAll(".alm-dice .alm-dicerow > .alm-die")].forEach((d, i) => {
+      if (!r.plan[i]) return;
+      const rolling = t < r.land[i] && !reduceMotion();
+      d.classList.toggle("rolling", t < r.total[i]);
+      let ov = d.querySelector(".die-face");
+      if (rolling) {
+        const fl = r.flick[i].filter((x) => x.t <= Math.max(0, t)).pop() || r.flick[i][0];
+        if (!fl) return;
+        if (!ov) { ov = document.createElement("span"); d.appendChild(ov); }
+        const cls = "alm-die die-face " + (fl.f.storm ? "storm" : fl.f.t);
+        if (ov.className !== cls) { ov.className = cls; ov.innerHTML = faceHtml(fl.f); }
+      } else if (ov) ov.remove();
+      // Akzent einmal, wenn der Würfel liegt: Gewitter ruckt und blitzt, Sonne leuchtet auf
+      if (t >= r.total[i] - 0.2 && !r.acc[i]) {
+        r.acc[i] = true;
+        if (reduceMotion()) return;
+        if (d.classList.contains("storm")) { d.classList.add("die-flash"); d.animate([{ transform: "none" }, { transform: "translateX(-4px) rotate(-2deg)" }, { transform: "translateX(4px) rotate(2deg)" }, { transform: "translateX(-2px)" }, { transform: "none" }], { duration: 320 }); }
+        else if (d.classList.contains("sun")) d.classList.add("die-glow");
+        setTimeout(() => d.classList.remove("die-flash", "die-glow"), 1000);
+      }
+    });
+    if (t < Math.max(...r.total) + 0.1) requestAnimationFrame(rollTick);
+    else { app.querySelectorAll(".alm-dice .alm-dicerow > .alm-die").forEach((d) => d.classList.remove("rolling")); almRoll = null; }
+  }
   let almHeard = null; // was schon erklungen ist (beim ersten Anzeigen nichts nachspielen)
+  let almChimeEnd = 0; // bis wann der Zweiklang „Fläche fertig“ klingt – die Würfel fallen erst danach
 
   // ---------- Feldgrafiken: illustrierte Wanderkarte (SVG, 40 × 40) ----------
   // Je Gelände drei Varianten (nach Feldnummer gewählt), damit das Tal nicht wie Tapete aussieht.
@@ -190,16 +274,18 @@
       const hk = v.code + ":" + st.seats.join(","), myDone = seated ? M.doneRegions(boardOf(G.myId)).length : 0;
       if (!almHeard || almHeard.key !== hk) {
         // Spielbeginn (Woche 1, noch nichts angekreuzt): die ersten Würfel hörbar fallen lassen
-        if (st.step === "play" && st.week === 1 && !st.done.length) SND.rollen();
+        if (st.step === "play" && st.week === 1 && !st.done.length) almThrow(0);
         almHeard = { key: hk, week: st.week, step: st.step, done: myDone };
       } else {
-        if (st.week !== almHeard.week && st.step !== "final" || (st.step === "play" && almHeard.step === "final")) SND.rollen();
-        if (seated && myDone > almHeard.done) SND.flaeche(0.1);
+        // Fläche fertig zuerst; kommt gleichzeitig (oder kurz danach) die neue Woche, rollen die Würfel erst nach dem Zweiklang
+        if (seated && myDone > almHeard.done) { SND.flaeche(0.1); almChimeEnd = Date.now() + 800; }
+        const wait = Math.max(0, almChimeEnd - Date.now()) / 1000;
+        if (st.week !== almHeard.week && st.step !== "final" || (st.step === "play" && almHeard.step === "final")) almThrow(wait);
         if (st.step === "final" && almHeard.step !== "final") {
           const last = st.week !== almHeard.week; // Sommer durchs letzte Gewitter vorbei: erst die letzten Würfel
-          if (last) SND.rollen();
-          // Sieg- bzw. Niederlage-Ton der Spielstube (nur für Mitspieler)
-          if (seated) setTimeout(() => ((st.winners || []).includes(G.myId) ? sfx.win() : sfx.lose()), last ? 1300 : 300);
+          if (last) almThrow(wait);
+          // Sieg- bzw. Niederlage-Ton der Spielstube (nur für Mitspieler) – nach Zweiklang und Würfeln
+          if (seated) setTimeout(() => ((st.winners || []).includes(G.myId) ? sfx.win() : sfx.lose()), wait * 1000 + (last ? 1300 : 300));
         }
         almHeard.week = st.week; almHeard.step = st.step; almHeard.done = myDone;
       }
@@ -255,7 +341,7 @@
           : `<div class="msg ok">Passt – ankreuzen${almSel.cells.length < max ? " (oder noch mehr Felder wählen)" : ""}!</div>`;
         // Hauptknopf über die ganze Breite, darunter zwei gleich große Nebenknöpfe
         actions = `<div class="alm-actions"><button class="btn primary alm-go" id="alm-go" ${terrain && almSel.cells.length && !err ? "" : "disabled"}>✓ Ankreuzen</button>
-          <button class="btn ghost" id="alm-clear" ${almSel.cells.length ? "" : "disabled"} title="Auswahl löschen">↺ Löschen</button><button class="btn ghost" id="alm-rest" title="diese Woche nichts ankreuzen">☕ Ruhetag</button></div>`;
+          <button class="btn ghost" id="alm-clear" ${almSel.cells.length ? "" : "disabled"} title="Auswahl löschen">↺ Löschen</button><button class="btn ghost" id="alm-rest" title="diese Woche nichts ankreuzen">🥨 Ruhetag</button></div>`;
       }
       // Woche, Gewitter und die eigenen Punkte stehen im Würfelkasten statt in einer eigenen Leiste (mehr Höhe fürs Tal);
       // die Punkte der anderen zeigen die kleinen Täler
@@ -284,6 +370,7 @@
       </main>`;
 
     fitAlm();
+    almRollApply();
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
