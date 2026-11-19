@@ -63,7 +63,7 @@
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
     { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
     { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen – wer holt am meisten aus seinem Tal?", icon: almIcon() },
-    { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken, gleichzeitig schießen – wer hat die größte Strecke?", icon: jagdIcon() },
+    { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken, im Revier des Nachbarn jagen – wer hat die größte Strecke?", icon: jagdIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -1924,7 +1924,7 @@
     }
     if (view.game === "jagd" && lb.jagd) {
       const l = JG.LENGTHS[lb.jagd.length] || JG.LENGTHS.normal;
-      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler, alle schießen gleichzeitig</p>`;
+      return `<p class="muted small">${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler · jeder jagt im Revier seines Nachbarn, alle gleichzeitig</p>`;
     }
     if (view.game === "alm" && lb.alm) {
       const l = ALM.LENGTHS[lb.alm.length] || ALM.LENGTHS.normal;
@@ -2360,11 +2360,11 @@
     <details class="rules"><summary>Regeln: Auf der Jagd</summary>
       <ul>
         <li>Jeder versteckt sein Wild im eigenen Revier (alle haben dasselbe Gelände): <b>Fuchs</b> (1 Feld, überall), <b>Hirschpaar</b> (2 Felder, Wald), <b>Gamsrudel</b> (3 Felder, Fels), <b>Murmeltier-Kolonie</b> (4 Felder, Wiese). Die Form ist frei, die Felder müssen aber zusammenhängen; verschiedene Tiere berühren sich nicht.</li>
-        <li>Jede Runde schießen <b>alle gleichzeitig</b> einmal – jeder wählt selbst, in wessen Revier. Erst wenn alle geschossen haben, werden die Schüsse aufgedeckt; sie sind für alle sichtbar.</li>
+        <li>Jeder jagt im <b>Revier seines Nachbarn</b> (im Kreis: Anna bei Berta, Berta bei Chris, Chris bei Anna; zu zweit beim anderen). Jede Runde schießen <b>alle gleichzeitig</b> einmal; aufgedeckt wird, wenn alle geschossen haben.</li>
         <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
         <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
-        <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich in einem fremden Revier beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>
-        <li>Die Jagd endet, wenn nur noch ein Revier Wild hat, oder nach der Rundenzahl. Die größte Strecke (meiste Punkte) gewinnt.</li>
+        <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich im Revier deines Nachbarn beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>
+        <li>Die Jagd endet nach der Rundenzahl – oder sobald jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde). Die größte Strecke (meiste Punkte) gewinnt.</li>
       </ul>
     </details>`;
   const almRulesHtml = `

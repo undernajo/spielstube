@@ -39,6 +39,7 @@
   let newsSeen = null, confettiKey = null;
 
   const nameOf = (v, id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
+  const gen = (name) => (/[sßxz]$/i.test(name) ? name + "’" : name + "s"); // Genitiv für „…s Revier“
   const colorOf = (v, id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
   const occupiedOf = (hide, except) => new Set(Object.entries(hide).filter(([k]) => k !== except).flatMap(([, c]) => c));
   const complete = (hide, a) => hide[a.id] && hide[a.id].length === a.len && J.connected(hide[a.id]);
@@ -87,7 +88,7 @@
     const lastNews = st.news[st.news.length - 1], nk = lastNews ? lastNews.round + ":" + lastNews.t + ":" + lastNews.a : "";
     if (newsSeen !== null && nk && nk !== newsSeen) st.news.filter((n) => n.round === lastNews.round).forEach((n) => {
       const who = n.by.map((id) => (id === me ? "Du" : nameOf(v, id))).join(" & ");
-      toast(`🎯 ${who} ${n.by.length > 1 ? "haben" : n.by[0] === me ? "hast" : "hat"} ${n.t === me ? "deine" : nameOf(v, n.t) + "s"} ${AN[n.a].name} erlegt (+${n.pts})`, n.by.includes(me) ? "ok" : "info");
+      toast(`🎯 ${who} ${n.by.length > 1 ? "haben" : n.by[0] === me ? "hast" : "hat"} ${n.t === me ? "deine" : esc(gen(nameOf(v, n.t)))} ${AN[n.a].name} erlegt (+${n.pts})`, n.by.includes(me) ? "ok" : "info");
     });
     newsSeen = nk;
     const chips = st.seats.slice().sort((a, b) => (st.pts[b] || 0) - (st.pts[a] || 0)).map((id) => `<span class="geo-score ${st.picked.includes(id) || st.ready.includes(id) ? "done" : ""}" style="--pc:${colorOf(v, id)}">
@@ -118,26 +119,30 @@
       }
     } else if (st.step === "play") {
       if (aim.key !== roundKey) aim = { key: roundKey, t: aim.t, i: null, scope: false };
-      const targets = others.filter((t) => st.left[t].length);
-      if (!targets.includes(aim.t) && !(aim.t === me && seated)) aim.t = targets[0] || null;
+      // Nachbar-Jagd: jeder schießt nur im Revier des Nächsten im Kreis; Zuschauer können alle Reviere ansehen
+      const myT = seated ? st.target[me] : null, hunter = seated ? st.seats.find((id) => st.target[id] === me) : null;
+      if (seated) { if (aim.t !== myT && aim.t !== me) aim.t = myT; }
+      else if (!st.seats.includes(aim.t)) aim.t = st.seats[0];
       const mineView = seated && aim.t === me; // Handy: eigenes Revier als eigener Reiter
       const iShot = seated && (st.picked.includes(me) || sentKey === roundKey);
       const t = aim.t, myScout = priv && priv.scout;
       const scoutHere = myScout && myScout.t === t ? myScout : null;
       const canScout = seated && !iShot && !myScout && t && !mineView;
       const pickHere = priv && priv.pick && priv.pick.t === t ? priv.pick.i : null;
-      const tabs = (seated ? targets : st.seats).map((id) => `<button type="button" class="jtab ${id === t ? "on" : ""}" data-jt="${id}" style="--pc:${colorOf(v, id)}">
-          <span class="jtab-name"><i></i>${esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
+      const tabs = (seated ? [myT] : st.seats).map((id) => `<button type="button" class="jtab ${id === t ? "on" : ""}" data-jt="${id}" style="--pc:${colorOf(v, id)}">
+          <span class="jtab-name"><i></i>${seated ? `🎯 ${esc(gen(nameOf(v, id)))} Revier` : esc(nameOf(v, id))}</span><span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>`).join("")
         + (seated ? `<button type="button" class="jtab mine ${mineView ? "on" : ""}" data-jt="${esc(me)}" style="--pc:${colorOf(v, me)}"><span class="jtab-name">🏠 Dein Revier</span>
           <span class="jtab-left">${ANIMALS.map((a) => `<span class="${st.left[me].includes(a.id) ? "" : "gone"}">${ICON[a.id]}</span>`).join("")}</span></button>` : "");
       const lastHere = st.last.filter((x) => x.t === t);
-      const task = !seated ? "Du schaust zu." : mineView ? "Dein Revier – hier schießen die anderen. Wähle ein fremdes Revier zum Schießen." : iShot ? `✓ Geschossen – warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
-        : aim.scope ? "🔭 Wähle die Mitte des Bereichs (3×3), den du vom Hochsitz beobachtest." : aim.i != null ? `Ziel: ${esc(nameOf(v, t))}s Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(nameOf(v, t))}s Revier.`;
+      const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `✓ Geschossen – warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
+        : aim.scope ? "🔭 Wähle die Mitte des Bereichs (3×3), den du vom Hochsitz beobachtest." : aim.i != null ? `Ziel: ${esc(gen(nameOf(v, t)))} Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier.`;
       // Knöpfe: am Handy als feste Leiste unten, am PC in der rechten Spalte (das Revier bekommt dann die volle Höhe)
       const acts = seated && !iShot ? `<button type="button" class="btn ghost ${aim.scope ? "on" : ""}" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
           <button type="button" class="btn primary" data-jact="shoot" ${aim.i != null && !aim.scope ? "" : "disabled"}>🎯 Schießen</button>` : "";
-      // PC: Reviere zum Auswählen und die Knöpfe oben in der rechten Spalte
-      const pickPanel = `<section class="panel jpick"><span class="game-label">${seated ? "In welches Revier schießt du?" : "Reviere"}</span><div class="jtabs jtabs-side">${tabs}</div>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`;
+      // PC: oben rechts, wer wo jagt, und die Knöpfe (Zuschauer: Reviere zum Durchblättern)
+      const pickPanel = seated
+        ? `<section class="panel jpick"><span class="game-label">Deine Jagd</span><p class="jwho">Du jagst in <b style="color:${colorOf(v, myT)}">${esc(gen(nameOf(v, myT)))}</b> Revier${st.seats.length > 2 ? ` · in deinem jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b>` : ""}.</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
+        : `<section class="panel jpick"><span class="game-label">Reviere</span><div class="jtabs jtabs-side">${tabs}</div></section>`;
       main = `<div class="jlayout">
           <section class="panel jtarget">
             <div class="jtabs jtabs-top">${tabs}</div>
@@ -161,12 +166,12 @@
       // Endstand: Jagdstrecke je Jäger, alle Reviere aufgedeckt
       if (confettiKey !== roundKey) { confettiKey = roundKey; if (st.winners && st.winners.includes(me)) confetti(); }
       const rank = st.seats.slice().sort((a, b) => (st.pts[b] || 0) - (st.pts[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy">🎯</div><b>${st.endReason === "leer" ? "Alle Reviere bis auf eines leergejagt!" : "Die Jagd ist vorbei!"}</b>
+      main = `<div class="banner win"><div class="trophy">🎯</div><b>${st.endReason === "leer" ? `${(st.cleared || []).map((id) => (id === me ? "Du" : esc(nameOf(v, id)))).join(" & ")} ${(st.cleared || []).length > 1 ? "haben" : (st.cleared || [])[0] === me ? "hast" : "hat"} ein Revier leergejagt – die Jagd ist aus!` : "Die Jagd ist vorbei!"}</b>
           <div>${st.winners.map((id) => esc(nameOf(v, id))).join(" & ")} ${st.winners.length > 1 ? "haben" : "hat"} die größte Strecke: ${st.pts[st.winners[0]]} ${st.pts[st.winners[0]] === 1 ? "Punkt" : "Punkte"}.</div>
           <div class="banner-actions"><button id="jg-restart" class="btn primary">Nochmal jagen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
         <div class="jfinal">${rank.map((id) => { const place = rank.filter((x) => (st.pts[x] || 0) > (st.pts[id] || 0)).length, kills = st.kills.filter((k) => k.by.includes(id));
           return `<section class="panel jfp" style="--pc:${colorOf(v, id)}"><div class="jfh"><span>${medal[place] || place + 1 + "."}</span><b>${esc(nameOf(v, id))}${id === me ? " <em>(du)</em>" : ""}</b><span class="jpts">${st.pts[id] || 0}</span></div>
-            <div class="jstrecke">${kills.length ? kills.map((k) => `<span title="${AN[k.a].name} aus ${esc(nameOf(v, k.t))}s Revier">${ICON[k.a]}</span>`).join("") : `<span class="muted small">nichts erlegt</span>`}</div>
+            <div class="jstrecke">${kills.length ? kills.map((k) => `<span title="${AN[k.a].name} aus ${esc(gen(nameOf(v, k.t)))} Revier">${ICON[k.a]}</span>`).join("") : `<span class="muted small">nichts erlegt</span>`}</div>
             ${boardHtml(v, { shots: st.shots[id], kills: st.kills.filter((k) => k.t === id), hide: st.reveal && st.reveal[id], reveal: true, small: true })}</section>`; }).join("")}</div>`;
     }
 

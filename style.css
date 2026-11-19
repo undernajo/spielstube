@@ -2192,3 +2192,4 @@ body.qb-play .banner.win .trophy { display: none; }
   .jhidebar { display: none; }
   .jsready { display: flex; flex-wrap: wrap; justify-content: flex-start; }
 }
+.jwho { margin: 0; line-height: 1.4; }
