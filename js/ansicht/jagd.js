@@ -38,6 +38,8 @@
   let sentKey = null;      // Runde, für die schon geschossen wurde
   let newsSeen = null, confettiKey = null;
 
+  // PC mit Maus: ein Klick schießt (Feld leuchtet beim Überfahren); Touch: erster Tipp visiert an, zweiter schießt
+  const fine = () => !!(window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches);
   const nameOf = (v, id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
   const gen = (name) => (/[sßxz]$/i.test(name) ? name + "’" : name + "s"); // Genitiv für „…s Revier“
   const colorOf = (v, id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
@@ -144,19 +146,22 @@
       const mine = cur.find((x) => x.by === me), resTxt = (x) => (x.r === "hit" ? "Treffer" : x.r === "track" ? "🐾 Fuchsspur" : "nichts");
       const myKill = mine && st.kills.find((k) => k.round === st.round && k.by.includes(me) && k.cells.includes(mine.i));
       const task = !seated ? "Du schaust zu." : mineView ? `Dein Revier – hier jagt ${esc(nameOf(v, hunter))}. Geschossen wird in ${esc(gen(nameOf(v, myT)))} Revier.` : iShot ? `${mine ? (myKill ? `🎯 Treffer – ${AN[myKill.a].name} erlegt!` : mine.r === "hit" ? "🎯 Treffer!" : mine.r === "track" ? "🐾 Fuchsspur – der Fuchs ist direkt daneben." : "Nichts getroffen.") : "✓ Geschossen."} Warte auf ${st.seats.filter((id) => !st.picked.includes(id)).map((id) => esc(nameOf(v, id))).join(", ") || "die anderen"} …`
-        : aim.scope ? (aim.sc != null ? "🔭 Dieser Bereich wird beobachtet – „Beobachten“ bestätigt, oder tippe eine andere Mitte an." : "🔭 Tippe die Mitte des Bereichs (3×3) an, den du vom Hochsitz beobachten willst.") : aim.i != null ? `Ziel: ${esc(gen(nameOf(v, t)))} Revier, Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} – schießen?` : `Tippe auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier.`;
+        : aim.scope ? (fine() ? "🔭 Klick auf die Mitte des Bereichs (3×3), den du vom Hochsitz beobachten willst."
+          : aim.sc != null ? "🔭 Dieser Bereich wird beobachtet – <b>nochmal auf die Mitte tippen</b> (oder „Beobachten“) bestätigt." : "🔭 Tippe die Mitte des Bereichs (3×3) an, den du vom Hochsitz beobachten willst.")
+        : fine() ? `Klick auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier – damit schießt du.`
+        : aim.i != null ? `Feld ${String.fromCharCode(65 + (aim.i % N))}${Math.floor(aim.i / N) + 1} anvisiert – <b>nochmal tippen</b> (oder „Schießen“) schießt.` : `Tippe auf ein Feld in ${esc(gen(nameOf(v, t)))} Revier – zweimal tippen schießt.`;
       // Knöpfe: am Handy als feste Leiste unten, am PC in der rechten Spalte (das Revier bekommt dann die volle Höhe)
       const acts = !seated || iShot ? "" : aim.scope
         ? `<button type="button" class="btn ghost" data-jact="scope">✕ Abbrechen</button>
           <button type="button" class="btn primary" data-jact="observe" ${aim.sc != null ? "" : "disabled"}>🔭 Beobachten</button>`
         : `<button type="button" class="btn ghost" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
-          <button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>🎯 Schießen</button>`;
+          ${fine() ? "" : `<button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>🎯 Schießen</button>`}`;
       // PC: oben rechts, wer wo jagt, und die Knöpfe (Zuschauer: Reviere zum Durchblättern)
       const pickPanel = seated
         ? `<section class="panel jpick"><span class="game-label">Deine Jagd</span><p class="jwho">Du jagst in <b style="color:${colorOf(v, myT)}">${esc(gen(nameOf(v, myT)))}</b> Revier${st.seats.length > 2 ? ` · in deinem jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b>` : ""}.</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
         : `<section class="panel jpick"><span class="game-label">Reviere</span><div class="jtabs jtabs-side">${tabs}</div></section>`;
       main = `<div class="jlayout">
-          <section class="panel jtarget">
+          <section class="panel jtarget ${aim.scope ? "scoping" : ""}">
             <div class="jtabs jtabs-top">${tabs}</div>
             ${mineView ? boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me) })
               : t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: iShot ? null : pickHere, aim: iShot || aim.scope ? null : aim, scopeArea: aim.scope && aim.sc != null ? J.area3(aim.sc) : null,
@@ -218,15 +223,16 @@
     // Zielen & Schießen
     app.querySelectorAll("[data-jt]").forEach((b) => b.onclick = () => { aim.t = b.dataset.jt; aim.i = null; renderJagd(); });
     app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; renderJagd(); });
-    app.querySelectorAll('[data-jact="observe"]').forEach((b) => b.onclick = () => {
-      if (aim.sc == null) return;
-      send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd();
-    });
-    app.querySelectorAll('[data-jact="shoot"]').forEach((b) => b.onclick = () => { if (aim.i == null) return; sentKey = roundKey; send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); if (sfx.tap) sfx.tap(); renderJagd(); });
+    const observe = () => { if (aim.sc == null) return; send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd(); };
+    const fire = () => { if (aim.i == null) return; sentKey = roundKey; send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); if (sfx.tap) sfx.tap(); renderJagd(); };
+    app.querySelectorAll('[data-jact="observe"]').forEach((b) => b.onclick = observe);
+    app.querySelectorAll('[data-jact="shoot"]').forEach((b) => b.onclick = fire);
+    // erster Klick visiert an, ein zweiter Klick aufs selbe Feld schießt (bzw. beobachtet beim Hochsitz) – kein Weg zum Knopf nötig
     app.querySelectorAll(".jtarget .jcell.can").forEach((c) => c.onclick = () => {
       const i = Number(c.dataset.ji);
-      if (aim.scope) { aim.sc = i; return renderJagd(); } // Hochsitz: Mitte wählen, „Beobachten“ bestätigt
-      aim.i = aim.i === i ? null : i; renderJagd();
+      if (aim.scope) { if (aim.sc === i || fine()) { aim.sc = i; return observe(); } aim.sc = i; return renderJagd(); }
+      if (aim.i === i || fine()) { aim.i = i; return fire(); }
+      aim.i = i; renderJagd();
     });
     // PC: im Hochsitz-Modus zeigt schon das Überfahren mit der Maus den 3×3-Bereich (ohne neu zu zeichnen)
     const tb = app.querySelector(".jtarget .jboard");

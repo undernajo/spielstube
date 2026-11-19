@@ -2200,3 +2200,10 @@ body.qb-play .banner.win .trophy { display: none; }
 .jcell.scopehover:not(.scopearea) { --ha: rgba(255, 216, 74, .75); --ht: 0px; --hb: 0px; --hl: 0px; --hr: 0px; filter: brightness(1.1);
   box-shadow: inset 0 var(--ht) 0 0 var(--ha), inset 0 calc(-1 * var(--hb)) 0 0 var(--ha), inset var(--hl) 0 0 0 var(--ha), inset calc(-1 * var(--hr)) 0 0 0 var(--ha); }
 .jcell.sh-t { --ht: 3px; } .jcell.sh-b { --hb: 3px; } .jcell.sh-l { --hl: 3px; } .jcell.sh-r { --hr: 3px; }
+/* Anvisiertes Feld: Zielkreuz zeigt, dass ein zweiter Klick schießt */
+.jcell.aim::after { content: "🎯"; position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; font-size: clamp(1rem, 3.4vw, 1.9rem); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+/* PC mit Maus: das Feld unter dem Mauszeiger zeigt schon das Zielkreuz – ein Klick schießt */
+@media (hover: hover) and (pointer: fine) {
+  .jtarget:not(.scoping) .jcell.can:hover { box-shadow: inset 0 0 0 3px var(--accent); }
+  .jtarget:not(.scoping) .jcell.can:hover::after { content: "🎯"; position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; font-size: clamp(1rem, 3.4vw, 1.9rem); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+}
