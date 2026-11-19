@@ -2257,9 +2257,9 @@ body.qb-play .banner.win .trophy { display: none; }
 /* Busfahren am Handy: Runde steht in der Kopfzeile, die Station zeigt die Stationsleiste – die Zeile darüber spart sich die Beschriftung */
 .kg-meta-round { display: none; }
 @media (max-width: 640px) {
-  .kg-bus .top.topbar .meta { font-size: 0; white-space: nowrap; overflow: visible; } /* „Busfahrt“ steht schon links – nur die Runde zeigen */
-  .kg-bus .kg-meta-round { display: inline-grid; justify-items: end; font-size: .72rem; line-height: 1.15; }
-  .kg-bus .kg-meta-round b { font-size: .9rem; color: var(--text, #fff); }
+  :is(.kg-bus, .kg-siebzehn) .top.topbar .meta { font-size: 0; white-space: nowrap; overflow: visible; display: block; } /* „Busfahrt“ steht schon links – nur die Runde zeigen */
+  :is(.kg-bus, .kg-siebzehn) .kg-meta-round { display: inline-grid; justify-items: end; font-size: .72rem; line-height: 1.15; }
+  :is(.kg-bus, .kg-siebzehn) .kg-meta-round b { font-size: .9rem; color: var(--text, #fff); }
   .kg-bus .geo-bar .game-label { display: none; }
   .kg-bus .geo-bar { padding: 6px 8px; }
   .kg-bus .bus-question h3 { font-size: .96rem; line-height: 1.2; }
@@ -2269,4 +2269,55 @@ body.qb-play .banner.win .trophy { display: none; }
   .kg-bus .kg-table .bus-q-main > .bus-choices.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .kg-bus .bus-choices.four .bus-choice b { font-size: .8rem; }
   .kg-bus.screen.game { padding-top: 6px; }
+}
+
+/* Siebzehn und Vier am Handy: Runde in der Kopfzeile, Spieler-Chips in einer Zeile, Karten in einer Reihe (werden schmaler),
+   Kartenwerte als Zeile, Mitspieler als schmale Leiste – alles ohne Scrollen */
+@media (max-width: 640px) {
+  .kg-siebzehn .slf-main { gap: 6px; }
+  .kg-siebzehn.screen.game { padding-top: 6px; }
+  .kg-siebzehn .geo-bar { padding: 6px 8px; gap: 6px; }
+  .kg-siebzehn .geo-bar .game-label { display: none; }
+  .kg-siebzehn .geo-bar .geo-scores { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; min-width: 0; max-width: 100%; }
+  .kg-siebzehn .slf-main > *, .kg-siebzehn .geo-bar { min-width: 0; }
+  .kg-siebzehn .kg-table { gap: 8px; padding: 8px 10px 10px; }
+  .kg-siebzehn .kg-goal { padding: 5px 10px; }
+  .kg-siebzehn .kg-goal b { font-size: .86rem; }
+  .kg-siebzehn .bus-q.with-scale { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .kg-siebzehn .bus-q-main { gap: 6px; }
+  .kg-siebzehn .kg-table .bus-q-main > .kg-hand { flex-wrap: nowrap; gap: 6px; width: 100%; }
+  .kg-siebzehn .kg-table .bus-q-main > .kg-hand .kg-card.big { width: min(74px, calc((100% - (var(--n, 1) - 1) * 6px) / var(--n, 1))); flex: none; }
+  .kg-siebzehn .kg-meter { margin: 2px 0 6px; height: 12px; }
+  .kg-siebzehn .kg-table .bus-q-main .kg-sum { font-size: 1rem; }
+  .kg-siebzehn .kg-sum b { font-size: 1.3rem; }
+  .kg-siebzehn .bus-q-main p { margin: 0; }
+  /* Kartenwerte als umbrechende Zeile */
+  .kg-siebzehn .kg-scale { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; padding: 5px 8px; min-width: 0; font-size: .72rem; }
+  .kg-siebzehn .kg-scale span:not(.bs-end) { gap: 3px; }
+  .kg-siebzehn .kg-scale .bs-end { display: none; }
+  .kg-siebzehn .kg-scale .kg-feuer { border-top: 0; margin: 0; padding: 0; font-size: .72rem; }
+  .kg-siebzehn .kg-valfold { margin-top: 0; }
+  .kg-siebzehn .kg-valfold .kg-scale { display: flex; }
+  /* Mitspieler: schmale Kärtchen nebeneinander */
+  .kg-siebzehn .kg-opps { margin-top: 0; gap: 6px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; width: 100%; }
+  .kg-siebzehn .kg-opp { padding: 4px 8px; gap: 2px; flex: 1 0 auto; }
+  .kg-siebzehn .kg-opp b { font-size: .85rem; }
+  .kg-siebzehn .kg-backs { min-height: 0; }
+  .kg-siebzehn .kg-opp .kg-card.mini { width: 20px; }
+  .kg-siebzehn .kg-opp .small { font-size: .68rem; }
+  .kg-siebzehn .kg-opps:has(.kg-opp:nth-child(-n+3):last-child) { justify-content: center; }
+}
+@media (max-width: 640px) {
+  /* Auflösung: je Spieler eine Zeile – Name und Summe links, kleine Karten, Punkte rechts */
+  .kg-siebzehn .kg-results { gap: 5px; }
+  .kg-siebzehn .kg-res { grid-template-columns: minmax(0, 1fr) auto 34px; grid-template-areas: "name hand pts" "sum hand pts"; gap: 0 8px; padding: 5px 10px; }
+  .kg-siebzehn .kg-res .kg-rname { grid-area: name; gap: 6px; font-size: .9rem; min-width: 0; }
+  .kg-siebzehn .kg-res .kg-hand { grid-area: hand; grid-column: auto; justify-content: flex-end; flex-wrap: nowrap; gap: 2px; }
+  .kg-siebzehn .kg-res .kg-card.mini { width: 24px; }
+  .kg-siebzehn .kg-res .kg-rsum { grid-area: sum; font-size: .78rem; color: var(--muted); }
+  .kg-siebzehn .kg-res > b { grid-area: pts; }
+}
+@media (max-width: 640px) {
+  /* Gast-Kopfzeile bei Busfahren/Siebzehn und Vier: die Runde braucht ihren Platz, eher wird der Spielname gekürzt */
+  .s10-guest :is(.kg-bus, .kg-siebzehn) .top.topbar { grid-template-columns: minmax(0, 1fr) auto auto; }
 }

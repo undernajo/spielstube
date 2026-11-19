@@ -89,7 +89,7 @@
         }).join("") : "";
         sounds = fresh;
         const late = lateAt != null ? `kg-late" style="--d:${lateAt}ms` : "";
-        const mine = priv ? `<div class="kg-hand">${handHtml}</div>
+        const mine = priv ? `<div class="kg-hand" style="--n:${priv.hand.length}">${handHtml}</div>
             <div class="${late}">${kgMeter(priv)}
             <div class="kg-sum ${priv.feuer || priv.sum === 21 ? "top" : priv.sum > 21 ? "bust" : ""}">${priv.feuer ? "🔥 Feuer – zwei Asse!" : priv.sum > 21 ? `${priv.sum} – über 21, leider raus` : `Summe: <b>${priv.sum}</b>`}</div>
             ${hold ? `<p class="muted">Alle sind fertig – gleich wird aufgedeckt …</p>` : st.done[G.myId] ? `<p class="muted">${priv.sum > 21 && !priv.feuer ? "Warte auf die anderen …" : "Du bist fertig – warte auf die anderen …"}</p>`
@@ -125,7 +125,7 @@
     }
     app.innerHTML = `
       <main class="screen game slf geo kg-main kg-${st.mode}">
-        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}${st.mode === "bus" && st.step !== "final" ? `<span class="kg-meta-round"><span>Runde</span> <b>${st.round}/${st.rounds}</b></span>` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}${(st.mode === "bus" || st.mode === "siebzehn") && st.step !== "final" ? `<span class="kg-meta-round"><span>Runde</span> <b>${st.round}/${st.rounds}</b></span>` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
         <section class="slf-main">${st.step !== "final" && st.mode !== "stich" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
       </main>`;
