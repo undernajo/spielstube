@@ -1668,9 +1668,17 @@ body.qb-play .banner.win .trophy { display: none; }
 .set-head .linkbtn { white-space: nowrap; }
 /* Computer: Spielauswahl dreispaltig */
 @media (min-width: 1100px) {
-  .lobby-host .gamegrid, .lobby-guest .gamegrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .lobby-host .gamegrid .gametile:last-child:nth-child(odd), .lobby-guest .gamegrid .gametile:last-child:nth-child(odd) { grid-column: auto; }
+  /* sechs Spuren, jede Kachel belegt zwei (= drei Kacheln je Reihe); eine unvollständige letzte Reihe füllt die Breite:
+     eine übrige Kachel über die ganze Breite, zwei übrige je zur Hälfte */
+  .lobby-host .gamegrid, .lobby-guest .gamegrid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .lobby-host .gamegrid .gametile, .lobby-guest .gamegrid .gametile { grid-column: span 2; }
+  /* die Handy-Regel „ungerade letzte Kachel über die ganze Breite“ gilt hier nicht */
+  .lobby-host .gamegrid .gametile:last-child:nth-child(odd), .lobby-guest .gamegrid .gametile:last-child:nth-child(odd) { grid-column: span 2; }
+  .lobby-host .gamegrid .gametile:last-child:nth-child(3n+1), .lobby-guest .gamegrid .gametile:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+  .lobby-host .gamegrid .gametile:nth-last-child(2):nth-child(3n+1), .lobby-guest .gamegrid .gametile:nth-last-child(2):nth-child(3n+1),
+  .lobby-host .gamegrid .gametile:last-child:nth-child(3n+2), .lobby-guest .gamegrid .gametile:last-child:nth-child(3n+2) { grid-column: span 3; }
   .lobby-host .gamegrid.gamegrid-top, .lobby-guest .gamegrid.gamegrid-top { grid-template-columns: minmax(0, 1fr); }
+  .lobby-host .gamegrid.gamegrid-top .gametile, .lobby-guest .gamegrid.gamegrid-top .gametile { grid-column: 1 / -1; }
 }
 
 /* Stadt, Land, Fluss: Buchstaben-Spannung, Überraschungskategorie, Auswertung Kategorie für Kategorie */
