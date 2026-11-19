@@ -2363,3 +2363,73 @@ body.qb-play .banner.win .trophy { display: none; }
   .screen.game.jagd .jtarget { gap: 4px; }
   .jtabs-top { padding-bottom: 2px; margin-bottom: 0; }
 }
+
+/* Lobby am Handy/Tablet: flache Spielkacheln – Symbol links, rechts Name (mit „ab 2“ und Wunsch-Abzeichen in derselben Zeile)
+   und Beschreibung; das Häkchen der Auswahl sitzt als kleines Abzeichen am Symbol */
+@media (min-width: 0px) {
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile {
+    grid-template-columns: auto minmax(0, 1fr) auto auto; grid-template-areas: "icon name two wish" "icon desc desc desc";
+    justify-items: start; align-items: center; align-content: center; text-align: left; column-gap: 10px; row-gap: 1px; padding: 9px 10px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-icon { grid-area: icon; width: 38px; height: 38px; margin: 0; align-self: center; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-name { grid-area: name; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-desc { grid-area: desc; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-two { grid-area: two; position: static; align-self: start; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-wish { grid-area: wish; position: static; align-self: start; margin: 0; max-width: 78px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-check { top: 4px; left: 4px; right: auto; width: 16px; height: 16px; font-size: .6rem; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile:has(.gt-two) .gt-icon { margin-top: 0; }
+}
+/* Lobby am PC: Kacheln etwas niedriger, damit die Lobby ohne Scrollen ins Fenster passt */
+@media (min-width: 1100px) {
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile { padding: 5px 8px 5px; row-gap: 0; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-icon { width: 30px; height: 30px; font-size: 1rem; margin-bottom: 2px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid-top .gametile { column-gap: 12px; padding: 7px 10px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid-top .gametile .gt-icon { margin-bottom: 0; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-desc { font-size: .74rem; }
+  .gamesecs { gap: 6px; } .gamesecs .gsec { margin-top: 2px; }
+  .screen.lobby .logo.small { margin: 0 0 8px; font-size: 1.5rem; }
+  .screen.lobby { padding-top: 10px; padding-bottom: 16px; }
+}
+/* Lobby: Kamera, Mikro und „Stube schließen“ – am PC zwei Knöpfe nebeneinander, darunter Schließen über die ganze Breite */
+.lobby-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lobby-tools #leave { grid-column: 1 / -1; }
+.lobby-tools.nocam { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  /* Handy: alle drei in einer schmalen Zeile */
+  .lobby-tools { grid-template-columns: 1fr 1fr 1.2fr; gap: 6px; }
+  .lobby-tools #leave { grid-column: auto; }
+  .lobby-tools.nocam { grid-template-columns: 1fr; }
+  .lobby-tools .btn { min-height: 38px; padding: 6px 4px; font-size: .86rem; margin: 0; }
+  /* Kopf der Lobby knapper: kleineres Logo, Code-Feld flacher */
+  .screen.lobby .logo.small { font-size: 1.5rem; margin: 0 0 8px; }
+  .lobby-host .lobby-col .code { padding: 8px 10px; }
+  .lobby-host .lobby-col.panel { gap: 10px; }
+}
+@media (max-width: 1099px) {
+  /* Handy/Tablet (eine schmale Spalte): Spielauswahl mit einer Zeile pro Spiel */
+  .lobby-host .gamegrid, .lobby-guest .gamegrid { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .lobby-host .gamegrid .gametile, .lobby-guest .gamegrid .gametile { grid-column: auto !important; padding: 7px 10px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-icon { width: 34px; height: 34px; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-desc { display: block; }
+  .gamesecs { gap: 6px; }
+}
+@media (max-width: 640px) {
+  .lobby-tools #leave { white-space: nowrap; font-size: .8rem; }
+  .lobby-host .lobby-col .code { font-size: 2rem; padding: 6px 10px; }
+}
+/* Lobby am PC: Kurzbeschreibung in einer Zeile */
+@media (min-width: 1100px) {
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-desc { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+}
+/* Lobby am PC: flache Kacheln (Symbol links, Text rechts) in zwei Spalten; eine übrige Kachel füllt die Reihe */
+@media (min-width: 1100px) {
+  .lobby-host .gamegrid, .lobby-guest .gamegrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 5px 6px; }
+  .lobby-host .gamegrid .gametile, .lobby-guest .gamegrid .gametile { grid-column: auto !important; padding: 4px 10px; column-gap: 10px; }
+  .gamesecs { gap: 4px; } .gamesecs .gsec { margin-top: 3px; }
+  .lobby-host .gamegrid .gametile:last-child:nth-child(odd), .lobby-guest .gamegrid .gametile:last-child:nth-child(odd) { grid-column: 1 / -1 !important; }
+  .lobby-host .gamegrid.gamegrid-top, .lobby-guest .gamegrid.gamegrid-top { grid-template-columns: minmax(0, 1fr) !important; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-icon { width: 32px; height: 32px; margin: 0; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-name { font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  /* „ab 2“ in die Zeile der Beschreibung, damit lange Namen („Gleiche Wellenlänge“) nicht umbrechen */
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile { grid-template-areas: "icon name name wish" "icon desc two two"; }
+  :is(.lobby-host, .lobby-guest) .gamegrid .gametile .gt-two { align-self: center; }
+}

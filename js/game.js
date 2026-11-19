@@ -41,29 +41,27 @@
   const GAMES = [
     { key: "querbeet", color: "#ff8a5c", name: "Querbeet", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Zehnkampf", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
-    { key: "raten", color: "#ffb347", name: "Zahlen schätzen", desc: "Höher oder tiefer · Schätzen", icon: schaetzenIcon(), modes: ["hl", "schaetzen"] },
-    { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Begriff erraten – je früher richtig, desto mehr Punkte", icon: hinweisIcon() },
-    { key: "karte", color: "#4aa8ff", name: "Landkarte", desc: "Wo liegt das? · Länder finden · Umriss-Rätsel · Von oben", icon: geoIcon(), modes: ["geo", "land", "umriss", "oben"] },
-    { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Abwechselnd nennen – wer patzt, verliert", icon: duellIcon() },
-    { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Antwort ist vorgegeben – erfinde die Frage", icon: frageIcon() },
-    // Spielarten der Sammelkacheln „Zahlen schätzen“, „Landkarte“, „Schnelle Kartenrunde“ und „Klassiker zu zweit“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
-    { key: "hl", group: "raten", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
-    { key: "schaetzen", group: "raten", color: "#ffb347", name: "Schätzen", desc: "Zahl schätzen – wer am nächsten liegt", icon: schaetzenIcon() },
-    { key: "umriss", group: "karte", color: "#ffd24d", name: "Umriss-Rätsel", desc: "Gebiet am Umriss erkennen", icon: umrissIcon() },
-    { key: "geo", group: "karte", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
-    { key: "land", group: "karte", color: "#ffd24d", name: "Länder finden", desc: "Land auf der Karte antippen", icon: landIcon() },
-    { key: "oben", group: "karte", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
-    { key: "kartenrunde", color: "#2fbf71", name: "Schnelle Kartenrunde", desc: "Siebzehn und Vier · Busfahrt", icon: siebzehnIcon(), modes: ["siebzehn", "bus"] },
-    { key: "siebzehn", group: "kartenrunde", color: "#2fbf71", name: "Siebzehn und Vier", desc: "Wer kommt am nächsten an 21?", icon: siebzehnIcon() },
-    { key: "bus", group: "kartenrunde", color: "#ffc83d", name: "Busfahrt", desc: "Station für Station – weiterfahren oder aussteigen?", icon: busIcon() },
-    { key: "stich", min2: true, color: "#6f8cff", name: "Stichhaltig", desc: "Stiche ansagen – und genau so viele holen", icon: stichIcon() },
+    { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Früh raten lohnt sich", icon: hinweisIcon() },
+    { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
+    { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Erfinde die Frage", icon: frageIcon() },
+    { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
+    { key: "schaetzen", color: "#ffb347", name: "Schätzen", desc: "Wer liegt am nächsten?", icon: schaetzenIcon() },
+    { key: "siebzehn", color: "#2fbf71", name: "Siebzehn und Vier", desc: "So nah wie möglich an 21", icon: siebzehnIcon() },
+    { key: "bus", color: "#ffc83d", name: "Busfahrt", desc: "Weiter oder aussteigen?", icon: busIcon() },
+    // Erdkunde
+    { key: "geo", color: "#4aa8ff", name: "Wo liegt das?", desc: "Orte auf der Karte finden", icon: geoIcon() },
+    { key: "land", color: "#ffd24d", name: "Länder finden", desc: "Länder auf der Karte", icon: landIcon() },
+    { key: "umriss", color: "#ffd24d", name: "Umriss-Rätsel", desc: "Gebiet am Umriss erkennen", icon: umrissIcon() },
+    { key: "oben", color: "#2fd4c8", name: "Von oben", desc: "Satellitenbild erkennen", icon: obenIcon() },
+    // Spielarten der Sammelkachel „Klassiker zu zweit“ – in der Lobby über die Kachel, die Spielart in den Einstellungen
+    { key: "stich", min2: true, color: "#6f8cff", name: "Stichhaltig", desc: "Stiche genau ansagen", icon: stichIcon() },
     { key: "klassik", two: true, color: "#e05a5a", name: "Klassiker zu zweit", desc: "Watten · Schnapsen", icon: wattenIcon(), modes: ["watten", "schnapsen"] },
     { key: "watten", group: "klassik", two: true, color: "#e05a5a", name: "Watten", desc: "Der Südtiroler Klassiker", icon: wattenIcon() },
     { key: "schnapsen", group: "klassik", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Bummerl für Bummerl", icon: schnapsenIcon() },
-    { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe, Kategorien, Stopp!", icon: slfIcon() },
-    { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Gemeinsam auf dasselbe Wort kommen", icon: wlIcon() },
-    { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen – wer holt am meisten aus seinem Tal?", icon: almIcon() },
-    { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken, im Revier des Nachbarn jagen – wer hat die größte Strecke?", icon: jagdIcon() },
+    { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe & Kategorien", icon: slfIcon() },
+    { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Aufs selbe Wort kommen", icon: wlIcon() },
+    { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen", icon: almIcon() },
+    { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken & jagen", icon: jagdIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -114,7 +112,7 @@
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "raten", "karte", "duell"]], ["Karten, Würfel & Taktik", ["kartenrunde", "stich", "klassik", "alm", "jagd"]], ["Wort & Kreativ", ["slf", "wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "hl", "schaetzen", "duell", "slf"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Kreativ", ["wl", "frage"]]];
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
     const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
@@ -1472,10 +1470,10 @@
               <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused && p.id !== myId ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
-            ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
-              <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button></div>
-              <div id="camslot"></div>` : ""}
-            <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button>
+            <div class="lobby-tools ${camOK ? "" : "nocam"}">${camOK ? `<button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
+              <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button>` : ""}
+              <button id="leave" class="btn ghost">${isHost ? "Stube schließen" : "Verlassen"}</button></div>
+            ${camOK ? `<div id="camslot"></div>` : ""}
             ${reportsHtml()}
           </div>
           ${isHost ? `<div class="lobby-col lobby-games"><div class="panel">${gamePickerHtml()}</div></div>
@@ -1749,14 +1747,14 @@
     const head = pickHeadHtml("Spiel wählen", chosenGame);
     if (rulesOpen) return `<div class="field">${head}${rulesViewHtml(chosenGame)}</div>`;
     return `<div class="field">${head}<div class="gamesecs" role="radiogroup">${tileSectionsHtml((g) => `
-      <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""} ${twoCls(g)}" style="--gc:${g.color}">${twoTagHtml(g)}
+      <label class="gametile ${groupOf(chosenGame) === g.key ? "on" : ""} ${twoCls(g)}" style="--gc:${g.color}" title="${esc(g.desc)}">${twoTagHtml(g)}
         <input type="radio" name="game" value="${g.key}" ${groupOf(chosenGame) === g.key ? "checked" : ""}>
         <span class="gt-icon" aria-hidden="true">${g.icon}</span>
         <span class="gt-name">${g.name}</span><span class="gt-desc">${g.desc}</span>
         ${guestTagHtml(g.key, true)}
         <span class="gt-check" aria-hidden="true">✓</span></label>`)}</div></div>`;
   }
-  // Spielart bei zusammengefassten Spielen (Landkarte: Wo liegt das? · Länder finden · Von oben)
+  // Spielart bei zusammengefassten Spielen (Klassiker zu zweit: Watten · Schnapsen)
   // cur = gewählte Spielart; Gäste sehen die Auswahl nur (readOnly), wählen kann der Gastgeber
   function modeSwitchHtml(cur = chosenGame, readOnly = false) {
     const grp = GAMES.find((g) => g.key === groupOf(cur));
