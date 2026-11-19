@@ -61,7 +61,7 @@
 
   function start(s, opts, now) {
     opts = opts || {};
-    const seats = s.players.filter((p) => p.connected).slice(0, 2).map((p) => p.id);
+    const seats = s.players.filter((p) => p.connected && !p.paused).slice(0, 2).map((p) => p.id);
     if (seats.length < 2) return false;
     const tn = Number(opts.target), target = TARGETS.includes(tn) || (opts.free && Number.isInteger(tn) && tn > 0 && tn <= 9) ? tn : 5; // free: Querbeet
     const timer = TIMERS[String(opts.timer)] ? String(opts.timer) : "30";

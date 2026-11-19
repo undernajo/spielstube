@@ -75,7 +75,7 @@
     st.deadline = st.mode === "oben" ? now + OBEN.steps * OBEN.stepMs : TIMERS[st.timer].ms ? now + TIMERS[st.timer].ms : 0;
   }
 
-  const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
+  const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
 
   function reveal(s) {
     const st = s.geo, reg = data()[st.region], pl = reg.places[st.place], target = [pl[2], pl[3]];

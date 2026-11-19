@@ -21,7 +21,7 @@
   function start(s, opts, now) {
     opts = opts || {};
     const mode = MODES[opts.mode] ? opts.mode : "siebzehn";
-    const seats = s.players.filter((p) => p.connected).map((p) => p.id);
+    const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (!seats.length) return false;
     const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 10) ? rn : 5;
     s.game = mode; s.phase = "karten";

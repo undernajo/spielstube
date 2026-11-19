@@ -115,8 +115,10 @@
     s.revealed = s.perm.map(() => null);
     s.round++;
     s.roundResult = null; s.pending = null;
-    s.players.forEach((p) => { p.roundPts = 0; p.status = "active"; p.waiting = false; });
+    // Pausierte (in der Lobby gesetzt) spielen nicht mit: gelten als „raus“ und werden beim Reihum übersprungen
+    s.players.forEach((p) => { p.roundPts = 0; p.status = p.paused ? "out" : "active"; p.waiting = false; });
     s.startPlayer = (s.startPlayer + 1) % s.players.length;
+    for (let k = 0; k < s.players.length && s.players[s.startPlayer].status !== "active"; k++) s.startPlayer = (s.startPlayer + 1) % s.players.length;
     s.turn = s.startPlayer;
     s.phase = "playing";
     event(s, "info", `Runde ${s.round}: ${s.players[s.turn].name} beginnt.`);
@@ -250,7 +252,7 @@
 
   function judges(s) {
     const pend = s.pending;
-    const others = s.players.filter((p) => p.id !== pend.by && p.connected);
+    const others = s.players.filter((p) => p.id !== pend.by && p.connected && !p.paused);
     return others.length ? others.map((p) => p.id) : [pend.by]; // niemand sonst da -> selbst entscheiden
   }
 
@@ -340,7 +342,7 @@
   }
   function undoApprovers(s) {
     const req = s.undoReq;
-    return req ? s.players.filter((p) => p.id !== req.by && p.connected && !p.waiting).map((p) => p.id) : [];
+    return req ? s.players.filter((p) => p.id !== req.by && p.connected && !p.waiting && !p.paused).map((p) => p.id) : [];
   }
   function applyUndo(s, cards) {
     const { snap, move } = s.undo, kind = s.undoReq ? s.undoReq.kind : "undo";
@@ -362,7 +364,7 @@
     const myTurn = s.phase === "playing" && cur && cur.id === pid && !s.pending && !s.undoReq;
     switch (a.type) {
       case "start":
-        if (!isHost || s.phase !== "lobby" || s.players.length < 1) return false;
+        if (!isHost || s.phase !== "lobby" || !s.players.some((p) => !p.paused)) return false;
         startGame(s, cards, a.target, a.set); return true;
       case "answer": {
         if (!myTurn) return false;

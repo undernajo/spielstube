@@ -80,7 +80,7 @@
   // „Mir fällt nichts mehr ein“: stimmen alle zu (oder sind schon fertig), endet die Schreibzeit sofort
   function slfStuckHtml(st) {
     if (st.done[G.myId] || Date.now() < slfStartAt) return `<div id="slf-stuck"></div>`;
-    const ids = G.view.players.filter((p) => p.connected).map((p) => p.id);
+    const ids = G.view.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     const n = ids.filter((id) => st.stuck && st.stuck[id]).length, mine = st.stuck && st.stuck[G.myId];
     return `<div id="slf-stuck" class="slf-stuck"><button type="button" class="btn ghost sm ${mine ? "on" : ""}">${mine ? "↩ Doch noch was eingefallen" : "🤷 Mir fällt nichts mehr ein"}</button>
       ${n ? `<span class="muted small">${n} von ${ids.length} wissen nicht weiter – stimmen alle zu, ist die Runde vorbei.</span>` : ""}</div>`;

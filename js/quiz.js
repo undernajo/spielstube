@@ -91,7 +91,7 @@
     st.deadline = st.mode === "hinweis" ? now + 4 * HINT_MS + AFTER_LAST_HINT_MS : now + ASK_MS[st.mode];
   }
 
-  const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
+  const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
   // Zahl lesen: „1.370“ / „1 370“ = 1370, „9,1“ = 9,1; ein Punkt mit genau drei Ziffern danach gilt als Tausenderpunkt
   const parseNum = (t) => {
     let x = String(t).trim().replace(/\s/g, "");

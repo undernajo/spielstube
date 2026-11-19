@@ -312,10 +312,19 @@
       if (S.wishes) delete S.wishes[action.id];
       return true;
     }
+    if (type === "pause") { // in der Lobby pausieren: bleibt in der Stube, spielt aber nicht mit (jeder für sich, der Gastgeber für alle)
+      const p = S.players.find((x) => x.id === action.id);
+      if (S.phase !== "lobby" || !p || (!host && action.id !== pid)) return false;
+      p.paused = !!action.on; return true;
+    }
+    // Pausierte schauen nur zu: ihre Spielzüge werden verworfen; Steuerung (Weiter, Neustart, Lobby …) bleibt erlaubt,
+    // damit auch ein pausierter Gastgeber das Spiel lenken kann
+    const me = S.players.find((x) => x.id === pid);
+    if (me && me.paused && S.phase !== "lobby" && !/^(lobby|start|restart|next|skip|ping|qb\w*)$|(Next|Restart|Force)$/.test(type)) return false;
     if (type === "start" && host && S.phase === "lobby") S.wishes = {}; // Wünsche gelten bis zum Spielstart
     if (type === "start" && action.game === "querbeet") {
       if (!host || S.phase !== "lobby") return false;
-      const q = QB.create(action.opts, S.players.filter((p) => p.connected).length);
+      const q = QB.create(action.opts, S.players.filter((p) => p.connected && !p.paused).length);
       if (!q) return false;
       S.qb = q; S.game = "querbeet"; S.phase = "querbeet";
       S.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -462,7 +471,7 @@
   }
   function qbAdvance(now) {
     const q = S.qb;
-    if (S.phase !== "querbeet") { QB.finishStage(q, qbScores(), S.players.map((p) => p.id)); qbCleanup(); return true; }
+    if (S.phase !== "querbeet") { QB.finishStage(q, qbScores(), S.players.filter((p) => !p.paused).map((p) => p.id)); qbCleanup(); return true; }
     if (q.step === "final") return false;
     if (q.plan[q.idx + 1] && ["land", "umriss"].includes(q.plan[q.idx + 1].game) && !needLandData()) { toast("Die Länderkarte wird noch geladen – einen Moment.", "info"); return false; }
     q.idx++; q.step = "play";
@@ -476,14 +485,14 @@
       if (!waiting) return false;
       if (a.type === "qbGo") { if (!host) return false; return qbAdvance(now); }
       q.ready[pid] = !q.ready[pid];
-      const ids = S.players.filter((p) => p.connected).map((p) => p.id);
+      const ids = S.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
       if (ids.length && ids.every((id) => q.ready[id])) qbAdvance(now);
       return true;
     }
     if (a.type === "qbJoker") return S.phase === "querbeet" && QB.setJoker(q, pid, !!a.on);
     if (a.type === "qbRestart") {
       if (!host || q.step !== "final") return false;
-      const nq = QB.create(q.opts, S.players.filter((p) => p.connected).length);
+      const nq = QB.create(q.opts, S.players.filter((p) => p.connected && !p.paused).length);
       if (!nq) return false;
       S.qb = nq; return true;
     }
@@ -1044,11 +1053,14 @@
 
   // Kopfzeilen-Knöpfe aller Spiele; der Gastgeber kann jederzeit alle zurück in die Lobby holen
   // Hinweisbalken in den Spielen. „Verbinde …“-Hinweise nur, wenn es Mitspieler gibt – allein betrifft das niemanden.
+  const iPause = () => !!(view && view.phase !== "lobby" && view.players && (view.players.find((p) => p.id === myId) || {}).paused);
   function statusBarHtml() {
-    if (!status) return "";
+    // pausiert: Hinweis über dem Spiel (Eingaben sind gesperrt, siehe .s10-paused in style.css)
+    const pz = iPause() ? `<div class="pause-note">⏸ Du pausierst und schaust zu. ${isHost ? "Als Gastgeber steuerst du das Spiel weiter." : ""} Wieder mitspielen kannst du in der Lobby – ab dem nächsten Spiel.</div>` : "";
+    if (!status) return pz;
     const busy = /…$/.test(status);
     if (busy && view && view.players && !view.players.some((p) => p.id !== myId)) return "";
-    return `<div class="status ${busy ? "busy" : ""}">${esc(status)}</div>`;
+    return pz + `<div class="status ${busy ? "busy" : ""}">${esc(status)}</div>`;
   }
   // Handy: Karten (Wo liegt das?, Von oben, Länder finden) so bemessen, dass die Seite genau auf den Bildschirm passt –
   // sonst schiebt Wischen auf der Karte manchmal die Seite statt der Karte. Vor dem Anlegen der Leaflet-Karte aufrufen.
@@ -1079,6 +1091,7 @@
   let lastLobbyGame = null, lastPhase = null;
   function render() {
     document.documentElement.classList.toggle("s10-guest", !!view && !isHost); // Gäste am Handy: Kopfleiste ohne Organisatorisches
+    document.documentElement.classList.toggle("s10-paused", iPause() && !isHost); // pausierte Gäste: Spiel nur ansehen
     if (!view) return renderStart();
     if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
     lastPhase = view.phase;
@@ -1364,7 +1377,8 @@
   addEventListener("resize", () => { const c = compactGuest(); if (view && view.phase === "lobby" && gcLast !== null && c !== gcLast) renderLobby(); });
   function compactGuestLobbyHtml() {
     const host = view.players.find((p) => p.id === view.hostId);
-    const chips = view.players.map((p, i) => `<span class="gc-chip ${p.connected ? "" : "off"}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><i></i>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? " 👑" : ""}</span>`).join("");
+    const chips = view.players.map((p, i) => `<span class="gc-chip ${p.connected ? "" : "off"} ${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><i></i>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? " 👑" : ""}${p.paused ? " ⏸" : ""}</span>`).join("");
+    const meP = view.players.find((p) => p.id === myId);
     const det = (key, label, body) => body ? `<details class="gc-det" data-gc="${key}" ${gcOpen[key] ? "open" : ""}><summary>${label}</summary><div class="gc-body">${body}</div></details>` : "";
     return `
       <main class="screen lobby lobby-guest gc">
@@ -1375,6 +1389,7 @@
               <input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn ghost sm" title="Mitspieler einladen" aria-label="Mitspieler einladen">🔗</button>
               <button id="leave" class="btn ghost sm" title="Stube verlassen" aria-label="Verlassen">✕</button></span></div>
           <div class="gc-chips">${chips}</div>
+          ${meP ? `<div class="gc-pause">${meP.paused ? `<span class="muted small">Du pausierst – du schaust bei den Spielen nur zu.</span>` : ""}${pauseBtnHtml(meP, true)}</div>` : ""}
           ${status ? `<p class="err">${esc(status)}</p>` : ""}
         </div>
         <section class="panel gc-now">
@@ -1386,6 +1401,13 @@
         ${det("more", guestInfo ? "Spiele ansehen & wünschen" : "Alle Spiele ansehen & wünschen", guestGamesHtml())}
         ${reportsHtml()}
       </main>`;
+  }
+  // Pausieren: eigener Knopf für jeden, beim Gastgeber an jeder Zeile
+  function pauseBtnHtml(p, big) {
+    if (p.id !== myId && !isHost) return "";
+    const self = p.id === myId, label = p.paused ? (self ? "▶ Mitspielen" : "▶") : (self ? "⏸ Pause" : "⏸");
+    const title = p.paused ? `${self ? "Wieder" : esc(p.name) + " wieder"} mitspielen lassen` : `${self ? "Pausieren" : esc(p.name) + " pausieren"}: bleibt in der Stube, spielt aber bei den nächsten Spielen nicht mit`;
+    return `<button type="button" class="pause-btn ${big ? "btn ghost sm" : ""} ${p.paused ? "on" : ""}" data-pause="${esc(p.id)}" data-on="${p.paused ? "" : "1"}" title="${title}" aria-label="${title}">${label}</button>`;
   }
   function renderLobby() {
     const isFile = location.protocol === "file:";
@@ -1409,7 +1431,7 @@
             ${setPickerHtml()}
             <label class="field"><span>Spielen bis</span>
               <select id="target">${[10, 15, 20, 30, 40].map((t) => `<option value="${t}" ${t === (chosenTarget || view.target || 30) ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
-            <button id="start" class="btn primary big" ${view.players.length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
+            <button id="start" class="btn primary big" ${playing().length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
             
           ` : ""}`;
     // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
@@ -1429,7 +1451,8 @@
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             <h3>Spieler</h3>
-            <ul class="plist">${view.players.map((p, i) => `<li style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span>${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}${p.id === view.hostId ? ` <span class="host-tag">Gastgeber</span>` : ""}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</li>`).join("")}</ul>
+            <ul class="plist">${view.players.map((p, i) => `<li class="${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span><span class="pl-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
+              <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
             <p class="err">${esc(status)}</p>
             ${camOK ? `<div class="row2"><button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
@@ -1451,6 +1474,7 @@
     qbStartBar();
     bindReports(renderLobby);
     bindGamePicker();
+    app.querySelectorAll("[data-pause]").forEach((b) => b.onclick = () => send({ type: "pause", id: b.dataset.pause, on: !!b.dataset.on }));
     app.querySelectorAll("[data-kick]").forEach((b) => b.onclick = async () => {
       const p = view.players.find((x) => x.id === b.dataset.kick);
       if (!p || !(await askConfirm(`${p.name} entfernen?`, "Die Person fliegt aus der Stube und kann mit diesem Gerät nicht wieder beitreten, solange die Stube offen ist.", "Entfernen", "Abbrechen", true))) return;
@@ -1535,8 +1559,8 @@
       const pct = v.qb ? (p.score / 10) * 100 : Math.min(100, (p.score / v.target) * 100); // Querbeet: nur eine Karte
       // Rundenpunkte nur zeigen, wenn es welche gibt: „+3 offen“ während der Runde, „+3“ nach der Runde
       const rp = v.phase === "playing" ? (p.status !== "out" && p.roundPts ? `+${p.roundPts} offen` : "") : res && res.gained ? `+${res.gained}` : "";
-      const badge = v.phase === "playing" ? (turn ? "am Zug" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]) : "";
-      return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
+      const badge = v.phase === "playing" ? (turn ? "am Zug" : p.paused ? "pausiert" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]) : "";
+      return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${p.paused ? "paused" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
         <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
           <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
           <span class="chip-score"><b>${p.score}</b>${v.qb ? "" : `<small>/${v.target}</small>`}</span></div>
@@ -1731,7 +1755,8 @@
   // Gäste: alle Spiele sehen und sich eines wünschen
   // Gäste-Kachel: kurzes Etikett oben rechts – „läuft“ oder Wünsche („💡 Du“, „💡 Maria“, „💡 Du +1“, „💡 3“); volle Namen im Tooltip
   // Spiele zu zweit: Etikett oben links; sind mehr als zwei da, spielen nur zwei mit (Kachel abgeblendet)
-  const twoCrowd = () => view.players.filter((p) => p.connected).length > 2;
+  const playing = () => view.players.filter((p) => p.connected && !p.paused); // wer beim nächsten Spiel mitspielt (nicht pausiert)
+  const twoCrowd = () => playing().length > 2;
   // Schild an der Kachel: „ab 2“ bei Spielen, für die man mindestens zu zweit sein muss;
   // bei reinen Zweierspielen und mehr als zwei Spielern stattdessen der Hinweis „nur 2 spielen“
   const twoTagHtml = (g) => !(g.two || g.min2) ? "" : g.two && twoCrowd()
@@ -1805,7 +1830,7 @@
         `<option value="${k}" ${(SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle") === k ? "selected" : ""}>${esc(l.name)} (${esc(l.desc)})</option>`).join("")}</select></label>
       ${slfOpts.preset === "zufall" ? "" : `<label class="setopt ${slfOpts.surprise !== false ? "on" : ""}"><input type="checkbox" id="slf-surprise" ${slfOpts.surprise !== false ? "checked" : ""}>
         <span class="setname">🎁 Jede Runde eine Überraschungskategorie dazu</span><span></span></label>`}
-      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
   // Für Gäste: gut sichtbar, welches Spiel der Gastgeber gewählt hat
@@ -2013,12 +2038,12 @@
         ${oben ? `<div class="field"><span>Zeit pro Runde</span><p class="muted small">${GEO.OBEN.steps * GEO.OBEN.stepMs / 1000} Sekunden – alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild weiter heraus.</p></div>`
           : `<label class="field"><span>Zeit pro Runde</span><select id="geo-timer">${Object.entries(GEO.TIMERS).map(([k, t]) => `<option value="${k}" ${geoOpts.timer === k ? "selected" : ""}>${t.name}</option>`).join("")}</select></label>`}
       </div>
-      <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
       ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : ""}`;
   }
   // Liste der Querbeet-Spiele: beim Gastgeber zum Anhaken, bei Gästen gleich aussehend, aber nur zum Ansehen
   function qbGamesHtml(off, readOnly) {
-    const two = view.players.filter((p) => p.connected).length === 2;
+    const two = playing().length === 2;
     const mx = QB.mixOf(off), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
     const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)${mxTxt}</span>`
       : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>` : ""}</div>`;
@@ -2040,7 +2065,7 @@
         <label class="field"><span>Schwierigkeit</span>${sel("quiz-level", levels, o.level)}</label>` : `<label class="field"><span>Fragen</span>${sel("quiz-theme", themes, o.theme)}</label>`}
       <label class="field"><span>Runden</span><select id="quiz-rounds">${QZ.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(quizOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
       ${freshHtml(nw.fresh, nw.total, { schaetzen: "Fragen", hinweis: "Begriffe", umriss: "Umrisse" }[mode] || "Fragen", "quiz")}
-      <button id="start" class="btn primary big" ${view.players.length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 1 || !nw.total ? "disabled" : ""}>Spiel starten</button>
       `;
   }
   function kgSettingsHtml(mode) {
@@ -2050,11 +2075,11 @@
             `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>`
         : `<label class="field"><span>Runden</span><select id="kg-stichrounds">${KG.STICH_ROUNDS.map((n) =>
             `<option value="${n}" ${Number(kgOpts.stichRounds) === n ? "selected" : ""}>${n} Runden (1 bis ${n} Karten)</option>`).join("")}</select></label>`}
-      <button id="start" class="btn primary big" ${view.players.length < (mode === "stich" ? 2 : 1) ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < (mode === "stich" ? 2 : 1) ? "disabled" : ""}>Spiel starten</button>
       ${mode === "stich" ? playerNoteHtml(view.players.length, false) : ""}`;
   }
   function qbSettingsHtml() {
-    const n = view.players.filter((p) => p.connected).length;
+    const n = playing().length;
     const games = QB.eligible(qbOpts.off, n);
     return `<div class="row2"><label class="field"><span>Länge</span><select id="qb-length">${Object.entries(QB.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${k} Etappen</option>`).join("")}</select></label>
@@ -2087,7 +2112,7 @@
         <label class="field"><span>Runden</span><select id="land-rounds">${LAND.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(landOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>
         <label class="field"><span>Zeit pro Runde</span>${sel("land-timer", LAND.TIMERS, landOpts.timer)}</label>
       </div>
-      <button id="start" class="btn primary big" ${view.players.length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 1 || !LF ? "disabled" : ""}>Spiel starten</button>
       ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : ""}`;
   }
   function hlSettingsHtml() {
@@ -2097,11 +2122,11 @@
         `<option value="${k}" ${hlOpts.theme === k ? "selected" : ""}>${n} (${hlCatCount(k)})</option>`).join("")}</select></label>
       <label class="field"><span>Schwierigkeit</span><select id="hl-level">${Object.entries(HL.LEVELS).map(([k, l]) =>
         `<option value="${k}" ${(HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
-      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
   function fqSettingsHtml() {
-    const n = view.players.filter((p) => p.connected).length;
+    const n = playing().length;
     const sel = (id, obj, val) => `<select id="${id}">${Object.entries(obj).map(([k, t]) => `<option value="${k}" ${String(val) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>`;
     const seen = store.get("s10-fq-seen") || [], all = fqAllKeys(), fresh = all.filter((k) => !seen.includes(k)).length;
     return `<label class="field"><span>Spielen bis</span><select id="fq-target">${FQ.TARGETS.map((t) =>
@@ -2127,7 +2152,7 @@
       </ul>
     </details>`;
   function duSettingsHtml() {
-    const n = view.players.filter((p) => p.connected).length;
+    const n = playing().length;
     return `<label class="field"><span>Spielen bis</span><select id="du-target">${DU.TARGETS.map((t) =>
         `<option value="${t}" ${Number(duOpts.target) === t ? "selected" : ""}>${t} Punkte</option>`).join("")}</select></label>
       <label class="field"><span>Zeit pro Antwort</span><select id="du-timer">${Object.entries(DU.TIMERS).map(([k, t]) =>
@@ -2149,7 +2174,7 @@
       </ul>
     </details>`;
   function schSettingsHtml() {
-    const n = view.players.filter((p) => p.connected).length;
+    const n = playing().length;
     return `<label class="field"><span>Spielweise</span><select id="sch-mode">${Object.entries(SCH.MODES).map(([k, m]) =>
         `<option value="${k}" ${schOpts.mode === k ? "selected" : ""}>${esc(m)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
@@ -2167,7 +2192,7 @@
       </ul>
     </details>`;
   function wattenSettingsHtml() {
-    const n = view.players.filter((p) => p.connected).length;
+    const n = playing().length;
     return `<label class="field"><span>Spielen bis</span><select id="watten-target">${WAT.TARGETS.map((t) =>
         `<option value="${t}" ${Number(wattenOpts.target) === t ? "selected" : ""}>${t} Punkte (gestrichen ab ${t - 2})</option>`).join("")}</select></label>
       <label class="field"><span>Weli</span><select id="watten-weli">
@@ -2305,7 +2330,7 @@
         ${ALM.MAP_LIST.map((m) => `<option value="${m.id}" ${mapSel === m.id ? "selected" : ""}>${esc(m.name)} – ${esc(m.desc)}</option>`).join("")}</select></label>
       <label class="field"><span>Länge</span><select id="alm-length">${Object.entries(ALM.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${(ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
-      <button id="start" class="btn primary big" ${view.players.length < 1 ? "disabled" : ""}>Spiel starten</button>`;
+      <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
   const almRulesHtml = `
     <details class="rules"><summary>Regeln: Almsommer</summary>
@@ -2326,7 +2351,7 @@
         <label class="field"><span>Länge</span><select id="wl-rounds">${WL.ROUND_CHOICES.map((n) => `<option value="${n}" ${Number(wlOpts.rounds) === n ? "selected" : ""}>${n} Impulse</option>`).join("")}</select></label>
       </div>
       ${best != null ? `<p class="muted small">Euer Rekord: <b>${best} Punkte</b></p>` : ""}
-      <button id="start" class="btn primary big" ${view.players.length < 2 ? "disabled" : ""}>Spiel starten</button>
+      <button id="start" class="btn primary big" ${playing().length < 2 ? "disabled" : ""}>Spiel starten</button>
       ${playerNoteHtml(view.players.length, false)}`;
   }
   const wlRulesHtml = `

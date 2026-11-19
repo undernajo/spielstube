@@ -2071,3 +2071,24 @@ body.qb-play .banner.win .trophy { display: none; }
   .alm-layout > .alm-boardbox { border-top: 0; border-top-left-radius: 0; border-top-right-radius: 0; padding-top: 4px; }
   .alm-layout > .alm-others { margin-top: 14px; }
 }
+
+/* ---------- Pausieren: in der Stube bleiben, aber nicht mitspielen ---------- */
+.plist li .pl-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plist li .pl-right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: none; }
+.plist li .pl-right .host-tag, .plist li .pl-right .kick { margin-left: 0; }
+.plist li.paused .pl-name, .plist li.paused .dot { opacity: .5; }
+.pause-tag { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.pause-btn { flex: none; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 99px; border: 1px solid var(--line); background: transparent;
+  color: var(--muted); font: 700 .78rem Nunito, sans-serif; cursor: pointer; white-space: nowrap; }
+.pause-btn:hover { color: var(--ink); border-color: var(--accent); }
+.pause-btn.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.pause-btn.btn { height: auto; min-height: 32px; }
+.gc-chip.paused { opacity: .55; }
+.gc-pause { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.gc-pause .pause-btn { margin-left: auto; }
+.pause-note { margin: 0 0 10px; padding: 8px 12px; border-radius: 12px; font-size: .9rem; text-align: center;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); }
+/* pausierte Gäste sehen das Spiel, können aber nichts eingeben (Kopfleiste und Kamera bleiben bedienbar) */
+.s10-paused #app main.screen > :not(header) { pointer-events: none; }
+.s10-paused #app main.screen > :not(header):not(.pause-note) input, .s10-paused #app main.screen .alm-bar { opacity: .6; }
+.chip.paused { opacity: .45; }

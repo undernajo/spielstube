@@ -96,7 +96,7 @@
     // Querbeet: eigene Wochenzahl / ohne Gewitter (free)
     const weeks = opts.free && Number.isInteger(opts.weeks) && opts.weeks > 0 && opts.weeks <= 20 ? opts.weeks : LENGTHS[length].weeks;
     const storms = opts.free && Number.isInteger(opts.storms) && opts.storms >= 0 ? opts.storms : LENGTHS[length].storms;
-    const seats = s.players.filter((p) => p.connected).map((p) => p.id);
+    const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (!seats.length) return false;
     s.game = "alm"; s.phase = "alm";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;

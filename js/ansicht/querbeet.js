@@ -23,7 +23,7 @@
     return `<div class="qbn-joker">${b}${who}</div>`;
   }
   function qbReadyBtnHtml(q, label) {
-    const ids = G.view.players.filter((p) => p.connected).map((p) => p.id), n = ids.filter((id) => q.ready[id]).length;
+    const ids = G.view.players.filter((p) => p.connected && !p.paused).map((p) => p.id), n = ids.filter((id) => q.ready[id]).length;
     return `<button class="btn primary" data-qb="ready">${q.ready[G.myId] ? `Bereit ✓ – warte auf die anderen (${n}/${ids.length})` : label}</button>
       ${G.isHost ? `<button class="btn ghost sm" data-qb="go">Sofort weiter</button>` : ""}`;
   }

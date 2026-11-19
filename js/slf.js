@@ -110,7 +110,7 @@
     st.review = null; st.ready = {}; st.collectUntil = null;
   }
 
-  const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
+  const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
 
   function cleanAnswers(st, answers) {
     const out = {};

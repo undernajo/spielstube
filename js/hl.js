@@ -90,7 +90,7 @@
   }
   function beginGuess(st) { st.step = "guess"; st.picks = {}; st.result = null; st.revealAt = 0; }
 
-  const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
+  const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
   const val = (st, k) => data()[st.cats[st.ci]].items[st.items[k]][1];
 
   function reveal(s, now) {

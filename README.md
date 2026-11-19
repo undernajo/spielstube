@@ -64,6 +64,7 @@ Der Gastgeber wählt in der Lobby das Spiel:
 
 ## Extras
 
+- **Pausieren:** In der Lobby kann sich jeder mit „⏸ Pause“ auf pausiert stellen (der Gastgeber auch andere). Pausierte bleiben in der Stube – Lobby, Kamera, Zuschauen –, werden aber bei den nächsten Spielen nicht eingeplant und bekommen in Querbeet keine Partypunkte. Wieder mitspielen: „▶ Mitspielen“ in der Lobby.
 - **Kamera & Mikrofon:** Über 📷 und 🎤 kann jeder Kamera und Mikrofon getrennt einschalten (Bild-im-Bild, Ton der anderen mit 🔊/🔇 stummschaltbar; am besten mit Kopfhörern). Bild und Ton gehen per WebRTC verschlüsselt direkt von Gerät zu Gerät, der Verbindungsaufbau läuft über den verschlüsselten Kanal der Stube (STUN: Cloudflare/Google, kein eigener Server). In manchen Mobilfunk- oder Firmennetzen kommt keine direkte Verbindung zustande – dann erscheint ein Hinweis. Ein- und Ausschalten unterbricht die Verbindung nicht (nur die jeweilige Spur wird getauscht). Die Bildqualität richtet sich nach der Ansicht beim Empfänger: kleines Kamerafenster ca. 320×180, vergrößert 640×360, großes Anruf-Fenster in der Lobby 1280×720; ist das Fenster zugeklappt, pausiert das Bild. Das spart vor allem am Handy Upload.
 
 - **Töne & Effekte:** Ein dezenter Hinweiston (und auf Android eine Vibration), wenn man dran ist oder entscheiden soll, Konfetti am Spielende. Ist der Tab im Hintergrund, zeigt der Titel „● Du bist dran!“. Der 🔊-Knopf oben schaltet den Ton stumm.

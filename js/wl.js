@@ -57,7 +57,7 @@
   }
   function beginAttempt(st) { st.step = "writing"; st.words = {}; st.result = null; }
 
-  const activeIds = (s) => s.players.filter((p) => p.connected).map((p) => p.id);
+  const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
   const isUsed = (st, w) => st.used.some((u) => same(u, w));
 
   function reveal(s) {

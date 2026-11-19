@@ -58,7 +58,7 @@
     opts = opts || {};
     const target = TARGETS.includes(Number(opts.target)) ? Number(opts.target) : 15;
     const weliMode = opts.weli === "trumpf" ? "trumpf" : "schell";
-    const seats = s.players.filter((p) => p.connected).slice(0, 2).map((p) => p.id);
+    const seats = s.players.filter((p) => p.connected && !p.paused).slice(0, 2).map((p) => p.id);
     if (seats.length < 2) return false;
     s.game = "watten"; s.phase = "watten";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
