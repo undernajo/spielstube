@@ -1,7 +1,7 @@
 // Kleine Vorführungen auf der Etappenkarte der Stubenmeisterschaft – nur für die Spiele, die man schwer aus einem Satz versteht.
-// Rein gezeichnet (kein echtes Spiel), läuft in Schleife; links leuchtet dazu der passende Schritt auf.
+// Rein gezeichnet (kein echtes Spiel), läuft in Schleife neben den drei Schritten.
 // Zeitbasiert: Startzeit je Etappe, beim Neuzeichnen läuft die Vorführung an derselben Stelle weiter.
-// „Bewegung reduzieren“: Standbild an einer aussagekräftigen Stelle, alle Schritte gleich hell.
+// „Bewegung reduzieren“: Standbild an einer aussagekräftigen Stelle.
 (function () {
   const C = { anna: "#ffc83d", berta: "#4fc3f7" };
   const px = (x, y, s) => `translate(${x}px, ${y}px)` + (s != null ? ` scale(${s})` : "");
@@ -52,7 +52,7 @@
 
   const SCENES = {
     // ---------------- Busfahrt ----------------
-    bus: { T: 10, still: 7.9, steps: [[0, 2.9], [2.9, 5.6], [5.6, 10]], build(st, A, T) {
+    bus: { T: 10, still: 7.9, build(st, A, T) {
       const SX = (i) => 8 + i * 57;
       st.innerHTML = [1, 1, 2, 10, 30].map((p, i) => `<div class="dm-stn" style="left:${SX(i)}px"><small>Station ${i + 1}</small>+${p}</div>`).join("")
         + [85, 130, 175].map((x) => `<div class="dm-slot" style="left:${x}px"></div>`).join("")
@@ -83,7 +83,7 @@
     } },
 
     // ---------------- Stichhaltig ----------------
-    stich: { T: 11, still: 9.2, steps: [[0, 2.8], [2.8, 8.5], [8.5, 11]], build(st, A, T) {
+    stich: { T: 11, still: 9.2, build(st, A, T) {
       const trump = window.S10WattenCards.sym("schelle", 1);
       st.innerHTML = `<div class="dm-sh"><span>Runde 2 · 2 Karten</span><span class="dm-trump">Trumpf <i>${trump}</i> Schelle</span></div>
         <div class="dm-pl" id="pA" style="left:8px;--pc:${C.anna}"><b><i></i>Anna</b><span class="dm-bid">${vals("?", "1")}</span><small>Stiche ${vals(0, 1)}</small></div>
@@ -114,7 +114,7 @@
     } },
 
     // ---------------- Almsommer ----------------
-    alm: { T: 10, still: 5.4, steps: [[0, 1.6], [1.6, 4.3], [4.3, 10]], build(st, A, T) {
+    alm: { T: 10, still: 5.4, build(st, A, T) {
       // Gelände (H = Hof) und Flächen; Fläche D (3 Wiesen neben dem Hof) wird in der Vorführung fertig
       const G = ["fffwwwb", "fggwwwb", "gggHggb", "ggggwgb"].map((r) => r.split(""));
       const reg = ["AAABBBC", "ADDBBBC", "EEDHFFC", "EEEEGFC"].map((r) => r.split("")), badge = { A: 4, B: 6, C: 4, D: 3, E: 6, F: 3, G: 1 }, first = {};
@@ -151,7 +151,7 @@
     } },
 
     // ---------------- Auf der Jagd ----------------
-    jagd: { T: 10, still: 6.4, steps: [[0, 2.6], [2.6, 5.7], [5.7, 10]], build(st, A, T) {
+    jagd: { T: 10, still: 6.4, build(st, A, T) {
       const TER = ["wwggf", "wgggf", "wwgff", "gggwf", "ggwww"].map((r) => r.split(""));
       const art = window.S10JagdArt || {}, ico = (k) => (art.ICON || {})[k] || "", J = window.S10Jagd || { HIT: 1, ANIMALS: [] };
       const killFox = ((J.ANIMALS || []).find((a) => a.id === "fuchs") || { kill: 4 }).kill, gain = (J.HIT || 1) + killFox;
@@ -196,19 +196,13 @@
   const reduce = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
   const has = (key) => !!SCENES[key];
   const html = () => `<div class="dm-stage" aria-hidden="true"></div><button type="button" class="linkbtn dm-replay">↻ nochmal ansehen</button>`;
-  // box: Element mit .dm-stage; steps: die Schritt-Zeilen (li) links; t0: Startzeit (ms) – läuft an derselben Stelle weiter
-  function mount(box, key, t0, stepsEls) {
+  // box: Element mit .dm-stage; t0: Startzeit (ms) – läuft an derselben Stelle weiter
+  function mount(box, key, t0) {
     const sc = SCENES[key], st = box && box.querySelector(".dm-stage");
     if (!sc || !st || !st.animate) return;
     const A = [];
     try { sc.build(st, A, sc.T); } catch (e) { console.warn("Vorführung " + key + ": " + (e && e.message)); st.innerHTML = ""; return; }
     const still = reduce();
-    (stepsEls || []).forEach((li, i) => {
-      const w = sc.steps[i]; if (!w || still) return;
-      const on = { opacity: 1, background: "color-mix(in srgb, var(--gc) 14%, transparent)", borderColor: "color-mix(in srgb, var(--gc) 45%, transparent)" },
-        off = { opacity: .5, background: "transparent", borderColor: "transparent" }, [a, b] = w;
-      tl(A, li, sc.T, [[0, a === 0 ? on : off], [Math.max(0, a - .01), a === 0 ? on : off], [a + .2, on], [b - .01, on], [b + .2, b >= sc.T ? on : off]]);
-    });
     const at = still ? sc.still * 1000 : Math.max(0, Date.now() - t0);
     A.forEach((a) => { if (still) a.pause(); a.currentTime = at; });
   }

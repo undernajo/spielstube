@@ -142,7 +142,7 @@
     if (dmCard) {
       const dk = v.code + ":" + q.idx + ":" + dmCard.dataset.demo;
       if (qbDemo.key !== dk) qbDemo = { key: dk, t0: Date.now() };
-      const go = () => S10Demo.mount(dmCard.querySelector(".qbn-demo"), dmCard.dataset.demo, qbDemo.t0, [...dmCard.querySelectorAll(".qbn-steps li:not(.win)")]);
+      const go = () => S10Demo.mount(dmCard.querySelector(".qbn-demo"), dmCard.dataset.demo, qbDemo.t0);
       go();
       const rb = dmCard.querySelector(".dm-replay"); if (rb) rb.onclick = () => { qbDemo.t0 = Date.now(); go(); };
     }
