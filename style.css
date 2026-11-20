@@ -2860,23 +2860,6 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-question { display: grid; gap: 3px; justify-items: center; }
 .bb-question h3 { margin: 0; font: 700 1.25rem/1.25 Fredoka, sans-serif; color: #fff; }
 .bb-note { font-size: .78rem; color: var(--muted); }
-.bb-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: min(100%, 560px); }
-.bb-choices.n8 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.bb-choice { display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 150px; min-height: 52px; padding: 8px 16px; border-radius: 12px;
-  border: 2px solid transparent; background: #3a3285; color: var(--ink); font: inherit; cursor: pointer; transition: transform .12s, background .12s; }
-.bb-choices.n4 .bb-choice { min-width: 118px; }
-.bb-choices.n8 .bb-choice { min-width: 0; min-height: 44px; padding: 6px 8px; }
-.bb-choice > span:last-child { display: grid; text-align: left; }
-.bb-choice b { font-size: 1rem; } .bb-choice small { font-size: .7rem; color: #c9c3ee; font-weight: 600; }
-@media (hover: hover) { .bb-choice:hover { background: #453c9c; transform: translateY(-1px); } }
-.bb-choice.on { background: var(--accent); color: var(--accent-ink); box-shadow: 0 3px 0 #c48f0a; } .bb-choice.on small { color: #5a4300; }
-.bb-ico { font-size: 1.25rem; line-height: 1; }
-.bb-suit { width: 24px; height: 24px; display: block; flex: none; } .bb-suit svg { width: 100%; height: 100%; display: block; }
-.bb-exit { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 18px; border-radius: 12px; cursor: pointer; font: inherit;
-  border: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); background: color-mix(in srgb, var(--accent) 9%, transparent); color: var(--accent); }
-.bb-exit b { font-size: 1rem; } .bb-exit small { color: var(--muted); font-size: .78rem; font-weight: 600; }
-@media (hover: hover) { .bb-exit:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); } }
-.bb-exit.on { background: var(--accent); color: var(--accent-ink); box-shadow: 0 3px 0 #c48f0a; } .bb-exit.on small { color: #5a4300; }
 .bb-stakes { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; font-size: .78rem; font-weight: 700; }
 .bb-stakes span { padding: 3px 10px; border-radius: 99px; }
 .bb-scale { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 3px; padding: 4px 10px; border-radius: 99px; background: #17133d; border: 1px solid var(--line); font-size: .76rem; }
@@ -2927,14 +2910,6 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .bb-pot b { font-size: clamp(1.9rem, 4vh, 2.6rem); }
   .bb-question h3 { font-size: clamp(1.25rem, 2.9vh, 1.85rem); }
   .bb-note { font-size: clamp(.78rem, 1.4vh, .9rem); }
-  .bb-choices { width: min(100%, clamp(560px, 70vh, 720px)); }
-  .bb-choice { min-height: clamp(52px, 8vh, 86px); min-width: clamp(150px, 23vh, 230px); }
-  .bb-choice b { font-size: clamp(1rem, 2.2vh, 1.35rem); } .bb-choice small { font-size: clamp(.7rem, 1.25vh, .82rem); }
-  .bb-choices.n4 .bb-choice { min-width: clamp(118px, 17vh, 170px); }
-  .bb-choices.n8 .bb-choice { min-height: clamp(44px, 6.4vh, 68px); }
-  .bb-ico { font-size: clamp(1.25rem, 2.4vh, 1.6rem); } .bb-suit { width: clamp(24px, 3vh, 32px); height: clamp(24px, 3vh, 32px); }
-  .bb-exit { min-height: clamp(44px, 6.4vh, 68px); padding: 6px 26px; }
-  .bb-exit b { font-size: clamp(1rem, 2.2vh, 1.35rem); } .bb-exit small { font-size: clamp(.78rem, 1.5vh, .95rem); }
   .bb-stakes { font-size: clamp(.78rem, 1.6vh, 1rem); }
   .bb-scale { font-size: clamp(.76rem, 1.7vh, 1.02rem); }
   .bb-riders { max-height: calc(100dvh - 116px); overflow-y: auto; scrollbar-width: thin; }
@@ -2953,17 +2928,66 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .bb-pot { width: auto; justify-self: center; display: flex; align-items: baseline; gap: 8px; padding: 4px 14px; border-radius: 99px; }
   .bb-pot b { font-size: 1.2rem; }
   .bb-question h3 { font-size: 1.02rem; }
-  .bb-choices { gap: 6px; width: 100%; }
-  .bb-choices.n2 .bb-choice { flex: 1 1 0; min-width: 0; }
-  .bb-choices.n4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .bb-choices.n4 .bb-choice { min-width: 0; flex-direction: column; gap: 2px; padding: 6px 2px; }
-  .bb-choices.n4 .bb-choice > span:last-child { text-align: center; }
-  .bb-choices.n8 { gap: 5px; } .bb-choices.n8 .bb-choice b { font-size: .85rem; }
-  .bb-choice { min-height: 48px; padding: 6px 10px; }
-  .bb-exit { width: 100%; justify-content: center; min-height: 40px; }
   .bb-stakes { font-size: .7rem; flex-wrap: nowrap; }
   .bb-scale { font-size: .66rem; padding: 3px 6px; }
   .bb-scale span { padding: 0 3px; }
   .bb-scale em { display: none; } /* am Handy reicht die Reihe von Sieben bis Ass */
   .bb-riders { padding: 10px; }
 }
+
+/* Busfahrt-Antworten als kleine Karten aus dem eigenen Blatt (Bild + Beschriftung); getippt: angehoben, gelb umrandet, ✓ */
+.bb-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: min(100%, 640px); --kh: 142px; }
+.bb-choices.n8 { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; --kh: 88px; }
+.bb-choice { position: relative; display: grid; justify-items: center; align-content: center; gap: 5px; width: 132px; min-height: var(--kh); padding: 10px 8px; border: 0; border-radius: 14px;
+  background: #fbf6ea; color: #231d4d; font: inherit; cursor: pointer; box-shadow: 0 6px 0 #c9bd9e, 0 10px 18px rgba(0, 0, 0, .35); transition: transform .15s cubic-bezier(.3, 1.4, .5, 1), box-shadow .15s; }
+.bb-choice::before { content: ""; position: absolute; inset: 6px; border-radius: 9px; border: 1.5px solid #e7dcc3; pointer-events: none; }
+.bb-choice b { font: 700 1.12rem Fredoka, sans-serif; line-height: 1.1; } .bb-choice small { font-size: .66rem; color: #6d6492; font-weight: 700; line-height: 1.2; }
+.bb-ill { display: flex; align-items: center; justify-content: center; gap: 4px; height: 48px; }
+.bb-mini { width: 29px; aspect-ratio: 120 / 186; display: block; flex: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25)); } .bb-mini svg { width: 100%; height: 100%; display: block; }
+.bb-arrow { font-style: normal; font-size: 2rem; line-height: 1; color: #4b33b5; } .bb-arrow.dn { color: #b5336a; }
+.bb-dot { width: 9px; height: 9px; border-radius: 50%; background: #e0a417; box-shadow: 0 0 0 2px #fff4cf; flex: none; }
+.bb-suit { width: 36px; height: 36px; display: block; } .bb-suit svg { width: 100%; height: 100%; display: block; }
+@media (hover: hover) { .bb-choice:hover { transform: translateY(-4px) rotate(-1deg); } }
+.bb-choice.on { transform: translateY(-8px) rotate(-2deg); box-shadow: 0 0 0 3px var(--accent), 0 6px 0 #c48f0a, 0 14px 24px rgba(0, 0, 0, .45); }
+.bb-choice.on::after { content: "✓"; position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; font: 800 .9rem Nunito, sans-serif; box-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.bb-choices.n4 .bb-choice { width: 112px; }
+.bb-choices.n8 .bb-choice { width: auto; padding: 8px 2px; border-radius: 10px; box-shadow: 0 4px 0 #c9bd9e, 0 6px 12px rgba(0, 0, 0, .3); gap: 2px; }
+.bb-choices.n8 .bb-choice::before { inset: 4px; border-radius: 6px; }
+.bb-choices.n8 .bb-choice b { font-size: 1.5rem; } .bb-choices.n8 .bb-choice small { font-size: .6rem; }
+.bb-choices.n8 .bb-choice.on::after { width: 20px; height: 20px; top: -8px; right: -6px; font-size: .75rem; }
+/* Aussteigen: rote Haltewunsch-Taste wie im Bus */
+.bb-halt { display: flex; align-items: center; gap: 14px; padding: 7px 20px 7px 7px; border-radius: 999px; border: 2px solid rgba(255, 255, 255, .12); background: #17133d; color: inherit; font: inherit; cursor: pointer; }
+.bb-knopf { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; flex: none; color: #fff; font: 800 .7rem Nunito, sans-serif; letter-spacing: 1px;
+  background: radial-gradient(circle at 40% 35%, #ff6b6b, #d42a3a 60%, #8f1424); box-shadow: 0 5px 0 #6d0f1b, 0 8px 14px rgba(0, 0, 0, .4), inset 0 2px 2px rgba(255, 255, 255, .35); transition: transform .08s, box-shadow .08s; }
+.bb-knopf span { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .65); }
+.bb-htxt { display: grid; text-align: left; } .bb-htxt b { font: 700 1.1rem Fredoka, sans-serif; color: #ff9aa2; } .bb-htxt small { color: var(--muted); font-size: .78rem; font-weight: 600; }
+@media (hover: hover) { .bb-halt:hover .bb-knopf { filter: brightness(1.1); } }
+.bb-halt.on { border-color: rgba(255, 90, 90, .45); }
+.bb-halt.on .bb-knopf { transform: translateY(4px); box-shadow: 0 1px 0 #6d0f1b, 0 0 18px rgba(255, 90, 90, .8), inset 0 2px 4px rgba(0, 0, 0, .3); }
+.bb-halt.on .bb-htxt b { color: #ffd0d4; } .bb-halt.on .bb-htxt b::after { content: " – Haltewunsch!"; font-size: .85rem; color: var(--accent); }
+@media (min-width: 900px) {
+  /* mit der Fensterhöhe wachsen (wie der Rest des Spielfelds) */
+  .bb-choices { --kh: clamp(118px, 17vh, 168px); width: min(100%, 720px); }
+  .bb-choice { width: clamp(118px, 15vh, 150px); }
+  .bb-choices.n4 .bb-choice { width: clamp(104px, 13vh, 130px); }
+  .bb-choices.n8 { --kh: clamp(76px, 10vh, 104px); }
+  .bb-ill { height: clamp(40px, 5.6vh, 58px); } .bb-mini { width: clamp(25px, 3.4vh, 35px); } .bb-suit { width: clamp(32px, 4.4vh, 44px); height: clamp(32px, 4.4vh, 44px); }
+  .bb-choice b { font-size: clamp(1.05rem, 2.1vh, 1.3rem); } .bb-choices.n8 .bb-choice b { font-size: clamp(1.3rem, 2.6vh, 1.7rem); }
+  .bb-knopf { width: clamp(54px, 7.2vh, 70px); height: clamp(54px, 7.2vh, 70px); } .bb-knopf span { width: 70%; height: 70%; }
+}
+@media (max-width: 640px) {
+  .bb-choices { gap: 8px; width: 100%; --kh: 112px; }
+  .bb-choices.n2 .bb-choice { flex: 1 1 0; width: auto; max-width: 160px; }
+  .bb-choices.n4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; --kh: 86px; }
+  .bb-choices.n4 .bb-choice { width: auto; padding: 8px 2px; } .bb-choices.n4 .bb-choice b { font-size: .9rem; }
+  .bb-choices.n8 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; --kh: 62px; }
+  .bb-choices.n8 .bb-choice b { font-size: 1.2rem; }
+  .bb-ill { height: 40px; } .bb-mini { width: 24px; } .bb-suit { width: 30px; height: 30px; }
+  .bb-halt { width: 100%; justify-content: center; padding: 5px 16px 5px 5px; } .bb-knopf { width: 48px; height: 48px; font-size: .6rem; } .bb-knopf span { width: 34px; height: 34px; }
+}
+/* Karten und STOP-Taste in einer Zeile (am PC nebeneinander, bei acht Werten und am Handy darunter) */
+.bb-act { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px 26px; width: 100%; }
+.bb-act > .bb-choices { width: auto; max-width: 100%; }
+.bb-act > .bb-choices.n8 { width: min(100%, 720px); flex-basis: 100%; }
+@media (max-width: 640px) { .bb-act { gap: 10px; } .bb-act > .bb-choices { width: 100%; } .bb-act > .bb-halt { flex-basis: 100%; } }

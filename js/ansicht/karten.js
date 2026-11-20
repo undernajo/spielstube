@@ -291,6 +291,7 @@
     puff.animate([{ opacity: 0, transform: "translateX(0) scale(.6)" }, { opacity: .9, offset: .15 }, { opacity: 0, transform: "translateX(-14px) scale(1.2)" }],
       { duration: 900, easing: "ease-out", fill: "forwards" }).currentTime = e;
   }
+  const rk2 = (id) => ["7", "8", "9", "10", "U", "O", "K", "A"].indexOf(id.split("-")[1]);
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
   // Busfahrt – alle im selben Bus: oben die fünf Stationen, darunter je ein Kartenfeld; an jeder Station wird eine Karte
   // für alle aufgedeckt. Darunter Frage und Antworten; rechts (am Handy darunter) die Mitfahrer mit ihrem Fortschritt.
@@ -320,12 +321,20 @@
       const q = st.question, h = cards, mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
       let act = "";
       if (st.step === "guess" && me === "ride") {
-        const ICON = { fig: "👑", zahl: "🔢", hoch: "⬆️", tief: "⬇️", in: "⇥⇤", out: "⇤⇥" };
-        const sym = (k) => ["herz", "laub", "eichel", "schelle"].includes(k) ? `<span class="bb-suit">${WCARDS.sym(k, 1)}</span>` : ICON[k] ? `<span class="bb-ico">${ICON[k]}</span>` : "";
-        const label = (k, t) => q.key === "figur" ? `<b>${k === "fig" ? "Figur" : "Zahl"}</b><small>${k === "fig" ? "Unter · Ober · König · Ass" : "Sieben bis Zehner"}</small>` : `<b>${esc(t)}</b>`;
-        act = `<div class="bb-choices n${q.opts.length}">${q.opts.map(([k, t]) =>
-            `<button type="button" class="bb-choice ${mine === k ? "on" : ""}" data-busg="${k}">${sym(k)}<span>${label(k, t)}</span></button>`).join("")}</div>
-          ${st.q > 0 && pot > 0 ? `<button type="button" class="bb-exit ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bb-ico">🚏</span><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></button>` : ""}
+        // Antworten als kleine Karten aus dem eigenen Blatt: Bild (Beispielkarten, Pfeil, Farbsymbol oder Wert) + Beschriftung
+        const mini = (id) => `<span class="bb-mini">${WCARDS.svg(id)}</span>`, dot = `<i class="bb-dot"></i>`;
+        const [c0, c1] = [h[0], h[1]], lo = c0 && c1 ? (rk2(c0) <= rk2(c1) ? c0 : c1) : null, hi = lo ? (lo === c0 ? c1 : c0) : null;
+        const face = (k, t) => {
+          if (q.key === "figur") return k === "fig" ? [mini("herz-K") + mini("eichel-U"), "Figur", "Unter · Ober · König · Ass"] : [mini("laub-9") + mini("schelle-7"), "Zahl", "Sieben bis Zehner"];
+          if (q.key === "hoeher") return k === "hoch" ? [`<i class="bb-arrow">▲</i>${mini(c0)}`, "Höher", `als ${BUS_VAL[rankOfId(c0)]}`] : [`${mini(c0)}<i class="bb-arrow dn">▼</i>`, "Tiefer", `als ${BUS_VAL[rankOfId(c0)]}`];
+          if (q.key === "zwischen") return k === "in" ? [mini(lo) + dot + mini(hi), "Zwischen", `${BUS_VAL[rankOfId(lo)]} bis ${BUS_VAL[rankOfId(hi)]}`] : [dot + mini(lo) + mini(hi) + dot, "Außerhalb", "tiefer oder höher"];
+          if (q.key === "suit") return [`<span class="bb-suit">${WCARDS.sym(k, 1)}</span>`, esc(t), ""];
+          return ["", { 10: "10" }[k] || k, esc(t)];
+        };
+        act = `<div class="bb-act"><div class="bb-choices n${q.opts.length}">${q.opts.map(([k, t]) => { const [ill, b, sm] = face(k, t);
+            return `<button type="button" class="bb-choice ${mine === k ? "on" : ""}" data-busg="${k}">${ill ? `<span class="bb-ill">${ill}</span>` : ""}<b>${b}</b>${sm ? `<small>${sm}</small>` : ""}</button>`; }).join("")}</div>
+          ${st.q > 0 && pot > 0 ? `<button type="button" class="bb-halt ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bb-knopf"><span>STOP</span></span>
+            <span class="bb-htxt"><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></span></button>` : ""}</div>
           <div class="bus-stakes bb-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
             : `<span class="bs-win">Richtig: +${q.pts}</span><span class="bs-lose">Falsch: ${pot ? `Topf (${pot}) weg` : "Bus verunglückt"}</span>`}</div>`;
       } else if (st.step === "show") act = `<p class="bb-state muted">Die Karten werden aufgedeckt …</p>`;
