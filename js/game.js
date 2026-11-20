@@ -2502,12 +2502,12 @@
   const busRulesHtml = `
     <details class="rules"><summary>Regeln: Busfahrt</summary>
       <ul>
-        <li>Jede Runde hat <b>5 Stationen</b>. Vor jeder Station tippen alle gleichzeitig, dann bekommt jeder seine nächste Karte:
+        <li>Alle fahren im <b>selben Bus</b>: Jede Runde hat <b>5 Stationen</b>, an jeder wird eine Karte für alle aufgedeckt. Vorher tippt jeder gleichzeitig und geheim:
           1. Figur (Unter, Ober, König, Ass) oder Zahl (Sieben bis Zehner)? (1 Punkt) · 2. Höher oder tiefer als die erste Karte? (1) · 3. Zwischen den ersten beiden oder außerhalb? (2) ·
           4. Welche Farbe genau? (10) · 5. Welcher Wert genau? (30)</li>
         <li><b>Richtig:</b> Die Punkte der Station kommen in deinen Rundentopf. <b>Falsch:</b> Dein Bus ist verunglückt – der Topf dieser Runde ist weg.</li>
         <li>Ab Station 2 kannst du statt zu tippen <b>aussteigen</b> und deinen Topf sicher mitnehmen. Wer alle 5 Stationen schafft, bekommt 44 Punkte.</li>
-        <li>Werte von klein nach groß: Sieben, Acht, Neun, Zehner, Unter, Ober, König, Ass. Ist die neue Karte bei Station 2 oder 3 gleich hoch wie eine deiner Karten, zählt das für dich.</li>
+        <li>Werte von klein nach groß: Sieben, Acht, Neun, Zehner, Unter, Ober, König, Ass. Ist die neue Karte bei Station 2 oder 3 gleich hoch wie eine der Vergleichskarten, zählt das als richtig.</li>
         <li>Nach allen Runden gewinnt, wer die meisten Punkte hat.</li>
       </ul>
     </details>`;

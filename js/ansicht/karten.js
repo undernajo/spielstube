@@ -265,24 +265,24 @@
     return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
   }
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
-  // Busfahrt: oben die fünf Stationen, darunter je ein Kartenfeld – deine Karten füllen die Fahrt von links nach rechts.
-  // Darunter Frage und Antworten; rechts (am Handy darunter) die Mitfahrer mit kleinen Kartenfeldern.
+  // Busfahrt – alle im selben Bus: oben die fünf Stationen, darunter je ein Kartenfeld; an jeder Station wird eine Karte
+  // für alle aufgedeckt. Darunter Frage und Antworten; rechts (am Handy darunter) die Mitfahrer mit ihrem Fortschritt.
   function busMainHtml(v, st, colorOf, nameOf, readyBtn) {
     const gk = st.gid + ":bus:" + st.round, seated = st.seats.includes(G.myId), me = seated ? st.status[G.myId] : null;
     const rankOfId = (c) => c.split("-")[1], end = st.step === "roundEnd";
     let flips = 0;
-    // Karten eines Spielers in fünf Feldern; die zuletzt aufgedeckte dreht sich beim Auflösen um
-    const slots = (id, size) => { const h = st.hands[id] || [], res = st.step === "show" && st.res ? st.res[id] : null;
-      return Array.from({ length: 5 }, (_, i) => { const c = h[i];
-        if (!c) return `<div class="bb-slot ${!end && i === h.length && st.status[id] === "ride" && i === st.q ? "cur" : ""}"></div>`;
-        const a = i === h.length - 1 && res && !res.out ? kgAnim(`${gk}:h:${id}:${i}`, 150, 1000) : null;
-        if (a && a.first) flips++;
-        return `<div class="bb-slot full">${kgCard(c, size, "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join(""); };
+    // die gemeinsamen Karten in fünf Feldern; die gerade aufgedeckte dreht sich um
+    const cards = st.cards || [];
+    const slots = Array.from({ length: 5 }, (_, i) => { const c = cards[i];
+      if (!c) return `<div class="bb-slot ${!end && i === cards.length && i === st.q && st.seats.some((id) => st.status[id] === "ride") ? "cur" : ""}"></div>`;
+      const a = i === cards.length - 1 && st.step === "show" ? kgAnim(`${gk}:c:${i}`, 150, 1000) : null;
+      if (a && a.first) flips++;
+      return `<div class="bb-slot full">${kgCard(c, "bb", "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join("");
     const stops = st.stations.map((p, i) => { const past = i < st.q || end, cur = !past && i === st.q;
       return `<div class="bb-stop ${past ? "past" : cur ? "cur" : ""}">${cur ? `<i class="bb-here" aria-hidden="true">🚌</i>` : ""}<small>Station ${i + 1}</small><b>+${p}</b></div>`; }).join("");
     const pot = seated ? st.pot[G.myId] || 0 : 0;
     const potBox = seated ? `<div class="bb-pot ${me === "ride" ? "" : "off"}"><small>${me === "ride" ? "Topf" : "Punkte"}</small><b>${me === "ride" ? pot : st.total[G.myId] || 0}</b></div>` : "";
-    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}</div>${seated ? `<div class="bb-slots">${slots(G.myId, "bb")}</div>` : ""}${potBox}</div>`;
+    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}</div><div class="bb-slots">${slots}</div>${potBox}</div>`;
 
     let body;
     if (end) {
@@ -290,7 +290,7 @@
           <span class="muted small">${st.status[id] === "crash" ? "💥 verunglückt" : st.status[id] === "done" ? "🏁 alle 5 Stationen!" : "🚏 ausgestiegen"}</span><span></span><b class="qb-plus">+${st.gain[id]}</b></div>`).join("");
       body = `<div class="kg-results">${rows}</div>${readyBtn}`;
     } else {
-      const q = st.question, h = st.hands[G.myId] || [], mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
+      const q = st.question, h = cards, mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
       let act = "";
       if (st.step === "guess" && me === "ride") {
         const ICON = { fig: "👑", zahl: "🔢", hoch: "⬆️", tief: "⬇️", in: "⇥⇤", out: "⇤⇥" };
@@ -311,7 +311,7 @@
         `<span class="${refs.some((c) => rankOfId(c) === r) ? "ref" : ""}">${BUS_VAL[r]}</span>`).join("")}<em>hoch</em></div>` : "";
       body = `<div class="bb-question"><h3>${esc(q.text)}</h3>${(st.q === 1 || st.q === 2) && me === "ride" ? `<span class="bb-note">Gleich hoch zählt für dich</span>` : ""}</div>${scale}${act}`;
     }
-    // Mitfahrer (auch du, zum Vergleichen): Name, Status, Topf, Punkte und kleine Kartenfelder
+    // Mitfahrer (auch du): Name, Status, Topf, Punkte und wie weit jeder mitgefahren ist (geschafft ✓, verunglückt ✕, ausgestiegen 🚏)
     const statusTxt = (id) => { const res = st.step === "show" && st.res ? st.res[id] : null;
       if (res) return `<span class="bus-badge ${res.out ? "good" : res.ok ? "ok" : "bad"} ${res.out ? "" : "kg-late"}" style="--d:1100ms">${res.out ? `🚏 steigt aus mit ${res.pts}` : res.ok ? `✓ +${res.pts}` : `💥 verunglückt${res.lost ? ` – ${res.lost} weg` : ""}`}</span>`;
       return `<span class="bb-st">${({ ride: st.step === "guess" ? (st.guessed[id] ? "✓ getippt" : "überlegt …") : "fährt", out: `🚏 ausgestiegen · +${st.gain[id]}`, crash: "💥 verunglückt", done: `🏁 Endstation · +${st.gain[id]}` })[st.status[id]]}</span>`; };
@@ -319,7 +319,9 @@
     const riders = order.map((id) => `<div class="bb-rider st-${st.status[id]} ${id === G.myId ? "me" : ""}" style="--pc:${colorOf(id)}">
         <div class="bb-rhead"><span class="pdot"></span><b>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</b>${statusTxt(id)}
           <span class="bb-rpot">${st.status[id] === "ride" && st.pot[id] ? `Topf ${st.pot[id]}` : ""}</span><span class="bb-rtotal">${st.total[id] || 0}</span></div>
-        <div class="bb-rslots">${slots(id, "mini")}</div></div>`).join("");
+        <div class="bb-rtrip">${Array.from({ length: 5 }, (_, i) => { const r = (st.reach || {})[id] || 0, s2 = st.status[id];
+          const cls = i < r ? "ok" : i === r && s2 === "crash" ? "bad" : i === r && s2 === "out" ? "out" : i === r && s2 === "ride" && !end ? "cur" : "";
+          return `<i class="${cls}">${cls === "ok" ? "✓" : cls === "bad" ? "✕" : cls === "out" ? "🚏" : ""}</i>`; }).join("")}</div></div>`).join("");
     if (flips) kgSound(flips, 200, 150);
     return `<div class="bb-layout"><div class="panel bb-board">${track}${body}</div><div class="panel bb-riders"><div class="game-label">Mitfahrer</div>${riders}</div></div>`;
   }

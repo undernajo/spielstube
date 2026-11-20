@@ -125,13 +125,14 @@
   });
 
   // ---------- Busfahrt (Leiter mit Aussteigen) ----------
-  // Pro Runde fünf Stationen. Alle tippen gleichzeitig; richtig = Punkte der Station in den Rundentopf, falsch = Topf weg
+  // Pro Runde fünf Stationen – alle fahren im selben Bus: an jeder Station wird eine Karte für alle aufgedeckt.
+  // Alle tippen gleichzeitig und geheim; richtig = Punkte der Station in den eigenen Rundentopf, falsch = Topf weg
   // („Bus verunglückt“). Ab Station 2 kann man stattdessen aussteigen und den Topf sicher mitnehmen.
-  // Bei Station 2 und 3 zählt ein gleich hoher Wert zugunsten des Spielers. Figuren: Unter, Ober, König, Ass (4 von 8 Werten).
+  // Bei Station 2 und 3 zählt ein gleich hoher Wert zugunsten der Tippenden. Figuren: Unter, Ober, König, Ass (4 von 8 Werten).
   const BUS_Q = [
-    { key: "figur", pts: 1, text: "Wird deine erste Karte eine Figur oder eine Zahl?", opts: [["fig", "Figur (Unter, Ober, König, Ass)"], ["zahl", "Zahl (Sieben bis Zehner)"]] },
-    { key: "hoeher", pts: 1, text: "Ist die nächste Karte höher oder tiefer als deine erste?", opts: [["hoch", "Höher"], ["tief", "Tiefer"]] },
-    { key: "zwischen", pts: 2, text: "Liegt die nächste Karte zwischen deinen ersten beiden oder außerhalb?", opts: [["in", "Zwischen"], ["out", "Außerhalb"]] },
+    { key: "figur", pts: 1, text: "Wird die erste Karte eine Figur oder eine Zahl?", opts: [["fig", "Figur (Unter, Ober, König, Ass)"], ["zahl", "Zahl (Sieben bis Zehner)"]] },
+    { key: "hoeher", pts: 1, text: "Ist die nächste Karte höher oder tiefer als die erste?", opts: [["hoch", "Höher"], ["tief", "Tiefer"]] },
+    { key: "zwischen", pts: 2, text: "Liegt die nächste Karte zwischen den ersten beiden oder außerhalb?", opts: [["in", "Zwischen"], ["out", "Außerhalb"]] },
     { key: "suit", pts: 10, text: "Welche Farbe hat die nächste Karte genau?", opts: [["herz", "Herz"], ["laub", "Laub"], ["eichel", "Eichel"], ["schelle", "Schelle"]] },
     { key: "wert", pts: 30, text: "Welchen Wert hat die letzte Karte genau?", opts: RANKS.map((r) => [r, { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" }[r]]) },
   ];
@@ -146,8 +147,9 @@
   function nextBusRound(st, now) {
     st.round++;
     if (st.round > st.rounds) { st.round = st.rounds; st.step = "final"; return; }
-    st.deck = deck(st.seats.length * 5 > 32 ? 2 : 1);
-    st.hands = Object.fromEntries(st.seats.map((id) => [id, []]));
+    st.deck = deck(1);
+    st.cards = []; // die gemeinsame Fahrt: eine Karte je Station
+    st.reach = Object.fromEntries(st.seats.map((id) => [id, 0])); // geschaffte Stationen je Spieler
     st.pot = Object.fromEntries(st.seats.map((id) => [id, 0]));
     st.status = Object.fromEntries(st.seats.map((id) => [id, "ride"])); // ride | out (ausgestiegen) | crash | done (alle 5 geschafft)
     st.gain = Object.fromEntries(st.seats.map((id) => [id, 0]));
@@ -157,13 +159,15 @@
   const riders = (st) => st.seats.filter((id) => st.status[id] === "ride");
   function busAsk(st) { st.step = "guess"; st.guesses = {}; st.until = 0; }
   function busCheck(st, now) { if (riders(st).every((id) => st.guesses[id])) busDeal(st, now); }
-  // Alle Fahrenden haben getippt (oder sind ausgestiegen): Karten austeilen und werten
+  // Alle Fahrenden haben getippt (oder sind ausgestiegen): die nächste gemeinsame Karte aufdecken und werten
   function busDeal(st, now) {
-    const q = BUS_Q[st.q], res = {};
+    const q = BUS_Q[st.q], res = {}, h = st.cards;
+    // nur aufdecken, wenn noch jemand weiterfährt (steigen alle aus, endet die Fahrt hier)
+    const c = riders(st).some((id) => st.guesses[id] !== "_out") ? st.deck.pop() : null;
+    if (c) h.push(c);
     riders(st).forEach((id) => {
       const g = st.guesses[id];
       if (g === "_out") { st.status[id] = "out"; st.gain[id] = st.pot[id]; st.total[id] += st.pot[id]; res[id] = { out: true, pts: st.pot[id] }; return; }
-      const c = st.deck.pop(), h = st.hands[id];
       let ok;
       if (q.key === "figur") ok = (g === "fig") === ["U", "O", "K", "A"].includes(rankOf(c));
       else if (q.key === "hoeher") ok = rk(c) === rk(h[0]) || (g === "hoch" ? rk(c) > rk(h[0]) : rk(c) < rk(h[0])); // gleich hoch = zu deinen Gunsten
@@ -171,12 +175,11 @@
         ok = rk(c) === lo || rk(c) === hi || (g === "in" ? rk(c) > lo && rk(c) < hi : rk(c) < lo || rk(c) > hi); }
       else if (q.key === "suit") ok = suitOf(c) === g;
       else ok = rankOf(c) === g;
-      h.push(c);
       if (ok) {
-        st.pot[id] += q.pts;
+        st.reach[id]++; st.pot[id] += q.pts;
         if (st.q === BUS_Q.length - 1) { st.status[id] = "done"; st.gain[id] = st.pot[id]; st.total[id] += st.pot[id]; }
       } else { st.status[id] = "crash"; st.gain[id] = 0; }
-      res[id] = { card: c, guess: g, ok, pts: q.pts, lost: ok ? 0 : st.pot[id] };
+      res[id] = { guess: g, ok, pts: q.pts, lost: ok ? 0 : st.pot[id] };
       if (!ok) st.pot[id] = 0;
     });
     st.res = res; st.step = "show"; st.until = now + BUS_SHOW_MS;
@@ -297,7 +300,7 @@
       out.done = Object.fromEntries(st.seats.map((id) => [id, st.step === "play" ? (st.done[id] ? "fertig" : "") : st.done[id] || ""]));
     } else if (st.mode === "bus") {
       out.q = st.q; out.question = BUS_Q[Math.min(st.q, BUS_Q.length - 1)]; out.stations = BUS_Q.map((x) => x.pts);
-      out.hands = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).slice()]));
+      out.cards = (st.cards || []).slice(); out.reach = { ...(st.reach || {}) };
       out.pot = { ...st.pot }; out.status = { ...st.status }; out.gain = { ...st.gain }; out.res = st.res;
       out.guessed = Object.fromEntries(st.seats.map((id) => [id, !!(st.guesses && st.guesses[id])]));
     } else if (st.mode === "stich") {

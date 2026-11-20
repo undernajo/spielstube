@@ -2895,11 +2895,13 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-rpot { margin-left: auto; font-size: .76rem; font-weight: 800; color: var(--accent); }
 .bb-rtotal { font: 700 1rem Fredoka, sans-serif; min-width: 18px; text-align: right; }
 .bb-rpot:empty + .bb-rtotal { margin-left: auto; }
-.bb-rslots { display: grid; grid-template-columns: repeat(5, 30px); gap: 5px; }
-.bb-rslots .bb-slot { height: 46px; border-radius: 5px; border-width: 1px; }
-.bb-rslots .bb-slot.cur { background: none; border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
-.bb-rslots .kg-card.mini { width: 30px; border-radius: 4px; }
-.bb-rider.st-crash .bb-rslots { opacity: .5; }
+/* Fahrt eines Mitfahrers: fünf Stationen – geschafft, verunglückt, ausgestiegen, gerade dran */
+.bb-rtrip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.bb-rtrip i { height: 18px; border-radius: 5px; border: 1px dashed var(--line); display: grid; place-items: center; font: 800 .7rem Nunito, sans-serif; font-style: normal; }
+.bb-rtrip i.ok { border: 0; background: color-mix(in srgb, var(--ok) 30%, #17133d); color: #7ee2b1; }
+.bb-rtrip i.bad { border: 0; background: color-mix(in srgb, var(--bad) 30%, #17133d); color: #ff9aa2; }
+.bb-rtrip i.out { border: 0; background: color-mix(in srgb, var(--accent) 22%, #17133d); font-size: .66rem; }
+.bb-rtrip i.cur { border: 1px dashed var(--accent); }
 .bb-rider.st-out, .bb-rider.st-done { border-left-style: dashed; }
 @media (min-width: 900px) {
   .kg-bus.screen.game { padding-bottom: 16px; }
@@ -2933,9 +2935,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .bb-stakes { font-size: clamp(.78rem, 1.6vh, 1rem); }
   .bb-scale { font-size: clamp(.76rem, 1.7vh, 1.02rem); }
   .bb-riders { max-height: calc(100dvh - 116px); overflow-y: auto; scrollbar-width: thin; }
-  .bb-rslots { grid-template-columns: repeat(5, clamp(30px, 4.4vh, 46px)); }
-  .bb-rslots .bb-slot { height: calc(clamp(30px, 4.4vh, 46px) * 1.55); }
-  .bb-rslots .kg-card.mini { width: clamp(30px, 4.4vh, 46px); }
+  .bb-rtrip i { height: clamp(18px, 2.6vh, 26px); font-size: clamp(.7rem, 1.3vh, .82rem); }
   .bb-rider { padding: clamp(8px, 1.1vh, 12px) 12px; } .bb-rhead { font-size: clamp(.9rem, 1.7vh, 1.02rem); }
 }
 @media (max-width: 899px) { .bb-layout { max-width: 640px; } }
