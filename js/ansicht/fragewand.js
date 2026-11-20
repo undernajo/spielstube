@@ -21,13 +21,13 @@
     // Ergebnis der letzten Frage: neu (nach dem ersten Zeichnen) → kurz zeigen; nach Neuladen nur still übernehmen
     if (st.last && fwRes.n !== st.last.n) fwRes = { n: st.last.n, t: fwRes.n === null && fwKey === null ? 0 : now };
     if (!st.last) fwRes = { n: 0, t: 0 };
-    const resAge = fwRes.t ? now - fwRes.t : Infinity;
-    const showRes = resAge < RES_MS && st.step !== "answer" && st.step !== "judge";
+    const resAge = fwRes.t ? now - fwRes.t : Infinity, resMs = st.last && st.last.checked ? 0 : RES_MS;
+    const showRes = resAge < resMs && st.step !== "answer" && st.step !== "judge" && st.step !== "check";
     clearTimeout(fwTimer);
-    if (showRes) fwTimer = setTimeout(() => { if (G.view && G.view.phase === "wand") renderWand(); }, RES_MS - resAge + 30);
+    if (showRes) fwTimer = setTimeout(() => { if (G.view && G.view.phase === "wand") renderWand(); }, resMs - resAge + 30);
 
     // Schlüssel: nur bei echten Änderungen neu zeichnen (Eingabe bleibt erhalten); sonst nur die Punkte-Chips
-    const key = [v.code, st.round, st.step, st.cur ? st.cur.k + "/" + st.cur.r : "", showRes ? "res" : "", st.chooser,
+    const key = [v.code, st.round, st.step, st.cur ? st.cur.k + "/" + st.cur.r + (st.cur.appeal ? "E" : "") : "", showRes ? "res" : "", st.chooser,
       v.players.map((p) => p.id + (p.connected ? 1 : 0)).join(",")].join(":");
     const chips = () => st.seats.map((id) => `<span class="geo-score ${st.chooser === id && st.step === "pick" ? "fw-turn" : ""} ${st.cur && st.cur.by === id ? "fw-turn" : ""}" style="--pc:${colorOf(id)}"><span class="pdot"></span><span class="geo-score-name">${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</span><b>${st.score[id] || 0}</b></span>`).join("");
     if (fwKey === key && app.querySelector(".fw-main")) { const c = app.querySelector(".fw-chips"); if (c) c.innerHTML = chips(); return; }
@@ -42,10 +42,10 @@
     st.pts.forEach((pt, r) => st.cats.forEach((c, k) => {
       const d = st.board[k][r], picked = st.cur && st.cur.k === k && st.cur.r === r;
       // gerade aufgelöst: Feld dreht sich erst um, wenn das Ergebnis verschwindet
-      const flipNew = d && lastKR === k + "/" + r && fwRes.t && !reduce() && resAge < RES_MS + FLIP_MS;
+      const flipNew = d && lastKR === k + "/" + r && fwRes.t && !reduce() && resAge < resMs + FLIP_MS;
       const back = d ? `<div class="fc back"><div>${d.ok ? `<div class="who" style="--pc:${colorOf(d.by)}"><i></i>${esc(nameOf(d.by))}</div>` : `<div class="who"><s>✗ ${esc(nameOf(d.by))}</s></div>`}<div class="ans">${esc(d.a)}</div></div></div>` : `<div class="fc back"></div>`;
       board += `<button class="fw-tile ${d ? "done" : ""} ${d && d.ok ? "got" : ""} ${picked ? "picked" : ""} ${flipNew ? "flip" : ""}" data-k="${k}" data-r="${r}"
-        style="${d && d.ok ? `--pc:${colorOf(d.by)};` : ""}${flipNew ? `--fd:${RES_MS - resAge}ms;` : ""}" ${d || !myPick ? "disabled" : ""} aria-label="${esc(c.name)} für ${pt}">
+        style="${d && d.ok ? `--pc:${colorOf(d.by)};` : ""}${flipNew ? `--fd:${resMs - resAge}ms;` : ""}" ${d || !myPick ? "disabled" : ""} aria-label="${esc(c.name)} für ${pt}">
         <div class="fc front">${pt}</div>${back}</button>`;
     }));
 
@@ -53,7 +53,7 @@
     let card = "";
     const head = (c, cat, pts, kind) => `<div class="fw-meta"><span>${cat.ico} ${esc(cat.name)}</span>${kind ? `<span class="tag-kind">${kind}</span>` : ""}<span class="pts">${pts}</span></div>
       <div class="fw-text">${esc(c)}</div>`;
-    if (st.step === "answer" || st.step === "judge") {
+    if (st.step === "answer" || st.step === "judge" || st.step === "check") {
       const c = st.cur, cat = st.cats[c.k], mine = c.by === me;
       // Öffnen-Animation nur für eine frisch gewählte Frage
       const ok = c.k + "/" + c.r + ":" + st.round;
@@ -66,9 +66,15 @@
           : `<form class="fw-form"><input id="fw-in" autocomplete="off" autocapitalize="off" placeholder="Deine Antwort" maxlength="80"><button class="btn primary">Antworten</button></form>`;
         else body = `<div class="fw-who" style="--pc:${colorOf(c.by)}"><b>${esc(nameOf(c.by))}</b> antwortet …</div>${c.c ? `<div class="fw-opts watch">${c.c.map((o) => `<span class="fw-o">${esc(o)}</span>`).join("")}</div>` : ""}`;
         if (mine) body = `<div class="fw-who"><b>Du</b> antwortest</div>${body}<button class="fw-pass" id="fw-pass">Weiß ich nicht</button>`;
+      } else if (st.step === "check") {
+        // nicht erkannt: Lösung zeigen – der Antwortende tippt „Weiter“ oder legt Einspruch ein
+        body = `<div class="fw-ans no">✗ Gesucht war: ${esc(c.a)}</div>
+          <div class="fw-line" style="--pc:${colorOf(c.by)}"><span class="pdot"></span><b>${esc(nameOf(c.by))}</b><span class="g">„${esc(c.given)}“</span><b class="no">0</b></div>
+          ${mine ? `<div class="fw-jbtns"><button id="fw-continue" class="btn primary">Weiter</button>${c.judges.length ? `<button id="fw-appeal" class="btn ghost">⚖️ Einspruch – das stimmt doch</button>` : ""}</div>`
+            : `<div class="fw-who">${esc(nameOf(c.by))} schaut sich die Lösung an …</div>`}`;
       } else {
         const iJudge = c.judges.includes(me);
-        body = `<div class="fw-judge"><div class="fw-line" style="--pc:${colorOf(c.by)}"><span class="pdot"></span><b>${esc(nameOf(c.by))}</b><span class="g">„${esc(c.given)}“</span></div>
+        body = `<div class="fw-judge">${c.appeal ? `<div class="fw-appeal">⚖️ ${mine ? "Dein Einspruch" : `Einspruch von ${esc(nameOf(c.by))}`} – zählt die Antwort doch?</div>` : ""}<div class="fw-line" style="--pc:${colorOf(c.by)}"><span class="pdot"></span><b>${esc(nameOf(c.by))}</b><span class="g">„${esc(c.given)}“</span></div>
           <div class="fw-right">Gesucht war: <b>${esc(c.a)}</b></div>
           ${iJudge ? `<div class="fw-jbtns"><button class="btn primary" data-fwjudge="1">✓ zählt</button><button class="btn ghost" data-fwjudge="0">✗ zählt nicht</button></div>`
             : `<div class="fw-who">${mine ? "Die anderen entscheiden, ob deine Antwort zählt …" : "Die anderen entscheiden …"}</div>`}</div>`;
@@ -80,7 +86,7 @@
       card = `<div class="fw-card res" style="animation:none">${head(l.t, cat, l.pts)}
         <div class="fw-ans ${l.ok ? "" : "no"}">${l.ok ? "✓" : "✗"} ${esc(l.a)}</div>
         <div class="fw-line" style="--pc:${colorOf(l.by)}"><span class="pdot"></span><b>${esc(nameOf(l.by))}</b>
-          <span class="g">${l.given ? `„${esc(l.given)}“${l.judged ? (l.ok ? " · von den anderen anerkannt" : " · nicht anerkannt") : ""}` : "wusste es nicht"}</span>
+          <span class="g">${l.given ? `„${esc(l.given)}“${l.judged ? (l.ok ? " · Einspruch anerkannt" : " · Einspruch abgelehnt") : ""}` : "wusste es nicht"}</span>
           ${l.ok ? `<b class="ok">+${l.pts}</b>` : `<b class="no">0</b>`}</div></div>`;
     } else if (st.step === "final") {
       const rank = st.seats.slice().sort((a, b) => (st.score[b] || 0) - (st.score[a] || 0));
@@ -123,6 +129,8 @@
     on("#toLobby", () => send({ type: "lobby" }));
     on("#fw-restart", () => send({ type: "fwRestart" }));
     on("#fw-skip", () => send({ type: "fwSkip" }));
+    on("#fw-appeal", () => once(() => send({ type: "fwAppeal" })));
+    on("#fw-continue", () => once(() => send({ type: "fwContinue" })));
     const once = (fn) => { const k = st.round + ":" + st.step; if (fwSent === k) return; fwSent = k; fn(); };
     on("#fw-pass", () => once(() => send({ type: "fwAnswer", pass: true })));
     app.querySelectorAll(".fw-tile:not(:disabled)").forEach((b) => b.onclick = () => {

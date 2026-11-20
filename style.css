@@ -2683,3 +2683,5 @@ body.qb-play .banner.win .trophy { display: none; }
   .fw-card { padding: 16px; }
   .fw-opts { grid-template-columns: 1fr; }
 }
+.fw-appeal { text-align: center; font-weight: 800; color: var(--accent); }
+.fw-appeal-btn { justify-self: center; margin: 0; }

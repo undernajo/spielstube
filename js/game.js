@@ -1311,6 +1311,7 @@
       zRes: v.phase === "playing" && v.card ? v.round + ":" + v.card.q + ":" + v.card.items.filter((it) => it.r && !it.r.pending).length : null,
       duFin: !!(v.duell && v.duell.step === "final"), fqFin: !!(v.frage && v.frage.step === "final"),
       fwLast: v.wand && v.wand.last ? v.wand.last.n : 0, fwFin: !!(v.wand && v.wand.step === "final"),
+      fwCheck: v.wand && v.wand.step === "check" && v.wand.cur ? v.wand.round + ":" + v.wand.cur.k + "/" + v.wand.cur.r : null,
       fwMine: !!(v.wand && ((v.wand.step === "pick" && v.wand.chooser === myId) || (v.wand.step === "judge" && v.wand.cur && v.wand.cur.judges.includes(myId)))),
       lobbyIds: v.phase === "lobby" ? v.players.map((p) => p.id) : null,
     };
@@ -1367,7 +1368,8 @@
       // Fragewand: Auflösung für alle hörbar (Pling/Bong), „Du bist dran“ erst danach; am Ende Sieg/Niederlage
       if (v.wand) {
         const fresh = now.fwLast > prev.fwLast;
-        if (fresh) (v.wand.last.ok ? sfx.right : sfx.wrong)();
+        if (fresh && !v.wand.last.checked) (v.wand.last.ok ? sfx.right : sfx.wrong)(); // nach „Weiter“ war das Bong schon
+        if (now.fwCheck && now.fwCheck !== prev.fwCheck) sfx.wrong(); // nicht erkannt: Lösung erscheint
         if (now.fwMine && !prev.fwMine) setTimeout(sfx.turn, fresh ? 700 : 0);
         if (now.fwFin && !prev.fwFin) { setTimeout(() => (v.wand.winners.includes(myId) ? sfx.win() : v.wand.seats.includes(myId) && sfx.lose()), 900); confetti(); }
       }
@@ -2387,7 +2389,7 @@
         <li>Auf der Tafel stehen <b>5 Kategorien</b> mit je vier Fragen: <b>10, 20, 30 und 50 Punkte</b> – je mehr Punkte, desto schwerer.</li>
         <li><b>Reihum</b> wählt jeder ein Feld und beantwortet die Frage – nur wer gewählt hat.</li>
         <li>Leichte Fragen haben oft <b>vier Antworten zur Auswahl</b>, sonst wird die Antwort eingetippt. Kleine Tippfehler zählen.</li>
-        <li>Erkennt das Spiel eine eingetippte Antwort nicht sicher, entscheiden die anderen, ob sie gilt.</li>
+        <li>Kleine Abweichungen und Tippfehler erkennt das Spiel als richtig. Erkennt es eine Antwort nicht, sieht man die Lösung und tippt <b>„Weiter“</b> – oder legt <b>Einspruch</b> ein, wenn die eigene Antwort doch stimmt; dann entscheiden die anderen.</li>
         <li>Richtig: die Punkte des Feldes. Falsch: keine Punkte, aber auch kein Abzug. Es gibt kein Zeitlimit.</li>
         <li>Sind alle Felder weg, gewinnt, wer die meisten Punkte hat.</li>
       </ul>

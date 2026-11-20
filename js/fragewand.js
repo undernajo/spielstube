@@ -55,12 +55,13 @@
   }
   const judges = (s, st) => st.seats.filter((id) => id !== (st.cur && st.cur.by) && active(s, id));
 
-  function resolve(s, ok, judged) {
+  // checked: der Antwortende hat die Lösung schon gesehen und „Weiter“ getippt (dann keine Ergebnis-Karte mehr)
+  function resolve(s, ok, judged, checked) {
     const st = s.wand, c = st.cur, q = qOf(st, c.k, c.r), pts = PTS[c.r];
     st.board[c.k][c.r].done = { by: c.by, ok: !!ok };
     if (ok) st.score[c.by] = (st.score[c.by] || 0) + pts;
     st.round++;
-    st.last = { n: st.round, k: c.k, r: c.r, by: c.by, given: c.given || "", ok: !!ok, judged: !!judged, a: q.a, t: q.t, pts, key: keyOf(st.cats[c.k], c.r, st.board[c.k][c.r].i) };
+    st.last = { n: st.round, k: c.k, r: c.r, by: c.by, given: c.given || "", ok: !!ok, judged: !!judged, checked: !!checked, appeal: !!st.cur.appeal, a: q.a, t: q.t, pts, key: keyOf(st.cats[c.k], c.r, st.board[c.k][c.r].i) };
     st.cur = null;
     if (st.board.every((col) => col.every((cell) => cell.done))) {
       st.step = "final";
@@ -86,11 +87,23 @@
         if (!text) return false;
         st.cur.given = text;
         if (q.c) { resolve(s, text === q.a); return true; }
-        if (L().textMatches(q.a, text, q.alt || [], false)) { resolve(s, true); return true; }
-        // nicht automatisch erkannt: die Mitspieler entscheiden (sind keine da, zählt es nicht)
-        if (!judges(s, st).length) { resolve(s, false); return true; }
-        st.step = "judge"; return true;
+        // kleine Abweichungen zählen (wie beim Zehnkampf); Zahlen: auch „drei“, „8 Minuten“, „1.991“
+        let ok = L().textMatches(q.a, text, q.alt || [], false);
+        if (!ok && /^\d+$/.test(String(q.a).trim())) {
+          const want = [q.a, ...(q.alt || [])].flatMap((x) => L().parseNumCandidates(x));
+          const m = /-?\d[\d.,]*/.exec(text), got = [...L().parseNumCandidates(text), ...(m ? L().parseNumCandidates(m[0]) : [])];
+          ok = got.some((v) => want.includes(v));
+        }
+        if (ok) { resolve(s, true); return true; }
+        // nicht erkannt: der Antwortende sieht die Lösung und tippt „Weiter“ oder legt Einspruch ein
+        st.step = "check"; return true;
       }
+      case "fwContinue": // Lösung gesehen, war falsch
+        if (st.step !== "check" || pid !== st.cur.by) return false;
+        resolve(s, false, false, true); return true;
+      case "fwAppeal": // Einspruch: die anderen urteilen
+        if (st.step !== "check" || pid !== st.cur.by || !judges(s, st).length) return false;
+        st.cur.appeal = true; st.step = "judge"; return true;
       case "fwJudge": {
         if (st.step !== "judge" || !judges(s, st).includes(pid)) return false;
         resolve(s, !!a.ok, true); return true;
@@ -109,9 +122,9 @@
     if (!st) return null;
     const cur = st.cur ? (() => { const q = qOf(st, st.cur.k, st.cur.r);
       return { k: st.cur.k, r: st.cur.r, by: st.cur.by, t: q.t, c: q.c ? q.c.slice() : null, pts: PTS[st.cur.r],
-        given: st.step === "judge" ? st.cur.given : "", judges: st.step === "judge" ? judges(s, st) : [],
-        // die richtige Antwort erst beim Urteilen zeigen (dann muss man vergleichen können)
-        a: st.step === "judge" ? q.a : null }; })() : null;
+        given: st.step === "judge" || st.step === "check" ? st.cur.given : "", judges: st.step === "judge" || st.step === "check" ? judges(s, st) : [], appeal: !!st.cur.appeal,
+        // die richtige Antwort erst nach der Antwort zeigen (Lösung ansehen bzw. urteilen)
+        a: st.step === "judge" || st.step === "check" ? q.a : null }; })() : null;
     return {
       step: st.step, seats: st.seats.slice(), chooser: st.step === "final" ? null : chooser(st), score: { ...st.score }, round: st.round,
       cats: st.cats.map((key) => { const c = catOf(key); return { key, ico: c.ico, name: c.name }; }),
