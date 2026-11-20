@@ -145,6 +145,7 @@ em { color: var(--muted); font-style: normal; font-size: .9em; }
 .judge-given { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
 .judge-sol { color: #f2e7c4; }
 .judge-ask { margin-top: 6px; font-weight: 600; }
+.judge-appeal { font-weight: 800; color: var(--accent); }
 .banner .opt { min-width: 130px; }
 .textform input { font-size: 1.2rem; text-align: left; }
 .slot.shown { background: #cfc9ee; color: #3b3470; }
@@ -2685,3 +2686,16 @@ body.qb-play .banner.win .trophy { display: none; }
 }
 .fw-appeal { text-align: center; font-weight: 800; color: var(--accent); }
 .fw-appeal-btn { justify-self: center; margin: 0; }
+.modal .m-check { display: grid; gap: 4px; text-align: center; padding: 10px; border-radius: 12px; background: #3a2f12; border: 1px solid var(--accent); }
+.modal .m-given { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+.modal .m-wait { text-align: center; }
+.modal .m-check-btns { display: flex; gap: 8px; } .modal .m-check-btns .btn { flex: 1; margin: 0; }
+/* gemeinsamer Baustein „nicht erkannt“ (Zehnkampf-Fenster, Zehnkampf-Kasten, Fragewand-Karte) – wie früher bei der Fragewand */
+.chk { display: grid; gap: 10px; }
+.chk-sol { text-align: center; font: 700 1.4rem/1.25 Fredoka, sans-serif; color: #ff8a8a; animation: fw-pop .4s cubic-bezier(.2,1.6,.4,1) both; }
+.chk-line { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: #15123a; border-left: 4px solid var(--pc); font-size: .95rem; text-align: left; }
+.chk-line .pdot { background: var(--pc); }
+.chk-line .g { color: var(--muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chk-line b.no { color: #ff8a8a; }
+.chk-wait { text-align: center; font-size: .92rem; color: var(--muted); }
+.chk-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; } .chk-btns .btn { margin: 0; flex: 1 1 140px; max-width: 320px; }

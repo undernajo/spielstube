@@ -68,10 +68,7 @@
         if (mine) body = `<div class="fw-who"><b>Du</b> antwortest</div>${body}<button class="fw-pass" id="fw-pass">Weiß ich nicht</button>`;
       } else if (st.step === "check") {
         // nicht erkannt: Lösung zeigen – der Antwortende tippt „Weiter“ oder legt Einspruch ein
-        body = `<div class="fw-ans no">✗ Gesucht war: ${esc(c.a)}</div>
-          <div class="fw-line" style="--pc:${colorOf(c.by)}"><span class="pdot"></span><b>${esc(nameOf(c.by))}</b><span class="g">„${esc(c.given)}“</span><b class="no">0</b></div>
-          ${mine ? `<div class="fw-jbtns"><button id="fw-continue" class="btn primary">Weiter</button>${c.judges.length ? `<button id="fw-appeal" class="btn ghost">⚖️ Einspruch – das stimmt doch</button>` : ""}</div>`
-            : `<div class="fw-who">${esc(nameOf(c.by))} schaut sich die Lösung an …</div>`}`;
+        body = G.checkHtml({ given: c.given, solution: c.a, mine, who: nameOf(c.by), color: colorOf(c.by), appeal: c.judges.length > 0 });
       } else {
         const iJudge = c.judges.includes(me);
         body = `<div class="fw-judge">${c.appeal ? `<div class="fw-appeal">⚖️ ${mine ? "Dein Einspruch" : `Einspruch von ${esc(nameOf(c.by))}`} – zählt die Antwort doch?</div>` : ""}<div class="fw-line" style="--pc:${colorOf(c.by)}"><span class="pdot"></span><b>${esc(nameOf(c.by))}</b><span class="g">„${esc(c.given)}“</span></div>
@@ -129,8 +126,8 @@
     on("#toLobby", () => send({ type: "lobby" }));
     on("#fw-restart", () => send({ type: "fwRestart" }));
     on("#fw-skip", () => send({ type: "fwSkip" }));
-    on("#fw-appeal", () => once(() => send({ type: "fwAppeal" })));
-    on("#fw-continue", () => once(() => send({ type: "fwContinue" })));
+    on('[data-chk="appeal"]', () => once(() => send({ type: "fwAppeal" })));
+    on('[data-chk="ok"]', () => once(() => send({ type: "fwContinue" })));
     const once = (fn) => { const k = st.round + ":" + st.step; if (fwSent === k) return; fwSent = k; fn(); };
     on("#fw-pass", () => once(() => send({ type: "fwAnswer", pass: true })));
     app.querySelectorAll(".fw-tile:not(:disabled)").forEach((b) => b.onclick = () => {

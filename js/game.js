@@ -1402,6 +1402,7 @@
         <li>Wer dran ist, wählt eine noch offene Antwort und beantwortet sie – oder <b>passt</b>.</li>
         <li>Richtig: +1 Punkt für diese Runde, dann ist der Nächste dran.</li>
         <li>Falsch: <b>alle Punkte dieser Runde sind weg</b> und du bist für die Runde raus.</li>
+        <li>Kleine Tippfehler zählen. Erkennt das Spiel eine Antwort nicht, siehst du die Lösung: <b>„Weiter“</b> (zählt als falsch) oder <b>„⚖️ Einspruch“</b> – dann entscheiden die anderen.</li>
         <li>Wer passt, sichert seine Rundenpunkte. Die Runde endet, wenn alle raus sind, gepasst haben oder alle 10 Antworten aufgedeckt sind.</li>
         <li>Wer zuerst die Zielpunktzahl erreicht, gewinnt (bei Gleichstand: beide).</li>
       </ul>
@@ -1749,7 +1750,11 @@
       const item = card.items[pend.pos];
       const iJudge = pend.judges.includes(myId);
       const self = pend.by === myId;
-      banner = `<div class="banner judge">
+      banner = pend.check && !iJudge && self ? "" : pend.check && !iJudge ? `<div class="banner judge">
+          <div class="judge-q">„${esc(item.t)}“</div>
+          ${checkHtml({ given: pend.given, solution: fmt(card, item.r.a), mine: false, who: nameOf(pend.by), color: colorOf(pend.by), zero: false })}
+        </div>` : `<div class="banner judge">
+          ${pend.appeal ? `<div class="judge-appeal">⚖️ ${self ? "Dein Einspruch" : `Einspruch von ${esc(nameOf(pend.by))}`} – zählt die Antwort doch?</div>` : ""}
           <div class="judge-q">${self ? "Du sagst" : `<b>${esc(nameOf(pend.by))}</b> sagt`} bei „${esc(item.t)}“:</div>
           <div class="judge-given">„${esc(pend.given)}“</div>
           <div class="judge-sol">Lösung laut Karte: <b>${esc(fmt(card, item.r.a))}</b></div>
@@ -2016,6 +2021,17 @@
     if (!off || !off.length) return "";
     const n = off.length <= 2 ? off.map(esc).join(" & ") : `${off.length} Mitspieler`;
     return `<span class="next-off">📵 ${n} ${off.length > 1 ? "sind" : "ist"} gerade getrennt – es wird nicht auf ${off.length > 1 ? "sie" : n} gewartet.</span>`;
+  }
+  // Gemeinsamer Baustein „nicht erkannt“ (Zehnkampf und Fragewand, Gestaltung wie ursprünglich bei der Fragewand):
+  // Lösung groß, darunter die Antwort in Spielerfarbe; für den Antwortenden „Weiter“ (falsch) und „⚖️ Einspruch“
+  // (die anderen entscheiden) – Knöpfe mit data-chk="ok" / "appeal"
+  // zero: „0“ am Zeilenende (Fragewand: Punkte des Feldes; beim Zehnkampf weggelassen)
+  function checkHtml({ given, solution, mine, who, color, appeal = true, zero = true }) {
+    return `<div class="chk">
+      <div class="chk-sol">✗ Gesucht war: ${esc(solution)}</div>
+      <div class="chk-line" style="--pc:${color}"><span class="pdot"></span><b>${esc(who)}</b><span class="g">„${esc(given)}“</span>${zero ? `<b class="no">0</b>` : ""}</div>
+      ${mine ? `<div class="chk-btns"><button class="btn primary" data-chk="ok">Weiter</button>${appeal ? `<button class="btn ghost" data-chk="appeal">⚖️ Einspruch – das stimmt doch</button>` : ""}</div>`
+        : `<div class="chk-wait">${esc(who)} schaut sich die Lösung an …</div>`}</div>`;
   }
   // beim Zwischenaktualisieren (ohne neu zu zeichnen) nur den Weiter-Knopf und den Getrennt-Hinweis austauschen
   function nextBtnSwap(sel, opts, fn) {
@@ -2741,9 +2757,34 @@
   }
 
   // ---------- Antwort-Dialog ----------
-  let modalFor = null;
+  let modalFor = null, modalWait = null; // modalWait: abgeschickte Freitext-Antwort – Fenster bleibt offen, bis das Spiel sie geprüft hat
   function syncModal() {
     const v = view;
+    // nicht erkannt: im selben Fenster Lösung zeigen – „Weiter“ (falsch) oder „Einspruch“ (die anderen entscheiden)
+    const pend = v && v.phase === "playing" ? v.pending : null;
+    if (pend && pend.check && pend.by === myId && !pend.judges.length) {
+      const key = "chk:" + v.round + ":" + pend.pos;
+      modalWait = null; selected = null;
+      if (modalFor === key) return;
+      modalFor = key;
+      const card = v.card, it = card.items[pend.pos];
+      modalEl.innerHTML = `
+      <div class="modal-back">
+        <div class="modal" role="dialog" aria-modal="true">
+          <div class="m-q">${esc(card.q)}</div>
+          <div class="m-item ${card.emoji ? "emo" : ""} ${card.emoji && graphemes(it.t) === 1 ? "solo" : ""}">${esc(it.t)}</div>
+          ${checkHtml({ given: pend.given, solution: fmt(card, it.r.a), mine: true, who: (v.players.find((p) => p.id === myId) || { name: "Du" }).name,
+            color: PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === myId)) % PLAYER_COLORS.length], zero: false })}
+        </div>
+      </div>`;
+      const once = (t) => () => { modalEl.querySelectorAll("button").forEach((b) => b.disabled = true); send({ type: t }); };
+      modalEl.querySelector('[data-chk="ok"]').onclick = once("checkOk");
+      modalEl.querySelector('[data-chk="appeal"]').onclick = once("checkAppeal");
+      return;
+    }
+    // abgeschickt, Prüfung läuft noch: Fenster offen lassen (statt kurz zu schließen und wieder zu öffnen)
+    if (modalWait !== null && v && v.phase === "playing" && !pend && v.card && v.card.items[modalWait] && !v.card.items[modalWait].r) return;
+    modalWait = null;
     const valid = v && v.phase === "playing" && !v.pending && !v.undoReq && v.players[v.turn] && v.players[v.turn].id === myId &&
       selected !== null && v.card.items[selected] && !v.card.items[selected].r;
     if (!valid) { selected = null; modalFor = null; modalEl.innerHTML = ""; return; }
@@ -2760,7 +2801,7 @@
     } else if (card.type === "choice" || card.type === "decade") {
       const ph = card.type === "decade" ? "z. B. 80er oder 1980er" : "Deine Antwort";
       controls = `<form class="numform textform"><input id="num" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" placeholder="${ph}"><button class="btn primary" type="submit">OK</button></form>
-        ${card.type === "choice" ? `<p class="muted small">Erkennt das Spiel deine Antwort nicht sicher, entscheidet dein Mitspieler.</p>` : ""}`;
+        ${card.type === "choice" ? `<p class="muted small">Kleine Tippfehler zählen. Erkennt das Spiel deine Antwort nicht, siehst du hier die Lösung.</p>` : ""}`;
     } else {
       const est = card.type === "estimate";
       controls = `<form class="numform"><input id="num" type="text" inputmode="${est ? "text" : "decimal"}" autocomplete="off" placeholder="${est ? "z. B. 1.500 oder 1,5 Mio" : "Zahl"}">${card.unit ? `<span class="unit">${esc(card.unit)}</span>` : ""}<button class="btn primary" type="submit">OK</button></form>
@@ -2775,7 +2816,14 @@
           <button class="btn ghost" data-close>Andere Antwort wählen</button>
         </div>
       </div>`;
-    const submit = (value) => { const pos = selected; selected = null; modalFor = null; modalEl.innerHTML = ""; send({ type: "answer", pos, value }); render(); };
+    const submit = (value) => {
+      const pos = selected; selected = null; modalFor = null;
+      if (card.type === "choice") { // offen lassen: gleich kommt entweder das Ergebnis oder „Weiter / Einspruch“
+        modalWait = pos; modalEl.querySelectorAll("button, input").forEach((x) => x.disabled = true);
+        const f = modalEl.querySelector(".numform"); if (f) f.insertAdjacentHTML("afterend", `<p class="muted small m-wait">Wird geprüft …</p>`);
+      } else modalEl.innerHTML = "";
+      send({ type: "answer", pos, value }); render();
+    };
     modalEl.querySelectorAll(".opt").forEach((b) => b.onclick = () => {
       const d = b.dataset.v; submit(card.type === "tf" ? d === "true" : card.type === "rank" ? Number(d) : d);
     });
@@ -2818,6 +2866,7 @@
     fitGeoMaps,
     headBrandHtml,
     nextBtnsHtml,
+    checkHtml,
     nextBtnSwap,
     waitingNames,
     invite,

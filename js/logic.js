@@ -234,9 +234,9 @@
     const item = card.items[s.perm[pos]];
     const p = s.players[s.turn];
     if (card.type === "choice" && !textMatches(item[1], v, item[2], card.names)) {
-      // Nicht automatisch erkannt -> die Mitspieler entscheiden
-      s.pending = { pos, by: p.id, given: v };
-      event(s, "info", `${p.name} sagt bei „${item[0]}“: „${v}“ – Lösung: ${item[1]}. Zählt das?`);
+      // Nicht automatisch erkannt -> wer geantwortet hat, sieht die Lösung: „Weiter“ (falsch) oder „Einspruch“ (dann entscheiden die anderen)
+      s.pending = { pos, by: p.id, given: v, check: true };
+      event(s, "info", `${p.name} sagt bei „${item[0]}“: „${v}“ – Lösung: ${item[1]}.`);
       return true;
     }
     let ok = true, given = v;
@@ -252,6 +252,8 @@
 
   function judges(s) {
     const pend = s.pending;
+    const by = s.players.find((p) => p.id === pend.by);
+    if (pend.check && by && by.connected) return []; // erst entscheidet, wer geantwortet hat (ist er weg, urteilen die anderen)
     const others = s.players.filter((p) => p.id !== pend.by && p.connected && !p.paused);
     return others.length ? others.map((p) => p.id) : [pend.by]; // niemand sonst da -> selbst entscheiden
   }
@@ -395,6 +397,20 @@
         if (!s.undoReq || !undoApprovers(s).includes(pid)) return false;
         if (a.accept === true) applyUndo(s, cards);
         else { const j = s.players.find((p) => p.id === pid); s.undoReq = null; event(s, "info", `${j ? j.name : "?"} lehnt den Einspruch ab.`); }
+        return true;
+      }
+      case "checkOk": { // Lösung gesehen: war falsch
+        if (s.phase !== "playing" || !s.pending || !s.pending.check || s.pending.by !== pid) return false;
+        const { pos, given } = s.pending; s.pending = null;
+        resolve(s, cards, pos, given, false, null);
+        if (s.undo) s.undo.move = { type: "answer", pos, given, ok: false, text: s.lastEvent.text };
+        return true;
+      }
+      case "checkAppeal": { // „Einspruch“: jetzt entscheiden die anderen
+        if (s.phase !== "playing" || !s.pending || !s.pending.check || s.pending.by !== pid) return false;
+        s.pending.check = false; s.pending.appeal = true;
+        const p = s.players.find((x) => x.id === pid), card = cards[s.cardIdx], item = card.items[s.perm[s.pending.pos]];
+        event(s, "info", `${p ? p.name : "?"} legt Einspruch ein: „${s.pending.given}“ (Lösung: ${item[1]}). Zählt das?`);
         return true;
       }
       case "judge": {

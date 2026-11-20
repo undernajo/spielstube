@@ -92,7 +92,7 @@ Die Karten stehen in `data/fragen/`: `standard-*.js` für das Standard-Set, `<se
 | `rank` | Platz 1–10 per Knopf wählen. | 1–10 |
 | `decade` | Jahrzehnt eingeben: „80er“, „1980er“, „1985“ oder „Achtziger“. | Startjahr, z. B. `1980` |
 | `estimate` | Schätzen. Zählt, wenn höchstens `tol` daneben (Standard 10 %). „1,5 Mio“ wird verstanden. | Zahl |
-| `choice` | Freitext. Das Spiel erkennt Tippfehler und Varianten. Bei Unklarheit entscheidet der Mitspieler. | Text |
+| `choice` | Freitext. Das Spiel erkennt Tippfehler und Varianten. Erkennt es eine Antwort nicht, sieht der Antwortende die Lösung und tippt „Weiter“ (falsch) oder „Einspruch“ – dann entscheiden die Mitspieler. | Text |
 
 Bei `choice` kann man als dritten Eintrag weitere Schreibweisen angeben, z. B. `["Mona Lisa", "Leonardo da Vinci", ["Leonardo", "da Vinci"]]`.
 Mit `names: true` an der Karte reicht bei Personen der Nachname.
