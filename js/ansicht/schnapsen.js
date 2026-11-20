@@ -106,7 +106,7 @@
         ${seated && st.handCount[me] ? `<div class="wshow">${st.shown[me] ? `<span class="muted small">Deine Karten sind aufgedeckt.</span>` : `<button id="x-show" class="btn ghost sm">Meine Karten zeigen</button>`}</div>` : ""}
         <div class="banner-actions">${st.step === "final"
           ? `<button id="x-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
-          : seated ? G.nextBtnsHtml({ attr: 'id="x-next"', hostAttr: 'id="x-force"', label: "Nächste Runde", ready: !!st.ready[me], waiting: G.waitingNames(v, st.ready, st.seats) }) : ""}</div></div>`;
+          : seated ? G.nextBtnsHtml({ attr: 'id="x-next"', hostAttr: 'id="x-force"', label: "Nächste Runde", ready: !!st.ready[me], waiting: G.waitingNames(v, st.ready, st.seats, true) }) : ""}</div></div>`;
     }
     // Punkteblock: Punkte je Runde, Summe oben, Bummerl als Kreuzl
     const cols = [self, opp];

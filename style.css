@@ -2596,3 +2596,5 @@ body.qb-play .banner.win .trophy { display: none; }
   .geo-actions:has(.next-btn), .banner-actions:has(.next-btn), .slf-actions:has(.next-btn) { justify-content: center; width: 100%; align-self: stretch; }
   .btn.next-btn { flex: 1 1 100%; width: 100%; min-width: 0; }
 }
+.next-off { flex: 1 1 100%; text-align: center; font-size: .8rem; color: #ffb4a8; }
+.geo-actions:has(.next-off) { justify-content: center; }

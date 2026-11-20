@@ -1973,18 +1973,32 @@
     const who = !waiting.length ? "gleich geht's weiter" : waiting.length <= 2 ? "warte auf " + waiting.map(esc).join(" & ") : `warte auf ${waiting.length} Mitspieler`;
     return `<button ${attr} class="btn primary next-btn ${cls} ${ready ? "is-ready" : ""}">${ready
       ? `<span class="nb-main">✓ Bereit</span> <span class="nb-wait">– ${who}</span><span class="nb-undo">zurücknehmen</span>` : esc(label)}</button>`
-      + (isHost && hostAttr ? `<button ${hostAttr} class="btn ghost sm next-host">Als Gastgeber sofort weiter</button>` : "");
+      + (isHost && hostAttr ? `<button ${hostAttr} class="btn ghost sm next-host">Als Gastgeber sofort weiter</button>` : "")
+      + nextOffHtml(waiting.offline);
   }
-  // beim Zwischenaktualisieren (ohne neu zu zeichnen) nur den Weiter-Knopf austauschen
+  // Hinweis unter dem Weiter-Knopf: wer als getrennt gilt, zählt beim Weiter nicht mit
+  function nextOffHtml(off) {
+    if (!off || !off.length) return "";
+    const n = off.length <= 2 ? off.map(esc).join(" & ") : `${off.length} Mitspieler`;
+    return `<span class="next-off">📵 ${n} ${off.length > 1 ? "sind" : "ist"} gerade getrennt und ${off.length > 1 ? "zählen" : "zählt"} beim Weiter nicht mit</span>`;
+  }
+  // beim Zwischenaktualisieren (ohne neu zu zeichnen) nur den Weiter-Knopf und den Getrennt-Hinweis austauschen
   function nextBtnSwap(sel, opts, fn) {
     const el = app.querySelector(sel); if (!el) return;
     const t = document.createElement("div"); t.innerHTML = nextBtnsHtml({ ...opts, hostAttr: null });
-    const nb = t.firstElementChild; el.replaceWith(nb); nb.onclick = fn;
+    const nb = t.firstElementChild, box = el.parentNode; el.replaceWith(nb); nb.onclick = fn;
+    box.querySelectorAll(".next-off").forEach((x) => x.remove());
+    const off = t.querySelector(".next-off"); if (off) box.appendChild(off);
   }
-  // Namen der verbundenen, nicht pausierten Mitspieler (ohne mich), die noch nicht bereit sind
-  function waitingNames(v, ready, ids) {
+  // Namen der verbundenen, nicht pausierten Mitspieler (ohne mich), die noch nicht bereit sind;
+  // dazu .offline: Namen derer, die gerade als getrennt gelten (zählen beim Weiter nicht mit)
+  // all = true: Spiele zu zweit (Watten, Schnapsen) warten auch auf Getrennte – dann kein Hinweis, sondern „warte auf …“
+  function waitingNames(v, ready, ids, all) {
     const isReady = (id) => (Array.isArray(ready) ? ready.includes(id) : !!(ready && ready[id]));
-    return v.players.filter((p) => p.connected && !p.paused && p.id !== myId && (!ids || ids.includes(p.id)) && !isReady(p.id)).map((p) => p.name);
+    const mine = v.players.filter((p) => !p.paused && p.id !== myId && (!ids || ids.includes(p.id)));
+    const out = mine.filter((p) => (all || p.connected) && !isReady(p.id)).map((p) => p.name);
+    out.offline = all ? [] : mine.filter((p) => !p.connected).map((p) => p.name);
+    return out;
   }
 
   function headBrandHtml(key) {
