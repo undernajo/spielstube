@@ -1980,7 +1980,7 @@
   function nextOffHtml(off) {
     if (!off || !off.length) return "";
     const n = off.length <= 2 ? off.map(esc).join(" & ") : `${off.length} Mitspieler`;
-    return `<span class="next-off">📵 ${n} ${off.length > 1 ? "sind" : "ist"} gerade getrennt und ${off.length > 1 ? "zählen" : "zählt"} beim Weiter nicht mit</span>`;
+    return `<span class="next-off">📵 ${n} ${off.length > 1 ? "sind" : "ist"} gerade getrennt – es wird nicht auf ${off.length > 1 ? "sie" : n} gewartet.</span>`;
   }
   // beim Zwischenaktualisieren (ohne neu zu zeichnen) nur den Weiter-Knopf und den Getrennt-Hinweis austauschen
   function nextBtnSwap(sel, opts, fn) {
