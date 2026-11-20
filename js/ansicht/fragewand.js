@@ -36,6 +36,7 @@
 
     // Tafel
     const open = st.board.reduce((n, col) => n + col.filter((c) => !c).length, 0);
+    const left = st.step === "final" ? 0 : Math.max(0, Math.min(open, (st.turns || open) - st.round));
     const myPick = st.step === "pick" && st.chooser === me;
     const lastKR = st.last ? st.last.k + "/" + st.last.r : "";
     let board = st.cats.map((c) => `<div class="fw-cat"><span class="ico">${c.ico}</span><span class="nm">${esc(c.name)}</span></div>`).join("");
@@ -90,6 +91,7 @@
       const w = st.winners || [];
       card = `<div class="fw-card fw-end"><div class="trophy">🏆</div>
         <b class="fw-win">${w.map((id) => esc(nameOf(id))).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"} mit ${st.score[w[0]] || 0} Punkten!</b>
+        ${open ? `<div class="fw-who">Gleich viele Züge für alle – ${open} ${open === 1 ? "Feld bleibt" : "Felder bleiben"} offen.</div>` : ""}
         <div class="fw-res">${rank.map((id, i) => `<div class="fw-line" style="--pc:${colorOf(id)}"><span class="pdot"></span><b>${1 + rank.filter((x) => (st.score[x] || 0) > (st.score[id] || 0)).length}. ${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</b><span class="g"></span><b>${st.score[id] || 0}</b></div>`).join("")}</div>
         ${v.qb ? "" : `<div class="banner-actions"><button id="fw-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div>`}</div>`;
     }
@@ -105,14 +107,14 @@
       <main class="screen game fw">
         <header class="top topbar">
           ${headBrandHtml("wand")}
-          <div class="meta">${open} ${open === 1 ? "Feld" : "Felder"} offen<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta">${left} ${left === 1 ? "Zug" : "Züge"} übrig<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
         <section class="fw-main">
           <div class="fw-chips geo-scores">${chips()}</div>
           <div class="fw-board-wrap ${card ? "has-card" : ""}">
-            <div class="fw-board" style="--cols:${st.cats.length}">${board}</div>
+            <div class="fw-board ${st.cats.length < 5 ? "narrow" : ""}" style="--cols:${st.cats.length}">${board}</div>
             ${card ? `<div class="fw-q">${card}</div>` : ""}
           </div>
           <div class="fw-status">${line} ${skip}</div>

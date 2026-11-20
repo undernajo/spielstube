@@ -2710,3 +2710,12 @@ body.qb-play .banner.win .trophy { display: none; }
   .modal-back.zk-back { place-items: end center; padding: 10px; }
   .modal.zk { padding: 16px; }
 }
+/* Fragewand: alle vier Reihen passen auf den Bildschirm (auch in der Stubenmeisterschaft mit 3 breiten Spalten) */
+.fw-tile { aspect-ratio: auto; height: clamp(46px, calc((100dvh - var(--fw-top, 330px)) / 4 - 8px), 120px); }
+.fw-board.narrow { max-width: 780px; margin: 0 auto; width: 100%; }
+body.qb-play .fw-main { --fw-top: 370px; }
+@media (max-width: 640px) {
+  .fw-main { --fw-top: 300px; }
+  body.qb-play .fw-main { --fw-top: 365px; }
+  .fw-tile { height: clamp(44px, calc((100dvh - var(--fw-top)) / 4 - 5px), 96px); }
+}

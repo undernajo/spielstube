@@ -38,7 +38,9 @@
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.wand = { opts: { cats: (opts.cats || []).slice(), n: opts.n || 5, theme: opts.theme || null }, cats, board, seats,
       turn: Math.floor(Math.random() * seats.length), score: Object.fromEntries(seats.map((id) => [id, 0])),
-      step: "pick", cur: null, last: null, winners: null, round: 0 };
+      step: "pick", cur: null, last: null, winners: null, round: 0,
+      // gleich viele Züge für alle: nach der letzten vollen Runde ist Schluss (übrige Felder bleiben offen)
+      turns: Math.floor(cats.length * PTS.length / seats.length) * seats.length };
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
     return true;
   }
@@ -63,7 +65,7 @@
     st.round++;
     st.last = { n: st.round, k: c.k, r: c.r, by: c.by, given: c.given || "", ok: !!ok, judged: !!judged, checked: !!checked, appeal: !!st.cur.appeal, a: q.a, t: q.t, pts, key: keyOf(st.cats[c.k], c.r, st.board[c.k][c.r].i) };
     st.cur = null;
-    if (st.board.every((col) => col.every((cell) => cell.done))) {
+    if (st.round >= (st.turns || Infinity) || st.board.every((col) => col.every((cell) => cell.done))) {
       st.step = "final";
       const max = Math.max(...st.seats.map((id) => st.score[id] || 0));
       st.winners = st.seats.filter((id) => (st.score[id] || 0) === max);
@@ -126,7 +128,7 @@
         // die richtige Antwort erst nach der Antwort zeigen (Lösung ansehen bzw. urteilen)
         a: st.step === "judge" || st.step === "check" ? q.a : null }; })() : null;
     return {
-      step: st.step, seats: st.seats.slice(), chooser: st.step === "final" ? null : chooser(st), score: { ...st.score }, round: st.round,
+      step: st.step, seats: st.seats.slice(), chooser: st.step === "final" ? null : chooser(st), score: { ...st.score }, round: st.round, turns: st.turns || 0,
       cats: st.cats.map((key) => { const c = catOf(key); return { key, ico: c.ico, name: c.name }; }),
       // Felder: offen = null; erledigt = wer, richtig?, die Antwort
       board: st.board.map((col, k) => col.map((cell, r) => cell.done ? { by: cell.done.by, ok: cell.done.ok, a: catOf(st.cats[k]).q[PTS[r]][cell.i].a } : null)),

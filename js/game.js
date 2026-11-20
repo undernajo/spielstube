@@ -2407,7 +2407,7 @@
         <li>Leichte Fragen haben oft <b>vier Antworten zur Auswahl</b>, sonst wird die Antwort eingetippt. Kleine Tippfehler zählen.</li>
         <li>Kleine Abweichungen und Tippfehler erkennt das Spiel als richtig. Erkennt es eine Antwort nicht, sieht man die Lösung und tippt <b>„Weiter“</b> – oder legt <b>Einspruch</b> ein, wenn die eigene Antwort doch stimmt; dann entscheiden die anderen.</li>
         <li>Richtig: die Punkte des Feldes. Falsch: keine Punkte, aber auch kein Abzug. Es gibt kein Zeitlimit.</li>
-        <li>Sind alle Felder weg, gewinnt, wer die meisten Punkte hat.</li>
+        <li>Alle kommen gleich oft dran: Gehen die Felder nicht genau auf, endet das Spiel nach der letzten vollen Runde (z. B. zu dritt nach 18 von 20 Feldern). Es gewinnt, wer die meisten Punkte hat.</li>
       </ul>
     </details>`;
   // Lobby: bis zu 5 Kategorien wählen, der Rest wird beim Start ausgelost
