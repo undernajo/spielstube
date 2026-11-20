@@ -265,62 +265,64 @@
     return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
   }
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
+  // Busfahrt: oben die fünf Stationen, darunter je ein Kartenfeld – deine Karten füllen die Fahrt von links nach rechts.
+  // Darunter Frage und Antworten; rechts (am Handy darunter) die Mitfahrer mit kleinen Kartenfeldern.
   function busMainHtml(v, st, colorOf, nameOf, readyBtn) {
     const gk = st.gid + ":bus:" + st.round, seated = st.seats.includes(G.myId), me = seated ? st.status[G.myId] : null;
-    const rankOfId = (c) => c.split("-")[1];
-    const order = seated ? [G.myId, ...st.seats.filter((id) => id !== G.myId)] : st.seats;
+    const rankOfId = (c) => c.split("-")[1], end = st.step === "roundEnd";
     let flips = 0;
-    // Fortschritt: fünf Stationen mit Punkten
-    const ladder = `<div class="bus-ladder">${st.stations.map((p, i) => `<div class="bus-stop ${i < st.q || st.step === "roundEnd" ? "past" : i === st.q ? "cur" : ""}"><span>Station ${i + 1}</span><b>+${p}</b></div>`).join(`<i class="bus-road"></i>`)}</div>`;
-    const statusTxt = (id) => ({ ride: st.step === "guess" ? (st.guessed[id] ? "✓ getippt" : "überlegt …") : "fährt", out: `🚏 ausgestiegen · +${st.gain[id]}`, crash: "💥 verunglückt", done: `🏁 Endstation! +${st.gain[id]}` })[st.status[id]];
-    const handRow = (id) => {
-      const res = st.step === "show" && st.res ? st.res[id] : null, h = st.hands[id] || [];
-      const cards = h.map((c, i) => {
+    // Karten eines Spielers in fünf Feldern; die zuletzt aufgedeckte dreht sich beim Auflösen um
+    const slots = (id, size) => { const h = st.hands[id] || [], res = st.step === "show" && st.res ? st.res[id] : null;
+      return Array.from({ length: 5 }, (_, i) => { const c = h[i];
+        if (!c) return `<div class="bb-slot ${!end && i === h.length && st.status[id] === "ride" && i === st.q ? "cur" : ""}"></div>`;
         const a = i === h.length - 1 && res && !res.out ? kgAnim(`${gk}:h:${id}:${i}`, 150, 1000) : null;
         if (a && a.first) flips++;
-        return kgCard(c, id === G.myId ? "big" : "mid", "", a ? "flip" : "", a ? a.d : 0);
-      }).join("");
-      const badge = res ? `<span class="bus-badge ${res.out ? "good" : res.ok ? "ok" : "bad"} ${res.out ? "" : "kg-late"}" style="--d:1100ms">${res.out ? `🚏 steigt aus mit ${res.pts}` : res.ok ? `✓ +${res.pts}` : `💥 verunglückt${res.lost ? ` – ${res.lost} weg` : ""}`}</span>` : "";
-      return `<div class="bus-player ${id === G.myId ? "me" : ""} st-${st.status[id]}" style="--pc:${colorOf(id)}"><div class="bus-pname"><span class="pdot"></span><b>${esc(nameOf(id))}${id === G.myId ? " (du)" : ""}</b>
-          <span class="muted small">${res ? "" : statusTxt(id)}</span>${badge}<span class="bus-pot" title="Rundentopf – noch nicht sicher">${st.status[id] === "ride" && st.pot[id] ? `Topf ${st.pot[id]}` : ""}</span><span class="bus-minus">${st.total[id] || 0}</span></div>
-        <div class="kg-hand">${cards || `<span class="muted small">noch keine Karte</span>`}</div></div>`;
-    };
-    let top;
-    if (st.step === "roundEnd") {
+        return `<div class="bb-slot full">${kgCard(c, size, "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join(""); };
+    const stops = st.stations.map((p, i) => { const past = i < st.q || end, cur = !past && i === st.q;
+      return `<div class="bb-stop ${past ? "past" : cur ? "cur" : ""}">${cur ? `<i class="bb-here" aria-hidden="true">🚌</i>` : ""}<small>Station ${i + 1}</small><b>+${p}</b></div>`; }).join("");
+    const pot = seated ? st.pot[G.myId] || 0 : 0;
+    const potBox = seated ? `<div class="bb-pot ${me === "ride" ? "" : "off"}"><small>${me === "ride" ? "Topf" : "Punkte"}</small><b>${me === "ride" ? pot : st.total[G.myId] || 0}</b></div>` : "";
+    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}</div>${seated ? `<div class="bb-slots">${slots(G.myId, "bb")}</div>` : ""}${potBox}</div>`;
+
+    let body;
+    if (end) {
       const rows = st.seats.slice().sort((a, b) => st.gain[b] - st.gain[a]).map((id) => `<div class="kg-res ${st.gain[id] ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span>
           <span class="muted small">${st.status[id] === "crash" ? "💥 verunglückt" : st.status[id] === "done" ? "🏁 alle 5 Stationen!" : "🚏 ausgestiegen"}</span><span></span><b class="qb-plus">+${st.gain[id]}</b></div>`).join("");
-      top = `${ladder}<div class="kg-results">${rows}</div>
-        ${readyBtn}`;
+      body = `<div class="kg-results">${rows}</div>${readyBtn}`;
     } else {
       const q = st.question, h = st.hands[G.myId] || [], mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
-      const ref = st.q === 1 && h[0] ? `Deine erste Karte: <b>${esc(kgName(h[0]))}</b>` : st.q === 2 && h[1] ? `Zwischen <b>${esc(BUS_VAL[rankOfId(h[0])])}</b> und <b>${esc(BUS_VAL[rankOfId(h[1])])}</b>?` : "";
-      const pot = seated ? st.pot[G.myId] : 0;
       let act = "";
       if (st.step === "guess" && me === "ride") {
-        // Antwort-Kacheln mit Symbol; Bezugskarten klein als Bild
-        const ICON = { fig: "👑", zahl: "🔢", hoch: "⬆️", tief: "⬇️", in: "⇥ ⇤", out: "⇤ ⇥" };
-        const sym = (k) => ["herz", "laub", "eichel", "schelle"].includes(k) ? `<span class="bus-suit">${WCARDS.sym(k, 1)}</span>` : ICON[k] ? `<span class="bus-ico">${ICON[k]}</span>` : "";
+        const ICON = { fig: "👑", zahl: "🔢", hoch: "⬆️", tief: "⬇️", in: "⇥⇤", out: "⇤⇥" };
+        const sym = (k) => ["herz", "laub", "eichel", "schelle"].includes(k) ? `<span class="bb-suit">${WCARDS.sym(k, 1)}</span>` : ICON[k] ? `<span class="bb-ico">${ICON[k]}</span>` : "";
         const label = (k, t) => q.key === "figur" ? `<b>${k === "fig" ? "Figur" : "Zahl"}</b><small>${k === "fig" ? "Unter · Ober · König · Ass" : "Sieben bis Zehner"}</small>` : `<b>${esc(t)}</b>`;
-        act = `<div class="bus-choices ${q.opts.length > 4 ? "many" : q.opts.length > 2 ? "four" : ""}">${q.opts.map(([k, t]) =>
-            `<button type="button" class="bus-choice ${mine === k ? "on" : ""}" data-busg="${k}">${sym(k)}${label(k, t)}</button>`).join("")}</div>
-          ${st.q > 0 && pot > 0 ? `<div class="bus-or"><span>oder</span></div>
-            <button type="button" class="bus-exit ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bus-ico">🚏</span><span><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></span></button>` : ""}
-          <div class="bus-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
+        act = `<div class="bb-choices n${q.opts.length}">${q.opts.map(([k, t]) =>
+            `<button type="button" class="bb-choice ${mine === k ? "on" : ""}" data-busg="${k}">${sym(k)}<span>${label(k, t)}</span></button>`).join("")}</div>
+          ${st.q > 0 && pot > 0 ? `<button type="button" class="bb-exit ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bb-ico">🚏</span><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></button>` : ""}
+          <div class="bus-stakes bb-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
             : `<span class="bs-win">Richtig: +${q.pts}</span><span class="bs-lose">Falsch: ${pot ? `Topf (${pot}) weg` : "Bus verunglückt"}</span>`}</div>`;
-      } else if (st.step === "show") act = `<p class="muted">Die Karten werden ausgeteilt …</p>`;
-      else if (me === "out") act = `<p class="bus-state">🚏 Du bist mit <b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkten"} ausgestiegen – schau, wie weit die anderen kommen.</p>`;
-      else if (me === "crash") act = `<p class="bus-state">💥 Dein Bus ist verunglückt – du schaust bis zum Rundenende zu.</p>`;
-      else if (me === "done") act = `<p class="bus-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></p>`;
-      // Bei höher/tiefer und zwischen/außerhalb: Rangfolge der Werte rechts daneben, eigene Bezugskarten markiert
+      } else if (st.step === "show") act = `<p class="bb-state muted">Die Karten werden aufgedeckt …</p>`;
+      else if (me === "out") act = `<p class="bb-state">🚏 Du bist mit <b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkten"} ausgestiegen – schau, wie weit die anderen kommen.</p>`;
+      else if (me === "crash") act = `<p class="bb-state">💥 Dein Bus ist verunglückt – du schaust bis zum Rundenende zu.</p>`;
+      else if (me === "done") act = `<p class="bb-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></p>`;
+      // höher/tiefer und zwischen/außerhalb: Wertereihe als Zeile, deine Bezugskarten markiert
       const refs = st.q === 1 ? [h[0]] : st.q === 2 ? [h[0], h[1]] : [];
-      const scale = (st.q === 1 || st.q === 2) && refs.every(Boolean) ? `<div class="bus-scale" aria-label="Reihenfolge der Werte"><span class="bs-end">hoch</span>${["A", "K", "O", "U", "10", "9", "8", "7"].map((r) =>
-        `<span>${BUS_VAL[r]}</span>`).join("")}<span class="bs-end">tief</span></div>` : "";
-      top = `${ladder}<div class="bus-q ${scale ? "with-scale" : ""}"><div class="bus-q-main"><div class="bus-question"><h3>${esc(q.text)}</h3>${st.q === 1 || st.q === 2 ? `<span class="bus-qnote">Gleich hoch zählt für dich</span>` : ""}</div>${act}</div>${scale}</div>`;
+      const scale = (st.q === 1 || st.q === 2) && refs.every(Boolean) && me === "ride" ? `<div class="bb-scale" aria-label="Reihenfolge der Werte"><em>tief</em>${["7", "8", "9", "10", "U", "O", "K", "A"].map((r) =>
+        `<span class="${refs.some((c) => rankOfId(c) === r) ? "ref" : ""}">${BUS_VAL[r]}</span>`).join("")}<em>hoch</em></div>` : "";
+      body = `<div class="bb-question"><h3>${esc(q.text)}</h3>${(st.q === 1 || st.q === 2) && me === "ride" ? `<span class="bb-note">Gleich hoch zählt für dich</span>` : ""}</div>${scale}${act}`;
     }
+    // Mitfahrer (auch du, zum Vergleichen): Name, Status, Topf, Punkte und kleine Kartenfelder
+    const statusTxt = (id) => { const res = st.step === "show" && st.res ? st.res[id] : null;
+      if (res) return `<span class="bus-badge ${res.out ? "good" : res.ok ? "ok" : "bad"} ${res.out ? "" : "kg-late"}" style="--d:1100ms">${res.out ? `🚏 steigt aus mit ${res.pts}` : res.ok ? `✓ +${res.pts}` : `💥 verunglückt${res.lost ? ` – ${res.lost} weg` : ""}`}</span>`;
+      return `<span class="bb-st">${({ ride: st.step === "guess" ? (st.guessed[id] ? "✓ getippt" : "überlegt …") : "fährt", out: `🚏 ausgestiegen · +${st.gain[id]}`, crash: "💥 verunglückt", done: `🏁 Endstation · +${st.gain[id]}` })[st.status[id]]}</span>`; };
+    const order = seated ? [G.myId, ...st.seats.filter((id) => id !== G.myId)] : st.seats;
+    const riders = order.map((id) => `<div class="bb-rider st-${st.status[id]} ${id === G.myId ? "me" : ""}" style="--pc:${colorOf(id)}">
+        <div class="bb-rhead"><span class="pdot"></span><b>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</b>${statusTxt(id)}
+          <span class="bb-rpot">${st.status[id] === "ride" && st.pot[id] ? `Topf ${st.pot[id]}` : ""}</span><span class="bb-rtotal">${st.total[id] || 0}</span></div>
+        <div class="bb-rslots">${slots(id, "mini")}</div></div>`).join("");
     if (flips) kgSound(flips, 200, 150);
-    return `<div class="panel kg-table bus">${top}</div><div class="bus-players">${order.map(handRow).join("")}</div>`;
+    return `<div class="bb-layout"><div class="panel bb-board">${track}${body}</div><div class="panel bb-riders"><div class="game-label">Mitfahrer</div>${riders}</div></div>`;
   }
-
 
 
   return {
