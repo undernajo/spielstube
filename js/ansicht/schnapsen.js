@@ -164,6 +164,16 @@
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#toLobby", () => send({ type: "lobby" }));
     G.stackHands();
+    { // Austeilen vom Stapel: 3 + 3, Trumpf aufdecken, 2 + 2
+      const e = G.dealFx("x:" + v.code + ":" + st.roundNo, st.step === "play" && nTricks === 0 && !st.trick.length && !xHold
+        && st.seats.every((id) => (st.handCount[id] || 0) === 5) && st.talon === 10, st.dealer === self, ".xstack .wcard, .xtalon");
+      const at = app.querySelector(".xatout .wcard");
+      if (e >= 0 && at && at.animate) {
+        const a = at.animate([{ transform: "rotateY(90deg) scale(.8)", opacity: 0 }, { transform: "none", opacity: 1 }],
+          { duration: 380, delay: G.dealFx.at(6) - 110, easing: "cubic-bezier(.3,.7,.3,1)", fill: "backwards" });
+        a.currentTime = e;
+      }
+    }
     if (xSwapFrom) { // Trumpf-Unter fliegt aus der Hand an den Trumpfplatz unter dem Stapel
       const el = app.querySelector(".xatout .wcard");
       if (el && el.animate) {

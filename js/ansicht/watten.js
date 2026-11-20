@@ -205,6 +205,8 @@
     const md = app.querySelector(".wmode");
     if (md) md.ontoggle = () => store.set("s10-wmode-open", md.open);
     stackHands();
+    dealFx("w:" + v.code + ":" + st.roundNo, st.step !== "roundEnd" && st.step !== "final" && nTricks === 0 && !st.trick.length && !wHold
+      && st.seats.every((id) => (st.handCount[id] || 0) === 5), st.dealer === self);
     on("#w-hold4", () => send({ type: "wHold" }));
     on("#w-go", () => send({ type: "wGiveUp" }));
     on("#w-giveup", async () => { if (await askConfirm("Wirklich aufgeben?", "Dein Gegner bekommt 2 Punkte.", "Aufgeben")) send({ type: "wGiveUp" }); });
@@ -230,6 +232,48 @@
     });
   }
 
+  // Austeilen zu Rundenbeginn (Watten und Schnapsen): die Karten fliegen vom Geber aus in die Hände –
+  // erst 3 an die Vorhand, 3 an den Geber, dann je 2 –, bei jeder Karte ein leises Klack.
+  // Zeitbasiert je Runde: Neuzeichnen setzt die Animation nur fort; sobald ausgespielt ist, passiert nichts mehr.
+  // Neue Runde = anderer Schlüssel als zuletzt gesehen (die Rundennummer beginnt nach jedem Spiel wieder bei 1)
+  let dealLast = { key: null, d: null };
+  const DEAL_GAP = 130, DEAL_PACK = 220, DEAL_DUR = 460;
+  // fromSel: Element, von dem aus ausgeteilt wird (Schnapsen: der Stapel); gibt die vergangene Zeit zurück (oder -1)
+  function dealFx(key, fresh, dealerIsMe, fromSel) {
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (dealLast.key !== key) dealLast = { key, d: fresh && !reduce ? { t: Date.now(), snd: false } : null };
+    const d0 = dealLast.d, tb = app.querySelector(".wtable");
+    if (!d0 || !fresh || !tb) return -1;
+    const e = Date.now() - d0.t;
+    const mine = [...app.querySelectorAll(".whand.mine .wcard")], opp = [...app.querySelectorAll(".whand.opp .wcard")];
+    const vh = dealerIsMe ? opp : mine, dl = dealerIsMe ? mine : opp;
+    const order = [...vh.slice(0, 3), ...dl.slice(0, 3), ...vh.slice(3), ...dl.slice(3)];
+    const at = (i) => i * DEAL_GAP + (i < 3 ? 0 : i < 6 ? 1 : i < 8 ? 2 : 3) * DEAL_PACK; // kleine Pause zwischen den Päckchen
+    if (e > at(9) + DEAL_DUR) return -1;
+    // Ausgangspunkt: der Stapel, sonst die Tischmitte ein Stück zum Geber hin
+    const src = fromSel && app.querySelector(fromSel), r = (src || tb).getBoundingClientRect(), dh = (dealerIsMe ? mine : opp)[0];
+    const ox = r.left + r.width / 2, oy = src || !dh ? r.top + r.height / 2 : (r.top + r.height / 2 + dh.getBoundingClientRect().top) / 2;
+    order.forEach((el, i) => {
+      if (!el.animate) return;
+      const to = el.getBoundingClientRect(), dx = ox - (to.left + to.width / 2), dy = oy - (to.top + to.height / 2);
+      const z = el.style.zIndex; el.style.zIndex = String(50 + i);
+      const an = el.animate([{ transform: `translate(${dx}px, ${dy}px) scale(.55) rotate(${i % 2 ? 10 : -10}deg)`, opacity: 0 },
+        { offset: .2, opacity: 1 }, { transform: "translate(0, 0) scale(1) rotate(0)", opacity: 1 }],
+        { duration: DEAL_DUR, delay: at(i), easing: "cubic-bezier(.25,.8,.3,1)", fill: "backwards" });
+      an.currentTime = e;
+      an.onfinish = an.oncancel = () => { el.style.zIndex = z; };
+    });
+    if (!d0.snd) { // Klänge nur einmal je Runde einplanen
+      d0.snd = true;
+      order.forEach((_, i) => { if (at(i) >= e) setTimeout(() => sfx.card(), at(i) - e); });
+      sfx.layAt = Date.now() + at(9) - e + DEAL_DUR; // „Du bist dran“ erst nach dem Austeilen
+    }
+    return e;
+  }
+  // beim Verlassen von Watten/Schnapsen (Lobby, anderes Spiel) vergessen – sonst gälte „Runde 1“ der nächsten Partie als schon ausgeteilt
+  function dealReset() { dealLast = { key: null, d: null }; }
+  dealFx.at = (i) => i * DEAL_GAP + (i < 3 ? 0 : i < 6 ? 1 : i < 8 ? 2 : 3) * DEAL_PACK;
+
   // Handkarten fest von links nach rechts stapeln (links unten, rechts oben)
   function stackHands() {
     app.querySelectorAll(".whand").forEach((h) => [...h.children].forEach((el, i) => { el.style.position = "relative"; el.style.zIndex = String(i + 1); }));
@@ -237,6 +281,8 @@
 
   return {
     bindScoreFold,
+    dealFx,
+    dealReset,
     renderWatten,
     scoreFold,
     stackHands,
