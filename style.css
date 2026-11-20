@@ -2992,3 +2992,31 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-act > .bb-choices { width: auto; max-width: 100%; }
 .bb-act > .bb-choices.n8 { width: min(100%, 720px); flex-basis: 100%; }
 @media (max-width: 640px) { .bb-act { gap: 10px; } .bb-act > .bb-choices { width: 100%; } .bb-act > .bb-halt { flex-basis: 100%; } }
+/* Busfahrt aus deiner Sicht: Unfall-Station rot, Ausstieg gelb, Stationen danach ohne dich blass */
+.bb-stop.crash { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 28%, #1f1a4a); color: #ffd0d4; }
+.bb-stop.crash.fx { animation: bb-bad-in .45s ease-out both; animation-delay: var(--d, 0ms); }
+.bb-stop.exit { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, #1f1a4a); }
+.bb-stop.gone { opacity: .35; }
+@keyframes bb-bad-in { from { border-color: var(--line); background: #1f1a4a; color: var(--ink); } 40% { transform: scale(1.12); } to { transform: none; } }
+.bb-slot.crash { border: 0; border-radius: 9px; box-shadow: 0 0 0 3px var(--bad), 0 0 22px rgba(239, 75, 90, .55); }
+.bb-slot.crash.fx { animation: bb-ring .45s ease-out both; animation-delay: var(--d, 0ms); }
+@keyframes bb-ring { from { box-shadow: 0 0 0 0 transparent; } }
+.bb-pot.lost { color: #ff9aa2; border-color: color-mix(in srgb, var(--bad) 60%, transparent); background: color-mix(in srgb, var(--bad) 14%, #15123a); }
+.bb-pot.lost s { text-decoration-thickness: 3px; text-decoration-color: var(--bad); }
+.bb-pot.safe { color: #7ee2b1; border-color: color-mix(in srgb, var(--ok) 60%, transparent); background: color-mix(in srgb, var(--ok) 12%, #15123a); }
+/* große Unfall-Einblendung über der Kartenreihe */
+.bb-track { position: relative; }
+.bb-boom { position: absolute; left: 50%; top: 50%; z-index: 6; display: grid; justify-items: center; gap: 4px; padding: 14px 28px; border-radius: 18px; pointer-events: none;
+  background: rgba(60, 10, 22, .92); border: 2px solid var(--bad); box-shadow: 0 0 40px rgba(239, 75, 90, .55), 0 14px 30px rgba(0, 0, 0, .5);
+  transform: translate(-50%, -50%); animation: bb-boom 2.6s cubic-bezier(.2, .9, .3, 1) both; animation-delay: var(--d, 0ms); }
+.bb-boom b { font: 700 clamp(1.8rem, 5vh, 2.8rem) Fredoka, sans-serif; color: #fff; white-space: nowrap; }
+.bb-boom span { color: #ffd0d4; font-weight: 700; white-space: nowrap; }
+@keyframes bb-boom { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.4) rotate(-6deg); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.12) rotate(2deg); }
+  16% { transform: translate(-52%, -50%) scale(1); } 20% { transform: translate(-48%, -50%); } 24% { transform: translate(-51%, -50%); } 28% { transform: translate(-50%, -50%); }
+  85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -54%) scale(.96); } }
+/* Hinweis-Box statt kleinem Satz */
+.bb-note-box { display: grid; gap: 4px; max-width: 520px; padding: 14px 20px; border-radius: 16px; text-align: center; }
+.bb-note-box > b { font: 700 1.3rem Fredoka, sans-serif; } .bb-note-box span { color: var(--ink); line-height: 1.4; }
+.bb-note-box.bad { background: color-mix(in srgb, var(--bad) 16%, #17133d); border: 2px solid color-mix(in srgb, var(--bad) 65%, transparent); } .bb-note-box.bad > b { color: #ff9aa2; }
+.bb-note-box.safe { background: color-mix(in srgb, var(--ok) 12%, #17133d); border: 2px solid color-mix(in srgb, var(--ok) 55%, transparent); } .bb-note-box.safe > b { color: #7ee2b1; }
+@media (prefers-reduced-motion: reduce) { .bb-boom { display: none; } .bb-stop.crash, .bb-slot.crash { animation: none; } }

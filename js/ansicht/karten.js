@@ -299,18 +299,35 @@
     const gk = st.gid + ":bus:" + st.round, seated = st.seats.includes(G.myId), me = seated ? st.status[G.myId] : null;
     const rankOfId = (c) => c.split("-")[1], end = st.step === "roundEnd";
     let flips = 0;
+    // dein Unfall: an welcher Station, wie viel weg ist; Effekte erst, wenn die Karte umgedreht ist
+    const myReach = seated ? (st.reach || {})[G.myId] || 0 : 0, myRes = st.step === "show" && st.res && seated ? st.res[G.myId] : null;
+    const myLost = st.stations.slice(0, myReach).reduce((a, b) => a + b, 0);
+    const crashNow = myRes && !myRes.out && !myRes.ok;
+    const fxBad = crashNow ? kgAnim(`${gk}:bad:${myReach}`, 1150, 600) : null, fxBoom = crashNow ? kgAnim(`${gk}:boom:${myReach}`, 1150, 2600) : null;
     // die gemeinsamen Karten in fünf Feldern; die gerade aufgedeckte dreht sich um
     const cards = st.cards || [];
     const slots = Array.from({ length: 5 }, (_, i) => { const c = cards[i];
       if (!c) return `<div class="bb-slot ${!end && i === cards.length && i === st.q && st.seats.some((id) => st.status[id] === "ride") ? "cur" : ""}"></div>`;
       const a = i === cards.length - 1 && st.step === "show" ? kgAnim(`${gk}:c:${i}`, 150, 1000) : null;
       if (a && a.first) flips++;
-      return `<div class="bb-slot full">${kgCard(c, "bb", "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join("");
-    const stops = st.stations.map((p, i) => { const past = i < st.q || end, cur = !past && i === st.q;
-      return `<div class="bb-stop ${past ? "past" : cur ? "cur" : ""}"><small>Station ${i + 1}</small><b>+${p}</b></div>`; }).join("");
+      const bad = seated && me === "crash" && i === myReach;
+      return `<div class="bb-slot full ${bad ? "crash" : ""} ${bad && fxBad ? "fx" : ""}" ${bad && fxBad ? `style="--d:${fxBad.d}ms"` : ""}>${kgCard(c, "bb", "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join("");
+    // Stationen aus deiner Sicht: geschafft (grün ✓), Unfall (rot ✕), ausgestiegen (gelb 🚏), danach ohne dich (blass);
+    // wer zuschaut, sieht die Fahrt des Busses
+    const stops = st.stations.map((p, i) => {
+      let cls;
+      if (!seated || me === "ride") cls = i < st.q || end ? "past" : i === st.q ? "cur" : "";
+      else if (me === "done") cls = "past";
+      else cls = i < myReach ? "past" : i === myReach ? (me === "crash" ? "crash" : "exit") : "gone";
+      const late = (cls === "crash" && fxBad) ? `style="--d:${fxBad.d}ms"` : "";
+      return `<div class="bb-stop ${cls} ${late ? "fx" : ""}" ${late}><small>Station ${i + 1}</small><b>${cls === "crash" ? "✕" : cls === "exit" ? "🚏" : `+${p}`}</b></div>`; }).join("");
     const pot = seated ? st.pot[G.myId] || 0 : 0;
-    const potBox = seated ? `<div class="bb-pot ${me === "ride" ? "" : "off"}"><small>${me === "ride" ? "Topf" : "Punkte"}</small><b>${me === "ride" ? pot : st.total[G.myId] || 0}</b></div>` : "";
-    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}<i class="bb-bus" aria-hidden="true" data-i="${end ? Math.max(0, cards.length - 1) : Math.min(st.q, 4)}" data-k="${gk}"><span>🚌</span></i></div><div class="bb-slots">${slots}</div>${potBox}</div>`;
+    const potBox = !seated ? "" : me === "ride" ? `<div class="bb-pot"><small>Topf</small><b>${pot}</b></div>`
+      : me === "crash" ? `<div class="bb-pot lost ${fxBad ? "kg-late" : ""}" ${fxBad ? `style="--d:${fxBad.d}ms"` : ""}><small>Topf weg</small><b>${myLost ? `<s>${myLost}</s>` : "0"}</b></div>`
+      : `<div class="bb-pot safe"><small>Gesichert</small><b>+${st.gain[G.myId] || 0}</b></div>`;
+    // Unfall-Einblendung: groß über der Kartenreihe, sobald die Karte umgedreht ist (läuft beim Neuzeichnen weiter)
+    const boom = fxBoom ? `<div class="bb-boom" style="--d:${fxBoom.d}ms"><b>💥 Unfall!</b><span>${myLost ? `Dein Topf (${myLost}) ist weg` : "Falsch getippt"}</span></div>` : "";
+    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}<i class="bb-bus" aria-hidden="true" data-i="${end ? Math.max(0, cards.length - 1) : Math.min(st.q, 4)}" data-k="${gk}"><span>🚌</span></i></div><div class="bb-slots">${slots}</div>${potBox}${boom}</div>`;
 
     let body;
     if (end) {
@@ -337,9 +354,11 @@
             <span class="bb-htxt"><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></span></button>` : ""}</div>
           <div class="bus-stakes bb-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
             : `<span class="bs-win">Richtig: +${q.pts}</span><span class="bs-lose">Falsch: ${pot ? `Topf (${pot}) weg` : "Bus verunglückt"}</span>`}</div>`;
-      } else if (st.step === "show") act = `<p class="bb-state muted">Die Karten werden aufgedeckt …</p>`;
-      else if (me === "out") act = `<p class="bb-state">🚏 Du bist mit <b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkten"} ausgestiegen – schau, wie weit die anderen kommen.</p>`;
-      else if (me === "crash") act = `<p class="bb-state">💥 Dein Bus ist verunglückt – du schaust bis zum Rundenende zu.</p>`;
+      } else if (me === "crash") act = `<div class="bb-note-box bad ${fxBad ? "kg-late" : ""}" ${fxBad ? `style="--d:${fxBad.d}ms"` : ""}><b>💥 Unfall an Station ${myReach + 1}</b>
+          <span>Falsch getippt – ${myLost ? `dein Topf (${myLost} ${myLost === 1 ? "Punkt" : "Punkte"}) ist weg` : "diese Runde gibt es keine Punkte"}. Du fährst nicht mehr mit und schaust zu, wie weit die anderen kommen.</span></div>`;
+      else if (me === "out") act = `<div class="bb-note-box safe"><b>🚏 Ausgestiegen an Station ${myReach + 1}</b>
+          <span><b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkte"} sicher – schau zu, wie weit die anderen kommen.</span></div>`;
+      else if (st.step === "show") act = `<p class="bb-state muted">Die Karte wird aufgedeckt …</p>`;
       else if (me === "done") act = `<p class="bb-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></p>`;
       // höher/tiefer und zwischen/außerhalb: Wertereihe als Zeile, deine Bezugskarten markiert
       const refs = st.q === 1 ? [h[0]] : st.q === 2 ? [h[0], h[1]] : [];
