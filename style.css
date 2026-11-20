@@ -2904,9 +2904,39 @@ body.qb-play .fw-main { --fw-top: 370px; }
 @media (min-width: 900px) {
   .kg-bus.screen.game { padding-bottom: 16px; }
   .kg-bus .geo-bar { display: none; } /* Runde steht oben, Station in der Leiste, Punkte bei den Mitfahrern */
+  .kg-bus.screen.slf.geo > .slf-main { max-width: none; } /* so breit wie die Kopfzeile – größere Karten */
   .kg-bus .kg-meta-round { display: inline; } .kg-bus .kg-meta-round::before { content: " · "; }
-  .bb-layout { grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; }
-  .bb-riders { max-height: calc(100dvh - 120px); overflow-y: auto; scrollbar-width: thin; }
+  /* Höhe ausnutzen: Spielfeld reicht bis zum unteren Rand, Karten, Stationen und Knöpfe wachsen mit der Fensterhöhe */
+  .bb-layout { grid-template-columns: minmax(0, 1fr) clamp(270px, 22vw, 330px); gap: 16px; align-items: stretch; max-width: 1240px; }
+  .bb-board { min-height: calc(100dvh - 116px); align-content: center; gap: clamp(14px, 3.2vh, 40px); container-type: inline-size; }
+  /* Kartenfeld: so hoch wie das Fenster erlaubt, aber nie breiter als das Spielfeld (5 Felder + Topf) */
+  .bb-track { --sw: min(calc(clamp(96px, calc(100dvh - 540px), 260px) * .66), calc((100cqw - 200px) / 5)); --sh: calc(var(--sw) / .66); }
+  .bb-stops, .bb-slots { grid-template-columns: repeat(5, var(--sw)); gap: clamp(12px, 1.3vh, 16px); }
+  .bb-stops::before { left: calc(var(--sw) / 2); right: calc(var(--sw) / 2); }
+  .bb-stop { height: clamp(42px, 6vh, 66px); font-size: clamp(1rem, 2.2vh, 1.45rem); }
+  .bb-stop small { font-size: clamp(.56rem, 1vh, .7rem); }
+  .bb-here { font-size: clamp(1.1rem, 2.2vh, 1.5rem); top: clamp(-17px, -2.2vh, -24px); }
+  .bb-slot { height: var(--sh); }
+  .kg-card.bb { width: calc(var(--sw) - 6px); }
+  .bb-pot { width: clamp(78px, 9vh, 104px); padding: clamp(10px, 1.6vh, 16px) 0; }
+  .bb-pot b { font-size: clamp(1.9rem, 4vh, 2.6rem); }
+  .bb-question h3 { font-size: clamp(1.25rem, 2.9vh, 1.85rem); }
+  .bb-note { font-size: clamp(.78rem, 1.4vh, .9rem); }
+  .bb-choices { width: min(100%, clamp(560px, 70vh, 720px)); }
+  .bb-choice { min-height: clamp(52px, 8vh, 86px); min-width: clamp(150px, 23vh, 230px); }
+  .bb-choice b { font-size: clamp(1rem, 2.2vh, 1.35rem); } .bb-choice small { font-size: clamp(.7rem, 1.25vh, .82rem); }
+  .bb-choices.n4 .bb-choice { min-width: clamp(118px, 17vh, 170px); }
+  .bb-choices.n8 .bb-choice { min-height: clamp(44px, 6.4vh, 68px); }
+  .bb-ico { font-size: clamp(1.25rem, 2.4vh, 1.6rem); } .bb-suit { width: clamp(24px, 3vh, 32px); height: clamp(24px, 3vh, 32px); }
+  .bb-exit { min-height: clamp(44px, 6.4vh, 68px); padding: 6px 26px; }
+  .bb-exit b { font-size: clamp(1rem, 2.2vh, 1.35rem); } .bb-exit small { font-size: clamp(.78rem, 1.5vh, .95rem); }
+  .bb-stakes { font-size: clamp(.78rem, 1.6vh, 1rem); }
+  .bb-scale { font-size: clamp(.76rem, 1.7vh, 1.02rem); }
+  .bb-riders { max-height: calc(100dvh - 116px); overflow-y: auto; scrollbar-width: thin; }
+  .bb-rslots { grid-template-columns: repeat(5, clamp(30px, 4.4vh, 46px)); }
+  .bb-rslots .bb-slot { height: calc(clamp(30px, 4.4vh, 46px) * 1.55); }
+  .bb-rslots .kg-card.mini { width: clamp(30px, 4.4vh, 46px); }
+  .bb-rider { padding: clamp(8px, 1.1vh, 12px) 12px; } .bb-rhead { font-size: clamp(.9rem, 1.7vh, 1.02rem); }
 }
 @media (max-width: 899px) { .bb-layout { max-width: 640px; } }
 @media (max-width: 640px) {
