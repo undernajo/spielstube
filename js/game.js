@@ -34,13 +34,14 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
   const GAMES = [
     { key: "querbeet", color: "#ff8a5c", name: "Stubenmeisterschaft", short: "Meisterschaft", desc: "Quer durch die Spiele – Etappe für Etappe", icon: qbIcon() },
     { key: "zehn", color: "#8b7cff", name: "Zehnkampf", desc: "Quiz mit zehn Antworten", icon: zehnIcon() },
+    { key: "wand", min2: true, color: "#f5a524", name: "Fragewand", desc: "Feld wählen, Punkte holen", icon: wandIcon() },
     { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Früh raten lohnt sich", icon: hinweisIcon() },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Erfinde die Frage", icon: frageIcon() },
@@ -96,6 +97,9 @@
   const hlCatCount = (theme) => Object.keys(HLDATA).filter((k) => theme !== "allgemein" || !HL_ST.includes(k)).length;
   const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
   let duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
+  const WAND = window.S10Wand, WANDDATA = window.SCHLAU10_WAND || [];
+  let fwOpts = Object.assign({ cats: [] }, store.get("s10-fw") || {}); // in der Lobby gewählte Kategorien (Rest wird ausgelost)
+  const fwAllKeys = () => WANDDATA.flatMap((c) => WAND.PTS.flatMap((pt, r) => c.q[pt].map((_, i) => WAND.keyOf(c.key, r, i))));
   const FQ = window.S10Frage, FQDATA = window.SCHLAU10_FRAGE || [];
   let fqOpts = Object.assign({ target: 5, write: "0", answer: "0", choices: "3" }, store.get("s10-fq") || {});
   const fqAllKeys = () => FQDATA.flatMap((c, ci) => c.answers.map((_, ai) => FQ.keyOf(ci, ai)));
@@ -112,7 +116,7 @@
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "hinweis", "hl", "schaetzen", "duell", "slf"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Kreativ", ["wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Kreativ", ["wl", "frage"]]];
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
     const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
@@ -379,6 +383,13 @@
       if (!host || S.phase !== "lobby") return false;
       return DU.start(S, { ...action.opts, avoid: store.get("s10-du-seen") || [] }, now);
     }
+    if (type === "start" && action.game === "wand") {
+      if (!host || S.phase !== "lobby") return false;
+      return WAND.start(S, { ...action.opts, avoid: store.get("s10-fw-seen") || [] }, now);
+    }
+    if (type === "fwRestart" && S.phase === "wand" && S.wand && S.wand.step === "final")
+      return WAND.start(S, { ...S.wand.opts, avoid: store.get("s10-fw-seen") || [] }, now);
+    if (type.startsWith("fw")) return S.phase === "wand" && WAND.apply(S, pid, action, host, now);
     if (type === "start" && action.game === "frage") {
       if (!host || S.phase !== "lobby") return false;
       return FQ.start(S, { ...action.opts, avoid: store.get("s10-fq-seen") || [] }, now);
@@ -406,7 +417,7 @@
     if (type.startsWith("alm")) return S.phase === "alm" && ALM.apply(S, pid, action, host);
     if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -423,6 +434,7 @@
       case "land": return !!S.land && S.land.step === "final";
       case "slf": return !!S.slf && S.slf.step === "final";
       case "duell": return !!S.duell && S.duell.step === "final";
+      case "wand": return !!S.wand && S.wand.step === "final";
       case "frage": return !!S.frage && S.frage.step === "final" && !(S.frage.complaint && S.frage.complaint.state === "open");
       case "schaetzen": case "hinweis": case "umriss": return !!S.quiz && S.quiz.step === "final";
       case "siebzehn": case "stich": case "bus": return !!S.karten && S.karten.step === "final";
@@ -441,6 +453,7 @@
       case "land": return all(S.land.total);
       case "slf": return all(S.slf.total);
       case "duell": return all(S.duell.score);
+      case "wand": return all(S.wand.score);
       case "frage": return all(S.frage.score);
       case "schaetzen": case "hinweis": case "umriss": return all(S.quiz.total);
       case "siebzehn": case "stich": case "bus": return all(S.karten.total);
@@ -463,6 +476,7 @@
       case "land": LAND.start(S, o, now); break;
       case "slf": SLF.start(S, { ...o, free: true }, now); break;
       case "duell": ok = DU.start(S, { ...o, free: true, avoid: store.get("s10-du-seen") || [] }, now); break;
+      case "wand": ok = WAND.start(S, { ...o, avoid: store.get("s10-fw-seen") || [] }, now); break;
       case "frage": ok = FQ.start(S, { ...o, free: true, avoid: store.get("s10-fq-seen") || [] }, now); break;
       case "schaetzen": case "hinweis": case "umriss": ok = QZ.start(S, { ...o, free: true }, now); break;
       case "siebzehn": case "stich": case "bus": ok = KG.start(S, { ...o, free: true }, now); break;
@@ -474,7 +488,7 @@
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -560,6 +574,7 @@
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
       frage: { target: Number(fqOpts.target), write: fqOpts.write, answer: fqOpts.answer, choices: fqOpts.choices },
+      wand: { cats: fwOpts.cats.filter((k) => WANDDATA.some((c) => c.key === k)) },
       watten: { target: Number(wattenOpts.target), weli: wattenOpts.weli },
       schnapsen: { mode: schOpts.mode },
     };
@@ -581,6 +596,11 @@
     view.jagd = S.phase === "jagd" ? JG.publicState(S) : null;
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
+    view.wand = S.phase === "wand" ? WAND.publicState(S) : null;
+    if (view.wand && view.wand.last) { // gespielte Fragen merken – erst wieder, wenn alle durch sind
+      const k = view.wand.last.key, seen = store.get("s10-fw-seen") || [];
+      if (!seen.includes(k)) { const all = fwAllKeys(), next = seen.concat(k).filter((x) => all.includes(x)); store.set("s10-fw-seen", all.every((x) => next.includes(x)) ? [k] : next); }
+    }
     if (view.frage) { // gespielte Aufgaben merken – erst wieder, wenn alle durch sind
       const k = FQ.curKey(S.frage), seen = store.get("s10-fq-seen") || [];
       if (S.frage.step !== "write" && !seen.includes(k)) { const all = fqAllKeys(), next = seen.concat(k).filter((x) => all.includes(x)); store.set("s10-fq-seen", all.every((x) => next.includes(x)) ? [k] : next); }
@@ -1140,7 +1160,7 @@
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase !== "watten" && view.phase !== "schnapsen") G.dealReset();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else renderGame();
     camDockPlace();
     chipFx();
     G.qbBarRender();
@@ -1290,6 +1310,8 @@
       laid: [v.watten, v.schnapsen].filter(Boolean).map((st) => st.roundNo + ":" + (st.seats.reduce((a, id) => a + st.tricks[id], 0) * st.seats.length + st.trick.length))[0] || null,
       zRes: v.phase === "playing" && v.card ? v.round + ":" + v.card.q + ":" + v.card.items.filter((it) => it.r && !it.r.pending).length : null,
       duFin: !!(v.duell && v.duell.step === "final"), fqFin: !!(v.frage && v.frage.step === "final"),
+      fwLast: v.wand && v.wand.last ? v.wand.last.n : 0, fwFin: !!(v.wand && v.wand.step === "final"),
+      fwMine: !!(v.wand && ((v.wand.step === "pick" && v.wand.chooser === myId) || (v.wand.step === "judge" && v.wand.cur && v.wand.cur.judges.includes(myId)))),
       lobbyIds: v.phase === "lobby" ? v.players.map((p) => p.id) : null,
     };
     if (prev) {
@@ -1341,6 +1363,13 @@
         const st = v[k];
         if (st.seats.includes(myId)) { if (st.score[myId] >= st.target) sfx.win(); else sfx.lose(); }
         confetti();
+      }
+      // Fragewand: Auflösung für alle hörbar (Pling/Bong), „Du bist dran“ erst danach; am Ende Sieg/Niederlage
+      if (v.wand) {
+        const fresh = now.fwLast > prev.fwLast;
+        if (fresh) (v.wand.last.ok ? sfx.right : sfx.wrong)();
+        if (now.fwMine && !prev.fwMine) setTimeout(sfx.turn, fresh ? 700 : 0);
+        if (now.fwFin && !prev.fwFin) { setTimeout(() => (v.wand.winners.includes(myId) ? sfx.win() : v.wand.seats.includes(myId) && sfx.lose()), 900); confetti(); }
       }
       // Lobby: leises „Pling-plong“, wenn jemand Neues hereinkommt (nicht für den, der selbst gerade beitritt)
       if (now.lobbyIds && prev.lobbyIds && now.lobbyIds.some((id) => id !== myId && !prev.lobbyIds.includes(id))) sfx.join();
@@ -1458,6 +1487,7 @@
     land: () => { S.landSeen = {}; store.set("s10-land-seen", {}); },
     duell: () => store.set("s10-du-seen", []),
     frage: () => store.set("s10-fq-seen", []),
+    wand: () => store.set("s10-fw-seen", []),
   };
   // Einheitliche Anmerkung unter „Spiel starten“ bei Spielen ab 2 Spielern – nur wenn sie etwas erklärt
   function playerNoteHtml(n, onlyTwo) {
@@ -1522,6 +1552,7 @@
           ${chosenGame === "hl" ? hlSettingsHtml() : ""}
           ${chosenGame === "duell" ? duSettingsHtml() : ""}
           ${chosenGame === "frage" ? fqSettingsHtml() : ""}
+          ${chosenGame === "wand" ? fwSettingsHtml() : ""}
           ${chosenGame === "watten" ? wattenSettingsHtml() : ""}
           ${chosenGame === "schnapsen" ? schSettingsHtml() : ""}
           ${chosenGame === "zehn" ? `
@@ -1623,6 +1654,7 @@
       if (KG.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: chosenGame === "bus" ? { rounds: kgOpts.busRounds } : chosenGame === "stich" ? { rounds: kgOpts.stichRounds } : kgOpts });
       if (chosenGame === "duell") return send({ type: "start", game: "duell", opts: duOpts });
       if (chosenGame === "frage") return send({ type: "start", game: "frage", opts: fqOpts });
+      if (chosenGame === "wand") return send({ type: "start", game: "wand", opts: { cats: fwOpts.cats } });
       if (chosenGame === "watten") return send({ type: "start", game: "watten", opts: wattenOpts });
       if (chosenGame === "schnapsen") return send({ type: "start", game: "schnapsen", opts: schOpts });
       if (chosenGame === "oben") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "oben" } });
@@ -1828,7 +1860,7 @@
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
     return ({ alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
-      duell: duRulesHtml, frage: fqRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
+      duell: duRulesHtml, frage: fqRulesHtml, wand: fwRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
   let rulesOpen = false; // Gastgeber: Spielauswahl oder „So geht's“ des gewählten Spiels
@@ -2066,6 +2098,10 @@
     if (view.game === "frage" && lb.frage) {
       return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${lb.frage.choices === "1" ? "1 Antwort vorgegeben" : "3 Antworten zur Auswahl"} · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
     }
+    if (view.game === "wand" && lb.wand) {
+      const names = lb.wand.cats.map((k) => { const c = WANDDATA.find((x) => x.key === k); return c ? c.ico + " " + esc(c.name) : ""; }).filter(Boolean);
+      return `<p class="muted small">5 Kategorien · ${names.length ? names.join(", ") + (names.length < 5 ? ` · ${5 - names.length} werden ausgelost` : "") : "alle werden ausgelost"} · reihum wählen</p>`;
+    }
     if (view.game === "duell" && lb.duell) {
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
     }
@@ -2183,6 +2219,15 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { fqOpts[k] = k === "target" ? Number(el.value) : el.value; store.set("s10-fq", fqOpts); publish(); };
     });
+    app.querySelectorAll("[data-fwcat]").forEach((b) => b.onclick = () => {
+      const k = b.dataset.fwcat, i = fwOpts.cats.indexOf(k);
+      if (i >= 0) fwOpts.cats.splice(i, 1);
+      else if (fwOpts.cats.length < 5) fwOpts.cats.push(k);
+      else return toast("Es sind schon 5 Kategorien gewählt – erst eine abwählen.", "info");
+      store.set("s10-fw", fwOpts); publish();
+    });
+    const fwNone = app.querySelector("#fw-none");
+    if (fwNone) fwNone.onclick = () => { fwOpts.cats = []; store.set("s10-fw", fwOpts); publish(); };
     const duT = app.querySelector("#du-target"), duZ = app.querySelector("#du-timer");
     if (duT) duT.onchange = () => { duOpts.target = Number(duT.value); store.set("s10-du", duOpts); publish(); };
     if (duZ) duZ.onchange = () => { duOpts.timer = duZ.value; store.set("s10-du", duOpts); publish(); };
@@ -2335,6 +2380,28 @@
         return freshHtml(fresh, DUDATA.length, "Themen", "duell"); })()}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       ${playerNoteHtml(n, true)}`;
+  }
+  const fwRulesHtml = `
+    <details class="rules"><summary>Regeln: Fragewand</summary>
+      <ul>
+        <li>Auf der Tafel stehen <b>5 Kategorien</b> mit je vier Fragen: <b>10, 20, 30 und 50 Punkte</b> – je mehr Punkte, desto schwerer.</li>
+        <li><b>Reihum</b> wählt jeder ein Feld und beantwortet die Frage – nur wer gewählt hat.</li>
+        <li>Leichte Fragen haben oft <b>vier Antworten zur Auswahl</b>, sonst wird die Antwort eingetippt. Kleine Tippfehler zählen.</li>
+        <li>Erkennt das Spiel eine eingetippte Antwort nicht sicher, entscheiden die anderen, ob sie gilt.</li>
+        <li>Richtig: die Punkte des Feldes. Falsch: keine Punkte, aber auch kein Abzug. Es gibt kein Zeitlimit.</li>
+        <li>Sind alle Felder weg, gewinnt, wer die meisten Punkte hat.</li>
+      </ul>
+    </details>`;
+  // Lobby: bis zu 5 Kategorien wählen, der Rest wird beim Start ausgelost
+  function fwSettingsHtml() {
+    const n = playing().length, sel = fwOpts.cats.filter((k) => WANDDATA.some((c) => c.key === k));
+    const seen = store.get("s10-fw-seen") || [], all = fwAllKeys(), fresh = all.filter((k) => !seen.includes(k)).length;
+    return `<div class="field"><span>Kategorien <small class="muted">${sel.length ? `${sel.length} gewählt${sel.length < 5 ? ` · ${5 - sel.length} werden ausgelost` : ""}` : "bis zu 5 wählen – sonst wird ausgelost"}</small></span>
+        <div class="fw-catpick">${WANDDATA.map((c) => `<button type="button" class="fw-catchip ${sel.includes(c.key) ? "on" : ""}" data-fwcat="${c.key}" aria-pressed="${sel.includes(c.key)}"><span>${c.ico}</span>${esc(c.name)}</button>`).join("")}</div>
+        ${sel.length ? `<button type="button" id="fw-none" class="btn ghost sm">Alle abwählen</button>` : ""}</div>
+      ${freshHtml(fresh, all.length, "Fragen", "wand")}
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      ${playerNoteHtml(n)}`;
   }
   const duRulesHtml = `
     <details class="rules"><summary>Regeln: Listen-Duell</summary>

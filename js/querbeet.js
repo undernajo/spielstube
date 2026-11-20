@@ -7,6 +7,7 @@
   // Spiele mit Kurzfassung; kind sorgt für Abwechslung (nicht zweimal dieselbe Art hintereinander)
   const STAGES = {
     zehn: { kind: "wissen", name: "Zehnkampf", short: "1 Karte", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
+    wand: { kind: "wissen", min2: true, name: "Fragewand", short: "3 Kategorien", rule: "Reihum ein Feld wählen und die Frage beantworten – je mehr Punkte, desto schwerer. Falsch kostet nichts." },
     hl: { kind: "wissen", name: "Höher oder tiefer", short: "1 Kategorie, 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig." },
     geo: { kind: "karte", name: "Wo liegt das?", short: "3 Orte", rule: "Tippt auf der Karte, wo der Ort liegt – je näher, desto mehr Punkte." },
     land: { kind: "karte", name: "Länder finden", short: "5 Gebiete", rule: "Tippt das genannte Land (oder Bundesland, Region, Kanton) auf der Karte an." },
@@ -23,11 +24,11 @@
     jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "8 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
-  const ORDER = ["zehn", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
     alle: { icon: "🎲", name: "Bunt gemischt", games: null },
-    wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "hl", "schaetzen", "hinweis", "duell"] },
+    wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "wand", "hl", "schaetzen", "hinweis", "duell"] },
     welt: { icon: "🗺️", name: "Rund um die Welt", games: ["geo", "land", "umriss", "oben"] },
     gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd"] },
     karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
@@ -79,6 +80,7 @@
     const pro = level === "profi";
     switch (game) {
       case "zehn": return st ? { sets: ["suedtirol"] } : {};
+      case "wand": return { n: 3, theme: st ? "suedtirol" : w ? "welt" : null }; // 3 Kategorien ausgelost (12 Felder)
       case "hl": return { ...(st ? { cats: 1, only: HL_ST } : w ? { cats: 1, not: HL_ST } : { cats: 1 }), level: LEVELS[level] ? level : "gemischt" };
       case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: LEVELS[level] ? level : "gemischt", rounds: 3, timer: "t60" };
       case "oben": return { mode: "oben", rounds: 2 };

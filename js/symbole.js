@@ -172,9 +172,20 @@
       ${paw(49, 54)}${paw(53, 50)}${paw(9, 53)}${paw(13, 57)}</svg>`;
   }
 
+  // Fragewand: Tafel aus 3 × 3 Feldern mit Punktwerten, ein Feld schon umgedreht
+  function wandIcon() {
+    const cells = [];
+    [10, 20, 50].forEach((v, r) => [0, 1, 2].forEach((c) => {
+      const x = 9 + c * 16, y = 12 + r * 15, done = r === 1 && c === 1;
+      cells.push(`<rect x="${x}" y="${y}" width="14" height="12.5" rx="2.5" fill="${done ? "#2fbf71" : "#3d33a0"}" stroke="#1b1660" stroke-width="1"/>`
+        + (done ? `<path d="M${x + 4} ${y + 6.5} l2.6 2.6 4.4 -5" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+          : `<text x="${x + 7}" y="${y + 9}" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="7" fill="#ffc83d">${v}</text>`));
+    }));
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="6" width="54" height="52" rx="6" fill="#221b63" stroke="#ffc83d" stroke-width="1.6"/>${cells.join("")}</svg>`;
+  }
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon
   };
 })();

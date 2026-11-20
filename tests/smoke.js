@@ -13,7 +13,7 @@ const path = require("path");
 const puppeteer = require("puppeteer-core");
 
 const ROOT = path.resolve(__dirname, "..");
-const ALL = ["zehn", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage",
+const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage",
   "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "wl", "alm", "jagd", "querbeet"];
 const GAMES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
