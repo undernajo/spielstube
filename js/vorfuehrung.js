@@ -1,9 +1,9 @@
-// Kleine Vorführungen auf der Etappenkarte der Stubenmeisterschaft – nur für die Spiele, die man schwer aus einem Satz versteht.
+// Kleine Vorführungen auf der Etappenkarte der Stubenmeisterschaft – für die Spiele, die man schwer aus einem Satz versteht.
 // Rein gezeichnet (kein echtes Spiel), läuft in Schleife neben den drei Schritten.
 // Zeitbasiert: Startzeit je Etappe, beim Neuzeichnen läuft die Vorführung an derselben Stelle weiter.
 // „Bewegung reduzieren“: Standbild an einer aussagekräftigen Stelle.
 (function () {
-  const C = { anna: "#ffc83d", berta: "#4fc3f7" };
+  const C = { anna: "#ffc83d", berta: "#4fc3f7", chris: "#f472b6" };
   const px = (x, y, s) => `translate(${x}px, ${y}px)` + (s != null ? ` scale(${s})` : "");
   const card = (id, cls = "") => `<span class="dm-card ${cls}">${id ? window.S10WattenCards.svg(id) : window.S10WattenCards.back()}</span>`;
   const flipCard = (id) => `<span class="dm-card flip"><span class="dm-f dm-back">${window.S10WattenCards.back()}</span><span class="dm-f dm-front">${window.S10WattenCards.svg(id)}</span></span>`;
@@ -111,6 +111,67 @@
       swap(A, [...st.querySelectorAll("#pB small .dm-val > span")], T, [8.1]); bump(A, $("#pB"), T, 8.1);
       tl(A, $("#fA"), T, [[0, { opacity: 0, transform: px(30, 90) }], [8.6, {}, "cubic-bezier(.3,1.6,.5,1)"], [8.9, { opacity: 1, transform: px(30, 84) }]]);
       tl(A, $("#fB"), T, [[0, { opacity: 0, transform: px(170, 90) }], [8.8, {}, "cubic-bezier(.3,1.6,.5,1)"], [9.1, { opacity: 1, transform: px(170, 84) }]]);
+    } },
+
+    // ---------------- Fragewand ----------------
+    wand: { T: 7.6, still: 6.6, build(st, A, T) {
+      const cats = [["🏔️", "Berge"], ["🍝", "Essen"], ["⚽", "Sport"]], pts = [10, 20, 30, 50], W = 89.33, X = (c) => 10 + c * (W + 6), Y = (r) => 39 + r * 39;
+      let h = cats.map(([e, n], c) => `<div class="dm-fwh" style="left:${X(c)}px;width:${W}px"><span>${e}</span>${n}</div>`).join("");
+      pts.forEach((p, r) => cats.forEach((_, c) => {
+        const pre = c === 2 && r === 0 ? "Berta" : c === 0 && r === 1 ? "Chris" : null, pc = pre === "Berta" ? C.berta : pre === "Chris" ? C.chris : C.anna;
+        h += `<div class="dm-fwt ${pre ? "done" : ""}" ${c === 1 && r === 3 ? 'id="fwT"' : ""} style="left:${X(c)}px;top:${Y(r)}px;width:${W}px;--pc:${pc}">
+          <div class="dm-ff fr">${p}</div><div class="dm-ff bk"><i></i>${pre || "Anna"}</div></div>`;
+      }));
+      st.innerHTML = h + `<div class="dm-fwc"><div class="top">🍝 ESSEN · 50 PUNKTE</div><div class="q">Welche Nudelsorte heißt übersetzt „kleine Zungen“?</div>
+        <div class="in"><span class="typed">Linguine</span><span class="caret"></span></div><div class="ok">✓ Richtig! +50</div></div>
+        <div class="dm-chips" style="top:204px"><div class="dm-chip turn" id="dmA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 50)}</div>
+          <div class="dm-chip" style="--pc:${C.berta}"><i></i>Berta ${vals(10)}</div><div class="dm-chip" style="--pc:${C.chris}"><i></i>Chris ${vals(20)}</div></div>
+        <div class="dm-float" id="dmF">+50</div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x), tile = $("#fwT"), cd = $(".dm-fwc");
+      finger(A, st, T, [[.5, 230, 215], [1.35, 150, 173, true]]);
+      tl(A, tile.querySelector(".fr"), T, [[0, { transform: "none", boxShadow: "0 3px 0 #1b1660, 0 0 0 1px rgba(255,200,61,.35)" }], [1.45, {}], [1.55, { boxShadow: "0 3px 0 #1b1660, 0 0 0 3px #ffc83d" }], [5.3, { transform: "none" }], [5.8, { transform: "rotateY(-180deg)" }]]);
+      tl(A, tile.querySelector(".bk"), T, [[0, { transform: "rotateY(180deg)" }], [5.3, {}], [5.8, { transform: "none" }]]);
+      tl(A, cd, T, [[0, { opacity: 0, transform: px(0, 69, .3) }], [1.7, {}, "cubic-bezier(.2,.8,.3,1.1)"], [2.2, { opacity: 1, transform: "none" }], [4.9, {}], [5.3, { opacity: 0, transform: px(0, 69, .3) }]]);
+      tl(A, cd.querySelector(".typed"), T, [[0, { maxWidth: "0px" }], [2.6, {}, "steps(8)"], [3.6, { maxWidth: "80px" }]]);
+      tl(A, cd.querySelector(".in"), T, [[0, { borderColor: "#3a3378", background: "#15123a" }], [3.85, {}], [4.0, { borderColor: "#2fbf71", background: "rgba(47,191,113,.15)" }]]);
+      tl(A, cd.querySelector(".ok"), T, [[0, { opacity: 0, transform: "translateY(4px)" }], [3.9, {}], [4.15, { opacity: 1, transform: "none" }]]);
+      fly(A, $("#dmF"), T, 5.5, [135, 160], [48, 192]);
+      swap(A, [...st.querySelectorAll("#dmA .dm-val > span")], T, [6.3]); bump(A, $("#dmA"), T, 6.3);
+    } },
+
+    // ---------------- Wo liegt das? ----------------
+    geo: { T: 7.6, still: 5.6, build(st, A, T) {
+      const P = [128, 130], B = [152, 96], Q = [208, 152];
+      st.innerHTML = `<div class="dm-geoq">📍 Wo liegt <b>Meran</b>?</div>
+        <div class="dm-map"><svg viewBox="0 0 280 160">
+          <path d="M-10 40 C 30 20, 60 30, 90 12 S 150 -6, 190 18 S 250 10, 290 30 L 290 170 L -10 170 Z" fill="#3e7a4f"/>
+          <path d="M-10 70 C 40 60, 70 80, 110 66 S 180 50, 220 72 S 270 66, 290 80 L 290 170 L -10 170 Z" fill="#4c8c5a"/>
+          <path d="M40 30 l14 -18 l12 16 M150 22 l16 -20 l14 18 M210 34 l12 -16 l12 14" fill="#e8e4f4" opacity=".75"/>
+          <path d="M60 160 C 90 120, 120 110, 140 70 S 170 40, 200 20" stroke="#7cc4ff" stroke-width="3" fill="none" opacity=".8"/>
+          <path d="M140 70 C 110 60, 80 66, 30 50" stroke="#7cc4ff" stroke-width="2" fill="none" opacity=".7"/></svg></div>
+        <svg class="dm-lines" viewBox="0 0 300 240"><line id="lA" x1="${P[0]}" y1="${P[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${C.anna}" stroke-width="2.5" stroke-linecap="round"/>
+          <line id="lB" x1="${Q[0]}" y1="${Q[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${C.berta}" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="dm-pin" id="pA" style="left:${P[0]}px;top:${P[1]}px;--pc:${C.anna}"></div><div class="dm-pin" id="pB" style="left:${Q[0]}px;top:${Q[1]}px;--pc:${C.berta}"></div>
+        <div class="dm-goal" style="left:${B[0]}px;top:${B[1]}px">⭐</div>
+        <div class="dm-km" id="kA" style="left:${(P[0] + B[0]) / 2 - 44}px;top:${(P[1] + B[1]) / 2 - 6}px">5 km</div>
+        <div class="dm-km" id="kB" style="left:${(Q[0] + B[0]) / 2 + 8}px;top:${(Q[1] + B[1]) / 2 - 6}px">22 km</div>
+        <div class="dm-chips" style="top:208px"><div class="dm-chip" id="dmA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 940)}</div><div class="dm-chip" id="dmB" style="--pc:${C.berta}"><i></i>Berta ${vals(0, 610)}</div></div>
+        <div class="dm-float" id="fA">+940</div><div class="dm-float" id="fB" style="color:${C.berta}">+610</div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      tl(A, $(".dm-geoq"), T, [[0, { transform: "scale(1)" }], [.35, {}], [.55, { transform: "scale(1.12)" }], [.8, { transform: "scale(1)" }]]);
+      finger(A, st, T, [[.9, 190, 200], [1.5, P[0], P[1], true]]);
+      const drop = (el, t) => tl(A, el, T, [[0, { opacity: 0, transform: "translateY(-22px)" }], [t, {}, "cubic-bezier(.3,1.5,.5,1)"], [t + .35, { opacity: 1, transform: "none" }]]);
+      drop($("#pA"), 1.6); drop($("#pB"), 2.0);
+      tl(A, $(".dm-goal"), T, [[0, { opacity: 0, transform: "scale(.2) rotate(-90deg)" }], [2.7, {}, "cubic-bezier(.3,1.6,.5,1)"], [3.05, { opacity: 1, transform: "none" }]]);
+      const line = (el, t) => { const L = Math.hypot(el.x2.baseVal.value - el.x1.baseVal.value, el.y2.baseVal.value - el.y1.baseVal.value);
+        el.style.strokeDasharray = L; tl(A, el, T, [[0, { strokeDashoffset: L }], [t, {}], [t + .6, { strokeDashoffset: 0 }]]); };
+      line($("#lA"), 3.1); line($("#lB"), 3.2);
+      pop(A, $("#kA"), T, 3.7); pop(A, $("#kB"), T, 3.8);
+      fly(A, $("#fA"), T, 4.3, [P[0] - 20, P[1] - 24], [40, 196]); fly(A, $("#fB"), T, 4.5, [Q[0] - 10, Q[1] - 26], [120, 196]);
+      swap(A, [...st.querySelectorAll("#dmA .dm-val > span")], T, [5.1]); bump(A, $("#dmA"), T, 5.1);
+      swap(A, [...st.querySelectorAll("#dmB .dm-val > span")], T, [5.3]); bump(A, $("#dmB"), T, 5.3);
     } },
 
     // ---------------- Almsommer ----------------

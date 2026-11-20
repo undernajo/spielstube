@@ -2802,3 +2802,30 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .dm-an.big svg { width: 80%; height: 80%; }
 .dm-shot { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; z-index: 5; opacity: 0; background: rgba(20,16,50,.55); border: 2px solid var(--pc, #fff); }
 .dm-flash { width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; z-index: 6; opacity: 0; background: radial-gradient(circle, #fff 0%, rgba(255,230,140,.8) 40%, transparent 70%); }
+/* Fragewand: Mini-Tafel wie im Spiel */
+.dm-chip.turn { box-shadow: 0 0 0 2px var(--pc); background: color-mix(in srgb, var(--pc) 18%, #15123a); }
+.dm-fwh { top: 8px; height: 26px; display: grid; place-items: center; font: 700 11px Fredoka, sans-serif; line-height: 1.05; border-bottom: 2px solid rgba(255,200,61,.35); }
+.dm-fwt { height: 34px; perspective: 400px; }
+.dm-ff { position: absolute; inset: 0; border-radius: 9px; display: grid; place-items: center; backface-visibility: hidden; }
+.dm-ff.fr { background: linear-gradient(180deg, #3d33a0, #2c2580); box-shadow: 0 3px 0 #1b1660, 0 0 0 1px rgba(255,200,61,.35); font: 700 17px Fredoka, sans-serif; color: var(--accent); text-shadow: 0 2px 0 rgba(0,0,0,.35); }
+.dm-ff.bk { transform: rotateY(180deg); background: color-mix(in srgb, var(--pc) 22%, #15123a); border: 1px solid color-mix(in srgb, var(--pc) 60%, transparent);
+  font-weight: 800; font-size: 11px; display: flex; gap: 4px; justify-content: center; align-items: center; }
+.dm-ff.bk i { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); }
+.dm-fwt.done .fr { transform: rotateY(-180deg); } .dm-fwt.done .bk { transform: none; }
+.dm-fwc { left: 18px; top: 12px; width: 264px; height: 184px; z-index: 20; border-radius: 16px; padding: 14px; opacity: 0;
+  background: linear-gradient(180deg, #2e2780, #211b62); border: 1.5px solid rgba(255,200,61,.55); box-shadow: 0 14px 30px rgba(0,0,0,.5); display: grid; align-content: start; gap: 10px; }
+.dm-fwc .top { font: 700 11px Fredoka, sans-serif; color: var(--accent); letter-spacing: .5px; }
+.dm-fwc .q { font: 700 16px/1.25 Fredoka, sans-serif; }
+.dm-fwc .in { height: 34px; border-radius: 10px; background: #15123a; border: 1.5px solid var(--line); display: flex; align-items: center; padding: 0 10px; font-weight: 700; }
+.dm-fwc .typed { display: inline-block; overflow: hidden; white-space: nowrap; max-width: 0; vertical-align: bottom; }
+.dm-fwc .caret { display: inline-block; width: 2px; height: 16px; background: var(--ink); margin-left: 1px; animation: dm-blink 1s steps(1) infinite; }
+@keyframes dm-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .dm-fwc .caret { animation: none; } }
+.dm-fwc .ok { font: 700 14px Fredoka, sans-serif; color: var(--ok); opacity: 0; }
+/* Wo liegt das? */
+.dm-geoq { left: 0; right: 0; top: 8px; text-align: center; font: 700 15px Fredoka, sans-serif; } .dm-geoq b { color: var(--accent); }
+.dm-map { left: 10px; top: 40px; width: 280px; height: 160px; border-radius: 12px; overflow: hidden; background: #2a5b8c; } .dm-map svg { width: 100%; height: 100%; display: block; }
+.dm-lines { left: 0; top: 0; width: 300px; height: 240px; z-index: 11; pointer-events: none; }
+.dm-pin { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--pc); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,.5); z-index: 12; opacity: 0; }
+.dm-goal { width: 22px; height: 22px; margin: -11px 0 0 -11px; z-index: 13; opacity: 0; font-size: 20px; line-height: 22px; text-align: center; }
+.dm-km { z-index: 14; font: 700 11px Nunito, sans-serif; padding: 1px 6px; border-radius: 6px; background: rgba(18,15,42,.85); opacity: 0; white-space: nowrap; }
