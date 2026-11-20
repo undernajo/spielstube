@@ -65,6 +65,30 @@
           <i></i><b>${esc(x.p.name)}${x.p.id === G.myId ? " (du)" : ""}</b><small>${tick(x.r.given)}</small></div>`).join("")}
       </div><div class="est-scale"><span>${tick(lo)}</span><span>${tick(hi)}</span></div></div>`;
   }
+  // Schätzen-Auflösung: die richtige Zahl zählt (leise tickend) hoch, dann erscheint die Ziellinie und die Tipps
+  // fallen nacheinander auf den Zahlenstrahl; der Beste leuchtet zuletzt auf
+  function estReveal(st) {
+    const ans = app.querySelector(".quiz-answer"), est = app.querySelector(".est");
+    if (!ans) return;
+    const val = st.item.v, unit = st.item.unit ? " " + st.item.unit : "", dur = 900, t0 = performance.now();
+    const K = window.S10Klang, tick = () => K && K.play(sfx, (c, t) => K.tone(c, t, 0.03, { f0: 1500, peak: 0.04 }));
+    let lastTick = 0;
+    const step = (now) => {
+      if (!ans.isConnected) return;
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      ans.textContent = (k < 1 ? quizFmt(Math.round(val * e)) : quizFmt(val)) + unit;
+      if (k < 1 && now - lastTick > 70) { lastTick = now; tick(); }
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    if (est) {
+      est.classList.add("fx");
+      est.querySelectorAll(".est-pin").forEach((p, i) => { p.style.animationDelay = dur + 350 + i * 300 + "ms"; });
+      const n = est.querySelectorAll(".est-pin").length;
+      est.style.setProperty("--best-at", dur + 350 + n * 300 + 200 + "ms");
+      for (let i = 0; i < n; i++) setTimeout(() => { if (est.isConnected) tick(); }, dur + 350 + i * 300);
+    }
+  }
   function quizResultsHtml(v, st) {
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const rows = v.players.filter((p) => st.result[p.id]).map((p) => ({ p, r: st.result[p.id] })).sort((a, b) => b.r.points - a.r.points);
@@ -122,6 +146,9 @@
     }
     if (st.step === "ask" && (!quizRendered || !quizRendered.startsWith(v.code + ":" + st.round + ":"))) { quizSent = null; quizMine = null; }
     if (st.step === "ask" && st.submitted.includes(G.myId) && quizSent !== st.round) { quizSent = st.round; }
+    // Schätzen: Auflösung direkt nach dem Tippen (nicht nach Neuladen) wird animiert
+    const estFresh = st.mode === "schaetzen" && st.step === "reveal" && quizRendered === v.code + ":" + st.round + ":ask"
+      && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     quizRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const label = `<span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "umriss" ? " · " + esc(LAND.REGION_NAMES[st.region] || "") : ""}</span>`;
@@ -152,6 +179,7 @@
         <div class="panel quiz-card">${q}${foot}</div>`;
     }
     app.innerHTML = head(main);
+    if (estFresh) estReveal(st);
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });

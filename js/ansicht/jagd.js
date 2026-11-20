@@ -73,6 +73,18 @@
     // neue Runde: leiser Doppelton – du bist wieder dran
     runde: (d = 0) => snd((c, t0) => { const t = t0 + d; tone(c, t, 0.18, { f0: 660, peak: 0.12 }); tone(c, t + 0.13, 0.3, { f0: 990, peak: 0.1 }); }),
   };
+  // ---------- Animationen: wann ein Schuss/Fund zum ersten Mal zu sehen war ----------
+  // Zeitbasiert, damit Neuzeichnen (z. B. wenn ein Mitspieler schießt) eine laufende Animation an derselben Stelle fortsetzt.
+  // Beim ersten Anzeigen (Seite neu geladen, später dazugekommen) ist alles „alt“ und wird nicht animiert.
+  const born = new Map();
+  let bornReady = false, seeding = false;
+  const reduce = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function age(key) {
+    if (!born.has(key)) born.set(key, seeding || reduce() ? 0 : Date.now());
+    const t = born.get(key);
+    return t ? Date.now() - t : Infinity;
+  }
+  const dl = (ms) => `animation-delay:${Math.round(ms)}ms`;
   // was schon erklungen ist (beim ersten Anzeigen nichts nachträglich abspielen)
   let heard = null, shotAt = 0;
 
@@ -99,19 +111,35 @@
 
   // Ein Revier zeichnen. o: { shots, kills, hide (eigenes/aufgedeckt), scout, last, pick, aim, cand, click }
   function boardHtml(v, o) {
-    const killAt = {}; (o.kills || []).forEach((k) => k.cells.forEach((i) => { killAt[i] = k.a; }));
+    const killAt = {}, killK = {}; (o.kills || []).forEach((k) => k.cells.forEach((i, n) => { killAt[i] = k.a; killK[i] = n; }));
+    const rev = o.rev || "", fxOn = !!o.rev; // Animationen nur in den großen, aktuellen Revieren
     const lastAt = {}; (o.last || []).forEach((x) => { (lastAt[x.i] = lastAt[x.i] || []).push(x.by); });
     let cells = "";
     for (let i = 0; i < N * N; i++) {
       const cls = ["jcell", T[i], "v" + variant(i)], sh = o.shots && o.shots[i];
       let inner = "";
       const own = o.hide && J.ownerOf(o.hide, i), seen = o.scout && o.scout.seen && o.scout.seen[i], sres = o.scout && o.scout.res && o.scout.res[i];
-      if (killAt[i]) { cls.push("down"); inner += `<span class="jico">${ICON[killAt[i]]}${BRUCH}</span>`; }
+      if (killAt[i]) {
+        // erlegt: Feld für Feld von links aufgedeckt (nach dem Treffer), kurz grün umrandet
+        const e = fxOn ? age(rev + ":k" + i) : Infinity, d = 250 + killK[i] * 110 - e;
+        cls.push("down"); if (e < 1500) cls.push("fx-glow");
+        inner += `<span class="jico ${e < 900 ? "fx-wipe" : ""}" style="${e < 900 ? dl(d) : ""}">${ICON[killAt[i]]}${BRUCH}</span>`;
+      }
       else if (own) { inner += `<span class="jico ${o.reveal ? "rev" : ""}">${ICON[own]}</span>`; if (sh && sh.r === "hit") inner += `<span class="jmark hitx">✕</span>`; }
-      else if (sh && sh.r === "hit") { cls.push("hit"); inner += `<span class="jmark star">✸</span>`; }
-      else if (seen) { cls.push("seen"); inner += `<span class="jico ghost">${ICON[seen]}</span><span class="jscope">🔭</span>`; }
-      if (sh && sh.r === "track" || (!sh && sres === "track")) inner += `<span class="jico track">${TRACK}</span>`;
-      if (sh && sh.r === "miss" || (!sh && sres === "miss")) inner += `<span class="jmark jmiss"></span>`;
+      else if (sh && sh.r === "hit") {
+        // Treffer: Lichtblitz, dann springt der Stern auf
+        const e = fxOn ? age(rev + ":s" + i) : Infinity;
+        cls.push("hit"); if (e < 600) inner += `<span class="jfx"><span class="fx-flash" style="${dl(-e)}"></span></span>`;
+        inner += `<span class="jmark star ${e < 600 ? "fx-pop" : ""}" style="${e < 600 ? dl(120 - e) : ""}">✸</span>`;
+      }
+      else if (seen) { const e = fxOn ? age(rev + ":o" + i) : Infinity; cls.push("seen"); inner += `<span class="jico ghost ${e < 900 ? "fx-in" : ""}" style="${e < 900 ? dl(250 - e) : ""}">${ICON[seen]}</span><span class="jscope">🔭</span>`; }
+      const shotE = fxOn && sh ? age(rev + ":s" + i) : fxOn && sres ? age(rev + ":o" + i) : Infinity;
+      if (sh && sh.r === "track" || (!sh && sres === "track")) inner += `<span class="jico track ${shotE < 1100 ? "fx-paws" : ""}" style="--t0:${Math.round(300 - shotE)}ms">${TRACK}</span>`;
+      if (sh && sh.r === "miss" || (!sh && sres === "miss") || (sh && sh.r === "track")) {
+        // daneben: kleiner Staubring mit Krümeln (nicht beim Hochsitz – dort wird nur geschaut)
+        if (sh && shotE < 700) inner += `<span class="jfx"><span class="fx-dust" style="${dl(-shotE)}"></span>${[[-1, -1], [1, -0.6], [-0.8, 0.9], [0.9, 1]].map(([x, y]) => `<span class="fx-crumb" style="--dx:${x * 16}px;--dy:${y * 16}px;${dl(-shotE)}"></span>`).join("")}</span>`;
+        if (!(sh && sh.r === "track")) inner += `<span class="jmark jmiss ${shotE < 900 ? "fx-in" : ""}" style="${shotE < 900 ? dl((sh ? 100 : 250) - shotE) : ""}"></span>`;
+      }
       if (sh) cls.push("shot"); else if (sres) cls.push("shot", "scouted");
       if (lastAt[i]) { cls.push("last"); inner += `<span class="jlast" style="--pc:${colorOf(v, lastAt[i][0])}"></span>`; }
       if (o.pick === i) { cls.push("picked"); inner += `<span class="jmark aimx">⌖</span>`; }
@@ -125,13 +153,26 @@
       if (o.click && o.click(i)) cls.push("can");
       cells += `<div class="${cls.join(" ")}" data-ji="${i}">${inner}</div>`;
     }
-    return `<div class="jboard ${o.small ? "small" : ""}">${cells}</div>`;
+    // Hochsitz: Fernglas-Blick öffnet sich über dem beobachteten 3×3-Bereich
+    let scopeFx = "";
+    if (fxOn && o.scout && o.scout.cells) {
+      const e = age(rev + ":scope:" + o.scout.cells.join(","));
+      if (e < 800) {
+        const area = o.scout.center != null ? J.area3(o.scout.center) : o.scout.cells;
+        const rs = area.map((i) => Math.floor(i / N)), cs = area.map((i) => i % N), r0 = Math.min(...rs), c0 = Math.min(...cs);
+        const h = Math.max(...rs) - r0 + 1, w = Math.max(...cs) - c0 + 1;
+        scopeFx = `<div class="fx-scope" style="left:${(c0 / N) * 100}%;top:${(r0 / N) * 100}%;width:${(w / N) * 100}%;height:${(h / N) * 100}%;${dl(-e)}"></div>`;
+      }
+    }
+    return `<div class="jboard ${o.small ? "small" : ""}">${cells}${scopeFx}</div>`;
   }
 
   function renderJagd() {
     const v = G.view, st = v.jagd;
     if (!st) return;
     T = J.terrain(st.map);
+    if (st.step === "hide") born.clear();
+    seeding = !bornReady; bornReady = true;
     const me = G.myId, seated = st.seats.includes(me), priv = G.wattenPriv && G.wattenPriv.jagd ? G.wattenPriv : null;
     const myHide = priv && priv.hide;
     const others = st.seats.filter((id) => id !== me);
@@ -241,8 +282,8 @@
       main = `<div class="jlayout">
           <section class="panel jtarget ${aim.scope ? "scoping" : ""}">
             <div class="jtabs jtabs-top">${tabs}</div>
-            ${mineView ? boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me) })
-              : t ? boardHtml(v, { shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: iShot ? null : pickHere, aim: iShot || aim.scope ? null : aim, scopeArea: aim.scope && aim.sc != null ? J.area3(aim.sc) : null,
+            ${mineView ? boardHtml(v, { rev: me, shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me) })
+              : t ? boardHtml(v, { rev: t, shots: st.shots[t], kills: st.kills.filter((k) => k.t === t), scout: scoutHere, last: lastHere, pick: iShot ? null : pickHere, aim: iShot || aim.scope ? null : aim, scopeArea: aim.scope && aim.sc != null ? J.area3(aim.sc) : null,
               click: (i) => seated && !iShot && (aim.scope || !st.shots[t][i]) }) : `<p class="muted">Kein Revier mit Wild mehr.</p>`}
           </section>
           <aside class="jside">
@@ -253,7 +294,7 @@
               <p class="jtask">${task}</p>
               ${cur.length || st.last.length ? `<p class="muted small jlastline">${cur.length ? "Diese Runde" : "Letzte Runde"}: ${(cur.length ? cur : st.last).map((x) => `<b style="color:${colorOf(v, x.by)}">${esc(nameOf(v, x.by))}</b> → ${esc(nameOf(v, x.t))}: ${resTxt(x)}`).join(" · ")}</p>` : ""}
             </section>
-            ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me), small: true })}</section>` : ""}
+            ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { rev: me, shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me), small: true })}</section>` : ""}
           </aside>
         </div>`;
       if (acts) bar = `<div class="jbar">${acts}</div>`;

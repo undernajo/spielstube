@@ -79,6 +79,9 @@
       return;
     }
     if (st.step === "guess" && (!geoRendered || !geoRendered.startsWith(v.code + ":" + st.round + ":"))) { geoMine = null; geoSent = null; }
+    // Auflösung direkt nach dem Tippen (nicht nach Neuladen): Nadeln fallen nacheinander, Linien ziehen sich zum Ziel
+    const revealFresh = st.step === "reveal" && geoRendered === v.code + ":" + st.round + ":guess"
+      && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     geoRendered = key;
     let main = "";
     const oben = st.mode === "oben";
@@ -161,15 +164,37 @@
       });
     } else if (st.step === "reveal") {
       const target = [st.answer.lat, st.answer.lng], pts = [target];
-      LF.marker(target, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-goal">★</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }), zIndexOffset: 1000 })
+      LF.marker(target, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-goal ${revealFresh ? "fx-pop" : ""}">★</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }), zIndexOffset: 1000 })
         .addTo(map).bindTooltip(esc(st.place.name), { permanent: true, direction: "top", offset: [0, -14], className: "geo-tip goal" });
+      const kmTxt = (x) => (x < 10 ? x.toFixed(1).replace(".", ",") : Math.round(x).toLocaleString("de-DE")) + " km";
+      let n = 0;
       v.players.forEach((p) => {
         const r = st.result[p.id];
         if (!r || r.lat == null) return;
         const g = [r.lat, r.lng]; pts.push(g);
-        LF.polyline([target, g], { color: colorOf(p.id), weight: 3, dashArray: "6 6", opacity: .9 }).addTo(map);
-        LF.marker(g, { icon: pin(colorOf(p.id)) }).addTo(map)
-          .bindTooltip(`${esc(p.name)}: ${r.km < 10 ? r.km.toFixed(1).replace(".", ",") : Math.round(r.km).toLocaleString("de-DE")} km`, { permanent: true, direction: "bottom", offset: [0, 10], className: "geo-tip" });
+        if (!revealFresh) {
+          LF.polyline([target, g], { color: colorOf(p.id), weight: 3, dashArray: "6 6", opacity: .9 }).addTo(map);
+          LF.marker(g, { icon: pin(colorOf(p.id)) }).addTo(map)
+            .bindTooltip(`${esc(p.name)}: ${kmTxt(r.km)}`, { permanent: true, direction: "bottom", offset: [0, 10], className: "geo-tip" });
+          return;
+        }
+        // nacheinander: Nadel fällt, Linie wächst zum Ziel, Entfernung zählt hoch
+        const at = 500 + 700 * n++;
+        setTimeout(() => {
+          if (geoMap !== map) return; // inzwischen neu gezeichnet
+          LF.marker(g, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin fx-drop" style="--pc:${colorOf(p.id)}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] }) }).addTo(map);
+          const line = LF.polyline([g, g], { color: colorOf(p.id), weight: 3, dashArray: "6 6", opacity: .9 }).addTo(map);
+          const tip = LF.tooltip({ permanent: true, direction: "bottom", offset: [0, 10], className: "geo-tip" }).setLatLng(g).setContent(`${esc(p.name)}: 0 km`).addTo(map);
+          const t0 = performance.now() + 300;
+          const step = (now) => {
+            if (geoMap !== map) return;
+            const q = Math.max(0, Math.min(1, (now - t0) / 650)), e = 1 - Math.pow(1 - q, 3);
+            line.setLatLngs([g, [g[0] + (target[0] - g[0]) * e, g[1] + (target[1] - g[1]) * e]]);
+            tip.setContent(`${esc(p.name)}: ${kmTxt(r.km * e)}`);
+            if (q < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }, at);
       });
       if (pts.length > 1) map.fitBounds(LF.latLngBounds(pts).pad(0.25), { maxZoom: 12 }); else map.setView(target, Math.max(map.getZoom(), 8));
     }

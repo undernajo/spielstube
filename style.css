@@ -2445,3 +2445,63 @@ body.qb-play .banner.win .trophy { display: none; }
 @keyframes die-flash { 0% { opacity: .85; } 100% { opacity: 0; } }
 .alm-die.die-glow { animation: die-glow 1s ease-out; }
 @keyframes die-glow { 0%, 100% { box-shadow: 0 4px 0 rgba(0, 0, 0, .35); } 30% { box-shadow: 0 0 22px 6px rgba(255, 200, 61, .75), 0 4px 0 rgba(0, 0, 0, .35); } }
+
+/* Auf der Jagd: Animationen neuer Schüsse (Verzögerungen kommen aus der Ansicht, damit Neuzeichnen nichts neu startet) */
+.jboard { position: relative; }
+.jfx { position: absolute; inset: 0; z-index: 6; pointer-events: none; display: grid; place-items: center; overflow: visible; }
+.fx-flash { position: absolute; width: 60%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #fffbe0 0 30%, rgba(255, 216, 74, .85) 45%, rgba(255, 216, 74, 0) 70%);
+  animation: fx-flash .45s ease-out both; }
+@keyframes fx-flash { 0% { transform: scale(.2); opacity: 1; } 60% { opacity: .9; } 100% { transform: scale(2.4); opacity: 0; } }
+.fx-pop { animation: fx-pop .4s cubic-bezier(.2, 1.8, .4, 1) both; }
+@keyframes fx-pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+.fx-dust { position: absolute; width: 50%; aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(235, 225, 200, .8); animation: fx-dust .55s ease-out both; }
+@keyframes fx-dust { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; border-width: .5px; } }
+.fx-crumb { position: absolute; width: 8%; aspect-ratio: 1; border-radius: 50%; background: #d9cfb4; animation: fx-crumb .5s ease-out both; }
+@keyframes fx-crumb { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.fx-in { animation: fx-in .3s ease-out both; } @keyframes fx-in { from { opacity: 0; } }
+.jico.track.fx-paws path { animation: fx-paw .18s ease-out both; transform-box: fill-box; transform-origin: center; }
+.jico.track.fx-paws path:nth-child(1) { animation-delay: var(--t0); }
+.jico.track.fx-paws path:nth-child(2) { animation-delay: calc(var(--t0) + 130ms); }
+.jico.track.fx-paws path:nth-child(3) { animation-delay: calc(var(--t0) + 360ms); }
+.jico.track.fx-paws path:nth-child(4) { animation-delay: calc(var(--t0) + 490ms); }
+@keyframes fx-paw { 0% { opacity: 0; transform: scale(.6); } 100% { opacity: 1; transform: scale(1); } }
+.fx-wipe { animation: fx-wipe .45s ease-out both; } @keyframes fx-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.jcell.down.fx-glow::after { content: ""; position: absolute; inset: 0; z-index: 5; box-shadow: inset 0 0 0 3px #7ee2b1; animation: fx-out 1.2s ease-out both; pointer-events: none; }
+@keyframes fx-out { from { opacity: 1; } to { opacity: 0; } }
+@property --fxr { syntax: "<length-percentage>"; inherits: false; initial-value: 0%; }
+.fx-scope { position: absolute; z-index: 7; pointer-events: none; border-radius: 6px;
+  background: radial-gradient(circle at 30% 50%, transparent 0 var(--fxr), rgba(8, 6, 25, .8) calc(var(--fxr) + 2px)),
+              radial-gradient(circle at 70% 50%, transparent 0 var(--fxr), rgba(8, 6, 25, .8) calc(var(--fxr) + 2px));
+  background-blend-mode: multiply; animation: fx-scope .7s ease-out both; }
+@keyframes fx-scope { 0% { --fxr: 0%; opacity: 1; } 75% { --fxr: 42%; opacity: 1; } 100% { --fxr: 60%; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .jfx, .fx-scope { display: none; } .fx-pop, .fx-in, .fx-wipe, .jico.track.fx-paws path, .jcell.down.fx-glow::after { animation: none; } }
+
+/* Almsommer: Kreuz zeichnet sich in zwei Bleistiftstrichen (zum Strich-Geräusch); fertige Fläche: goldener Lichtstreif, Abzeichen springt auf */
+.acell.sel.drawn::after { content: none; }
+.akreuz { position: absolute; inset: 16%; z-index: 2; pointer-events: none; }
+.akreuz path { fill: none; stroke: #b07800; stroke-width: 5; stroke-linecap: round; opacity: .9; stroke-dasharray: 40; stroke-dashoffset: 40; animation: akreuz .09s ease-in both; }
+@keyframes akreuz { to { stroke-dashoffset: 0; } }
+.ashine { position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 236, 160, .85) 50%, transparent 70%); background-size: 300% 100%; animation: ashine .7s ease-out both; }
+@keyframes ashine { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.ab.apop { animation: fx-pop .4s cubic-bezier(.2, 1.8, .4, 1) both; }
+@media (prefers-reduced-motion: reduce) { .akreuz path, .ab.apop { animation: none; stroke-dashoffset: 0; } .ashine { display: none; } }
+/* Erdkunde: Auflösung – Nadeln fallen, der Stern springt auf */
+.geo-pin.fx-drop { animation: fx-drop .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes fx-drop { 0% { transform: translateY(-40px) scale(.7); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .geo-pin.fx-drop, .geo-goal.fx-pop { animation: none; } }
+/* Schätzen: Auflösung – Ziellinie wächst nach dem Hochzählen, Tipps fallen nacheinander (Verzögerung aus der Ansicht), der Beste leuchtet zuletzt */
+.est.fx .est-goal { animation: est-goal .35s ease-out .9s both; transform-origin: bottom; }
+@keyframes est-goal { from { transform: scaleY(0); opacity: 0; } }
+.est.fx .est-pin { animation: est-drop .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+@keyframes est-drop { from { transform: translate(-50%, -26px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+.est.fx .est-pin.best i { animation: est-best .6s ease-out var(--best-at, 2s) both; }
+@keyframes est-best { 0% { box-shadow: 0 1px 4px rgba(0, 0, 0, .5); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc) 45%, transparent), 0 0 16px var(--pc); }
+  100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 35%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .est.fx .est-goal, .est.fx .est-pin, .est.fx .est-pin.best i { animation: none; } }
+/* Stubenmeisterschaft: Partypunkte der Etappe erscheinen kurz als „+5“ */
+.qb-standing .qb-row { position: relative; }
+.qb-gain { position: absolute; right: -4px; top: -6px; padding: 0 6px; border-radius: 99px; background: #2fbf71; color: #fff; font: 800 .72rem Nunito, sans-serif;
+  pointer-events: none; animation: qb-gain 1.4s ease-out both; }
+@keyframes qb-gain { 0% { transform: translateY(6px); opacity: 0; } 20% { transform: none; opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .qb-gain { display: none; } }

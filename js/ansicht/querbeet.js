@@ -43,6 +43,29 @@
       ${q.done ? `<span class="qb-done">Etappe geschafft!</span>${qbReadyBtnHtml(q, fin ? "Zur Siegerehrung" : "Weiter zum Zwischenstand")}`
         : `<span class="qb-cur muted small">${esc(g.name)} · ${esc(q.cur.detail)}</span>`}`;
   }
+  // Gesamtwertung nach einer Etappe: „+5“ erscheint, Balken und Punkte wachsen, wer überholt, rutscht auf den neuen Platz.
+  // Zeitbasiert (Start je Etappe), damit Neuzeichnen (jemand drückt „Bereit“) die Animation nur fortsetzt; nach Neuladen keine.
+  let qbAnimKey = null, qbAnimT = 0;
+  const QB_ANIM = 1500; // ms: Wachsen 0–700, Rutschen 850–1400
+  function qbStandAnim(q, players) {
+    const box = app.querySelector(".qb-standing"), e = Date.now() - qbAnimT;
+    if (!box || !qbAnimT || e > QB_ANIM) return;
+    const last = q.stages[q.stages.length - 1], gain = (id) => (last && last.res[id] ? last.res[id].pts : 0);
+    const oldPts = Object.fromEntries(players.map((p) => [p.id, (q.pts[p.id] || 0) - gain(p.id)]));
+    const oldOrder = players.slice().sort((a, b) => oldPts[b.id] - oldPts[a.id]).map((p) => p.id);
+    const rows = [...box.querySelectorAll(".qb-row[data-id]")], tops = rows.map((r) => r.getBoundingClientRect().top);
+    const max = Math.max(1, ...Object.values(q.pts));
+    rows.forEach((r, i) => {
+      const id = r.dataset.id, g = gain(id), dy = tops[oldOrder.indexOf(id)] - tops[i];
+      if (dy) { const a = r.animate([{ transform: `translateY(${dy}px)` }, { offset: 850 / QB_ANIM, transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: QB_ANIM, easing: "ease-in-out", fill: "backwards" }); a.currentTime = e; }
+      const bar = r.querySelector(".qb-bar i");
+      if (bar) { const a = bar.animate([{ width: Math.round(100 * oldPts[id] / max) + "%" }, { offset: 700 / QB_ANIM, width: bar.style.width }, { width: bar.style.width }], { duration: QB_ANIM, easing: "ease-out" }); a.currentTime = e; }
+      if (g) r.insertAdjacentHTML("beforeend", `<span class="qb-gain" style="animation-delay:${-e}ms">+${g}</span>`);
+      const b = r.querySelector("b"), t0 = performance.now() - e, to = q.pts[id] || 0, from = oldPts[id];
+      const step = (now) => { if (!b.isConnected) return; const k = Math.min(1, (now - t0) / 700); b.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(step); };
+      if (from !== to) requestAnimationFrame(step);
+    });
+  }
   function renderQuerbeet() {
     const v = G.view, q = v.qb;
     if (!q) return;
@@ -58,7 +81,7 @@
     }).join(`<span class="qb-link"></span>`)}</div>`;
     const standings = (title) => `<div class="panel qb-standing"><h3>${title}</h3>${ranking.map((p, i) => {
       const place = ranking.findIndex((x) => (q.pts[x.id] || 0) === (q.pts[p.id] || 0));
-      return `<div class="qb-row" style="--pc:${colorOf(p.id)}"><span class="qb-place">${medal[place] || place + 1 + "."}</span><span class="pdot"></span>
+      return `<div class="qb-row" data-id="${esc(p.id)}" style="--pc:${colorOf(p.id)}"><span class="qb-place">${medal[place] || place + 1 + "."}</span><span class="pdot"></span>
         <span class="qb-name">${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}${q.jokerOn && q.step !== "final" && q.joker[p.id] == null ? ` <span class="qb-jk" title="Joker noch nicht eingesetzt">🃏</span>` : ""}</span>
         <span class="qb-bar"><i style="width:${Math.round(100 * (q.pts[p.id] || 0) / maxPts)}%"></i></span><b>${q.pts[p.id] || 0}</b></div>`;
     }).join("")}</div>`;
@@ -76,6 +99,10 @@
           <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div>
           <p>${esc(n.rule)}</p></div>
         ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div></div>`; };
+    {
+      const ak = v.code + ":" + q.stages.length + ":" + (q.step === "intro" ? "intro" : "stand");
+      if (ak !== qbAnimKey) { qbAnimT = qbAnimKey && q.step !== "intro" && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? Date.now() : 0; qbAnimKey = ak; }
+    }
     let main = "";
     if (q.step === "intro") {
       main = `<div class="panel qb-intro"><h2>Stubenmeisterschaft</h2>
@@ -103,6 +130,7 @@
         ${statusBarHtml()}
         <section class="qb-main">${main}</section>
       </main>`;
+    qbStandAnim(q, v.players);
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });

@@ -119,6 +119,8 @@
     else { app.querySelectorAll(".alm-dice .alm-dicerow > .alm-die").forEach((d) => d.classList.remove("rolling")); almRoll = null; }
   }
   let almHeard = null; // was schon erklungen ist (beim ersten Anzeigen nichts nachspielen)
+  let almSelAt = new Map(); // Feld → Zeitpunkt des Ankreuzens (das Kreuz zeichnet sich in zwei Strichen)
+  let almShine = null, almDoneKeys = null; // frisch fertige eigene Flächen: { keys, t } – goldener Lichtstreif
   let almChimeEnd = 0; // bis wann der Zweiklang „Fläche fertig“ klingt – die Würfel fallen erst danach
 
   // ---------- Feldgrafiken: illustrierte Wanderkarte (SVG, 40 × 40) ----------
@@ -227,15 +229,21 @@
       const can = o.interactive && !isMarked && ter === o.terrain;
       const hint = can && !o.sel.length && M.neighbors(i).some((j) => marked.has(j));
       const first = badgeCell(k) === i;
+      // Animationen: Kreuz zeichnet sich (zwei Bleistiftstriche), fertige Fläche bekommt einen goldenen Lichtstreif
+      let fx = "";
+      if (chosen) { const e = Date.now() - (almSelAt.get(i) || 0);
+        fx += `<svg class="akreuz" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 9 L31 31" style="animation-delay:${-e}ms"/><path d="M31 9 L9 31" style="animation-delay:${130 - e}ms"/></svg>`; }
+      const sh = o.shine && o.shine.keys.has(k) ? Date.now() - o.shine.t : Infinity;
+      if (sh < 1300) fx += `<span class="ashine" style="animation-delay:${M.REGIONS[k].indexOf(i) * 90 - sh}ms"></span>`;
       let badge = "";
       if (first) {
         const cl = st.claimed[k], race = M.SPECIAL.includes(k);
         const mine = cl && cl.ids.includes(G.myId);
         const flag = cl ? `<b class="ab-flag" title="Erstbonus: ${esc(cl.ids.map((id) => nameOf(v, id)).join(" & "))}">${mine ? "🏆" : "🚩"}</b>` : "";
-        badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${M.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
+        badge = `<span class="ab ${done.has(i) ? "full" : soon.includes(k) ? "soon" : ""} ${sh < 900 ? "apop" : ""}" style="${sh < 900 ? `animation-delay:${250 - sh}ms` : ""}" title="${race && !cl ? `Wer sie als Erster fertig hat: +${ALM.BONUS.first}` : ""}">${done.has(i) ? "✓" : ""}${M.regionValue(k)}${race && !cl ? `<small>+${ALM.BONUS.first}</small>` : ""}${flag}</span>`;
       }
       const name = `${String.fromCharCode(65 + c)}${r + 1} · ${NAMES[ter]}${sym === "🏠" ? " · Hütte" : sym === "⛰️" ? " · Gipfel" : ""}`;
-      return `<div class="acell ${ter} v${variant(i)} ${edges} ${isMarked && i !== M.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel" : ""}" data-ai="${i}" title="${name}">${badge}${symSvg ? `<span class="as">${symSvg}</span>` : ""}</div>`;
+      return `<div class="acell ${ter} v${variant(i)} ${edges} ${isMarked && i !== M.START ? "x" : ""} ${fresh ? "new" : ""} ${done.has(i) ? "done" : ""} ${can ? "can" : ""} ${hint ? "hint" : ""} ${chosen ? "sel drawn" : ""}" data-ai="${i}" title="${name}">${badge}${fx}${symSvg ? `<span class="as">${symSvg}</span>` : ""}</div>`;
     }).join("");
     const cols = o.small ? M.COLS : rot ? M.ROWS : M.COLS;
     return `<div class="${o.small ? "alm-mini" : "alm-board"}" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${cells}</div>`
@@ -271,7 +279,10 @@
     almNewsSeen = lastKey;
     // ---- Klänge auslösen (nur Neues seit dem letzten Zeichnen) ----
     {
-      const hk = v.code + ":" + st.seats.join(","), myDone = seated ? M.doneRegions(boardOf(G.myId)).length : 0;
+      const hk = v.code + ":" + st.seats.join(","), doneKeys = seated ? M.doneRegions(boardOf(G.myId)) : [], myDone = doneKeys.length;
+      // frisch fertige eigene Flächen merken (Lichtstreif zum Zweiklang); beim ersten Anzeigen nichts nachholen
+      if (almDoneKeys && almHeard && almHeard.key === hk) { const nk = doneKeys.filter((k) => !almDoneKeys.has(k)); if (nk.length) almShine = { keys: new Set(nk), t: Date.now() + 100 }; }
+      almDoneKeys = new Set(doneKeys);
       if (!almHeard || almHeard.key !== hk) {
         // Spielbeginn (Woche 1, noch nichts angekreuzt): die ersten Würfel hörbar fallen lassen
         if (st.step === "play" && st.week === 1 && !st.done.length) almThrow(0);
@@ -319,7 +330,7 @@
       const soon = !err && almSel.cells.length ? Object.keys(M.REGIONS).filter((k) => M.REGIONS[k].some((i) => almSel.cells.includes(i))
         && M.REGIONS[k].every((i) => marked.has(i) || almSel.cells.includes(i))) : [];
       // nach dem Abschicken erscheinen die eigenen Kreuze als normale Kreuze (nicht mehr als Auswahl)
-      const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: iDone ? [] : almSel.cells, soon: iDone ? [] : soon, fresh: lookId !== G.myId ? pend(lookId) : [] });
+      const board = boardHtml(v, st, marked, { interactive: mine && !iDone && !!terrain, terrain, sel: iDone ? [] : almSel.cells, soon: iDone ? [] : soon, fresh: lookId !== G.myId ? pend(lookId) : [], shine: lookId === G.myId && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? almShine : null });
 
       // Würfel und Aufgabe
       const dieHtml = (x, i) => x.storm ? `<div class="alm-die storm" title="Gewitter – nicht nutzbar"><small>Gewitter</small></div>`
@@ -389,7 +400,7 @@
     app.querySelectorAll("[data-alook]").forEach((b) => b.onclick = () => { almLook = b.dataset.alook; renderAlm(); });
     app.querySelectorAll(".acell.can").forEach((c) => c.onclick = () => {
       const i = Number(c.dataset.ai), k = almSel.cells.indexOf(i), x = st.dice[almSel.di];
-      if (k >= 0) almSel.cells.splice(k, 1); else if (x && almSel.cells.length < x.n) { almSel.cells.push(i); SND.kreuze(1); } // Bleistiftstrich beim Ankreuzen eines Feldes
+      if (k >= 0) almSel.cells.splice(k, 1); else if (x && almSel.cells.length < x.n) { almSel.cells.push(i); almSelAt.set(i, Date.now()); SND.kreuze(1); } // Bleistiftstrich beim Ankreuzen eines Feldes
       renderAlm();
     });
   }
