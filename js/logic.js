@@ -328,7 +328,7 @@
       s.phase = "gameOver";
       event(s, "info", `Spielende! ${s.players.filter((p) => s.winners.includes(p.id)).map((p) => p.name).join(" & ")} gewinnt mit ${max} Punkten.`);
     } else {
-      s.phase = "roundEnd";
+      s.phase = "roundEnd"; s.ready = {};
       event(s, "info", `Runde ${s.round} beendet.`);
     }
   }
@@ -409,9 +409,15 @@
       case "skip":
         if (!isHost || s.phase !== "playing" || s.pending) return false;
         pass(s, cards, true); return true;
-      case "next":
+      case "next": {
+        // wie bei den anderen Spielen: weiter, wenn alle (verbundenen, nicht pausierten) bereit sind – der Gastgeber kann sofort weiter
         if (s.phase !== "roundEnd" || s.undoReq) return false;
-        startRound(s, cards); return true;
+        if (a.now && isHost) { startRound(s, cards); return true; }
+        s.ready = s.ready || {}; s.ready[pid] = !s.ready[pid];
+        const ids = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
+        if (ids.length && ids.every((id) => s.ready[id])) startRound(s, cards);
+        return true;
+      }
       case "restart":
         if (s.phase !== "gameOver" || s.undoReq) return false;
         startGame(s, cards, s.target); return true;
@@ -429,7 +435,7 @@
     const out = {
       code, hostId: s.hostId || (s.players[0] && s.players[0].id), phase: s.phase, target: s.target, round: s.round, turn: s.turn,
       players: s.players.map((p) => ({ ...p })), lastEvent: s.lastEvent, log: s.log.slice(0, 15),
-      roundResult: s.roundResult, winners: s.winners, card: null, cardSet: normSets(s.cardSet || "standard"),
+      roundResult: s.roundResult, winners: s.winners, ready: s.phase === "roundEnd" ? { ...(s.ready || {}) } : {}, card: null, cardSet: normSets(s.cardSet || "standard"),
       pending: s.phase === "playing" && s.pending ? { ...s.pending, judges: judges(s) } : null,
       undo: s.phase !== "lobby" && s.undo && s.undo.move && !s.pending ? { by: s.undo.by, text: s.undo.move.text, canFlip: s.undo.move.type === "answer" } : null,
       undoReq: s.undoReq ? { ...s.undoReq, approvers: undoApprovers(s) } : null,

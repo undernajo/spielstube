@@ -1728,8 +1728,10 @@
         ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "Passen"}</button>`
         : isHost && !cur.connected ? `<div class="banner row"><div class="banner-text"><b>${esc(cur.name)}</b> ist getrennt.</div><button id="skip" class="btn ghost sm">Überspringen</button></div>` : "";
     } else if (v.phase === "roundEnd") {
+      const ids = v.players.filter((p) => p.connected && !p.paused).map((p) => p.id), nAll = ids.length, nReady = ids.filter((id) => v.ready && v.ready[id]).length; // Zähler nur, solange man selbst wartet
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
-        <button id="next" class="btn primary">Nächste Runde</button></div>`;
+        <div class="banner-actions"><button id="next" class="btn primary" ${v.ready && v.ready[myId] ? `title="Nochmal tippen zum Zurücknehmen"` : ""}>${v.ready && v.ready[myId] ? `Bereit ✓ – warte (${nReady}/${nAll}) …` : "Nächste Runde"}</button>
+        ${isHost ? `<button id="next-now" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div></div>`;
     } else {
       const w = v.players.filter((p) => v.winners.includes(p.id));
       const iWon = v.winners.includes(myId);
@@ -1774,6 +1776,7 @@
     on("#acc", () => send({ type: "judge", accept: true }));
     on("#rej", () => send({ type: "judge", accept: false }));
     on("#next", () => send({ type: "next" }));
+    on("#next-now", () => send({ type: "next", now: true }));
     on("#restart", () => send({ type: "restart" }));
     on("#toLobby", () => send({ type: "lobby" }));
     on("#leave", leave);
