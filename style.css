@@ -2910,7 +2910,8 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .kg-bus .kg-meta-round { display: inline; } .kg-bus .kg-meta-round::before { content: " · "; }
   /* Höhe ausnutzen: Spielfeld reicht bis zum unteren Rand, Karten, Stationen und Knöpfe wachsen mit der Fensterhöhe */
   .bb-layout { grid-template-columns: minmax(0, 1fr) clamp(270px, 22vw, 330px); gap: 16px; align-items: stretch; max-width: 1240px; }
-  .bb-board { min-height: calc(100dvh - 116px); align-content: center; gap: clamp(14px, 3.2vh, 40px); container-type: inline-size; }
+  /* Kartenreihe bleibt an ihrem Platz: Inhalt beginnt oben (fester Abstand), nur der Teil darunter wechselt */
+  .bb-board { min-height: calc(100dvh - 116px); align-content: start; gap: clamp(14px, 3.2vh, 40px); container-type: inline-size; padding-top: clamp(30px, 6vh, 72px); }
   /* Kartenfeld: so hoch wie das Fenster erlaubt, aber nie breiter als das Spielfeld (5 Felder + Topf) */
   .bb-track { --sw: min(calc(clamp(96px, calc(100dvh - 540px), 260px) * .66), calc((100cqw - 200px) / 5)); --sh: calc(var(--sw) / .66); }
   .bb-stops, .bb-slots { grid-template-columns: repeat(5, var(--sw)); gap: clamp(12px, 1.3vh, 16px); }
