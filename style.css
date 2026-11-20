@@ -2844,7 +2844,9 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-stop small { font: 700 .56rem Nunito, sans-serif; color: var(--muted); white-space: nowrap; }
 .bb-stop.cur { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, #1f1a4a); box-shadow: 0 0 14px rgba(255, 200, 61, .3); }
 .bb-stop.past { border-color: color-mix(in srgb, var(--ok) 60%, var(--line)); background: color-mix(in srgb, var(--ok) 13%, #1f1a4a); color: #7ee2b1; }
-.bb-here { position: absolute; top: -17px; left: 50%; transform: translateX(-50%); font-size: 1.1rem; font-style: normal; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+.bb-bus { position: absolute; top: -19px; left: 10%; transform: translateX(-50%); z-index: 2; font-size: 1.1rem; font-style: normal; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+.bb-bus span { display: block; transform-origin: 50% 100%; }
+.bb-puff { position: absolute; top: -15px; font-size: .8rem; font-style: normal; line-height: 1; opacity: 0; pointer-events: none; }
 .bb-slots { grid-area: slots; }
 .bb-slot { height: 96px; border-radius: 9px; border: 1.5px dashed var(--line); display: grid; place-items: center; }
 .bb-slot.full { border-color: transparent; }
@@ -2918,7 +2920,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .bb-stops::before { left: calc(var(--sw) / 2); right: calc(var(--sw) / 2); }
   .bb-stop { height: clamp(42px, 6vh, 66px); font-size: clamp(1rem, 2.2vh, 1.45rem); }
   .bb-stop small { font-size: clamp(.56rem, 1vh, .7rem); }
-  .bb-here { font-size: clamp(1.1rem, 2.2vh, 1.5rem); top: clamp(-17px, -2.2vh, -24px); }
+  .bb-bus { font-size: clamp(1.1rem, 2.2vh, 1.5rem); top: calc(-1 * clamp(19px, 2.5vh, 27px)); } .bb-puff { top: calc(-1 * clamp(15px, 2vh, 22px)); }
   .bb-slot { height: var(--sh); }
   .kg-card.bb { width: calc(var(--sw) - 6px); }
   .bb-pot { width: clamp(78px, 9vh, 104px); padding: clamp(10px, 1.6vh, 16px) 0; }

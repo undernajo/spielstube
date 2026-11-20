@@ -137,6 +137,7 @@
     on("#kg-next", () => send({ type: "kgNext" }));
     on("#kg-restart", () => send({ type: "kgRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
+    if (st.mode === "bus") busDrive();
     app.querySelectorAll("[data-busg]").forEach((b) => b.onclick = () => {
       busMine = { gid: st.gid, q: st.q, r: st.round, g: b.dataset.busg };
       app.querySelectorAll("[data-busg]").forEach((x) => x.classList.toggle("on", x === b));
@@ -264,6 +265,32 @@
     // beim Ansagen erst die eigenen Karten zeigen, dann die Knöpfe – zum Überlegen
     return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
   }
+  // Bus fährt von Station zu Station: Lage als Prozent der Stationsleiste (passt bei jeder Breite), Fahrt zeitbasiert –
+  // wird währenddessen neu gezeichnet, fährt er an derselben Stelle weiter; neue Runde = sofort an Station 1
+  let busPos = { key: null, idx: 0, from: 0, t0: 0 };
+  const BUS_DRIVE_MS = 1100;
+  function busDrive() {
+    const bus = app.querySelector(".bb-bus"), row = bus && bus.parentElement, stops = row ? [...row.querySelectorAll(".bb-stop")] : [];
+    if (!bus || !stops.length) return;
+    const idx = Number(bus.dataset.i), key = bus.dataset.k, w = row.getBoundingClientRect().width || 1;
+    const at = (i) => { const r = stops[i].getBoundingClientRect(); return (r.left - row.getBoundingClientRect().left + r.width / 2) / w * 100; };
+    if (busPos.key !== key) busPos = { key, idx, from: idx, t0: 0 };
+    else if (busPos.idx !== idx) busPos = { key, idx, from: busPos.idx, t0: performance.now() };
+    bus.style.left = at(idx) + "%";
+    const e = performance.now() - busPos.t0, reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!busPos.t0 || e >= BUS_DRIVE_MS || reduce || !bus.animate) return;
+    const dx = (at(busPos.from) - at(idx)) / 100 * w;
+    // anfahren, rollen, bremsen; dabei leicht schaukeln und eine kleine Staubwolke hinter sich lassen
+    bus.animate([{ transform: `translateX(calc(-50% + ${dx}px))` }, { transform: "translateX(-50%)" }],
+      { duration: BUS_DRIVE_MS, easing: "cubic-bezier(.55, 0, .3, 1)", fill: "backwards" }).currentTime = e;
+    bus.firstElementChild.animate([{ transform: "none" }, { transform: "translateY(-2px) rotate(-3deg)", offset: .15 }, { transform: "translateY(0) rotate(1deg)", offset: .35 },
+      { transform: "translateY(-2px) rotate(-2deg)", offset: .55 }, { transform: "translateY(0) rotate(2deg)", offset: .82 }, { transform: "rotate(-1deg)", offset: .92 }, { transform: "none" }],
+      { duration: BUS_DRIVE_MS, easing: "ease-in-out" }).currentTime = e;
+    const puff = document.createElement("i"); puff.className = "bb-puff"; puff.textContent = "💨";
+    puff.style.left = `calc(${at(busPos.from)}% - 18px)`; row.appendChild(puff);
+    puff.animate([{ opacity: 0, transform: "translateX(0) scale(.6)" }, { opacity: .9, offset: .15 }, { opacity: 0, transform: "translateX(-14px) scale(1.2)" }],
+      { duration: 900, easing: "ease-out", fill: "forwards" }).currentTime = e;
+  }
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
   // Busfahrt – alle im selben Bus: oben die fünf Stationen, darunter je ein Kartenfeld; an jeder Station wird eine Karte
   // für alle aufgedeckt. Darunter Frage und Antworten; rechts (am Handy darunter) die Mitfahrer mit ihrem Fortschritt.
@@ -279,10 +306,10 @@
       if (a && a.first) flips++;
       return `<div class="bb-slot full">${kgCard(c, "bb", "", a ? "flip" : "", a ? a.d : 0)}</div>`; }).join("");
     const stops = st.stations.map((p, i) => { const past = i < st.q || end, cur = !past && i === st.q;
-      return `<div class="bb-stop ${past ? "past" : cur ? "cur" : ""}">${cur ? `<i class="bb-here" aria-hidden="true">🚌</i>` : ""}<small>Station ${i + 1}</small><b>+${p}</b></div>`; }).join("");
+      return `<div class="bb-stop ${past ? "past" : cur ? "cur" : ""}"><small>Station ${i + 1}</small><b>+${p}</b></div>`; }).join("");
     const pot = seated ? st.pot[G.myId] || 0 : 0;
     const potBox = seated ? `<div class="bb-pot ${me === "ride" ? "" : "off"}"><small>${me === "ride" ? "Topf" : "Punkte"}</small><b>${me === "ride" ? pot : st.total[G.myId] || 0}</b></div>` : "";
-    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}</div><div class="bb-slots">${slots}</div>${potBox}</div>`;
+    const track = `<div class="bb-track ${seated ? "" : "watch"}"><div class="bb-stops">${stops}<i class="bb-bus" aria-hidden="true" data-i="${end ? Math.max(0, cards.length - 1) : Math.min(st.q, 4)}" data-k="${gk}"><span>🚌</span></i></div><div class="bb-slots">${slots}</div>${potBox}</div>`;
 
     let body;
     if (end) {
