@@ -24,7 +24,7 @@
   const UMRISS_ART = { DE: "Welches deutsche Bundesland", AT: "Welches österreichische Bundesland", IT: "Welche italienische Region", CH: "Welcher Schweizer Kanton" };
   const umrissFrage = (c) => (String(c).includes("-") ? UMRISS_ART[String(c).split("-")[0]] || "Welches Gebiet" : "Welches Land") + " ist das?";
   // Umriss als SVG: Hauptteil plus nahe Inseln (keine weit entfernten Überseegebiete)
-  function umrissSvg(code) {
+  function umrissSvg(code, draw) {
     const D = window.SCHLAU10_LAND; if (!D) return "";
     const c = D.countries.concat(D.subs || []).find((x) => x.c === code); if (!c) return "";
     const ctr = (flat) => { let a = 0, b = 0, k = 0; for (let i = 0; i < flat.length; i += 2) { a += flat[i]; b += flat[i + 1]; k++; } return [a / k, b / k]; };
@@ -35,8 +35,13 @@
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
     const pathOf = (flat) => { let d = ""; for (let i = 0; i < flat.length; i += 2) { const x = flat[i + 1] * k, y = -flat[i];
       x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); d += (i ? "L" : "M") + x.toFixed(3) + " " + y.toFixed(3); } return d + "Z"; };
-    const d = polys.map((p) => p.map(pathOf).join("")).join("");
+    const ds = polys.flatMap((p) => p.map(pathOf)), d = ds.join("");
     const w = x1 - x0, h = y1 - y0, pad = Math.max(w, h) * 0.06;
+    if (draw) { // jeder Teilumriss einzeln: Strich läuft einmal herum (pathLength 1), danach füllt er sich; leises Stiftgeräusch
+      const K = window.S10Klang; if (K) K.play(sfx, (c, t) => K.noise(c, t, 1.1, { type: "bandpass", freq: 3200, q: 1.2, a: 0.05, peak: 0.05, sweepTo: 4200 }));
+      return `<svg class="umriss-svg fx-draw" style="--sw:${(Math.max(w, h) / 140).toFixed(4)}" viewBox="${(x0 - pad).toFixed(3)} ${(y0 - pad).toFixed(3)} ${(w + 2 * pad).toFixed(3)} ${(h + 2 * pad).toFixed(3)}" preserveAspectRatio="xMidYMid meet">
+        <path class="u-fill" d="${d}" fill="#ffd24d" fill-rule="evenodd"/>${ds.map((x) => `<path class="u-line" d="${x}" pathLength="1" fill="none" stroke="#fff6cf" stroke-linejoin="round"/>`).join("")}</svg>`;
+    }
     return `<svg class="umriss-svg" viewBox="${(x0 - pad).toFixed(3)} ${(y0 - pad).toFixed(3)} ${(w + 2 * pad).toFixed(3)} ${(h + 2 * pad).toFixed(3)}" preserveAspectRatio="xMidYMid meet">
       <path d="${d}" fill="#ffd24d" fill-opacity=".9" stroke="#fff6cf" stroke-width="${(Math.max(w, h) / 220).toFixed(4)}" fill-rule="evenodd" stroke-linejoin="round"/></svg>`;
   }
@@ -149,6 +154,9 @@
     // Schätzen: Auflösung direkt nach dem Tippen (nicht nach Neuladen) wird animiert
     const estFresh = st.mode === "schaetzen" && st.step === "reveal" && quizRendered === v.code + ":" + st.round + ":ask"
       && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    // Umriss-Rätsel: neue Frage (nicht nach Neuladen) – der Umriss zeichnet sich wie mit dem Stift gezogen
+    const umrissFresh = st.mode === "umriss" && st.step === "ask" && (quizRendered !== null || st.round === 1) && !(quizRendered || "").startsWith(v.code + ":" + st.round + ":")
+      && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     quizRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const label = `<span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "umriss" ? " · " + esc(LAND.REGION_NAMES[st.region] || "") : ""}</span>`;
@@ -166,7 +174,7 @@
       if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>${estLineHtml(v, st)}` : ""}`;
       else if (st.mode === "hinweis") q = `<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Wer oder was ist gemeint?</div>`}
           ${quizHintsHtml(st)}${st.step === "ask" ? `<p class="muted small">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte · <span id="quiz-nexthint"></span></p>` : ""}</div>`;
-      else q = `<div class="umriss-box">${umrissSvg(it.c)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">${umrissFrage(it.c)}</div>`}`;
+      else q = `<div class="umriss-box">${umrissSvg(it.c, umrissFresh)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">${umrissFrage(it.c)}</div>`}`;
       const foot = st.step === "ask" ? `<div class="quiz-foot">${sent ? "" : `<form class="quiz-form" onsubmit="return false">
           <input id="quiz-in" ${st.mode === "schaetzen" ? `inputmode="decimal" placeholder="Deine Schätzung"` : `placeholder="Deine Antwort"`} autocomplete="off" maxlength="60">
           ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>

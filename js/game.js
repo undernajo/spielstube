@@ -1563,6 +1563,19 @@
     return `<section class="log compact"><h3>Letzte Züge</h3><ul>${last.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>
       ${older.length ? `<details><summary>Ganzer Verlauf (${moves.length})</summary><ul>${older.map((l) => `<li>${esc(l)}</li>`).join("")}</ul></details>` : ""}</section>`;
   }
+  // Zehnkampf: Felder drehen sich beim Aufdecken um (richtig: grüner Lichtring, falsch: rotes Rucken; am Kartenende nacheinander).
+  // Zeitbasiert je Feld, damit Neuzeichnen die Animation nur fortsetzt; beim ersten Anzeigen (Neuladen) ist alles alt.
+  const slotBorn = new Map();
+  let slotSeeded = false;
+  function slotAge(key, pos, batch) {
+    if (!slotBorn.has(key)) {
+      const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      slotBorn.set(key, !slotSeeded || reduce ? null : { t: Date.now(), k: batch.n++ });
+      if (slotBorn.get(key) && batch.flip) { const k = slotBorn.get(key).k; setTimeout(() => window.S10Klang && window.S10Klang.play(sfx, (c, t) => window.S10Klang.noise(c, t, 0.05, { type: "bandpass", freq: 1800, q: 1.2, peak: 0.08 })), k * 150); }
+    }
+    const b = slotBorn.get(key);
+    return b ? { e: Date.now() - b.t, k: b.k } : null;
+  }
   function renderGame() {
     const v = view, card = v.card;
     const cur = v.players[v.turn];
@@ -1589,6 +1602,7 @@
       </div>`;
     }).join("");
 
+    const cardKey = v.code + ":" + v.round + ":" + card.q, batchOk = { n: 0 }, batchShown = { n: 0, flip: true };
     const slots = card.items.map((it, pos) => {
       const ang = (-90 + pos * 36) * Math.PI / 180;
       const x = 50 + 40.5 * Math.cos(ang), y = 50 + 40.5 * Math.sin(ang);
@@ -1599,9 +1613,17 @@
         : `<span class="slot-a">${esc(fmt(card, r.a))}</span>`) : "";
       const by = r && r.by ? `<span class="slot-by"><i class="pdot" style="--pc:${colorOf(r.by)}"></i>${esc(nameOf(r.by))}</span>` : "";
       const pc = r && r.by ? `;--pc:${colorOf(r.by)}` : "";
-      return `<button class="slot ${cls} ${r && r.by ? "has-by" : ""} ${selected === pos ? "sel" : ""}" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%${pc}" data-pos="${pos}" ${myTurn && !r ? "" : "disabled"}>
+      // aufgedeckt (nicht „wird geprüft“): einmal umdrehen – die am Kartenende aufgedeckten nacheinander
+      let fx = "", fxStyle = "";
+      if (r && !r.pending) {
+        const a = slotAge(cardKey + ":" + pos + ":" + cls, pos, cls === "shown" ? batchShown : batchOk);
+        if (a) { const d = (cls === "shown" ? a.k * 150 : 0) - a.e;
+          if (d > -1100) { fx = cls === "bad" ? "fx-shake" : "fx-flip"; fxStyle = `;animation-delay:${d}ms${cls === "bad" ? `, ${d + 350}ms` : cls === "ok" ? `, ${d}ms` : ""}`; } }
+      }
+      return `<button class="slot ${cls} ${fx} ${r && r.by ? "has-by" : ""} ${selected === pos ? "sel" : ""}" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%${pc}${fxStyle}" data-pos="${pos}" ${myTurn && !r ? "" : "disabled"}>
         <span class="slot-t">${esc(it.t)}</span>${ans}${by}</button>`;
     }).join("");
+    slotSeeded = true;
 
     let banner;
     if (pend) {
