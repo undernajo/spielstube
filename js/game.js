@@ -2769,8 +2769,8 @@
       modalFor = key;
       const card = v.card, it = card.items[pend.pos];
       modalEl.innerHTML = `
-      <div class="modal-back">
-        <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-back zk-back">
+        <div class="modal zk" role="dialog" aria-modal="true">
           <div class="m-q">${esc(card.q)}</div>
           <div class="m-item ${card.emoji ? "emo" : ""} ${card.emoji && graphemes(it.t) === 1 ? "solo" : ""}">${esc(it.t)}</div>
           ${checkHtml({ given: pend.given, solution: fmt(card, it.r.a), mine: true, who: (v.players.find((p) => p.id === myId) || { name: "Du" }).name,
@@ -2808,8 +2808,8 @@
         ${est ? `<p class="muted small">Zählt, wenn du höchstens ${Math.round(((it.tol != null ? it.tol : card.tol) || 0.1) * 100)} % danebenliegst.</p>` : ""}`;
     }
     modalEl.innerHTML = `
-      <div class="modal-back">
-        <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-back zk-back">
+        <div class="modal zk" role="dialog" aria-modal="true">
           <div class="m-q">${esc(card.q)}</div>
           <div class="m-item ${card.emoji ? "emo" : ""} ${card.emoji && graphemes(it.t) === 1 ? "solo" : ""}">${esc(it.t)}</div>
           ${controls}
