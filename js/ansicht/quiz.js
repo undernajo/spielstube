@@ -146,7 +146,7 @@
         const pts = app.querySelector("#quiz-pts"); if (pts) pts.textContent = 6 - st.item.hints.length;
       }
       const rs = app.querySelector(".geo-results"); if (rs && st.result) rs.innerHTML = quizResultsHtml(v, st);
-      if (st.step === "reveal") { const rb = app.querySelector("#quiz-ready"); if (rb) rb.textContent = st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Weiter"; }
+      if (st.step === "reveal") G.nextBtnSwap("#quiz-ready", { attr: 'id="quiz-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Weiter", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "quizReady" }));
       return;
     }
     if (st.step === "ask" && (!quizRendered || !quizRendered.startsWith(v.code + ":" + st.round + ":"))) { quizSent = null; quizMine = null; }
@@ -180,8 +180,7 @@
           ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>
           ${st.mode !== "schaetzen" ? `<p class="muted small quiz-note">Nur ein Versuch – kleine Tippfehler sind kein Problem.</p>` : `<p class="muted small quiz-note">Kommazahlen mit Komma, z. B. 9,1</p>`}`}</div>`
         : `<div class="geo-results">${quizResultsHtml(v, st)}</div>
-           <div class="geo-actions"><button id="quiz-ready" class="btn primary">${st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Weiter"}</button>
-             ${G.isHost ? `<button id="quiz-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+           <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="quiz-ready"', hostAttr: 'id="quiz-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Weiter", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>`;
       main = `<div class="geo-bar">${label}<div class="geo-scores">${quizChips(v, st)}</div>
           ${st.step === "ask" ? `<div id="quiz-timer" class="slf-timer">${Math.ceil((st.endsIn || 0) / 1000)} s</div>` : ""}</div>
         <div class="panel quiz-card">${q}${foot}</div>`;

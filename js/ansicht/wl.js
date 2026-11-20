@@ -97,9 +97,9 @@
           <div class="wl-word ${r.ids.includes(pid) ? "hit" : ""} ${flip ? "flip" : ""}" style="--pc:${colorOf(pid)}"><span class="wl-who"><i class="pdot"></i>${esc(nameOf(pid))}</span><b>${esc(w)}</b></div>`).join("")}</div>
         <div class="${flip ? "wl-late" : ""}">${r.hit
           ? `<div class="banner win"><div class="trophy">🎉</div><b>Gleiche Wellenlänge!</b> „${esc(r.word)}“ – +${st.nextPoints} Punkte
-              <div class="banner-actions"><button id="wl-next" class="btn primary">${st.impulse >= st.rounds ? "Zum Ergebnis" : "Nächster Impuls"}</button></div></div>`
+              <div class="banner-actions"><button id="wl-next" class="btn primary next-btn">${st.impulse >= st.rounds ? "Zum Ergebnis" : "Nächster Impuls"}</button></div></div>`
           : `<div class="banner row"><div class="banner-text"><b>Knapp daneben!</b> ${st.attempt >= st.maxTries ? "Das war der letzte Versuch." : "Im nächsten Versuch werden eure Wörter zum Impuls."}</div>
-              <div class="banner-actions"><button id="wl-next" class="btn primary">${st.attempt >= st.maxTries ? "Weiter" : "Nächster Versuch"}</button>
+              <div class="banner-actions"><button id="wl-next" class="btn primary next-btn">${st.attempt >= st.maxTries ? "Weiter" : "Nächster Versuch"}</button>
               ${st.attempt < st.maxTries ? `<button id="wl-giveup" class="btn ghost sm">Aufgeben</button>` : ""}</div></div>`}</div>`;
     } else if (st.step === "final") {
       const max = st.rounds * 10;

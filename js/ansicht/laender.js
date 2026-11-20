@@ -82,7 +82,7 @@
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     if (landRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
       { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = landChips(v, st); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = landResults(v, st); }
-      if (st.step === "reveal") { const rb = app.querySelector("#land-ready"); if (rb) rb.textContent = st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land"; }
+      if (st.step === "reveal") G.nextBtnSwap("#land-ready", { attr: 'id="land-ready"', label: st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "landReady" }));
       return;
     }
     if (st.step === "guess" && (!landRendered || !landRendered.startsWith(v.code + ":" + st.round + ":"))) { landMine = null; landSent = null; }
@@ -105,8 +105,7 @@
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.targetName)}</div></div>
           <div class="geo-results">${landResults(v, st)}</div>
-          <div class="geo-actions"><button id="land-ready" class="btn primary">${st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land"}</button>
-            ${G.isHost ? `<button id="land-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>
+          <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="land-ready"', hostAttr: 'id="land-next"', label: st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>
         </div>
         <div class="geo-wrap"><div id="land-map" class="geo-map land-map"></div></div>`;
     } else {

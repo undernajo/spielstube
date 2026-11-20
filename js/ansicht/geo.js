@@ -76,7 +76,7 @@
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
       { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
-      if (st.step === "reveal") { const rb = app.querySelector("#geo-ready"); if (rb) rb.textContent = st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"; }
+      if (st.step === "reveal") G.nextBtnSwap("#geo-ready", { attr: 'id="geo-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "geoReady" }));
       return;
     }
     if (st.step === "guess" && (!geoRendered || !geoRendered.startsWith(v.code + ":" + st.round + ":"))) { geoMine = null; geoSent = null; }
@@ -106,8 +106,7 @@
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.place.name)}</div></div>
           <div class="geo-results">${geoResults(v, st)}</div>
-          <div class="geo-actions"><button id="geo-ready" class="btn primary">${st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort"}</button>
-            ${G.isHost ? `<button id="geo-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>
+          <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="geo-ready"', hostAttr: 'id="geo-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
     } else {

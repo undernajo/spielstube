@@ -94,7 +94,7 @@
           <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>
           <div class="banner-actions">${iGuess && r.winner === st.asker && !r.voided && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}
             ${cp && cp.state === "open" ? "" : st.step === "final" ? `<button id="fq-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
-            : seated || G.isHost ? `<button id="fq-next" class="btn primary">Nächste Runde</button>` : ""}</div></div>`;
+            : seated || G.isHost ? `<button id="fq-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`;
     }
     app.innerHTML = `
       <main class="screen game slf du fq">

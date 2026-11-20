@@ -46,14 +46,13 @@
       + (st.mode === "bus" ? ":" + st.q + ":" + st.revealed + ":" + JSON.stringify(st.pick || {}) + ":" + JSON.stringify(st.guessed || {}) + ":" + JSON.stringify(st.status || {}) : "");
     if (kgRendered === key && app.querySelector(".kg-main")) {
       const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = kgChips(v, st);
-      if (st.step === "reveal") { const rb = app.querySelector("#kg-ready"); if (rb) rb.textContent = st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"; }
+      if (st.step === "reveal" || st.step === "roundEnd") G.nextBtnSwap("#kg-ready", { attr: 'id="kg-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) }, () => send({ type: "kgReady" }));
       return;
     }
     kgRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
-    const readyBtn = `<div class="geo-actions"><button id="kg-ready" class="btn primary">${st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"}</button>
-      ${G.isHost ? `<button id="kg-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+    const readyBtn = `<div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="kg-ready"', hostAttr: 'id="kg-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) })}</div>`;
     let main = "";
     if (st.step === "final") {
       const ranking = st.seats.slice().sort((a, b) => (st.total[b] || 0) - (st.total[a] || 0)), medal = ["🥇", "🥈", "🥉"];
@@ -63,7 +62,7 @@
           <span class="slf-name">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0} Punkte</b></div>`).join("")}
           <p class="muted small">${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
     } else if (st.mode === "bus") {
-      main = busMainHtml(v, st, colorOf, nameOf);
+      main = busMainHtml(v, st, colorOf, nameOf, readyBtn);
     } else if (st.mode === "siebzehn") {
       const gk = st.gid + ":" + st.round;
       // Hat die eigene letzte Karte die Runde beendet (21, über 21 oder als Letzter fertig), bleibt der Tisch kurz stehen:
@@ -266,7 +265,7 @@
     return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
   }
   const BUS_VAL = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
-  function busMainHtml(v, st, colorOf, nameOf) {
+  function busMainHtml(v, st, colorOf, nameOf, readyBtn) {
     const gk = st.gid + ":bus:" + st.round, seated = st.seats.includes(G.myId), me = seated ? st.status[G.myId] : null;
     const rankOfId = (c) => c.split("-")[1];
     const order = seated ? [G.myId, ...st.seats.filter((id) => id !== G.myId)] : st.seats;
@@ -291,8 +290,7 @@
       const rows = st.seats.slice().sort((a, b) => st.gain[b] - st.gain[a]).map((id) => `<div class="kg-res ${st.gain[id] ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span>
           <span class="muted small">${st.status[id] === "crash" ? "💥 verunglückt" : st.status[id] === "done" ? "🏁 alle 5 Stationen!" : "🚏 ausgestiegen"}</span><span></span><b class="qb-plus">+${st.gain[id]}</b></div>`).join("");
       top = `${ladder}<div class="kg-results">${rows}</div>
-        <div class="geo-actions"><button id="kg-ready" class="btn primary">${st.ready[G.myId] ? "Warte auf die anderen … (zurücknehmen)" : st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde"}</button>
-          ${G.isHost ? `<button id="kg-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div>`;
+        ${readyBtn}`;
     } else {
       const q = st.question, h = st.hands[G.myId] || [], mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
       const ref = st.q === 1 && h[0] ? `Deine erste Karte: <b>${esc(kgName(h[0]))}</b>` : st.q === 2 && h[1] ? `Zwischen <b>${esc(BUS_VAL[rankOfId(h[0])])}</b> und <b>${esc(BUS_VAL[rankOfId(h[1])])}</b>?` : "";

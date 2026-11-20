@@ -57,7 +57,7 @@
         : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
       if (st.step === "roundEnd") action = `<div class="banner ${iWon ? "win" : seated ? "lose" : ""}"><b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>
           <div class="small">${reason}</div>
-          <div class="banner-actions">${seated || G.isHost ? `<button id="du-next" class="btn primary">Nächste Runde</button>` : ""}</div></div>`;
+          <div class="banner-actions">${seated || G.isHost ? `<button id="du-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`;
       else action = `<div class="banner win"><div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[opp(r.winner)]}!</b>
           <div class="small">${reason}</div>
           <div class="banner-actions"><button id="du-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>`;

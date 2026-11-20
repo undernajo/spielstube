@@ -151,8 +151,7 @@
         <div class="slf-cards ${fresh ? "enter" : ""}">${cards}</div>
         <p class="muted small slf-hint">Tippe 👎, wenn eine Antwort nicht gilt – stimmt die Mehrheit der anderen dagegen, zählt sie nicht.</p>
         <div class="slf-actions">
-          <button id="slf-ready" class="btn ${iReady ? "ghost" : "primary"} big">${iReady ? "Warte auf die anderen … (zurücknehmen)" : !last ? "Weiter zur nächsten Kategorie" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde"}</button>
-          ${G.isHost ? `<button id="slf-next" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}
+          ${G.nextBtnsHtml({ attr: 'id="slf-ready"', hostAttr: 'id="slf-next"', cls: "big", label: !last ? "Weiter zur nächsten Kategorie" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde", ready: !!iReady, waiting: G.waitingNames(v, st.ready) })}
         </div>`;
     } else if (st.step === "final") {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));

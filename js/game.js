@@ -1728,10 +1728,8 @@
         ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "Passen"}</button>`
         : isHost && !cur.connected ? `<div class="banner row"><div class="banner-text"><b>${esc(cur.name)}</b> ist getrennt.</div><button id="skip" class="btn ghost sm">Überspringen</button></div>` : "";
     } else if (v.phase === "roundEnd") {
-      const ids = v.players.filter((p) => p.connected && !p.paused).map((p) => p.id), nAll = ids.length, nReady = ids.filter((id) => v.ready && v.ready[id]).length; // Zähler nur, solange man selbst wartet
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
-        <div class="banner-actions"><button id="next" class="btn primary" ${v.ready && v.ready[myId] ? `title="Nochmal tippen zum Zurücknehmen"` : ""}>${v.ready && v.ready[myId] ? `Bereit ✓ – warte (${nReady}/${nAll}) …` : "Nächste Runde"}</button>
-        ${isHost ? `<button id="next-now" class="btn ghost sm">Als Gastgeber sofort weiter</button>` : ""}</div></div>`;
+        <div class="banner-actions">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}</div></div>`;
     } else {
       const w = v.players.filter((p) => v.winners.includes(p.id));
       const iWon = v.winners.includes(myId);
@@ -1968,6 +1966,27 @@
     return `<span class="gtag" style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span><b>${esc(g.name)}</b></span>`;
   }
   // Kopfzeile der Spielbildschirme: Marke Spielstube · großer Spieltitel · Infos · Knöpfe
+  // Gemeinsamer „Weiter“-Knopf für alle Spiele: gelb, solange man selbst noch nicht bereit ist; danach ruhig mit
+  // „✓ Bereit – warte auf …“ (nochmal tippen nimmt zurück). Der Gastgeber bekommt daneben „Als Gastgeber sofort weiter“.
+  // attr / hostAttr: z. B. 'id="geo-ready"' bzw. 'id="geo-next"'; waiting: Namen derer, auf die man noch wartet.
+  function nextBtnsHtml({ attr, hostAttr, label, ready, waiting = [], cls = "" }) {
+    const who = !waiting.length ? "gleich geht's weiter" : waiting.length <= 2 ? "warte auf " + waiting.map(esc).join(" & ") : `warte auf ${waiting.length} Mitspieler`;
+    return `<button ${attr} class="btn primary next-btn ${cls} ${ready ? "is-ready" : ""}">${ready
+      ? `<span class="nb-main">✓ Bereit</span> <span class="nb-wait">– ${who}</span><span class="nb-undo">zurücknehmen</span>` : esc(label)}</button>`
+      + (isHost && hostAttr ? `<button ${hostAttr} class="btn ghost sm next-host">Als Gastgeber sofort weiter</button>` : "");
+  }
+  // beim Zwischenaktualisieren (ohne neu zu zeichnen) nur den Weiter-Knopf austauschen
+  function nextBtnSwap(sel, opts, fn) {
+    const el = app.querySelector(sel); if (!el) return;
+    const t = document.createElement("div"); t.innerHTML = nextBtnsHtml({ ...opts, hostAttr: null });
+    const nb = t.firstElementChild; el.replaceWith(nb); nb.onclick = fn;
+  }
+  // Namen der verbundenen, nicht pausierten Mitspieler (ohne mich), die noch nicht bereit sind
+  function waitingNames(v, ready, ids) {
+    const isReady = (id) => (Array.isArray(ready) ? ready.includes(id) : !!(ready && ready[id]));
+    return v.players.filter((p) => p.connected && !p.paused && p.id !== myId && (!ids || ids.includes(p.id)) && !isReady(p.id)).map((p) => p.name);
+  }
+
   function headBrandHtml(key) {
     const g = GAMES.find((x) => x.key === key) || GAMES[0];
     // In Querbeet steht die Etappe als kleines Abzeichen neben dem Spielnamen (statt einer Leiste, die etwas überdecken könnte)
@@ -2714,6 +2733,9 @@
     esc,
     fitGeoMaps,
     headBrandHtml,
+    nextBtnsHtml,
+    nextBtnSwap,
+    waitingNames,
     invite,
     get isHost() { return isHost; }, set isHost(v) { isHost = v; },
     leave,

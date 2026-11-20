@@ -154,7 +154,7 @@
         ${seated && st.handCount[me] ? `<div class="wshow">${st.shown && st.shown[me] ? `<span class="muted small">Deine Karten sind aufgedeckt.</span>` : `<button id="w-show" class="btn ghost sm">Meine Karten zeigen</button>`}</div>` : ""}
         <div class="banner-actions">${st.step === "final"
           ? `<button id="w-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
-          : seated ? `<button id="w-next" class="btn primary">${st.ready[me] ? "Warte auf den anderen … (zurücknehmen)" : "Nächste Runde"}</button>${G.isHost ? `<button id="w-force" class="btn ghost sm">Sofort weiter</button>` : ""}` : ""}</div></div>`;
+          : seated ? G.nextBtnsHtml({ attr: 'id="w-next"', hostAttr: 'id="w-force"', label: "Nächste Runde", ready: !!st.ready[me], waiting: G.waitingNames(v, st.ready, st.seats) }) : ""}</div></div>`;
     }
     const oppCards = st.reveal && st.reveal[opp] ? st.reveal[opp].map((c) => wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, wBack).join("");
     const myCards = !seated ? (st.reveal && st.reveal[self] ? st.reveal[self].map((c) => wCard(c)).join("") : Array.from({ length: st.handCount[self] || 0 }, wBack).join(""))
