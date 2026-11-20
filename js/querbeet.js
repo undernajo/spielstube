@@ -41,8 +41,8 @@
     siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus."], win: "Die meisten Punkte nach allen Runden." },
     bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
     stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
-    alm: { steps: ["*3 Würfel für alle* – jeder nimmt einen (Gelände + Zahl).", "*Bis zu so viele Felder* dieses Geländes ankreuzen – angrenzend, Start am Hof.", "*Fläche voll* = ihre Punkte (Zahl im Eck)."], win: "Die meisten Punkte nach 6 Wochen." },
-    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die größte Strecke nach 8 Runden." },
+    alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 6 Wochen." },
+    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 8 Runden." },
   };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
