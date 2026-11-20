@@ -159,6 +159,29 @@
   }
 
   // Joker setzen / zurücknehmen – vor einer Etappe (nicht vor dem Finale), einmal pro Partie
+  // Gastgeber überspringt die angekündigte Etappe: an ihre Stelle kommt ein anderes Spiel (die Meisterschaft bleibt gleich lang).
+  // Bevorzugt ein Spiel, das noch nicht im Plan ist und nicht zur selben Art wie die Nachbar-Etappen gehört.
+  function skipStage(q, players) {
+    const i = q.idx + 1, cur = q.plan[i];
+    if (!cur || !(q.step === "intro" || q.step === "break")) return false;
+    // schon abgelehnte Spiele für diese Etappe kommen nicht wieder – erst wenn alle durch sind, geht es von vorn los
+    const tried = q.skipped && q.skipped.at === i ? q.skipped.tried.concat(cur.game) : [cur.game];
+    const all = eligible(q.opts.off, players).filter((g) => g !== cur.game);
+    if (!all.length) return false;
+    let games = all.filter((g) => !tried.includes(g)), fresh = tried;
+    if (!games.length) { games = all; fresh = [cur.game]; }
+    const prev = q.plan[i - 1], next = q.plan[i + 1], kinds = [prev, next].filter(Boolean).map((x) => STAGES[x.game].kind);
+    const left = q.plan.slice(i).map((x) => x.game), done = q.plan.slice(0, i).map((x) => x.game);
+    const score = (g) => (left.includes(g) ? 4 : 0) + (done.includes(g) ? 2 : 0) + (kinds.includes(STAGES[g].kind) ? 1 : 0) + (prev && prev.game === g ? 8 : 0);
+    const best = Math.min(...games.map(score)), game = pick(games.filter((g) => score(g) === best));
+    q.plan[i] = { game, opts: stageOpts(game, q.opts.theme, q.opts.level) };
+    // „statt …“ nennt das ursprünglich geplante Spiel
+    q.skipped = { at: i, from: q.skipped && q.skipped.at === i ? q.skipped.from : cur.game, tried: fresh };
+    q.ready = {};
+    if (q.joker) Object.keys(q.joker).forEach((id) => { if (q.joker[id] === i) delete q.joker[id]; }); // Joker für diese Etappe neu überlegen
+    return true;
+  }
+
   function setJoker(q, pid, on) {
     const next = q.idx + 1;
     if (q.opts.joker === false || !(q.step === "intro" || q.step === "break") || next >= q.plan.length - 1) return false;
@@ -202,5 +225,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { LENGTHS, POINTS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { skipStage, LENGTHS, POINTS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

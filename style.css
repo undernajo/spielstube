@@ -3020,3 +3020,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-note-box.bad { background: color-mix(in srgb, var(--bad) 16%, #17133d); border: 2px solid color-mix(in srgb, var(--bad) 65%, transparent); } .bb-note-box.bad > b { color: #ff9aa2; }
 .bb-note-box.safe { background: color-mix(in srgb, var(--ok) 12%, #17133d); border: 2px solid color-mix(in srgb, var(--ok) 55%, transparent); } .bb-note-box.safe > b { color: #7ee2b1; }
 @media (prefers-reduced-motion: reduce) { .bb-boom { display: none; } .bb-stop.crash, .bb-slot.crash { animation: none; } }
+/* Stubenmeisterschaft: „Anderes Spiel“ für die angekündigte Etappe (nur Gastgeber) */
+.qb-skip { margin-left: auto; padding: 8px 14px; font-size: .88rem; }
+.qb-skipped { text-transform: none; letter-spacing: 0; color: var(--accent); font-weight: 700; }
+@media (max-width: 760px) { .qb-skip { margin-left: 0; flex-basis: 100%; } }

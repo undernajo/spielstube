@@ -514,6 +514,7 @@
       return true;
     }
     if (a.type === "qbJoker") return S.phase === "querbeet" && QB.setJoker(q, pid, !!a.on);
+    if (a.type === "qbSkip") return host && S.phase === "querbeet" && QB.skipStage(q, S.players.filter((p) => p.connected && !p.paused).length);
     if (a.type === "qbRestart") {
       if (!host || q.step !== "final") return false;
       const nq = QB.create(q.opts, S.players.filter((p) => p.connected && !p.paused).length);
@@ -548,6 +549,7 @@
       step: q.step, idx: q.idx, n: q.plan.length, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready },
       done: qbStageDone(), cur: info(qbStage()), next: info(nextSt), lastDouble: q.idx + 1 === q.plan.length - 1,
       stages: q.stages.map((x) => ({ game: x.game, res: x.res })), winners: q.step === "final" ? QB.winners(q) : null,
+      skipped: q.skipped && q.skipped.at === q.idx + 1 && (q.step === "intro" || q.step === "break") ? QB.STAGES[q.skipped.from].name : null,
       joker: { ...(q.joker || {}) }, jokerOn: q.opts.joker !== false, theme: q.opts.theme || "mix", titles: q.step === "final" ? QB.titles(q, S.players.map((p) => p.id)) : null,
     };
   }

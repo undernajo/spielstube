@@ -100,11 +100,11 @@
         <li class="win"><span class="n">🏆</span><span><b>Etappensieg:</b> ${bold(n.how.win)}</span></li></ol>` : `<p>${esc(n.rule)}</p>`;
     const nextCard = (n, isFinal) => { const g = qbGame(n.game), jk = qbJokerHtml(q, isFinal), demo = window.S10Demo && S10Demo.has(n.game);
       return `<div class="panel qb-next ${jk ? "with-joker" : ""} ${demo ? "with-demo" : ""}" style="--gc:${g.color}" data-demo="${demo ? esc(n.game) : ""}">
-        <div class="qbn-head"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}</div>
+        <div class="qbn-head"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}${q.skipped ? `<span class="qb-skipped"> · statt ${esc(q.skipped)}</span>` : ""}</div>
           <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div></div>
         ${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : ""}
         <div class="qbn-info">${howHtml(n)}</div>
-        ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div></div>`; };
+        ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}${G.isHost ? `<button type="button" class="btn ghost qb-skip" data-qbskip>🔄 Anderes Spiel</button>` : ""}</div></div>`; };
     {
       const ak = v.code + ":" + q.stages.length + ":" + (q.step === "intro" ? "intro" : "stand");
       if (ak !== qbAnimKey) { qbAnimT = qbAnimKey && q.step !== "intro" && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? Date.now() : 0; qbAnimKey = ak; }
@@ -152,6 +152,7 @@
     on("#qb-restart", () => send({ type: "qbRestart" }));
     on("#toLobby", () => send({ type: "lobby" }));
     app.querySelectorAll("[data-qb]").forEach((b) => b.onclick = () => send({ type: b.dataset.qb === "go" ? "qbGo" : "qbReady" }));
+    app.querySelectorAll("[data-qbskip]").forEach((b) => b.onclick = () => send({ type: "qbSkip" }));
     app.querySelectorAll("[data-qbjoker]").forEach((b) => b.onclick = () => send({ type: "qbJoker", on: b.dataset.qbjoker === "on" }));
   }
 
