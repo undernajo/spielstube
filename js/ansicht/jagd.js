@@ -76,7 +76,7 @@
   // ---------- Animationen: wann ein Schuss/Fund zum ersten Mal zu sehen war ----------
   // Zeitbasiert, damit Neuzeichnen (z. B. wenn ein Mitspieler schießt) eine laufende Animation an derselben Stelle fortsetzt.
   // Beim ersten Anzeigen (Seite neu geladen, später dazugekommen) ist alles „alt“ und wird nicht animiert.
-  const born = new Map();
+  const born = new Map(), scopeHeard = new Set();
   let bornReady = false, seeding = false;
   const reduce = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
   function age(key) {
@@ -156,7 +156,9 @@
     // Hochsitz: Fernglas-Blick öffnet sich über dem beobachteten 3×3-Bereich
     let scopeFx = "";
     if (fxOn && o.scout && o.scout.cells) {
-      const e = age(rev + ":scope:" + o.scout.cells.join(","));
+      const sk = rev + ":scope:" + o.scout.cells.join(","), e = age(sk);
+      // Fernglas-Geräusch zusammen mit dem Fernglas-Blick (einmal, wenn das Ergebnis neu da ist)
+      if (e < 400 && !scopeHeard.has(sk)) { scopeHeard.add(sk); SND.hochsitz(); }
       if (e < 800) {
         const area = o.scout.center != null ? J.area3(o.scout.center) : o.scout.cells;
         const rs = area.map((i) => Math.floor(i / N)), cs = area.map((i) => i % N), r0 = Math.min(...rs), c0 = Math.min(...cs);
@@ -273,11 +275,14 @@
       const acts = !seated || iShot ? "" : aim.scope
         ? `<button type="button" class="btn ghost" data-jact="scope">✕ Abbrechen</button>
           <button type="button" class="btn primary" data-jact="observe" ${aim.sc != null ? "" : "disabled"}>🔭 Beobachten</button>`
-        : `<button type="button" class="btn ghost" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz${myScout ? " ✓" : ""}</button>
+        : `<button type="button" class="btn ghost" data-jact="scope" ${canScout ? "" : "disabled"} title="Einmal pro Partie, kostet keinen Schuss: 3×3 beobachten – nur du siehst das Ergebnis">🔭 Hochsitz<small class="jhs">${myScout ? "benutzt" : "1× pro Jagd"}</small></button>
           ${fine() ? "" : `<button type="button" class="btn primary" data-jact="shoot" ${aim.i != null ? "" : "disabled"}>${RET} Schießen</button>`}`;
       // PC: oben rechts, wer wo jagt, und die Knöpfe (Zuschauer: Reviere zum Durchblättern)
+      // Wild eines Reviers als Symbole – erlegtes ausgegraut
+      const wildRow = (id) => `<div class="jwild">${ANIMALS.map((a) => `<span class="${st.left[id].includes(a.id) ? "" : "gone"}" title="${a.name}${st.left[id].includes(a.id) ? "" : " – erlegt"}">${ICON[a.id]}</span>`).join("")}</div>`;
       const pickPanel = seated
-        ? `<section class="panel jpick"><span class="game-label">Deine Jagd</span><p class="jwho">Du jagst in <b style="color:${colorOf(v, myT)}">${esc(gen(nameOf(v, myT)))}</b> Revier${st.seats.length > 2 ? ` · in deinem jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b>` : ""}.</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
+        ? `<section class="panel jpick" style="--pc:${colorOf(v, myT)}"><span class="game-label">Du jagst in</span><h3 class="jrevname">${esc(gen(nameOf(v, myT)))} Revier</h3>
+            ${wildRow(myT)}<p class="jtask">${task}</p>${acts ? `<div class="jacts">${acts}</div>` : ""}</section>`
         : `<section class="panel jpick"><span class="game-label">Reviere</span><div class="jtabs jtabs-side">${tabs}</div></section>`;
       main = `<div class="jlayout">
           <section class="panel jtarget ${aim.scope ? "scoping" : ""}">
@@ -289,12 +294,17 @@
           <aside class="jside">
             ${pickPanel}
             <section class="panel jinfo">
-              <div class="jhead"><span class="game-label">Runde ${st.round}${st.rounds ? ` von ${st.rounds}` : ""}</span>${seated ? `<span class="muted small">🔭 Hochsitz ${myScout ? "benutzt" : "frei"}</span>` : ""}</div>
-              <div class="geo-scores">${chips}</div>
+              <div class="jhead"><span class="game-label">Jagdstrecke</span><span class="muted small">Runde ${st.round}${st.rounds ? ` von ${st.rounds}` : ""}</span></div>
+              <div class="jstand">${(() => { const rk = st.seats.slice().sort((a, b) => (st.pts[b] || 0) - (st.pts[a] || 0)), medal = ["🥇", "🥈", "🥉"];
+                return rk.map((id) => { const place = rk.filter((x) => (st.pts[x] || 0) > (st.pts[id] || 0)).length, kills = st.kills.filter((k) => k.by.includes(id));
+                  const on = (v.players.find((p) => p.id === id) || {}).connected, shot = st.picked.includes(id);
+                  return `<div class="jsrow ${id === me ? "me" : ""}" style="--pc:${colorOf(v, id)}"><span class="jsplace">${medal[place] || place + 1 + "."}</span><span class="pdot ${on ? "" : "off"}"></span>
+                    <span class="jsname">${esc(nameOf(v, id))}${id === me ? " <em>(du)</em>" : ""}</span><span class="jskills">${kills.map((k) => `<span title="${AN[k.a].name} aus ${esc(gen(nameOf(v, k.t)))} Revier">${ICON[k.a]}</span>`).join("")}</span>
+                    <b class="jspts">${st.pts[id] || 0}</b><span class="jsst ${shot ? "ok" : ""}" title="${shot ? "hat geschossen" : "zielt noch"}">${shot ? "✓" : "…"}</span></div>`; }).join(""); })()}</div>
               <p class="jtask">${task}</p>
               ${cur.length || st.last.length ? `<p class="muted small jlastline">${cur.length ? "Diese Runde" : "Letzte Runde"}: ${(cur.length ? cur : st.last).map((x) => `<b style="color:${colorOf(v, x.by)}">${esc(nameOf(v, x.by))}</b> → ${esc(nameOf(v, x.t))}: ${resTxt(x)}`).join(" · ")}</p>` : ""}
             </section>
-            ${seated ? `<section class="panel jmine"><h3>Dein Revier</h3>${boardHtml(v, { rev: me, shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me), small: true })}</section>` : ""}
+            ${seated ? `<section class="panel jmine"><div class="jhead"><h3>Dein Revier${hunter ? ` <span class="muted small">· hier jagt <b style="color:${colorOf(v, hunter)}">${esc(nameOf(v, hunter))}</b></span>` : ""}</h3>${wildRow(me)}</div>${boardHtml(v, { rev: me, shots: st.shots[me], kills: st.kills.filter((k) => k.t === me), hide: myHide, last: recent(me), small: true })}</section>` : ""}
           </aside>
         </div>`;
       if (acts) bar = `<div class="jbar">${acts}</div>`;
@@ -342,7 +352,7 @@
     // Zielen & Schießen
     app.querySelectorAll("[data-jt]").forEach((b) => b.onclick = () => { aim.t = b.dataset.jt; aim.i = null; renderJagd(); });
     // Hochsitz-Klang beim Hinaufsteigen (Knopf), nicht erst beim Beobachten; Abbrechen bleibt still
-    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; if (aim.scope) SND.hochsitz(); renderJagd(); });
+    app.querySelectorAll('[data-jact="scope"]').forEach((b) => b.onclick = () => { aim.scope = !aim.scope; aim.sc = null; renderJagd(); });
     const observe = () => { if (aim.sc == null) return; send({ type: "jgScout", t: aim.t, i: aim.sc }); aim.scope = false; aim.sc = null; renderJagd(); };
     const fire = () => { if (aim.i == null) return; sentKey = roundKey; shotAt = Date.now(); SND.schuss(); send({ type: "jgShoot", round: st.round, t: aim.t, i: aim.i }); renderJagd(); };
     app.querySelectorAll('[data-jact="observe"]').forEach((b) => b.onclick = observe);

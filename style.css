@@ -2505,3 +2505,49 @@ body.qb-play .banner.win .trophy { display: none; }
   pointer-events: none; animation: qb-gain 1.4s ease-out both; }
 @keyframes qb-gain { 0% { transform: translateY(6px); opacity: 0; } 20% { transform: none; opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(-10px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .qb-gain { display: none; } }
+
+/* Jagd, rechte Spalte: oben das Ziel (Revier, Wild dort, Aufgabe, Hochsitz), darunter die Jagdstrecke, unten dein Revier */
+.jpick { border-top: 3px solid var(--pc); }
+.jpick .game-label { margin: 0; }
+.jrevname { margin: -4px 0 0; font-size: 1.2rem; color: var(--pc); }
+.jpick .jtask { margin: 0; font-size: .92rem; line-height: 1.35; }
+.jwild { display: flex; gap: 6px; }
+.jwild span { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(255, 255, 255, .06); }
+.jwild span svg { width: 82%; height: 82%; display: block; }
+.jwild span.gone { opacity: .3; filter: grayscale(1); position: relative; }
+.jwild span.gone::after { content: ""; position: absolute; left: 10%; right: 10%; top: 50%; height: 2px; background: #ff8a8a; transform: rotate(-30deg); }
+.jmine .jwild span { width: 24px; height: 24px; }
+.jmine .jhead { margin-bottom: 6px; } .jmine .jhead h3 { margin: 0; }
+.jmine .jwild { margin-bottom: 8px; justify-content: center; }
+.jacts .btn { display: grid; justify-items: center; gap: 0; line-height: 1.15; }
+.jhs { font-size: .68rem; font-weight: 700; opacity: .75; }
+/* Jagdstrecke: Platz, Name, erlegte Tiere, Punkte, geschossen? */
+.jstand { display: grid; gap: 4px; }
+.jsrow { display: grid; grid-template-columns: 26px auto minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 10px; background: rgba(255, 255, 255, .04); border-left: 3px solid var(--pc); }
+.jsrow.me { background: color-mix(in srgb, var(--pc) 12%, transparent); }
+.jsrow .pdot { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); } .jsrow .pdot.off { opacity: .3; }
+.jsname { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .jsname em { font-weight: 600; color: var(--muted); font-style: normal; font-size: .8em; }
+.jskills { display: flex; gap: 1px; } .jskills span { width: 20px; height: 20px; } .jskills svg { width: 100%; height: 100%; display: block; }
+.jspts { font-size: 1.05rem; min-width: 1.4em; text-align: right; }
+.jsst { width: 1.2em; text-align: center; color: var(--muted); } .jsst.ok { color: #7ee2b1; }
+@media (min-width: 861px) { .jinfo .jtask { display: none; } } /* am PC steht die Aufgabe oben beim Ziel */
+@media (max-width: 860px) {
+  /* Handy: Jagdstrecke kompakt unter der Kopfzeile, Aufgabe und letzte Runde darunter */
+  /* links „Jagdstrecke / Runde“, rechts die Jäger nebeneinander (seitlich wischbar) – so hoch wie vorher die Chips */
+  .jinfo { grid-template-columns: auto minmax(0, 1fr); }
+  .jstand { display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  .jsrow { flex: none; display: flex; gap: 4px; padding: 3px 8px; border-left-width: 3px; }
+  .jsplace { font-size: .8rem; } .jsname { font-size: .86rem; max-width: 7em; } .jskills span { width: 15px; height: 15px; } .jspts { font-size: .92rem; min-width: 0; }
+  .jbar .jhs { display: none; } /* „1× pro Jagd“ passt in der Leiste nicht – der Knopf ist nach Gebrauch ausgegraut */
+}
+.jpick .jrevname { margin: -4px 0 0; font-size: 1.25rem; font-weight: 800; color: var(--pc); }
+/* Jagd, rechte Spalte am PC kompakt: Wild und Hochsitz-Knopf in einer Zeile, eigenes Wild in der Überschrift */
+@media (min-width: 861px) {
+  .jpick { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "label label" "name name" "wild acts" "task task"; gap: 6px 10px; align-items: center; }
+  .jpick > .game-label { grid-area: label; } .jpick .jrevname { grid-area: name; margin: -2px 0 0; } .jpick .jwild { grid-area: wild; }
+  .jpick .jacts { grid-area: acts; display: flex; } .jpick .jacts .btn { min-height: 38px; padding: 4px 12px; }
+  .jpick .jtask { grid-area: task; }
+  .jmine .jhead { margin-bottom: 6px; } .jmine .jhead h3 { font-size: .95rem; }
+  .jmine .jwild { margin: 0; gap: 3px; } .jmine .jwild span { width: 20px; height: 20px; border-radius: 6px; }
+  .jinfo { gap: 6px; } .jstand { gap: 3px; } .jsrow { padding: 3px 8px; }
+}
