@@ -119,8 +119,10 @@
     const oppCards = st.reveal && st.reveal[opp] ? st.reveal[opp].map((c) => G.wCard(c, "sm")).join("") : Array.from({ length: st.handCount[opp] || 0 }, G.wBack).join("");
     // neu gezogene Karten merken (eigene und Anzahl beim Gegner)
     if (xDraw.round !== st.roundNo) xDraw = { round: st.roundNo, cards: [], opp: 0 };
+    // Nachgezogen nur, wenn die eigene Hand vorher schon bekannt war: Beim Gast kommen die Karten zu Rundenbeginn
+    // über einen eigenen Kanal etwas nach dem Spielstand – sonst gälten alle fünf als nachgezogen und flögen zusätzlich zum Austeilen
     if (xPrev && xPrev.round === st.roundNo) {
-      hand.filter((c) => !xPrev.cards.includes(c)).forEach((c) => { if (!xDraw.cards.includes(c)) xDraw.cards.push(c); });
+      if (xPrev.cards.length || !seated) hand.filter((c) => !xPrev.cards.includes(c)).forEach((c) => { if (!xDraw.cards.includes(c)) xDraw.cards.push(c); });
       const oc = st.handCount[opp] || 0; if (oc > xPrev.opp) xDraw.opp += oc - xPrev.opp;
     }
     xPrev = { round: st.roundNo, cards: hand.slice(), opp: st.handCount[opp] || 0 };
