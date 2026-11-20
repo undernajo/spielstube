@@ -2566,3 +2566,18 @@ body.qb-play .banner.win .trophy { display: none; }
 @media (prefers-reduced-motion: reduce) { .umriss-svg.fx-draw .u-line, .umriss-svg.fx-draw .u-fill { animation: none; stroke-dashoffset: 0; fill-opacity: .9; } }
 @keyframes u-draw { to { stroke-dashoffset: 0; } }
 @keyframes u-fill { to { fill-opacity: .9; } }
+
+/* Punkte-Chips: Zahl zählt hoch, Chip leuchtet in der Spielerfarbe, „+3“ steigt auf; Abzug ruckt rot (Verzögerung aus game.js) */
+.geo-score, .jsrow { position: relative; }
+.geo-score.fx-gain, .jsrow.fx-gain { animation: chip-glow 1.1s ease-out both; }
+@keyframes chip-glow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pc) 80%, transparent); background-color: color-mix(in srgb, var(--pc) 35%, #15123a); }
+  100% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--pc) 0%, transparent); } }
+.geo-score.fx-gain > b, .jsrow.fx-gain .jspts { animation: chip-num .5s cubic-bezier(.2, 1.8, .4, 1) both; animation-delay: inherit; display: inline-block; }
+@keyframes chip-num { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.chip-plus { position: absolute; right: 4px; top: -4px; z-index: 3; padding: 0 6px; border-radius: 99px; background: var(--pc); color: #15123a; font: 800 .72rem Nunito, sans-serif;
+  pointer-events: none; animation: chip-plus 1.3s ease-out both; }
+@keyframes chip-plus { 0% { transform: translateY(6px); opacity: 0; } 20% { transform: translateY(-8px); opacity: 1; } 75% { opacity: 1; } 100% { transform: translateY(-20px); opacity: 0; } }
+.geo-score.fx-loss > b, .jsrow.fx-loss .jspts { animation: chip-loss .45s ease-in-out both; animation-delay: inherit; display: inline-block; color: #ff8a8a; }
+@keyframes chip-loss { 0%, 100% { transform: none; } 30% { transform: translateX(-3px); } 60% { transform: translateX(3px); } }
+/* wischbare Chipzeilen (Handy): oben/seitlich Luft, damit „+3“ und Leuchten nicht abgeschnitten werden */
+@media (max-width: 860px) { .geo-scores, .jstand { padding-top: 16px; margin-top: -16px; padding-inline: 8px; margin-inline: -8px; padding-bottom: 8px; margin-bottom: -8px; } }

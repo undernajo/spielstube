@@ -1101,6 +1101,29 @@
     }
   });
   let lastLobbyGame = null, lastPhase = null;
+  // Punkte-Chips (oben in vielen Spielen, Jagdstrecke): ändert sich ein Punktestand, zählt die Zahl hoch, der Chip leuchtet in der
+  // Spielerfarbe und „+3“ steigt auf (Abzug: Zahl ruckt rot). Zeitbasiert je Spieler, damit Neuzeichnen die Animation fortsetzt.
+  const chipPts = new Map(), chipAnim = new Map();
+  function chipFx() {
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches, now = Date.now();
+    app.querySelectorAll(".geo-score, .jsrow").forEach((el) => {
+      const nm = el.querySelector(".geo-score-name, .jsname"), b = el.querySelector(".geo-score > b, .jspts");
+      if (!nm || !b) return;
+      const key = view.phase + ":" + nm.textContent.replace(/\(du\)/, "").trim(), pts = Number(b.textContent);
+      if (!Number.isFinite(pts)) return;
+      const prev = chipPts.get(key);
+      chipPts.set(key, pts);
+      // neue Änderung (nicht beim ersten Anzeigen, nicht beim Zurücksetzen auf 0 für eine neue Partie)
+      if (prev !== undefined && pts !== prev && !(pts === 0 && prev > 0) && !reduce) chipAnim.set(key, { from: prev, to: pts, t: now });
+      const a = chipAnim.get(key);
+      if (!a || a.to !== pts || now - a.t > 1300) return;
+      const e = now - a.t, d = a.to - a.from;
+      el.classList.add(d > 0 ? "fx-gain" : "fx-loss"); el.style.animationDelay = -e + "ms"; b.style.animationDelay = -e + "ms";
+      if (d > 0) el.insertAdjacentHTML("beforeend", `<span class="chip-plus" style="animation-delay:${-e}ms">+${d}</span>`);
+      const step = () => { if (!b.isConnected) return; const q = Math.min(1, (Date.now() - a.t) / 600); b.textContent = Math.round(a.from + d * (1 - Math.pow(1 - q, 3))); if (q < 1) requestAnimationFrame(step); };
+      step();
+    });
+  }
   function render() {
     document.documentElement.classList.toggle("s10-guest", !!view && !isHost); // Gäste am Handy: Kopfleiste ohne Organisatorisches
     document.documentElement.classList.toggle("s10-paused", iPause() && !isHost); // pausierte Gäste: Spiel nur ansehen
@@ -1118,6 +1141,7 @@
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else renderGame();
     camDockPlace();
+    chipFx();
     G.qbBarRender();
     if (view.lastEvent && view.lastEvent.id !== lastToastId) {
       if (lastToastId !== null && view.phase !== "lobby") {
