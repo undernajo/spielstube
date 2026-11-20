@@ -27,6 +27,8 @@
     // während der Buchstabe sich dreht, steht die Uhr noch still
     const ms = Math.max(0, slfDeadline - Math.max(Date.now(), slfStartAt));
     el.textContent = fmtClock(ms); el.classList.toggle("urgent", ms <= 10000);
+    const st = G.view.slf;
+    if (Date.now() >= slfStartAt) sfx.countdown("slf:" + G.view.code + ":" + st.round, ms, !(st.done[G.myId] || (st.stuck && st.stuck[G.myId])));
   }, 250);
 
   function slfChips(v, st) {

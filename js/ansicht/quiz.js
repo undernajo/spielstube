@@ -124,7 +124,7 @@
     const st = G.view && G.view.quiz;
     if (!st || st.step !== "ask") return;
     const el = document.getElementById("quiz-timer"), ms = Math.max(0, quizDeadline - Date.now());
-    if (el) { el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000); }
+    if (el) { el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000); sfx.countdown("quiz:" + G.view.code + ":" + st.round, ms, quizSent !== st.round); }
     const nh = document.getElementById("quiz-nexthint");
     if (nh && quizHintAt) { const left = Math.max(0, Math.ceil((quizHintAt - Date.now()) / 1000)); nh.textContent = left ? `nächster Hinweis in ${left} s` : "gleich kommt der nächste Hinweis …"; }
     if (ms <= 300) quizSubmit(); // Eingetipptes bei Zeitablauf abgeben

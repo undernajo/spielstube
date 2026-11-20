@@ -44,6 +44,7 @@
     if (!st || st.step !== "guess" || !el || st.endsIn == null) return;
     const ms = Math.max(0, geoDeadline - Date.now());
     el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000);
+    sfx.countdown("geo:" + G.view.code + ":" + st.round, ms, geoSent !== st.round);
     if (ms <= 300) geoSubmit(); // gesetzte Nadel bei Zeitablauf automatisch abgeben
     if (st.mode === "oben" && st.pic && obenMap) obenUpdate(st.pic);
   }, 250);
@@ -164,6 +165,7 @@
       });
     } else if (st.step === "reveal") {
       const target = [st.answer.lat, st.answer.lng], pts = [target];
+      if (revealFresh) sfx.goal();
       LF.marker(target, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-goal ${revealFresh ? "fx-pop" : ""}">★</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }), zIndexOffset: 1000 })
         .addTo(map).bindTooltip(esc(st.place.name), { permanent: true, direction: "top", offset: [0, -14], className: "geo-tip goal" });
       const kmTxt = (x) => (x < 10 ? x.toFixed(1).replace(".", ",") : Math.round(x).toLocaleString("de-DE")) + " km";
@@ -182,6 +184,7 @@
         const at = 500 + 700 * n++;
         setTimeout(() => {
           if (geoMap !== map) return; // inzwischen neu gezeichnet
+          sfx.plop();
           LF.marker(g, { icon: LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin fx-drop" style="--pc:${colorOf(p.id)}"></span>`, iconSize: [22, 22], iconAnchor: [11, 11] }) }).addTo(map);
           const line = LF.polyline([g, g], { color: colorOf(p.id), weight: 3, dashArray: "6 6", opacity: .9 }).addTo(map);
           const tip = LF.tooltip({ permanent: true, direction: "bottom", offset: [0, 10], className: "geo-tip" }).setLatLng(g).setContent(`${esc(p.name)}: 0 km`).addTo(map);

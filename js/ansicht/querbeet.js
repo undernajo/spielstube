@@ -45,7 +45,7 @@
   }
   // Gesamtwertung nach einer Etappe: „+5“ erscheint, Balken und Punkte wachsen, wer überholt, rutscht auf den neuen Platz.
   // Zeitbasiert (Start je Etappe), damit Neuzeichnen (jemand drückt „Bereit“) die Animation nur fortsetzt; nach Neuladen keine.
-  let qbAnimKey = null, qbAnimT = 0;
+  let qbAnimKey = null, qbAnimT = 0, qbWhooshT = 0;
   const QB_ANIM = 1500; // ms: Wachsen 0–700, Rutschen 850–1400
   function qbStandAnim(q, players) {
     const box = app.querySelector(".qb-standing"), e = Date.now() - qbAnimT;
@@ -54,6 +54,8 @@
     const oldPts = Object.fromEntries(players.map((p) => [p.id, (q.pts[p.id] || 0) - gain(p.id)]));
     const oldOrder = players.slice().sort((a, b) => oldPts[b.id] - oldPts[a.id]).map((p) => p.id);
     const rows = [...box.querySelectorAll(".qb-row[data-id]")], tops = rows.map((r) => r.getBoundingClientRect().top);
+    // jemand überholt: einmal „Wusch“, wenn die Zeilen zu rutschen beginnen
+    if (qbWhooshT !== qbAnimT) { qbWhooshT = qbAnimT; if (e < 850 && rows.some((r, i) => oldOrder.indexOf(r.dataset.id) !== i)) setTimeout(() => sfx.whoosh(), 850 - e); }
     const max = Math.max(1, ...Object.values(q.pts));
     rows.forEach((r, i) => {
       const id = r.dataset.id, g = gain(id), dy = tops[oldOrder.indexOf(id)] - tops[i];

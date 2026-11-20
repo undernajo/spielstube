@@ -24,6 +24,7 @@
       bar.style.width = (100 * left / st.timerMs) + "%";
       txt.textContent = left >= 60000 ? Math.floor(left / 60000) + ":" + String(Math.floor(left / 1000) % 60).padStart(2, "0") + " min" : Math.ceil(left / 1000) + " s";
       bar.parentNode.classList.toggle("urgent", left < 10000);
+      sfx.countdown("fq:" + v.code + ":" + st.round + ":" + st.step, left, (st.step === "write" || st.step === "judge" ? st.asker : st.step === "answer" ? st.guesser : null) === G.myId);
     }, 250);
     const key = [v.code, st.round, st.step, st.li, priv ? priv.answer + (priv.options ? "+" + priv.options.length : "") : "", st.question, st.guess, st.complaint ? st.complaint.state : "", st.result && st.result.voided].join(":");
     const activeId = st.step === "write" || st.step === "judge" ? st.asker : st.step === "answer" ? st.guesser : null;

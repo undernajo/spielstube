@@ -6,7 +6,7 @@
   } = G;
 
   // ---------- Schnapsen ----------
-  let xShown = { round: 0, n: 0 }, xHold = null, xFly = null;
+  let xShown = { round: 0, n: 0 }, xHold = null, xFly = null, xLaid = null;
   // Nachziehen sichtbar machen: neue Karten fliegen vom Stapel in die Hand (nach der Stich-Pause)
   let xPrev = null, xDraw = { round: 0, cards: [], opp: 0 }, xPrevAtout = null;
   // Erklärung im rechten Rand: „Was jetzt?“-Tipp passend zur Lage + kurze Anleitung
@@ -46,14 +46,18 @@
     const sn = (su) => SCH.SUIT_NAMES[su];
     // fertigen Stich kurz in der Mitte zeigen
     const nTricks = st.seats.reduce((a, id) => a + st.tricks[id], 0);
+    const laid = nTricks * st.seats.length + st.trick.length; // Karte auf dem Tisch: kurzes Klatschen (nicht nach Neuladen / neuer Runde)
+    if (xLaid && xLaid.round === st.roundNo && laid > xLaid.n) sfx.lay();
+    xLaid = { round: st.roundNo, n: laid };
     if (xShown.round !== st.roundNo) { xShown = { round: st.roundNo, n: nTricks }; xHold = null; }
-    if (xHold && st.trick.length) { xShown.n = nTricks; xHold = null; }
+    if (xHold && st.trick.length) { xShown.n = nTricks; xHold = null; sfx.sweep(); } // schnell weitergespielt: Stich trotzdem hörbar einsammeln
     if (nTricks > xShown.n && !xHold && st.lastTrick && !st.trick.length) {
       const held = xHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards }, hr = st.roundNo;
       // Stich in Ruhe zeigen, dann wandern die Karten zum Stapel des Gewinners
       setTimeout(() => {
         if (xHold !== held || xShown.round !== hr) return;
         const tr = app.querySelector(".wtrick");
+        sfx.sweep(); // Stich wird eingesammelt
         xFly = { winner: held.winner, from: tr ? [...tr.querySelectorAll(".wcard")].map((c) => c.getBoundingClientRect()) : [] };
         xShown.n = nTricks; xHold = null; if (G.view && G.view.phase === "schnapsen") renderSchnapsen();
       }, 1800);

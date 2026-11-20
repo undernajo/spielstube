@@ -24,6 +24,7 @@
       const left = Math.max(0, endAt - Date.now());
       bar.style.width = (100 * left / st.timerMs) + "%"; txt.textContent = Math.ceil(left / 1000) + " s";
       bar.parentNode.classList.toggle("urgent", left < 6000);
+      sfx.countdown("du:" + v.code + ":" + st.round + ":" + st.turn + ":" + st.moves.length, left, st.step === "turn" && st.turn === G.myId);
     }, 200);
     const key = [v.code, st.round, st.step, st.turn, st.moves.length, st.judge ? st.judge.text : ""].join(":");
     const pills = () => st.seats.map((id) => `<div class="du-pill ${st.step === "turn" && st.turn === id ? "on" : ""}" style="--pc:${colorOf(id)}">

@@ -1190,6 +1190,44 @@
       }),
     };
   })();
+  // weitere Klänge über die Bausteine aus klang.js (Nachhall, Rauschen)
+  {
+    const K = window.S10Klang, P = (fn) => K && K.play(sfx, fn);
+    let cd = { key: null, s: null, mine: false }, gongAt = 0;
+    Object.assign(sfx, {
+      // Uhr: leises Holz-Ticken in den letzten 5 s (letzte 3 heller), Gong bei 0
+      tickLow: () => P((c, t) => { K.noise(c, t, 0.025, { type: "bandpass", freq: 2200, q: 4, peak: 0.22 }); K.tone(c, t, 0.04, { f0: 900, peak: 0.05 }); }),
+      tickHigh: () => P((c, t) => { K.noise(c, t, 0.025, { type: "bandpass", freq: 3200, q: 4, peak: 0.28 }); K.tone(c, t, 0.05, { f0: 1300, peak: 0.07 }); }),
+      gong: () => { gongAt = Date.now(); P((c, t) => { [[196, .16], [294, .07], [392, .05], [523, .025]].forEach(([f, p]) => K.tone(c, t, 1.4, { f0: f, a: 0.004, peak: p, rev: 0.5 })); K.noise(c, t, 0.05, { freq: 600, peak: 0.12 }); }); },
+      // Countdown je Timer-Takt melden: key = Runde, ms = Restzeit, mine = man muss selbst noch etwas abgeben.
+      // Beim ersten Melden (Neuladen, Rundenbeginn) kein Ton; der Gong kommt, wenn man kurz vor 0 noch dran war.
+      countdown(key, ms, mine) {
+        const s = Math.ceil(Math.max(0, ms - 300) / 1000); // 0,3 s früher: bei Zeitablauf wird automatisch abgegeben und die Runde endet sofort
+        if (cd.key !== key) { cd = { key, s, mine }; return; }
+        if (s === cd.s) return; // „mine“ zählt zu Beginn jeder Sekunde (Abgabe bei Zeitablauf stört den Gong nicht)
+        const was = cd.s, wasMine = cd.mine; cd.s = s; if (s > 0) cd.mine = mine;
+        if (s > was) return;
+        if (s === 0) { if (wasMine) sfx.gong(); return; }
+        if (!mine) return;
+        if (s <= 3) sfx.tickHigh(); else if (s <= 5) sfx.tickLow();
+      },
+      // richtig / falsch
+      right: () => P((c, t) => { K.tone(c, t, 0.35, { type: "triangle", f0: 1318, peak: 0.13, rev: 0.35 }); K.tone(c, t + 0.07, 0.45, { type: "triangle", f0: 1976, peak: 0.09, rev: 0.35 }); }),
+      wrong: () => P((c, t) => { K.tone(c, t, 0.45, { f0: 175, f1: 120, peak: 0.28 }); K.tone(c, t, 0.3, { type: "triangle", f0: 233, f1: 165, peak: 0.07, filter: { type: "lowpass", freq: 900 } }); K.noise(c, t, 0.06, { freq: 400, peak: 0.15 }); }),
+      // Watten/Schnapsen: Karte auf den Tisch, Stich einsammeln
+      layAt: 0,
+      lay: () => (sfx.layAt = Date.now()) && P((c, t) => { K.noise(c, t, 0.06, { type: "bandpass", freq: 1500, q: 0.9, peak: 0.35, sweepTo: 700 }); K.tone(c, t, 0.07, { f0: 160, f1: 90, peak: 0.12 }); }),
+      sweep: () => P((c, t) => { for (let i = 0; i < 3; i++) K.noise(c, t + i * 0.05, 0.12, { type: "bandpass", freq: 2600 - i * 400, q: 0.8, a: 0.02, peak: 0.12 }); K.noise(c, t + 0.15, 0.08, { type: "bandpass", freq: 900, q: 1, peak: 0.18 }); }),
+      // Lobby: jemand kommt dazu
+      join: () => P((c, t) => { K.tone(c, t, 0.18, { type: "triangle", f0: 1046, peak: 0.08, rev: 0.25 }); K.tone(c, t + 0.1, 0.3, { type: "triangle", f0: 784, peak: 0.08, rev: 0.25 }); }),
+      // Erdkunde-Auflösung: Ziel erscheint, Nadel fällt
+      // (direkt nach dem Gong kein zweiter Ton)
+      goal: () => Date.now() - gongAt > 800 && P((c, t) => { K.tone(c, t, 0.5, { type: "triangle", f0: 1568, peak: 0.08, rev: 0.4 }); K.tone(c, t + 0.06, 0.5, { type: "triangle", f0: 2093, peak: 0.05, rev: 0.4 }); }),
+      plop: () => P((c, t) => { K.tone(c, t, 0.12, { f0: 520, f1: 180, peak: 0.2 }); K.noise(c, t, 0.03, { freq: 1200, peak: 0.08 }); }),
+      // Stubenmeisterschaft: jemand überholt
+      whoosh: () => P((c, t) => { K.noise(c, t, 0.35, { type: "bandpass", freq: 350, q: 1.4, a: 0.12, peak: 0.25, sweepTo: 2600 }); }),
+    });
+  }
 
   let qbQuiet = false; // während einer Querbeet-Etappe: kein Konfetti, leise Töne
   // Großes Finale: mehrere Wellen von links, rechts und aus der Mitte
@@ -1247,10 +1285,17 @@
       wStep: v.watten ? v.watten.step : null,
       xMine: !!(v.schnapsen && v.schnapsen.turn === myId),
       xStep: v.schnapsen ? v.schnapsen.step : null,
+      // Watten/Schnapsen: Anzahl gelegter Karten in der Runde (neue Karte = Klatschen)
+      laid: [v.watten, v.schnapsen].filter(Boolean).map((st) => st.roundNo + ":" + (st.seats.reduce((a, id) => a + st.tricks[id], 0) * st.seats.length + st.trick.length))[0] || null,
+      zRes: v.phase === "playing" && v.card ? v.round + ":" + v.card.q + ":" + v.card.items.filter((it) => it.r && !it.r.pending).length : null,
+      duFin: !!(v.duell && v.duell.step === "final"), fqFin: !!(v.frage && v.frage.step === "final"),
+      lobbyIds: v.phase === "lobby" ? v.players.map((p) => p.id) : null,
     };
     if (prev) {
       const needsMe = (now.myTurn && !prev.myTurn) || (now.mustJudge && !prev.mustJudge) || (now.mustVote && !prev.mustVote);
-      if (needsMe) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
+      // Zehnkampf: gerade wurde ein Feld aufgedeckt (Pling/Bong) – „Du bist dran“ erst danach
+      const zFresh = now.zRes && prev.zRes && now.zRes !== prev.zRes && now.zRes.split(":").slice(0, 2).join() === prev.zRes.split(":").slice(0, 2).join();
+      if (needsMe) { if (zFresh) setTimeout(sfx.turn, 700); else sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(120); } catch {} }
       if (now.geoKey && now.geoKey !== prev.geoKey) {
         if (v.geo.step === "guess") sfx.turn();
         if (v.geo.step === "final") { if (v.geo.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
@@ -1282,12 +1327,24 @@
         if (v.land.step === "reveal" && v.land.result && v.land.result[myId] && v.land.result[myId].ok) sfx.win();
         if (v.land.step === "final") { if (v.land.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
-      if (now.wMine && !prev.wMine) { sfx.turn(); if (navigator.vibrate) try { navigator.vibrate(80); } catch {} }
-      if (now.xMine && !prev.xMine) sfx.turn();
+      // gerade wurde eine Karte gelegt: „Du bist dran“ erst nach dem Klatschen
+      const laidFresh = now.laid && prev.laid && now.laid !== prev.laid && now.laid.split(":")[0] === prev.laid.split(":")[0];
+      const turnSoon = () => { const d = laidFresh ? 450 : 450 - (Date.now() - sfx.layAt); if (d > 0) setTimeout(sfx.turn, d); else sfx.turn(); };
+      if (now.wMine && !prev.wMine) { turnSoon(); if (navigator.vibrate) try { navigator.vibrate(80); } catch {} }
+      if (now.xMine && !prev.xMine) turnSoon();
       if (now.xStep === "final" && prev.xStep !== "final") { if ((v.schnapsen.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       if (now.wStep === "final" && prev.wStep !== "final") { if ((v.watten.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
+      // Listen-Duell / Erfinde die Frage: Sieg oder Niederlage (Zuschauer feiern nur mit)
+      for (const [k, f] of [["duell", "duFin"], ["frage", "fqFin"]]) {
+        if (!now[f] || prev[f]) continue;
+        const st = v[k];
+        if (st.seats.includes(myId)) { if (st.score[myId] >= st.target) sfx.win(); else sfx.lose(); }
+        confetti();
+      }
+      // Lobby: leises „Pling-plong“, wenn jemand Neues hereinkommt (nicht für den, der selbst gerade beitritt)
+      if (now.lobbyIds && prev.lobbyIds && now.lobbyIds.some((id) => id !== myId && !prev.lobbyIds.includes(id))) sfx.join();
       if (now.hlKey && now.hlKey !== prev.hlKey) {
-        if (v.hl.step === "reveal" && v.hl.result && myId in v.hl.result.ok) { if (v.hl.result.ok[myId]) sfx.turn(); }
+        if (v.hl.step === "reveal" && v.hl.result && myId in v.hl.result.ok) { const ok = v.hl.result.ok[myId]; setTimeout(() => (ok ? sfx.right() : sfx.wrong()), 900); } // wenn der Wert fertig hochgezählt ist
         if (v.hl.step === "final") { if (v.hl.winners.includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
       }
       if (now.wlKey && now.wlKey !== prev.wlKey) {
@@ -1591,11 +1648,14 @@
   // Zeitbasiert je Feld, damit Neuzeichnen die Animation nur fortsetzt; beim ersten Anzeigen (Neuladen) ist alles alt.
   const slotBorn = new Map();
   let slotSeeded = false;
-  function slotAge(key, pos, batch) {
+  function slotAge(key, pos, batch, cls) {
     if (!slotBorn.has(key)) {
       const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
       slotBorn.set(key, !slotSeeded || reduce ? null : { t: Date.now(), k: batch.n++ });
       if (slotBorn.get(key) && batch.flip) { const k = slotBorn.get(key).k; setTimeout(() => window.S10Klang && window.S10Klang.play(sfx, (c, t) => window.S10Klang.noise(c, t, 0.05, { type: "bandpass", freq: 1800, q: 1.2, peak: 0.08 })), k * 150); }
+      // frisch beantwortet: „Pling“ für richtig, „Bong“ für falsch (auch mit „Bewegung reduzieren“, aber nicht nach Neuladen)
+      else if (slotSeeded && cls === "ok") sfx.right();
+      else if (slotSeeded && cls === "bad") sfx.wrong();
     }
     const b = slotBorn.get(key);
     return b ? { e: Date.now() - b.t, k: b.k } : null;
@@ -1640,7 +1700,7 @@
       // aufgedeckt (nicht „wird geprüft“): einmal umdrehen – die am Kartenende aufgedeckten nacheinander
       let fx = "", fxStyle = "";
       if (r && !r.pending) {
-        const a = slotAge(cardKey + ":" + pos + ":" + cls, pos, cls === "shown" ? batchShown : batchOk);
+        const a = slotAge(cardKey + ":" + pos + ":" + cls, pos, cls === "shown" ? batchShown : batchOk, cls);
         if (a) { const d = (cls === "shown" ? a.k * 150 : 0) - a.e;
           if (d > -1100) { fx = cls === "bad" ? "fx-shake" : "fx-flip"; fxStyle = `;animation-delay:${d}ms${cls === "bad" ? `, ${d + 350}ms` : cls === "ok" ? `, ${d}ms` : ""}`; } }
       }

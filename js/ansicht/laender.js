@@ -45,6 +45,7 @@
     if (!st || st.step !== "guess" || !el || st.endsIn == null) return;
     const ms = Math.max(0, landDeadline - Date.now());
     el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 5000);
+    sfx.countdown("land:" + G.view.code + ":" + st.round, ms, landSent !== st.round);
     if (ms <= 300) landSubmit(); // angetipptes Land bei Zeitablauf automatisch abgeben
   }, 250);
   // Farben je nach Zustand: angetippt (eigene Farbe), Auflösung (grün / Spielerfarbe), sonst neutral

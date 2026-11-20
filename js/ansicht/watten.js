@@ -10,7 +10,7 @@
   const wBack = () => `<div class="wcard back">${WCARDS.back()}</div>`;
   const wSuitIcon = (suit) => `<span class="wsuit">${WCARDS.sym(suit, 1)}</span>`;
   // Stich-Animation: fertiger Stich bleibt kurz in der Mitte, dann wandern die Karten zum Stapel des Gewinners
-  let wShown = { round: 0, n: 0 }, wHold = null, wFly = null;
+  let wShown = { round: 0, n: 0 }, wHold = null, wFly = null, wLaid = null;
   // Kurzinfo zum Spielmodus im rechten Rand
   function wattenModeHtml(st) {
     const tr = st.weliMode === "trumpf";
@@ -38,14 +38,18 @@
     const v = G.view, st = v.watten;
     if (!st) return;
     const nTricks = st.seats.reduce((a, id) => a + st.tricks[id], 0);
+    const laid = nTricks * st.seats.length + st.trick.length; // Karte auf dem Tisch: kurzes Klatschen (nicht nach Neuladen / neuer Runde)
+    if (wLaid && wLaid.round === st.roundNo && laid > wLaid.n) sfx.lay();
+    wLaid = { round: st.roundNo, n: laid };
     if (wShown.round !== st.roundNo) { wShown = { round: st.roundNo, n: nTricks }; wHold = null; }
-    if (wHold && st.trick.length) { wShown.n = nTricks; wHold = null; } // neue Karte liegt: alten Stich nicht mehr zeigen
+    if (wHold && st.trick.length) { wShown.n = nTricks; wHold = null; sfx.sweep(); } // neue Karte liegt: alten Stich nicht mehr zeigen
     if (nTricks > wShown.n && !wHold && st.lastTrick && !st.trick.length) {
       wHold = { winner: st.lastTrick.winner, cards: st.lastTrick.cards };
       const held = wHold, heldRound = st.roundNo;
       setTimeout(() => {
         if (wHold !== held || wShown.round !== heldRound) return; // inzwischen neue Runde
         const tr = app.querySelector(".wtrick");
+        sfx.sweep(); // Stich wird eingesammelt
         wFly = { winner: held.winner, from: tr ? [...tr.querySelectorAll(".wcard")].map((c) => c.getBoundingClientRect()) : [] };
         wShown.n = nTricks; wHold = null; if (G.view && G.view.phase === "watten") renderWatten();
       }, 1800); // wie beim Schnapsen: Stich in Ruhe zeigen
