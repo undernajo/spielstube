@@ -140,7 +140,11 @@
             <button class="btn primary" id="w-hold4">Halten (um 4)</button>
             <button class="btn ghost" id="w-go">Gehen (${esc(nameOf(opp))} +2)</button></div>`;
       }
-      else if (st.turn === me && st.follow === "pflicht") hint = `<b>Trumpf ausgeworfen:</b> Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.`;
+      else if (st.turn === me && st.follow === "pflicht") {
+        const led = st.trick[0] && st.trick[0].card, rechter = led && led.split("-")[1] === st.schlag; // der Rechte (bzw. Weli als Schlag) ist ausgeworfen
+        hint = rechter ? `<b>Der Rechte ist ausgeworfen:</b> Trumpf zugeben – stechen kann ihn nur der Gute${legal.length === hand.length ? ". Du hast keinen Trumpf, also freie Wahl" : ""}.`
+          : `<b>Trumpf ausgeworfen:</b> Trumpf zugeben oder mit einem Schlag stechen${legal.length === hand.length ? " – du hast keinen, also freie Wahl" : ""}.`;
+      }
       else if (st.turn === me && st.follow === "guter") hint = "Der <b>Gute</b> wurde ausgeworfen – kein Trumpf-Zwang.";
       else if (st.mustDecide && st.mustDecide !== me) hint = `${esc(nameOf(st.mustDecide))} entscheidet: halten oder gehen …`;
       // Bieten (und ggf. Aufgeben) als Knöpfe auf dem Spielfeld rechts unten

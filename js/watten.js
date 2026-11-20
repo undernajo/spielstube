@@ -33,7 +33,8 @@
     if (suitOf(c) === ledSuit) return 100 + ORDER.indexOf(rankOf(c));
     return 0;
   }
-  // Trumpf zugeben: wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen
+  // Trumpf zugeben: wird Trumpf ausgespielt (nicht der Gute), muss man Trumpf geben oder mit einem Schlag stechen –
+  // ein Schlag zählt nur, wenn er die ausgespielte Karte wirklich sticht (den Rechten sticht nur der Gute, und der ist Trumpf)
   // Was gilt für die zweite Karte? "pflicht" = Trumpf zugeben/stechen, "guter" = Guter ausgespielt (kein Zwang), "frei"
   function followRule(r) {
     if (r.trick.length !== 1) return null;
@@ -47,7 +48,8 @@
     const led = r.trick[0].card;
     const trumpLed = isTrump(led, r.trump, r.weliMode) || (r.schlag === "6" && led === "schelle-6"); // Weli als Schlag zählt wie der Rechte
     if (!trumpLed || led === guterOf(r.schlag, r.trump, r.weliMode)) return hand.slice();
-    const ok = hand.filter((c) => isTrump(c, r.trump, r.weliMode) || rankOf(c) === r.schlag);
+    const ledPow = power(led, r, suitOf(led));
+    const ok = hand.filter((c) => isTrump(c, r.trump, r.weliMode) || (rankOf(c) === r.schlag && power(c, r, suitOf(led)) > ledPow));
     return ok.length ? ok : hand.slice();
   }
 
