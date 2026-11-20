@@ -66,6 +66,7 @@
       if (from !== to) requestAnimationFrame(step);
     });
   }
+  let qbDemo = { key: null, t0: 0 };
   function renderQuerbeet() {
     const v = G.view, q = v.qb;
     if (!q) return;
@@ -93,11 +94,16 @@
         ${rows.map(([id, r]) => `<div class="qb-row" style="--pc:${colorOf(id)}"><span class="qb-place">${medal[r.place - 1] || r.place + "."}</span><span class="pdot"></span>
           <span class="qb-name">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${x.game === "bus" ? `${qbFmt(r.score)} Punkte` : `${qbFmt(r.score)} ${x.game === "zehn" || x.game === "hl" || x.game === "land" ? "richtig" : "Punkte"}`}</span><b class="qb-plus">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}+${r.pts}</b></div>`).join("")}</div>`;
     };
-    const nextCard = (n, isFinal) => { const g = qbGame(n.game), jk = qbJokerHtml(q, isFinal);
-      return `<div class="panel qb-next ${jk ? "with-joker" : ""}" style="--gc:${g.color}">
-        <div class="qbn-info"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}</div>
-          <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div>
-          <p>${esc(n.rule)}</p></div>
+    // So geht's: drei Schritte (*fett*) + Etappensieg; bei schweren Spielen dazu eine kleine Vorführung
+    const bold = (t) => esc(t).replace(/\*([^*]+)\*/g, "<b>$1</b>");
+    const howHtml = (n) => n.how ? `<ol class="qbn-steps">${n.how.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${bold(t)}</span></li>`).join("")}
+        <li class="win"><span class="n">🏆</span><span><b>Etappensieg:</b> ${bold(n.how.win)}</span></li></ol>` : `<p>${esc(n.rule)}</p>`;
+    const nextCard = (n, isFinal) => { const g = qbGame(n.game), jk = qbJokerHtml(q, isFinal), demo = window.S10Demo && S10Demo.has(n.game);
+      return `<div class="panel qb-next ${jk ? "with-joker" : ""} ${demo ? "with-demo" : ""}" style="--gc:${g.color}" data-demo="${demo ? esc(n.game) : ""}">
+        <div class="qbn-head"><div class="game-label">${isFinal ? "Finale – zählt doppelt!" : `Etappe ${q.idx + 2} von ${q.n}`}</div>
+          <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div></div>
+        ${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : ""}
+        <div class="qbn-info">${howHtml(n)}</div>
         ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, isFinal ? "Bereit fürs Finale" : "Bereit")}</div></div>`; };
     {
       const ak = v.code + ":" + q.stages.length + ":" + (q.step === "intro" ? "intro" : "stand");
@@ -131,6 +137,15 @@
         <section class="qb-main">${main}</section>
       </main>`;
     qbStandAnim(q, v.players);
+    // Vorführung: läuft je Etappe ab dem ersten Zeigen durch, Neuzeichnen setzt an derselben Stelle fort
+    const dmCard = app.querySelector(".qb-next[data-demo]:not([data-demo=''])");
+    if (dmCard) {
+      const dk = v.code + ":" + q.idx + ":" + dmCard.dataset.demo;
+      if (qbDemo.key !== dk) qbDemo = { key: dk, t0: Date.now() };
+      const go = () => S10Demo.mount(dmCard.querySelector(".qbn-demo"), dmCard.dataset.demo, qbDemo.t0, [...dmCard.querySelectorAll(".qbn-steps li:not(.win)")]);
+      go();
+      const rb = dmCard.querySelector(".dm-replay"); if (rb) rb.onclick = () => { qbDemo.t0 = Date.now(); go(); };
+    }
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });

@@ -542,7 +542,7 @@
     const LAND_RULE = { de: "Tippt das genannte Bundesland auf der Karte an.", at: "Tippt das genannte Bundesland auf der Karte an.",
       it: "Tippt die genannte Region auf der Karte an.", ch: "Tippt den genannten Kanton auf der Karte an." };
     const rule = (st) => st.game === "land" ? LAND_RULE[st.opts.region] || "Tippt das genannte Land auf der Karte an." : QB.STAGES[st.game].rule;
-    const q = S.qb, info = (st) => st ? { game: st.game, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st) } : null;
+    const q = S.qb, info = (st) => st ? { game: st.game, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] || null } : null;
     const nextSt = q.step === "intro" || q.step === "break" ? q.plan[q.idx + 1] : null;
     return {
       step: q.step, idx: q.idx, n: q.plan.length, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready },

@@ -1421,8 +1421,18 @@ body.qb-play .banner.win .trophy { display: none; }
 .quiz-note { margin: 0; }
 
 /* Querbeet: Etappenkarte – links Erklärung + Bereit, rechts das Joker-Feld (am Handy dazwischen) */
-.qb-next { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "act"; align-items: start; }
-.qb-next.with-joker { grid-template-columns: minmax(0, 1fr) 250px; grid-template-areas: "info joker" "act joker"; column-gap: 20px; }
+.qb-next { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "info" "act"; align-items: start; }
+.qb-next.with-joker { grid-template-columns: minmax(0, 1fr) 250px; grid-template-areas: "head joker" "info joker" "act joker"; column-gap: 20px; }
+/* mit Vorführung: rechts die Bühne, Joker links unter den Schritten */
+.qb-next.with-demo { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "head demo" "info demo" "act act"; column-gap: 24px; }
+.qb-next.with-demo.with-joker { grid-template-areas: "head demo" "info demo" "joker demo" "act act"; }
+.qbn-head { grid-area: head; justify-self: stretch; } .qbn-head .qb-head { margin: 4px 0 0; }
+.qbn-demo { grid-area: demo; display: grid; gap: 4px; justify-items: center; align-self: start; }
+.qbn-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.qbn-steps li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding: 6px 10px; border-radius: 12px; border: 1px solid transparent; line-height: 1.3; }
+.qbn-steps .n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 .9rem Fredoka, sans-serif; background: color-mix(in srgb, var(--gc) 25%, #1a1640); }
+.qbn-steps li.win { color: var(--muted); font-size: .92rem; } .qbn-steps li.win b { color: var(--ink); }
+.qbn-steps li.win .n { background: none; font-size: 1.15rem; }
 .qbn-info { grid-area: info; display: grid; gap: 8px; }
 .qbn-info p { margin: 0; }
 .qbn-act { grid-area: act; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; align-self: end; }
@@ -1442,7 +1452,9 @@ body.qb-play .banner.win .trophy { display: none; }
 .qb-jbox.set .qbj-txt b { color: var(--accent); }
 .qbj-who { color: var(--muted); font-size: .78rem; text-align: center; }
 @media (max-width: 760px) {
-  .qb-next.with-joker { grid-template-columns: minmax(0, 1fr); grid-template-areas: "info" "joker" "act"; }
+  .qb-next.with-joker { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "info" "joker" "act"; }
+  .qb-next.with-demo, .qb-next.with-demo.with-joker { grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "demo" "info" "joker" "act"; }
+  .qbn-steps li { padding: 5px 8px; }
   .qb-jbox { min-height: 0; }
   .qbn-act .btn.primary { flex: 1; }
 }
@@ -2719,3 +2731,74 @@ body.qb-play .fw-main { --fw-top: 370px; }
   body.qb-play .fw-main { --fw-top: 365px; }
   .fw-tile { height: clamp(44px, calc((100dvh - var(--fw-top)) / 4 - 5px), 96px); }
 }
+
+/* ---------- Vorführung auf der Etappenkarte (js/vorfuehrung.js) ---------- */
+.dm-stage { position: relative; width: 300px; height: 240px; border-radius: 16px; overflow: hidden; flex: none; font-size: 13px; color: var(--ink);
+  background: radial-gradient(120% 100% at 50% 0%, #2b2470 0%, #1a1550 60%, #151140 100%); border: 1px solid var(--line); box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+  --wiese: #8fcf6a; --wald: #2f7a4a; --fels: #9a98a6; --bach: #4aa8e8; --hof: #e6b26e; --pen: #2a1d00; }
+.dm-stage > * { position: absolute; }
+.dm-replay { font-size: .8rem; }
+.dm-cur { left: 0; top: 0; width: 30px; height: 30px; font-size: 26px; line-height: 30px; z-index: 30; pointer-events: none; filter: drop-shadow(0 3px 2px rgba(0,0,0,.55)); }
+.dm-tap { width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; border: 2px solid rgba(255,255,255,.85); z-index: 29; opacity: 0; }
+.dm-chips { left: 8px; right: 8px; display: flex; gap: 5px; z-index: 6; }
+.dm-chip { position: relative; display: flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: #15123a; border: 1px solid var(--line); font-weight: 800; font-size: 11.5px; height: 26px; }
+.dm-chip i { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); }
+.dm-val { display: inline-grid; min-width: 12px; } .dm-val > span { grid-area: 1 / 1; text-align: right; }
+.dm-float { left: 0; top: 0; z-index: 25; font: 700 15px Fredoka, sans-serif; color: var(--accent); text-shadow: 0 2px 0 rgba(0,0,0,.45); opacity: 0; white-space: nowrap; }
+.dm-float.ok { color: #5fe39a; } .dm-float.bad { color: #ff7d8a; }
+.dm-note { left: 0; right: 0; top: 162px; text-align: center; font: 700 12px Nunito, sans-serif; color: var(--accent); opacity: 0; z-index: 8; }
+.dm-note.side { left: 200px; right: 6px; top: 110px; text-align: left; line-height: 1.25; }
+.dm-card { display: block; width: 40px; height: 63px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+.dm-card svg { width: 100%; height: 100%; display: block; }
+.dm-card.flip { position: relative; perspective: 400px; }
+.dm-f { position: absolute; inset: 0; backface-visibility: hidden; } .dm-f svg { width: 100%; height: 100%; display: block; }
+/* Busfahrt */
+.dm-stn { top: 8px; width: 50px; height: 32px; border-radius: 8px; border: 1.5px solid var(--line); background: #1f1a4a; display: grid; place-items: center; align-content: center;
+  font: 700 12px Fredoka, sans-serif; line-height: 1.05; }
+.dm-stn small { font: 700 7.5px Nunito, sans-serif; color: var(--muted); }
+.dm-slot { top: 46px; width: 40px; height: 63px; border-radius: 6px; border: 1.5px dashed var(--line); }
+.dm-bc { top: 46px; z-index: 3; }
+.dm-ck { right: -6px; top: -6px; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--ok); color: #fff; font: 800 11px Nunito; font-style: normal;
+  display: grid; place-items: center; opacity: 0; z-index: 2; }
+.dm-pot { left: 232px; top: 58px; width: 56px; padding: 4px 0; border-radius: 12px; display: grid; justify-items: center; color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, #15123a); border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); font: 700 18px Fredoka, sans-serif; }
+.dm-pot small { font: 800 9px Nunito, sans-serif; text-transform: uppercase; letter-spacing: 1px; }
+.dm-q { left: 0; right: 0; top: 116px; display: grid; justify-items: center; gap: 8px; opacity: 0; }
+.dm-q b { font: 700 13.5px Fredoka, sans-serif; } .dm-q b.ok { color: #5fe39a; font-size: 15px; margin-top: 18px; }
+.dm-bb { display: flex; gap: 10px; } .dm-bb.three { gap: 8px; }
+.dm-bb span { width: 120px; height: 32px; border-radius: 10px; background: #3a3285; display: grid; place-items: center; font-weight: 700; font-size: 12.5px; }
+.dm-bb.three span { width: 88px; font-size: 11.5px; }
+.dm-bb span.y { background: var(--accent); color: var(--accent-ink); }
+/* Stichhaltig */
+.dm-sh { left: 10px; right: 10px; top: 8px; display: flex; justify-content: space-between; align-items: center; font: 700 10.5px Nunito, sans-serif; color: var(--muted); }
+.dm-trump { display: flex; align-items: center; gap: 4px; color: var(--ink); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: #15123a; }
+.dm-trump i { width: 16px; height: 16px; } .dm-trump svg { width: 100%; height: 100%; display: block; }
+.dm-pl { top: 36px; width: 138px; height: 48px; border-radius: 10px; background: #15123a; border: 1px solid var(--line); border-top: 3px solid var(--pc); padding: 4px 8px; }
+.dm-pl b { display: flex; align-items: center; gap: 5px; font-size: 12px; } .dm-pl b i { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); }
+.dm-pl small { display: flex; gap: 4px; color: var(--muted); font-size: 11px; font-weight: 700; margin-top: 3px; }
+.dm-bid { position: absolute; right: 8px; top: 5px; min-width: 22px; padding: 1px 6px; border-radius: 999px; background: #2b2470; font: 700 12px Fredoka, sans-serif; text-align: center; }
+.dm-bid .dm-val > span { text-align: center; }
+.dm-bidui { left: 0; right: 0; top: 96px; display: grid; justify-items: center; gap: 8px; opacity: 0; }
+.dm-bidui b { font: 700 13.5px Fredoka, sans-serif; }
+.dm-nums { display: flex; gap: 8px; } .dm-nums span { width: 40px; height: 40px; border-radius: 10px; border: 2px solid #4a3fa0; display: grid; place-items: center; font: 700 18px Fredoka, sans-serif; }
+.dm-tc { z-index: 4; }
+/* Almsommer: Felder und Würfel wie im Spiel (Grafiken aus js/ansicht/alm.js) */
+.dm-almb { left: 42px; top: 59px; width: 216px; height: 126px; border-radius: 10px; background: #0b0920; }
+.dm-stage .acell { position: absolute; width: 30px; height: 30px; aspect-ratio: auto; font-size: 12px; }
+.dm-stage .acell .as { inset: 8%; }
+.dm-ab { position: absolute; left: 1px; top: 1px; z-index: 3; min-width: 13px; height: 13px; padding: 0 3px; border-radius: 7px; background: rgba(20,16,50,.82); color: #fff;
+  font: 800 9px/13px Nunito, sans-serif; text-align: center; }
+.dm-x { width: 30px; height: 30px; display: grid; place-items: center; z-index: 5; font: 700 22px Fredoka, sans-serif; color: var(--pen); opacity: 0;
+  text-shadow: 0 0 3px rgba(255,255,255,.8); background: rgba(255,249,232,.38); }
+.dm-stage .dm-die { top: 4px; width: 46px; height: 50px; border-radius: 10px; border-width: 2px; box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.dm-stage .dm-die .num { width: 24px; height: 24px; margin-top: -10px; border-radius: 7px; font-size: 15px; }
+.dm-stage .dm-die small { font-size: 8.5px; padding: 1px 0 2px; }
+.dm-btn { left: 16px; top: 194px; width: 136px; height: 34px; border-radius: 10px; background: #8a6a3e; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+/* Auf der Jagd: Gelände wie im Spiel */
+.dm-lab { top: 10px; font: 700 11px Nunito, sans-serif; color: var(--muted); }
+.dm-rev { border-radius: 6px; overflow: hidden; }
+.dm-stage .jcell { position: absolute; aspect-ratio: auto; }
+.dm-an { z-index: 4; display: grid; place-items: center; opacity: 0; } .dm-an svg { width: 88%; height: 88%; display: block; filter: drop-shadow(0 1px 1px rgba(0,0,0,.4)); }
+.dm-an.big svg { width: 80%; height: 80%; }
+.dm-shot { width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; z-index: 5; opacity: 0; background: rgba(20,16,50,.55); border: 2px solid var(--pc, #fff); }
+.dm-flash { width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; z-index: 6; opacity: 0; background: radial-gradient(circle, #fff 0%, rgba(255,230,140,.8) 40%, transparent 70%); }

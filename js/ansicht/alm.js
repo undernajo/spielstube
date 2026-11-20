@@ -177,6 +177,7 @@
       <path d="M17 12 L13.2 18.3 L16 17.2 L18 19 L20.3 16.4Z" fill="#fff"/><path d="M26 14 L23.6 18 L25.5 17.3 L27.8 17.8Z" fill="#fff"/>
       <path d="M17 3.5 V12 M14.4 6.2 H19.6" stroke="#5b3a22" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   };
+  window.S10AlmArt = { SYMBOL_SVG }; // auch für die Vorführung in der Stubenmeisterschaft
   // Würfelbilder: Sonne (goldener Himmel) und Gewitter (Wolke mit Blitz); Gelände-Würfel zeigen die Feldgrafik
   const DIE_SVG = {
     sun: svg40(`<rect width="40" height="40" fill="url(#sw)"/><g transform="translate(20 17)">${Array.from({ length: 12 }, (_, k) =>

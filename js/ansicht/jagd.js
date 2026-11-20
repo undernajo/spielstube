@@ -29,6 +29,7 @@
   };
   const TRACK = `<svg viewBox="0 0 40 40"><g fill="#2b1c10" opacity=".85"><path d="M12 9 C9 13 10 19 13 19 C15 19 15 13 12 9Z"/><path d="M19 8 C16 12 17 18 20 18 C22 18 22 12 19 8Z"/>
     <path d="M21 23 C18 27 19 33 22 33 C24 33 24 27 21 23Z"/><path d="M28 22 C25 26 26 32 29 32 C31 32 31 26 28 22Z"/></g></svg>`;
+  window.S10JagdArt = { ICON, TRACK }; // auch für die Vorführung in der Stubenmeisterschaft
   const BRUCH = `<svg class="jbruch" viewBox="0 0 40 40"><path d="M8 32 L30 10" stroke="#2f6b2f" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M14 26 l-6 -2 M18 22 l-6 -3 M22 18 l-5 -4 M17 27 l1 6 M21 23 l2 6 M25 19 l3 5" stroke="#4c9a3c" stroke-width="2" stroke-linecap="round"/></svg>`;
   // Zielfernrohr-Absehen als kleines Symbol (wie beim Zielen auf dem Spielfeld)

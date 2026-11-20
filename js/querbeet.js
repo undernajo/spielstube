@@ -24,6 +24,26 @@
     jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "8 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
+  // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
+  const HOWTO = {
+    zehn: { steps: ["Eine Karte mit *10 Antworten* – reihum ist einer dran.", "Wer dran ist, *nennt eine Antwort* oder *passt* (sichert seine Punkte).", "Richtig = +1. *Falsch = alle Punkte dieser Runde weg.*"], win: "Wer am Ende die meisten Punkte hat." },
+    wand: { steps: ["Wer dran ist, *wählt ein Feld* – je höher die Zahl, desto schwerer.", "*Nur du antwortest* – eintippen oder auswählen, ohne Zeitdruck.", "*Richtig = Punkte* des Feldes. Falsch kostet nichts."], win: "Wer nach allen Zügen die meisten Punkte hat." },
+    hl: { steps: ["Ein Begriff mit Wert, daneben der nächste *ohne* Wert.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = 1 Punkt – der neue Begriff wird die nächste Vergleichszahl."], win: "Die meisten richtigen Tipps." },
+    schaetzen: { steps: ["Eine Frage mit einer *Zahl* als Antwort.", "Alle *schätzen gleichzeitig*.", "*Am nächsten dran* = die meisten Punkte, ganz genau = Bonus."], win: "Die meisten Punkte nach allen Fragen." },
+    hinweis: { steps: ["Gesucht ist ein Begriff – alle 8 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "*Früh richtig* = viele Punkte, spät richtig = wenige."], win: "Die meisten Punkte nach allen Begriffen." },
+    geo: { steps: ["Oben steht ein *Ort*.", "*Alle tippen gleichzeitig* auf die Karte, wo er liegt.", "*Je näher* am echten Ort, desto mehr Punkte."], win: "Die meisten Punkte nach allen Orten." },
+    land: { steps: ["Oben steht ein *Gebiet* (Land, Bundesland, Region oder Kanton).", "*Tippt es auf der Karte an* – alle gleichzeitig.", "*Richtig* getippt = Punkt."], win: "Die meisten richtigen Gebiete." },
+    umriss: { steps: ["Zu sehen ist nur ein *Umriss*.", "*Welches Gebiet ist das?* Eintippen – nur ein Versuch.", "Richtig = Punkte, *wer zuerst richtig liegt*, bekommt mehr."], win: "Die meisten Punkte nach allen Umrissen." },
+    oben: { steps: ["Ein Ort *von oben* – das Bild zoomt langsam heraus.", "*Tippe auf der Karte*, wo das ist.", "*Je näher und je früher*, desto mehr Punkte."], win: "Die meisten Punkte nach allen Bildern." },
+    slf: { steps: ["Ein *Buchstabe*, sechs Kategorien.", "Zu jeder Kategorie *ein Wort* mit diesem Anfangsbuchstaben.", "Wer fertig ist, ruft *Stopp* – dann bleiben noch 10 Sekunden."], win: "Die meisten Punkte (eigene Antworten zählen mehr)." },
+    duell: { steps: ["Ein Thema mit fester Liste, z. B. „die 10 größten Städte …“.", "*Abwechselnd* je eine Antwort nennen.", "*Falsch, doppelt oder zu spät* = Runde verloren."], win: "Wer die meisten Runden gewinnt." },
+    frage: { steps: ["Einer bekommt eine *Antwort* und eine Kategorie.", "Er *erfindet eine Frage* dazu – der andere muss sie beantworten.", "*Richtig beantwortet* = Punkt für den Antwortenden, sonst für den Fragesteller."], win: "Wer die meisten Runden gewinnt." },
+    siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus."], win: "Die meisten Punkte nach allen Runden." },
+    bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
+    stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
+    alm: { steps: ["*3 Würfel für alle* – jeder nimmt einen (Gelände + Zahl).", "*Bis zu so viele Felder* dieses Geländes ankreuzen – angrenzend, Start am Hof.", "*Fläche voll* = ihre Punkte (Zahl im Eck)."], win: "Die meisten Punkte nach 6 Wochen." },
+    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die größte Strecke nach 8 Runden." },
+  };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
@@ -182,5 +202,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { LENGTHS, POINTS, STAGES, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { LENGTHS, POINTS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);
