@@ -97,7 +97,7 @@
       case "alm": return { weeks: 6, storms: 0, map: "zufall" }; // Kurzsommer: 6 Wochen ohne Gewitter, Tal ausgelost
       case "jagd": return { rounds: 8, map: "zufall" }; // kurze Jagd: 8 Runden, Jagdgebiet ausgelost
       case "duell": return { target: 2, timer: "45" };
-      case "frage": return { target: 2, write: "0", answer: "0" };
+      case "frage": return { target: 2, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben
     }
     return {};
   }
