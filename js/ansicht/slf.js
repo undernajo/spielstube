@@ -151,12 +151,8 @@
           </div>`;
       }).join("");
       main = `
-        <div class="slf-revhead">
-          <div class="slf-letter small">${st.letter}</div>
-          <div class="slf-revtitle"><div class="game-label">Runde ${st.round} · Kategorie ${ci + 1} von ${st.cats.length}</div>
-            <h3>${cat === st.surpriseCat ? "🎁 " : ""}${esc(cat)}</h3>
-            <div class="slf-dots">${st.cats.map((c, i) => `<span class="${i < ci ? "done" : i === ci ? "cur" : ""}"></span>`).join("")}</div></div>
-        </div>
+        ${G.gameHeadHtml({ icoHtml: `<div class="slf-letter landed">${st.letter}</div>`, small: `Stadt, Land, Fluss · Runde ${st.round} / ${st.rounds} · Kategorie ${ci + 1} von ${st.cats.length}`,
+          big: `${cat === st.surpriseCat ? "🎁 " : ""}${esc(cat)}`, hint: `<div class="slf-dots">${st.cats.map((c, i) => `<span class="${i < ci ? "done" : i === ci ? "cur" : ""}"></span>`).join("")}</div>` })}
         <div class="slf-cards ${fresh ? "enter" : ""}">${cards}</div>
         <p class="muted small slf-hint">Tippe 👎, wenn eine Antwort nicht gilt – stimmt die Mehrheit der anderen dagegen, zählt sie nicht.</p>
         <div class="slf-actions">
@@ -172,7 +168,7 @@
       <main class="screen game slf">
         <header class="top topbar">
           ${headBrandHtml("slf")}
-          <div class="meta">Runde ${st.round}/${st.rounds}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta"><span class="stube-code">Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

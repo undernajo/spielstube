@@ -44,8 +44,8 @@
       const okMe = st.step === "reveal" && st.result ? st.result.ok[G.myId] : undefined;
       main = `
         <div class="geo-scores hl-pills">${hlChips(v, st)}</div>
-        <div class="hl-title"><div class="hl-catname">${esc(st.cat.name)}</div>
-          <div class="muted small">${esc(st.cat.q)}${st.cat.approx ? " · Werte ca." : ""}${st.cat.note ? " · " + esc(st.cat.note) : ""}</div></div>
+        ${G.gameHeadHtml({ ico: emo, small: `Höher oder tiefer · Kategorie ${st.catNo} / ${st.catCount} · Vergleich ${st.pos} / ${st.steps}`, big: esc(st.cat.name), sub: st.cat.name.toLowerCase().includes(String(st.cat.q).toLowerCase()) ? "" : esc(st.cat.q),
+          hint: `${st.cat.approx ? "Werte ca." : ""}${st.cat.approx && st.cat.note ? " · " : ""}${st.cat.note ? esc(st.cat.note) : ""}` })}
         <div class="hl-main">
           <div class="hl-pips">${pips}</div>
           <div class="hl-cards">
@@ -70,7 +70,7 @@
       <main class="screen game slf geo hl">
         <header class="top topbar">
           ${headBrandHtml("hl")}
-          <div class="meta">${st.step !== "final" ? `Kategorie ${st.catNo}/${st.catCount} · Vergleich ${st.pos}/${st.steps}` : ""}<span class="stube-code">${st.step !== "final" ? " · " : ""}Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta"><span class="stube-code">Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

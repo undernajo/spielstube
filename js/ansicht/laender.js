@@ -125,7 +125,7 @@
       <main class="screen game slf geo land">
         <header class="top topbar">
           ${headBrandHtml("land")}
-          <div class="meta">${esc(st.regionName)}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta"><span class="stube-code">Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

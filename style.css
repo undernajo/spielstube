@@ -3754,3 +3754,8 @@ body.qb-play .fw-main { --fw-top: 370px; }
 @media (max-width: 640px) {
   .zp { padding: 8px 10px 10px; gap: 2px 8px; } .zp-lamp { width: 12px; height: 12px; } .zp-nm { font-size: .92rem; } .zp small { font-size: .72rem; } .zp-sc b { font-size: 1.25rem; } .zp-open { font-size: .72rem; }
 }
+/* Höher oder tiefer & Stadt-Land-Fluss-Auswertung: gemeinsame Kopfzeile */
+.screen.hl .gh { margin: 6px 0 0; }
+.gh .slf-dots { margin-top: 6px; justify-content: flex-start; }
+.gh-t .hint:empty { display: none; }
+.gh-pl:empty { display: none; }
