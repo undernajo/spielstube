@@ -270,6 +270,85 @@
       show(A, $("#m2"), T, 5.9);
     } },
 
+    // ---------------- Zehnkampf ----------------
+    zehn: { T: 9.5, still: 7.4, build(st, A, T) {
+      const cities = ["Graz", "Lyon", "Porto", "Gent", "Krakau", "Turin", "Brünn", "Malmö", "Split", "Basel"];
+      const res = { 0: ["ok", "Österreich"], 1: ["ok", "Frankreich"], 2: ["bad", "Portugal"] };
+      st.innerHTML = `<div class="dm-zq">In welchem Land liegt …?</div>`
+        + cities.map((c, i) => `<div class="dm-zt" id="z${i}" style="left:${i % 2 ? 154 : 10}px;top:${32 + Math.floor(i / 2) * 25}px"><span class="a">${c}</span>${res[i] ? `<span class="b ${res[i][0]}">${res[i][0] === "ok" ? "✓" : "✗"} ${res[i][1]}</span>` : ""}</div>`).join("")
+        + `<div class="dm-zin"><span class="t" id="t1">Österreich</span><span class="t" id="t2">Frankreich</span><span class="t" id="t3">Spanien</span><span class="caret"></span><b>OK</b></div>
+        <div class="dm-zpass">✋ Passen</div>
+        <div class="dm-zwho" id="w1">Anna ist dran</div><div class="dm-zwho" id="w2" style="color:${C.berta}">Berta ist dran</div>
+        <div class="dm-note" id="zn" style="top:176px;color:#ff9aa2">Falsch = alle Punkte dieser Runde weg!</div>
+        <div class="dm-chips" style="top:208px"><div class="dm-chip" id="dmA" style="--pc:${C.anna}"><i></i>Anna <span class="dm-st">Runde</span>${vals(0, 1, 2, "✓ +2")}</div>
+          <div class="dm-chip" id="dmB" style="--pc:${C.berta}"><i></i>Berta <span class="dm-st">Runde</span>${vals(3, "weg!")}</div></div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      const sel = (el, a, b) => tl(A, el, T, [[0, { boxShadow: "0 0 0 0 rgba(255,200,61,0)" }], [a, {}], [a + .15, { boxShadow: "0 0 0 2px #ffc83d" }], [b, {}], [b + .15, { boxShadow: "0 0 0 0 rgba(255,200,61,0)" }]]);
+      const flip = (i, t, bad) => { const el = $("#z" + i); tl(A, el.querySelector(".a"), T, [[0, { opacity: 1 }], [t, {}], [t + .2, { opacity: 0 }]]); pop(A, el.querySelector(".b"), T, t);
+        tl(A, el, T, [[0, { background: "#15123a" }], [t, {}], [t + .2, { background: bad ? "rgba(239,75,90,.3)" : "rgba(47,191,113,.28)" }]]); };
+      sel($("#z0"), .7, 2.0); sel($("#z1"), 2.7, 3.9); sel($("#z2"), 5.7, 6.6);
+      const type = (el, a, b, w) => tl(A, el, T, [[0, { maxWidth: "0px", display: "inline-block" }], [a, {}, "steps(8)"], [b, { maxWidth: w + "px" }], [b + .9, {}], [b + 1, { maxWidth: "0px" }]]);
+      type($("#t1"), 1.0, 1.6, 80); type($("#t2"), 3.0, 3.6, 80); type($("#t3"), 5.9, 6.3, 64);
+      flip(0, 2.0); flip(1, 3.9); flip(2, 6.6, true);
+      finger(A, st, T, [[.3, 230, 225], [.6, 60, 44, true], [1.8, 182, 180, true], [2.6, 200, 44, true], [3.7, 182, 180, true], [4.5, 248, 180, true]]);
+      tl(A, $(".dm-zpass"), T, [[0, { transform: "none" }], [4.55, {}], [4.65, { transform: "translateY(2px)", background: "#ffc83d", color: "#2a1d00" }], [5.2, {}], [5.4, { transform: "none", background: "#3a3285", color: "#f4f1ff" }]]);
+      show(A, $("#w1"), T, .2, 5.0); show(A, $("#w2"), T, 5.3);
+      swap(A, [...st.querySelectorAll("#dmA .dm-val > span")], T, [2.1, 4.0, 4.8]); bump(A, $("#dmA"), T, 4.8);
+      swap(A, [...st.querySelectorAll("#dmB .dm-val > span")], T, [6.8]); bump(A, $("#dmB"), T, 6.8);
+      tl(A, $("#dmB"), T, [[0, { borderColor: "#3a3378" }], [6.8, {}], [7.0, { borderColor: "#ef4b5a" }]]);
+      [".dm-zin", ".dm-zpass", "#w2"].forEach((x) => tl(A, $(x), T, [[7.0, { opacity: 1 }], [7.2, { opacity: 0 }]]));
+      show(A, $("#zn"), T, 7.2);
+    } },
+
+    // ---------------- Listen-Duell ----------------
+    duell: { T: 9.5, still: 7.4, build(st, A, T) {
+      const slots = [["Italien", "anna", 10, 40], ["Frankreich", "berta", 106, 40], ["Österreich", "anna", 202, 40], ["Deutschland", null, 58, 72], ["Liechtenstein", null, 154, 72]];
+      st.innerHTML = `<div class="dm-zq">Nachbarländer der Schweiz</div><div class="dm-dn">5 Antworten · abwechselnd</div>`
+        + slots.map(([n, who, x, y], i) => `<div class="dm-ds" id="s${i}" style="left:${x}px;top:${y}px;--pc:${who ? C[who] : "#888"}"><span class="a">?</span><span class="b">${n}</span></div>`).join("")
+        + [["anna", "Italien", "ok"], ["berta", "Frankreich", "ok"], ["anna", "Österreich", "ok"], ["berta", "Italien", "bad"]].map(([w, t, k], i) =>
+          `<div class="dm-db ${k}" id="b${i}" style="--pc:${C[w]}"><i></i><b>${w === "anna" ? "Anna" : "Berta"}:</b> ${t} ${k === "ok" ? "✓" : "✗ schon genannt!"}</div>`).join("")
+        + `<div class="dm-dt"><i></i></div>
+        <div class="dm-note" id="dn" style="top:166px;color:#ff9aa2">Berta verliert die Runde – Punkt für Anna!</div>
+        <div class="dm-chips" style="top:206px"><div class="dm-chip" id="cA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 1)}</div><div class="dm-chip" id="cB" style="--pc:${C.berta}"><i></i>Berta ${vals(0)}</div></div>`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x), turns = [[.4, 1.2, "anna"], [2.0, 2.8, "berta"], [3.6, 4.4, "anna"], [5.2, 6.0, "berta"]];
+      turns.forEach(([a, r, w], i) => {
+        show(A, $("#b" + i), T, r - .2, i < 3 ? turns[i + 1][0] : undefined);
+        if (i < 3) { const el = $("#s" + i); tl(A, el.querySelector(".a"), T, [[0, { opacity: 1 }], [r, {}], [r + .2, { opacity: 0 }]]); pop(A, el.querySelector(".b"), T, r);
+          tl(A, el, T, [[0, { background: "#15123a", borderColor: "#3a3378" }], [r, {}], [r + .2, { background: `color-mix(in srgb, ${C[w]} 25%, #15123a)`, borderColor: C[w] }]]); }
+      });
+      tl(A, $(".dm-dt i"), T, [[0, { width: "100%", background: C.anna }], ...turns.flatMap(([a, r, w]) => [[a - .01, { width: "100%", background: C[w] }], [a, {}, "linear"], [r, { width: "55%" }]]), [6.1, { width: "0%" }]]);
+      const on = (el, wins) => tl(A, el, T, [[0, { boxShadow: "0 0 0 0 transparent" }], ...wins.flatMap(([a, b]) => [[a, {}], [a + .15, { boxShadow: "0 0 0 2px var(--pc)" }], [b, {}], [b + .15, { boxShadow: "0 0 0 0 transparent" }]])]);
+      on($("#cA"), [[.4, 1.6], [3.6, 4.8]]); on($("#cB"), [[2.0, 3.2], [5.2, 6.2]]);
+      tl(A, $("#cB"), T, [[0, { borderColor: "#3a3378" }], [6.0, {}], [6.2, { borderColor: "#ef4b5a" }]]);
+      show(A, $("#dn"), T, 6.4);
+      swap(A, [...st.querySelectorAll("#cA .dm-val > span")], T, [7.0]); bump(A, $("#cA"), T, 7.0);
+    } },
+
+    // ---------------- Antwort sucht Frage ----------------
+    frage: { T: 10.5, still: 6.4, build(st, A, T) {
+      st.innerHTML = `<div class="dm-fsecret"><span>🔒 Nur Anna sieht</span><div>Kategorie <b>Religion</b> · Antwort <b class="big">3</b></div></div>
+        <div class="dm-flab" style="top:58px;color:${C.anna}">Anna erfindet eine Frage dazu:</div>
+        <div class="dm-fin" style="top:74px"><span class="t" id="fq">Wie viele Weise kamen zur Krippe?</span><span class="caret"></span></div>
+        <div class="dm-flab" id="fl2" style="top:112px;color:${C.berta}">Berta antwortet:</div>
+        <div class="dm-fin" id="fa" style="top:128px"><span class="t" id="ft">3</span><span class="caret"></span></div>
+        <div class="dm-note" id="fr" style="top:166px;color:#5fe39a;font-size:13px">✓ Richtig – Punkt für Berta!</div>
+        <div class="dm-note" id="fx" style="top:184px;color:#fff;font-weight:600;font-size:10.5px">Falsch geantwortet? Dann bekommt Anna den Punkt.</div>
+        <div class="dm-chips" style="top:206px"><div class="dm-chip" style="--pc:${C.anna}"><i></i>Anna ${vals(0)}</div><div class="dm-chip" id="cB" style="--pc:${C.berta}"><i></i>Berta ${vals(0, 1)}</div></div>`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      pop(A, $(".dm-fsecret"), T, .2, "ease-out");
+      show(A, $(".dm-flab"), T, .8);
+      tl(A, $("#fq"), T, [[0, { maxWidth: "0px" }], [1.0, {}, "steps(16)"], [3.0, { maxWidth: "220px" }]]);
+      tl(A, $(".dm-fin"), T, [[0, { borderColor: "rgba(255,255,255,.25)" }], [3.1, {}], [3.3, { borderColor: C.anna }]]);
+      show(A, $("#fl2"), T, 3.6); show(A, $("#fa"), T, 3.6);
+      tl(A, $("#ft"), T, [[0, { maxWidth: "0px" }], [4.3, {}, "steps(1)"], [4.5, { maxWidth: "20px" }]]);
+      tl(A, $("#fa"), T, [[4.9, {}], [5.1, { borderColor: "#2fbf71", background: "rgba(47,191,113,.2)" }]]);
+      show(A, $("#fr"), T, 5.2); show(A, $("#fx"), T, 6.2);
+      swap(A, [...st.querySelectorAll("#cB .dm-val > span")], T, [5.6]); bump(A, $("#cB"), T, 5.6);
+    } },
+
     // ---------------- Almsommer ----------------
     alm: { T: 10, still: 5.4, build(st, A, T) {
       // Gelände (H = Hof) und Flächen; Fläche D (3 Wiesen neben dem Hof) wird in der Vorführung fertig

@@ -3304,3 +3304,26 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .dm-sacts span { width: 84px; height: 28px; border-radius: 9px; display: grid; place-items: center; font: 700 12px Fredoka, sans-serif; }
 .dm-sacts .hit { background: var(--accent); color: var(--accent-ink); box-shadow: 0 3px 0 #c48f0a; } .dm-sacts .stand { border: 1.5px solid rgba(255, 255, 255, .35); background: rgba(0, 0, 0, .18); }
 .dm-smsg { left: 0; right: 0; top: 188px; text-align: center; font: 700 14px Fredoka, sans-serif; color: #fff; opacity: 0; } .dm-smsg.win { color: var(--accent); top: 196px; font-size: 13px; }
+/* Vorführung Zehnkampf */
+.dm-zq { left: 0; right: 0; top: 8px; text-align: center; font: 700 14px Fredoka, sans-serif; color: var(--accent); }
+.dm-zt { width: 136px; height: 22px; border-radius: 7px; background: #15123a; border: 1px solid var(--line); font-weight: 800; font-size: 11.5px; display: grid; place-items: center; }
+.dm-zt > span { grid-area: 1 / 1; } .dm-zt .b { opacity: 0; font-size: 10.5px; } .dm-zt .b.ok { color: #b8f0d2; } .dm-zt .b.bad { color: #ffb3ba; }
+.dm-zin { left: 10px; top: 166px; width: 190px; height: 28px; border-radius: 9px; border: 1.5px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .3); display: flex; align-items: center; padding: 0 4px 0 9px; font-weight: 800; font-size: 12px; }
+.dm-zin .t { overflow: hidden; white-space: nowrap; max-width: 0; } .dm-zin .caret { width: 2px; height: 14px; background: var(--ink); margin-left: 1px; }
+.dm-zin b { margin-left: auto; padding: 3px 10px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); font: 700 11px Fredoka, sans-serif; }
+.dm-zpass { left: 208px; top: 166px; width: 82px; height: 28px; border-radius: 9px; background: #3a3285; display: grid; place-items: center; font: 700 12px Fredoka, sans-serif; }
+.dm-zwho { left: 0; right: 0; top: 152px; text-align: center; font: 800 10px Nunito, sans-serif; color: var(--accent); opacity: 0; }
+/* Vorführung Listen-Duell */
+.dm-dn { left: 0; right: 0; top: 25px; text-align: center; font-size: 10px; font-weight: 700; color: var(--muted); }
+.dm-ds { width: 88px; height: 26px; border-radius: 8px; background: #15123a; border: 1.5px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: 11.5px; }
+.dm-ds > span { grid-area: 1 / 1; } .dm-ds .a { color: var(--muted); font: 700 14px Fredoka, sans-serif; } .dm-ds .b { opacity: 0; }
+.dm-db { left: 30px; right: 30px; top: 110px; height: 28px; border-radius: 99px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 700; opacity: 0;
+  background: rgba(0, 0, 0, .3); border: 1.5px solid var(--pc); } .dm-db i { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); } .dm-db.bad { background: rgba(239, 75, 90, .25); color: #ffd0d4; }
+.dm-dt { left: 30px; right: 30px; top: 146px; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .12); overflow: hidden; } .dm-dt i { display: block; height: 100%; }
+/* Vorführung Antwort sucht Frage */
+.dm-fsecret { left: 10px; right: 10px; top: 8px; height: 44px; border-radius: 11px; background: rgba(255, 200, 61, .12); border: 1.5px dashed rgba(255, 200, 61, .6); display: grid; place-items: center; align-content: center; gap: 0; font-size: 12px; font-weight: 700; }
+.dm-fsecret span { color: var(--accent); font-size: 10px; } .dm-fsecret b { color: #fff; } .dm-fsecret b.big { font: 700 18px Fredoka, sans-serif; color: var(--accent); }
+.dm-flab { left: 12px; font-size: 10.5px; font-weight: 800; opacity: 0; }
+.dm-fin { left: 10px; right: 10px; height: 30px; border-radius: 9px; border: 1.5px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .3); display: flex; align-items: center; padding: 0 10px; font-weight: 800; font-size: 12px; }
+.dm-fin .t { overflow: hidden; white-space: nowrap; max-width: 0; } .dm-fin .caret { width: 2px; height: 14px; background: var(--ink); margin-left: 1px; }
+#fa.dm-fin { opacity: 0; }
