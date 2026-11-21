@@ -3130,7 +3130,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
 /* ---------- Stichhaltig: Leiste oben (Trumpf, Spieler mit Ring, Runde), Stich als Haufen mit Erklärung daneben, Hand unten ---------- */
 .sc-table { display: grid; gap: 14px; padding: 16px 18px 18px; justify-items: stretch; text-align: left; width: 100%; max-width: 1100px; margin: 0 auto; }
 .sc-bar { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
-.sc-trump { display: flex; align-items: center; gap: 10px; } .kg-card.sc-tcard { width: 44px; rotate: -6deg; }
+.sc-trump { display: flex; align-items: center; gap: 10px; } .kg-card.sc-tcard { width: 58px; rotate: -6deg; }
 .sc-trump > div { display: grid; line-height: 1.1; }
 .sc-trump small, .sc-round small { font: 800 .64rem Nunito, sans-serif; text-transform: uppercase; letter-spacing: 1.2px; color: var(--felt-ink); }
 .sc-trump b { font: 700 1.2rem Fredoka, sans-serif; color: var(--accent); }
@@ -3183,11 +3183,13 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .kg-stich.screen.game { padding-bottom: 16px; }
   .sc-table { min-height: calc(100dvh - 116px); grid-template-rows: auto auto 1fr auto; align-content: stretch; }
   .sc-center { min-height: 0; }
-  .sc-pile { width: clamp(300px, 34vh, 420px); height: clamp(200px, 30vh, 330px); }
+  .sc-pile { width: clamp(300px, 34vh, 420px); height: clamp(170px, calc(30vh - 20px), 320px); }
   .kg-card.sc-card { width: clamp(84px, 13vh, 136px); }
   .sc-hand .kg-card.big { width: clamp(80px, 15vh, 150px); }
   .sc-yt { font-size: clamp(1.35rem, 2.8vh, 1.8rem); } .sc-info p { font-size: clamp(.92rem, 1.7vh, 1.08rem); } .sc-info { max-width: 320px; }
   .sc-ring { width: clamp(40px, 5vh, 50px); height: clamp(40px, 5vh, 50px); } .sc-chip b { font-size: clamp(.92rem, 1.7vh, 1.05rem); }
-  .kg-card.sc-tcard { width: clamp(44px, 6vh, 60px); }
+  .kg-card.sc-tcard { width: clamp(62px, 9vh, 92px); }
 }.sc-hand, .sc-hand.active { border: 0; background: none; box-shadow: none; padding: 14px 0 0; align-self: end; }
 .sc-results { align-content: center; } .sc-results .kg-res { align-self: center; }
+
+@media (max-width: 760px) { .kg-card.sc-tcard { width: 50px; } }
