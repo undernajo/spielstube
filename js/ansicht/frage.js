@@ -106,6 +106,7 @@
           <p>${appealTxt}${reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</p>
           <div class="du-score-nb">${cp && cp.state === "open" ? "" : seated || G.isHost ? `<button id="fq-next" class="btn primary next-btn">Nächste Runde</button>` : ""}
             ${iGuess && r.winner === st.asker && r.why === "time" && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}<span class="du-stand">Stand ${st.score[st.seats[0]]} : ${st.score[st.seats[1]]}</span></div></div>`
+        : st.step === "final" && !r.voided && !v.qb ? G.podiumHtml({ items: st.seats.map((id) => ({ id, name: nameOf(id), pts: st.score[id] || 0, txt: `${st.score[id] || 0} Punkte` })), winners: [r.winner], restartId: "fq-restart", info: `${appealTxt}${reason}` })
         : `<div class="banner fq-result ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
           : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>${iWon ? "Punkt für dich!" : "Punkt für " + esc(nameOf(r.winner))}</b>`}
           <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>

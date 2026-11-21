@@ -313,9 +313,8 @@
       // Endstand: Jagdstrecke je Jäger, alle Reviere aufgedeckt
       if (confettiKey !== roundKey) { confettiKey = roundKey; if (st.winners && st.winners.includes(me)) confetti(); }
       const rank = st.seats.slice().sort((a, b) => (st.pts[b] || 0) - (st.pts[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy jtrophy">${RET}</div><b>${st.endReason === "leer" ? `${(st.cleared || []).map((id) => (id === me ? "Du" : esc(nameOf(v, id)))).join(" & ")} ${(st.cleared || []).length > 1 ? "haben" : (st.cleared || [])[0] === me ? "hast" : "hat"} ein Revier leergejagt – die Jagd ist aus!` : "Die Jagd ist vorbei!"}</b>
-          <div>${st.winners.map((id) => esc(nameOf(v, id))).join(" & ")} ${st.winners.length > 1 ? "haben" : "hat"} die größte Strecke: ${st.pts[st.winners[0]]} ${st.pts[st.winners[0]] === 1 ? "Punkt" : "Punkte"}.</div>
-          <div class="banner-actions"><button id="jg-restart" class="btn primary">Nochmal jagen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+      main = G.podiumHtml({ items: rank.map((id) => ({ id, name: nameOf(v, id), pts: st.pts[id] || 0, txt: `${st.pts[id] || 0} ${st.pts[id] === 1 ? "Punkt" : "Punkte"}` })), winners: st.winners, restartId: "jg-restart", restartLabel: "Nochmal jagen",
+          info: st.endReason === "leer" ? `${(st.cleared || []).map((id) => (id === me ? "Du" : esc(nameOf(v, id)))).join(" & ")} ${(st.cleared || []).length > 1 ? "haben" : (st.cleared || [])[0] === me ? "hast" : "hat"} ein Revier leergejagt – die Jagd ist aus!` : "Die Jagd ist vorbei – die größte Strecke gewinnt." }) + `
         <div class="jfinal">${rank.map((id) => { const place = rank.filter((x) => (st.pts[x] || 0) > (st.pts[id] || 0)).length, kills = st.kills.filter((k) => k.by.includes(id));
           return `<section class="panel jfp" style="--pc:${colorOf(v, id)}"><div class="jfh"><span>${medal[place] || place + 1 + "."}</span><b>${esc(nameOf(v, id))}${id === me ? " <em>(du)</em>" : ""}</b><span class="jpts">${st.pts[id] || 0}</span></div>
             <div class="jstrecke">${kills.length ? kills.map((k) => `<span title="${AN[k.a].name} aus ${esc(gen(nameOf(v, k.t)))} Revier">${ICON[k.a]}</span>`).join("") : `<span class="muted small">nichts erlegt</span>`}</div>

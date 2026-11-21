@@ -1788,12 +1788,7 @@
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
         <div class="banner-actions">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}</div></div>`;
     } else {
-      const w = v.players.filter((p) => v.winners.includes(p.id));
-      const iWon = v.winners.includes(myId);
-      banner = `<div class="banner win"><div class="trophy">🏆</div><b>${w.map((p) => esc(p.name)).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"}!</b>
-        ${iWon ? "Glückwunsch!" : "Revanche?"}
-        <div class="banner-actions"><button id="restart" class="btn primary">Nochmal spielen</button>
-        ${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>`;
+      banner = v.qb ? `<div class="banner win"><b>${v.players.filter((p) => v.winners.includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${v.winners.length > 1 ? "gewinnen" : "gewinnt"} die Etappe!</b></div>` : "";
     }
 
     app.innerHTML = `
@@ -1808,7 +1803,8 @@
           <section class="players">${chips}</section>
           <section class="action">${banner}${undoHtml(v, nameOf)}</section>
           <section class="board">
-            <div class="ring ${myTurn && v.phase === "playing" ? "myturn" : ""} ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
+            ${v.phase === "gameOver" && !v.qb ? podiumHtml({ items: v.players.filter((p) => !p.waiting || p.score).map((p) => ({ id: p.id, name: p.name, pts: p.score, txt: `${p.score} Punkte` })), winners: v.winners, restartId: "restart", info: `Zehnkampf · bis ${v.target} Punkte · ${v.round} ${v.round === 1 ? "Runde" : "Runden"}` }) : ""}
+            <div ${v.phase === "gameOver" && !v.qb ? "hidden" : ""} class="ring ${myTurn && v.phase === "playing" ? "myturn" : ""} ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
               <div class="zk-bulbs">${ZK_BULBS}</div>
               <div class="center">
                 ${myTurn && v.phase === "playing" ? `<div class="zturn">Du bist dran!</div>` : ""}
@@ -2027,6 +2023,30 @@
   // Gemeinsamer „Weiter“-Knopf für alle Spiele: gelb, solange man selbst noch nicht bereit ist; danach ruhig mit
   // „✓ Bereit – warte auf …“ (nochmal tippen nimmt zurück). Der Gastgeber bekommt daneben „Als Gastgeber sofort weiter“.
   // attr / hostAttr: z. B. 'id="geo-ready"' bzw. 'id="geo-next"'; waiting: Namen derer, auf die man noch wartet.
+  // ---------- Gemeinsame Siegerehrung: Treppchen (Platz 1 Mitte, 2 links, 3 rechts), ab Platz 4 Liste ----------
+  // items: [{ id, name, pts (Zahl zum Sortieren), txt (Anzeige, z. B. „31 Punkte“), sub }]; winners: Sieger-IDs (Gleichstand möglich)
+  // Die Animation läuft nur beim ersten Zeigen dieses Endstands (nicht nach Neuladen/Neuzeichnen).
+  const podiumSeen = new Set();
+  function podiumHtml({ items, winners, restartId, restartLabel = "Nochmal spielen", info = "", title = "", key = "" }) {
+    const pl = view && view.players ? view.players : [];
+    const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const r = items.slice().sort((a, b) => (winners.includes(b.id) - winners.includes(a.id)) || b.pts - a.pts);
+    r.forEach((x, i) => { x.place = winners.includes(x.id) ? 1 : i && x.pts === r[i - 1].pts ? r[i - 1].place : i + 1; });
+    const ws = r.filter((x) => x.place === 1), iWon = ws.some((x) => x.id === myId);
+    const head = title || (ws.length > 1 ? `${ws.map((x) => esc(x.name)).join(" & ")} gewinnen gemeinsam!` : iWon ? "Du gewinnst!" : `${esc(ws[0] ? ws[0].name : "?")} gewinnt!`);
+    const k = (view ? view.code : "") + ":" + (key || restartId) + ":" + r.map((x) => x.id + "=" + x.pts).join(",");
+    const anim = !podiumSeen.has(k) && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); podiumSeen.add(k);
+    const top = r.slice(0, 3), pos = [top[1], top[0], top[2]].filter(Boolean), H = { 1: 150, 2: 110, 3: 80 };
+    const step = (x) => { const k2 = top.indexOf(x), d = [0.5, 0.2, 0.8][k2], p = Math.min(x.place, 3);
+      return `<div class="pod-step p${p}" style="--pc:${col(x.id)}"><div class="pod-who" style="--d:${d + .45}s"><span class="pod-crown">${x.place === 1 ? "👑" : ""}</span>
+        <span class="pod-av">${esc((x.name || "?").charAt(0).toUpperCase())}</span><b>${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</b><small>${x.txt}</small>${x.sub ? `<small class="pod-sub">${x.sub}</small>` : ""}</div>
+        <div class="pod-block" style="--h:${H[p]}px;--bd:${d}s">${x.place}</div></div>`; };
+    const rest = r.length > 3 ? `<div class="pod-rest">${r.slice(3).map((x, i) => `<div style="--pc:${col(x.id)};--d:${1.6 + i * .12}s"><span class="n">${x.place}.</span><span class="pdot"></span><span class="nm">${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}${x.sub ? ` <span class="muted small">· ${x.sub}</span>` : ""}</span><b>${x.txt}</b></div>`).join("")}</div>` : "";
+    return `<div class="podium-wrap ${anim ? "anim" : ""}"><div class="pod-head">🏆 <em>${head}</em></div>
+      <div class="podium">${pos.map(step).join("")}</div>${rest}
+      <div class="banner-actions pod-acts">${restartId ? `<button id="${restartId}" class="btn primary">${restartLabel}</button>` : ""}${isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div>
+      ${info ? `<p class="pod-info">${info}</p>` : ""}</div>`;
+  }
   function nextBtnsHtml({ attr, hostAttr, label, ready, waiting = [], cls = "" }) {
     const who = !waiting.length ? "gleich geht's weiter" : waiting.length <= 2 ? "warte auf " + waiting.map(esc).join(" & ") : `warte auf ${waiting.length} Mitspieler`;
     return `<button ${attr} class="btn primary next-btn ${cls} ${ready ? "is-ready" : ""}">${ready
@@ -2886,6 +2906,7 @@
     headBrandHtml,
     nextBtnsHtml,
     checkHtml,
+    podiumHtml,
     nextBtnSwap,
     waitingNames,
     invite,

@@ -94,7 +94,9 @@
     } else if (st.step === "final") {
       const rank = st.seats.slice().sort((a, b) => (st.score[b] || 0) - (st.score[a] || 0));
       const w = st.winners || [];
-      card = `<div class="fw-card fw-end"><div class="trophy">🏆</div>
+      if (!v.qb) card = `<div class="fw-card fw-end fw-pod">${G.podiumHtml({ items: st.seats.map((id) => ({ id, name: nameOf(id), pts: st.score[id] || 0, txt: `${st.score[id] || 0} Punkte` })), winners: w, restartId: "fw-restart",
+          info: open ? `Gleich viele Züge für alle – ${open} ${open === 1 ? "Feld bleibt" : "Felder bleiben"} offen.` : "" })}</div>`;
+      else card = `<div class="fw-card fw-end"><div class="trophy">🏆</div>
         <b class="fw-win">${w.map((id) => esc(nameOf(id))).join(" & ")} ${w.length > 1 ? "gewinnen" : "gewinnt"} mit ${st.score[w[0]] || 0} Punkten!</b>
         ${open ? `<div class="fw-who">Gleich viele Züge für alle – ${open} ${open === 1 ? "Feld bleibt" : "Felder bleiben"} offen.</div>` : ""}
         <div class="fw-res">${rank.map((id, i) => `<div class="fw-line" style="--pc:${colorOf(id)}"><span class="pdot"></span><b>${1 + rank.filter((x) => (st.score[x] || 0) > (st.score[id] || 0)).length}. ${esc(nameOf(id))}${id === me ? " <em>(du)</em>" : ""}</b><span class="g"></span><b>${st.score[id] || 0}</b></div>`).join("")}</div>

@@ -71,9 +71,7 @@
           <div class="du-score-nb">${seated || G.isHost ? `<button id="du-next" class="btn primary next-btn">Nächste Runde</button>` : ""}<span class="du-stand">Stand ${st.score[st.seats[0]]} : ${st.score[st.seats[1]]}</span></div></div>`;
       else if (st.step === "roundEnd") action = `<div class="banner"><b>Runde zählt nicht</b><div class="small">${reason}</div>
           <div class="banner-actions">${seated || G.isHost ? `<button id="du-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`;
-      else action = `<div class="banner win"><div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[opp(r.winner)]}!</b>
-          <div class="small">${reason}</div>
-          <div class="banner-actions"><button id="du-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>`;
+      else action = G.podiumHtml({ items: st.seats.map((id) => ({ id, name: nameOf(id), pts: st.score[id] || 0, txt: `${st.score[id] || 0} Punkte` })), winners: [r.winner], restartId: "du-restart", info: reason });
     }
     const log = st.moves.slice().reverse().slice(0, 4).map((m) => `<li style="--pc:${colorOf(m.by)}"><i class="pdot"></i>${esc(nameOf(m.by))}: ${m.text ? `„${esc(m.text)}“` : "keine Antwort"} ${m.ok ? "✓" : "✗"}</li>`).join("");
     app.innerHTML = `

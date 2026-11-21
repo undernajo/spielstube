@@ -180,11 +180,7 @@
     let main;
     if (st.step === "final") {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((p) => (st.winners || []).includes(p.id)).map((p) => esc(p.name)).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"}!</b>
-          <div class="banner-actions"><button id="quiz-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
-        <div class="panel slf-final">${ranking.map((p, i) => `<div class="slf-rank" style="--pc:${colorOf(p.id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
-          <span class="slf-name">${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0} Punkte</b></div>`).join("")}
-          <p class="muted small">${esc(st.modeName)} · ${st.rounds} Runden</p></div>`;
+      main = G.podiumHtml({ items: ranking.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, txt: `${st.total[p.id] || 0} Punkte` })), winners: st.winners || [], restartId: "quiz-restart", info: `${esc(st.modeName)} · ${st.rounds} Runden` });
     } else {
       const sent = quizSent === st.round, it = st.item || {};
       let q = "";

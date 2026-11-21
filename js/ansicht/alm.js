@@ -313,9 +313,8 @@
     if (st.step === "final") {
       if (almConfetti !== key) { almConfetti = key; if (st.winners && st.winners.includes(G.myId)) confetti(); }
       const rank = st.seats.slice().sort((a, b) => (st.totals[b] || 0) - (st.totals[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy">🏔️</div><b>${st.endReason === "storm" ? "Ein Unwetter beendet den Sommer!" : "Der Sommer ist vorbei!"}</b>
-          <div>${st.winners.map((id) => esc(nameOf(v, id))).join(" & ")} ${st.winners.length > 1 ? "gewinnen" : "gewinnt"} mit ${st.totals[st.winners[0]]} Punkten.</div>
-          <div class="banner-actions"><button id="alm-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+      main = G.podiumHtml({ items: rank.map((id) => ({ id, name: nameOf(v, id), pts: st.totals[id] || 0, txt: `${st.totals[id] || 0} Punkte` })), winners: st.winners, restartId: "alm-restart",
+          info: st.endReason === "storm" ? "⛈️ Ein Unwetter hat den Sommer beendet." : "🏔️ Der Sommer ist vorbei." }) + `
         <div class="alm-final">${rank.map((id, i) => `<div class="alm-fp" style="--pc:${colorOf(v, id)}">
             <div class="alm-fh"><span>${(() => { const place = rank.filter((x) => (st.totals[x] || 0) > (st.totals[id] || 0)).length; return medal[place] || place + 1 + "."; })()}</span><b>${esc(nameOf(v, id))}${id === G.myId ? " (du)" : ""}</b><b class="alm-ft">${st.totals[id]}</b></div>
             ${boardHtml(v, st, new Set(st.boards[id]), { small: true })}

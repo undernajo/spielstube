@@ -67,11 +67,7 @@
           <p class="muted small">${esc(st.modeName)} gegen die Bank · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
     } else if (st.step === "final") {
       const ranking = st.seats.slice().sort((a, b) => (st.total[b] || 0) - (st.total[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = `<div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((id) => (st.winners || []).includes(id)).map((id) => esc(nameOf(id))).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"}!</b>
-          <div class="banner-actions"><button id="kg-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
-        <div class="panel slf-final">${ranking.map((id, i) => `<div class="slf-rank" style="--pc:${colorOf(id)}"><span class="slf-medal">${medal[i] || i + 1 + "."}</span><span class="pdot"></span>
-          <span class="slf-name">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0} Punkte</b></div>`).join("")}
-          <p class="muted small">${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
+      main = G.podiumHtml({ items: ranking.map((id) => ({ id, name: nameOf(id), pts: st.total[id] || 0, txt: `${st.total[id] || 0} Punkte` })), winners: st.winners || [], restartId: "kg-restart", info: `${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}` });
     } else if (st.mode === "bus") {
       main = busMainHtml(v, st, colorOf, nameOf, readyBtn);
     } else if (st.mode === "siebzehn") {

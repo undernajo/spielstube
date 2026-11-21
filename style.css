@@ -3623,3 +3623,37 @@ body.qb-play .fw-main { --fw-top: 370px; }
 @media (max-width: 899px) { .fq-role { display: none; } .fq-ri { display: inline; } .fq-card .fq-choices { grid-template-columns: 1fr; } .fq-card .fq-choice { min-height: 54px; } }
 @media (max-width: 560px) { .fq-cmp { grid-template-columns: 1fr; } .fq-wait2 { padding: 16px; font-size: 1rem; } }
 .fq-card .fq-complain { justify-self: center; align-self: center; font-size: .92rem; padding: 9px 16px; }
+
+/* ---------- Gemeinsame Siegerehrung: Treppchen ---------- */
+.podium-wrap { display: grid; justify-items: center; gap: 18px; padding: 10px 0 20px; width: 100%; }
+.pod-head { font: 700 clamp(1.5rem, 3.4vw, 2.2rem) Fredoka, sans-serif; text-align: center; } .pod-head em { font-style: normal; color: var(--accent); }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 10px; width: min(100%, 560px); }
+.pod-step { flex: 1; display: grid; justify-items: center; gap: 8px; min-width: 0; max-width: 190px; }
+.pod-who { display: grid; justify-items: center; gap: 3px; text-align: center; min-width: 0; max-width: 100%; }
+.pod-av { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--pc); color: #1a1530; font: 700 1.4rem Fredoka, sans-serif; box-shadow: 0 0 0 4px color-mix(in srgb, var(--pc) 30%, transparent); }
+.pod-step.p1 .pod-av { width: 76px; height: 76px; font-size: 1.9rem; }
+.pod-crown { font-size: 1.6rem; line-height: 1; height: 1.6rem; }
+.pod-who b { font: 700 1.05rem Fredoka, sans-serif; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .pod-who b em { font: 600 .8rem Nunito, sans-serif; font-style: normal; color: var(--muted); }
+.pod-who small { color: var(--muted); font-weight: 700; } .pod-who .pod-sub { font-size: .75rem; font-weight: 600; }
+.pod-block { width: 100%; height: var(--h); border-radius: 14px 14px 4px 4px; display: grid; place-items: start center; padding-top: 10px; font: 700 2.2rem Fredoka, sans-serif; color: rgba(26, 21, 48, .7);
+  background: linear-gradient(180deg, var(--bc), color-mix(in srgb, var(--bc) 70%, #000)); box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), 0 10px 24px rgba(0, 0, 0, .35); transform-origin: bottom; }
+.p1 .pod-block { --bc: #ffc83d; } .p2 .pod-block { --bc: #cfd6e6; } .p3 .pod-block { --bc: #d99a5b; }
+.pod-rest { width: min(100%, 520px); display: grid; gap: 6px; }
+.pod-rest > div { display: grid; grid-template-columns: 34px auto 1fr auto; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+.pod-rest .n { font: 700 1rem Fredoka, sans-serif; color: var(--muted); } .pod-rest .pdot { background: var(--pc); } .pod-rest b { font: 700 1.05rem Fredoka, sans-serif; }
+.pod-rest .nm em { font-style: normal; color: var(--muted); font-size: .85em; }
+.pod-acts { margin: 0; } .pod-acts .btn { min-width: 180px; }
+.pod-info { margin: 0; color: var(--muted); font-size: .9rem; text-align: center; }
+.podium-wrap.anim .pod-block { animation: pod-grow .6s cubic-bezier(.3, 1.3, .5, 1) both; animation-delay: var(--bd); }
+.podium-wrap.anim .pod-who { animation: pod-pop .55s cubic-bezier(.3, 1.5, .5, 1) both; animation-delay: var(--d); }
+.podium-wrap.anim .pod-rest > div { animation: pod-rise .4s ease-out both; animation-delay: var(--d); }
+@keyframes pod-grow { from { transform: scaleY(0); } }
+@keyframes pod-pop { 0% { transform: scale(.3); opacity: 0; } 70% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes pod-rise { from { transform: translateY(14px); opacity: 0; } }
+@media (max-width: 560px) { .pod-block { font-size: 1.6rem; } .pod-av { width: 48px; height: 48px; font-size: 1.15rem; } .pod-step.p1 .pod-av { width: 62px; height: 62px; } .pod-acts .btn { min-width: 0; flex: 1; } }
+/* Endstand nicht mehr im alten Kasten */
+.podium-wrap .banner-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: min(100%, 520px); }
+.ring[hidden] { display: none !important; }
+.board > .podium-wrap { padding-top: 30px; }
+.fw-card.fw-pod { width: min(640px, 100%); }
+.fw-pod .podium-wrap { padding: 0; }
