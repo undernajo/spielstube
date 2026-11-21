@@ -335,7 +335,11 @@
     if (end) {
       const rows = st.seats.slice().sort((a, b) => st.gain[b] - st.gain[a]).map((id) => `<div class="kg-res ${st.gain[id] ? "win" : "bust"}" style="--pc:${colorOf(id)}"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span>
           <span class="muted small">${st.status[id] === "crash" ? "💥 verunglückt" : st.status[id] === "done" ? "🏁 alle 5 Stationen!" : "🚏 ausgestiegen"}</span><span></span><b class="qb-plus">+${st.gain[id]}</b></div>`).join("");
-      body = `<div class="kg-results">${rows}</div>${readyBtn}`;
+      // was dir passiert ist, bleibt über der Rundenwertung stehen (schmal), damit man es nicht verpasst
+      const mineLine = !seated ? "" : me === "crash" ? `<div class="bb-note-box bad slim"><b>💥 Unfall an Station ${myReach + 1}</b><span>${myLost ? `dein Topf (${myLost}) ist weg` : "keine Punkte in dieser Runde"}</span></div>`
+        : me === "out" ? `<div class="bb-note-box safe slim"><b>🚏 Ausgestiegen an Station ${myReach + 1}</b><span><b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkte"} gesichert</span></div>`
+        : me === "done" ? `<div class="bb-note-box safe slim"><b>🏁 Endstation!</b><span>alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></span></div>` : "";
+      body = `${mineLine}<div class="kg-results bb-results ${st.seats.length > 3 ? "two" : ""}">${rows}</div>${readyBtn}`;
     } else {
       const q = st.question, h = cards, mine = busMine && busMine.gid === st.gid && busMine.q === st.q && busMine.r === st.round && st.guessed[G.myId] ? busMine.g : null;
       let act = "";
