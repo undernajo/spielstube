@@ -3726,3 +3726,10 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .pult-acts .next-off { text-align: center; font-size: .78rem; }
   .pult-main .gh { grid-template-columns: auto minmax(0, 1fr) auto; }
 }
+/* Auflösung: auf breiten Bildschirmen Kopfzeile wie beim Raten, Ergebnisse stehen im Pult */
+.gh.gh-rev { display: none; }
+@media (min-width: 1200px) {
+  .pult-main > .gh.gh-rev { display: grid; }
+  .pult-main > .gh.gh-rev ~ .geo-bar { display: none; }
+  .pult-main > .gh.gh-rev ~ .geo-wrap .geo-map { height: max(360px, calc(100vh - 246px)); }
+}

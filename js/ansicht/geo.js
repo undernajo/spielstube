@@ -68,9 +68,10 @@
   const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
 
   // Kopfzeile (gemeinsamer Baustein): Symbol, Spiel · Runde · Region, Ort groß, Spieler mit Lämpchen, Zeitring, Knopf
+  const geoKm = (km) => km == null ? "keine Nadel" : (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km).toLocaleString("de-DE")) + " km";
   const geoPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, ptsTxt: (st.total[p.id] || 0).toLocaleString("de-DE"),
     done: st.step === "reveal" ? !!st.ready[p.id] : st.submitted.includes(p.id),
-    txt: st.step === "reveal" ? (st.ready[p.id] ? "bereit" : st.result && st.result[p.id] ? `+${st.result[p.id].points} in dieser Runde` : "schaut sich die Lösung an")
+    txt: st.step === "reveal" ? (() => { const r = st.result && st.result[p.id]; const t = r ? `${geoKm(r.km)} · +${r.points}` : "schaut sich die Lösung an"; return st.ready[p.id] ? "bereit · " + t : t; })()
       : st.submitted.includes(p.id) ? "hat getippt" : p.connected ? "sucht noch …" : "getrennt" }));
   const geoPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: (st.total[p.id] || 0).toLocaleString("de-DE"), done: st.submitted.includes(p.id) }));
   function geoHead(v, st, btn = "") {
@@ -108,7 +109,7 @@
           <div class="geo-wrap oben-pic oben-target"><div id="geo-map" class="geo-map"></div><span class="oben-tag"><b>2</b> Hier auf der Karte antippen</span></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
       if (!oben) main = G.pultWrap(main, geoPult(v, st));
     } else if (st.step === "reveal") {
-      main = `
+      main = G.gameHeadHtml({ ico: oben ? "🛰️" : "📍", small: `Auflösung · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`, big: esc(st.place.name), sub: oben ? "" : esc(st.place.kind) }).replace('class="gh"', 'class="gh gh-rev"') + `
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.place.name)}</div></div>
           <div class="geo-results">${geoResults(v, st)}</div>

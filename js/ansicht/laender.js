@@ -14,7 +14,9 @@
   const landMainRing = (c) => { let big = c.g[0][0]; c.g.forEach((p) => { if (p[0].length > big.length) big = p[0]; }); return landRing(big); };
   const landPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0,
     done: st.step === "reveal" ? !!st.ready[p.id] : st.submitted.includes(p.id),
-    txt: st.step === "reveal" ? (st.ready[p.id] ? "bereit" : st.result && st.result[p.id] ? `+${st.result[p.id].points || 0} in dieser Runde` : "schaut sich die Lösung an")
+    txt: st.step === "reveal" ? (() => { const r = st.result && st.result[p.id];
+      const t = r ? `${r.c == null ? "nichts getippt" : r.ok ? "✓ richtig" + (r.fast ? " ⚡" : "") : "✗ " + (LAND.nameOf(st.region, r.c) || "?")} · +${r.points || 0}` : "schaut sich die Lösung an";
+      return st.ready[p.id] ? "bereit · " + t : t; })()
       : st.submitted.includes(p.id) ? "hat getippt" : p.connected ? "sucht noch …" : "getrennt" }));
   const landPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, done: st.submitted.includes(p.id) }));
   function landChips(v, st) {
@@ -103,7 +105,7 @@
         <div class="geo-wrap"><div id="land-map" class="geo-map land-map"></div></div>`;
       main = G.pultWrap(main, landPult(v, st));
     } else if (st.step === "reveal") {
-      main = `
+      main = G.gameHeadHtml({ ico: "🗺️", small: `Auflösung · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`, big: esc(st.targetName) }).replace('class="gh"', 'class="gh gh-rev"') + `
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.targetName)}</div></div>
           <div class="geo-results">${landResults(v, st)}</div>
