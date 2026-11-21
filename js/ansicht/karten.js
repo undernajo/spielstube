@@ -97,15 +97,19 @@
         if (priv) {
           const v = priv.feuer ? 21 : priv.sum, over = v > 21, top = priv.feuer || v === 21, C = 2 * Math.PI * 56;
           const tone = over ? "over" : top ? "top" : v >= 17 ? "near" : "";
-          const msg = priv.feuer ? "🔥 Feuer – zwei Asse!" : over ? `${priv.sum} – über 21, leider raus` : v === 21 ? "21 – Siebzehn und Vier!" : st.done[G.myId] || hold ? `Du bleibst bei ${v}` : `noch ${21 - v} bis 21`;
+          // Tisch-Beschriftung wie bei Stichhaltig: gelbe Überschrift, darunter weißer Text
+          const fin = st.done[G.myId] || hold;
+          const headTxt = priv.feuer ? "🔥 Feuer – zwei Asse!" : over ? "Über 21 – leider raus" : v === 21 ? "21 – Siebzehn und Vier!" : fin ? `Du bleibst bei ${v}` : "Noch eine Karte?";
+          const subTxt = hold ? "Alle sind fertig – gleich wird aufgedeckt …" : over ? `Du hast ${priv.sum}. ${st.done[G.myId] ? "Warte auf die anderen …" : ""}`
+            : fin ? "Du bist fertig – warte auf die anderen …" : v === 21 || priv.feuer ? "Mehr geht nicht – tippe auf „Genug“." : `Du hast ${v} – bis 21 fehlen noch ${21 - v}.`;
           me = `<div class="sv-me"><div class="sv-hand">${handHtml}</div>
               <div class="sv-dial ${tone} ${late}"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" class="sv-ring0"/>
                 <circle cx="66" cy="66" r="56" class="sv-ring" style="stroke-dasharray:${C * Math.min(1, v / 21)} ${C}"/></svg>
                 <div><b>${priv.feuer ? "🔥" : v}</b><small>von 21</small></div></div></div>
-            <div class="sv-foot ${late}"><div class="sv-msg ${tone}">${msg}<span class="sv-mine">Deine Punkte: <b>${st.total[G.myId] || 0}</b></span></div>
-              ${hold ? `<p class="sv-wait">Alle sind fertig – gleich wird aufgedeckt …</p>` : st.done[G.myId] ? `<p class="sv-wait">${priv.sum > 21 && !priv.feuer ? "Warte auf die anderen …" : "Du bist fertig – warte auf die anderen …"}</p>`
+            <div class="sv-foot ${late}"><span class="tt-head ${over ? "bad" : fin && !top ? "calm" : ""}">${headTxt}</span><p class="tt-text">${subTxt}</p>
+              ${fin ? `<span class="tt-chip">Deine Punkte: ${st.total[G.myId] || 0}</span>`
                 : `<div class="sv-acts"><button id="kg-hit" class="sv-hit">🂠 Karte!</button><button id="kg-stand" class="sv-stand">✋ Genug</button></div>`}</div>`;
-        } else me = `<p class="sv-wait sv-solo">${seated ? "Karten werden ausgeteilt …" : "Du schaust in dieser Runde zu."}</p>`;
+        } else me = `<div class="sv-solo"><span class="tt-head calm">${seated ? "Karten werden ausgeteilt …" : "Du schaust in dieser Runde zu."}</span></div>`;
         kgSound(sounds, 380, 0);
         const legend = `<div class="sv-legend" aria-label="Kartenwerte">${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
           .map(([nm, v]) => `<span>${nm} <b>${v}</b></span>`).join("")}<span>2 Asse = 🔥</span></div>`;
@@ -148,7 +152,7 @@
     app.querySelectorAll("[data-busg]").forEach((b) => b.onclick = () => {
       busMine = { gid: st.gid, q: st.q, r: st.round, g: b.dataset.busg };
       app.querySelectorAll("[data-busg]").forEach((x) => x.classList.toggle("on", x === b));
-      const sk = app.querySelector(".bus-stakes"); if (sk) sk.innerHTML = `<span class="bs-done">${b.dataset.busg === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`;
+      const sk = app.querySelector(".bus-stakes"); if (sk) sk.innerHTML = `<span class="bs-done">${b.dataset.busg === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"}</span>`;
       send({ type: "kgGuess", round: st.round, station: st.q, g: b.dataset.busg });
     });
     app.querySelectorAll("[data-say]").forEach((b) => b.onclick = () => {
@@ -358,19 +362,21 @@
             return `<button type="button" class="bb-choice ${mine === k ? "on" : ""}" data-busg="${k}">${ill ? `<span class="bb-ill">${ill}</span>` : ""}<b>${b}</b>${sm ? `<small>${sm}</small>` : ""}</button>`; }).join("")}</div>
           ${st.q > 0 && pot > 0 ? `<button type="button" class="bb-halt ${mine === "_out" ? "on" : ""}" data-busg="_out"><span class="bb-knopf"><span>STOP</span></span>
             <span class="bb-htxt"><b>Aussteigen</b><small>${pot} ${pot === 1 ? "Punkt" : "Punkte"} sicher mitnehmen</small></span></button>` : ""}</div>
-          <div class="bus-stakes bb-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"} – umentscheiden geht, bis alle dran sind</span>`
+          <div class="bus-stakes bb-stakes">${mine ? `<span class="bs-done">${mine === "_out" ? "🚏 Du steigst aus" : "✓ Getippt"}</span>`
             : `<span class="bs-win">Richtig: +${q.pts}</span><span class="bs-lose">Falsch: ${pot ? `Topf (${pot}) weg` : "Bus verunglückt"}</span>`}</div>`;
       } else if (me === "crash") act = `<div class="bb-note-box bad ${fxBad ? "kg-late" : ""}" ${fxBad ? `style="--d:${fxBad.d}ms"` : ""}><b>💥 Unfall an Station ${myReach + 1}</b>
           <span>Falsch getippt – ${myLost ? `dein Topf (${myLost} ${myLost === 1 ? "Punkt" : "Punkte"}) ist weg` : "diese Runde gibt es keine Punkte"}. Du fährst nicht mehr mit und schaust zu, wie weit die anderen kommen.</span></div>`;
       else if (me === "out") act = `<div class="bb-note-box safe"><b>🚏 Ausgestiegen an Station ${myReach + 1}</b>
           <span><b>${st.gain[G.myId]}</b> ${st.gain[G.myId] === 1 ? "Punkt" : "Punkte"} sicher – schau zu, wie weit die anderen kommen.</span></div>`;
-      else if (st.step === "show") act = `<p class="bb-state muted">Die Karte wird aufgedeckt …</p>`;
-      else if (me === "done") act = `<p class="bb-state">🏁 Endstation! Du hast alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></p>`;
+      else if (st.step === "show") act = `<p class="tt-text">Die Karte wird aufgedeckt …</p>`;
+      else if (me === "done") act = `<span class="tt-head">🏁 Endstation!</span><p class="tt-text">Du hast alle 5 Stationen geschafft: <b>+${st.gain[G.myId]}</b></p>`;
       // höher/tiefer und zwischen/außerhalb: Wertereihe als Zeile, deine Bezugskarten markiert
       const refs = st.q === 1 ? [h[0]] : st.q === 2 ? [h[0], h[1]] : [];
       const scale = (st.q === 1 || st.q === 2) && refs.every(Boolean) && me === "ride" ? `<div class="bb-scale" aria-label="Reihenfolge der Werte"><em>tief</em>${["7", "8", "9", "10", "U", "O", "K", "A"].map((r) =>
         `<span class="${refs.some((c) => rankOfId(c) === r) ? "ref" : ""}">${BUS_VAL[r]}</span>`).join("")}<em>hoch</em></div>` : "";
-      body = `<div class="bb-question"><h3>${esc(q.text)}</h3>${(st.q === 1 || st.q === 2) && me === "ride" ? `<span class="bb-note">Gleich hoch zählt für dich</span>` : ""}</div>${scale}${act}`;
+      const tip = st.step !== "guess" || me !== "ride" ? "" : mine ? (mine === "_out" ? "Du steigst aus – umentscheiden geht, bis alle getippt haben." : "Getippt – umentscheiden geht, bis alle getippt haben.")
+        : `Tippe auf eine Karte${st.q > 0 && pot > 0 ? ` – oder steig aus und nimm deinen Topf (${pot}) sicher mit` : ""}.${st.q === 1 || st.q === 2 ? " Gleich hoch zählt für dich." : ""}`;
+      body = `<div class="bb-question"><span class="tt-head ${me === "ride" && st.step === "guess" ? "" : "calm"}">${esc(q.text)}</span>${tip ? `<p class="tt-text">${tip}</p>` : ""}</div>${scale}${act}`;
     }
     // Mitfahrer (auch du): Name, Status, Topf, Punkte und wie weit jeder mitgefahren ist (geschafft ✓, verunglückt ✕, ausgestiegen 🚏)
     const statusTxt = (id) => { const res = st.step === "show" && st.res ? st.res[id] : null;

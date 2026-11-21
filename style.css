@@ -3193,3 +3193,20 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .sc-results { align-content: center; } .sc-results .kg-res { align-self: center; }
 
 @media (max-width: 760px) { .kg-card.sc-tcard { width: 50px; } }
+
+/* ---------- Beschriftung direkt auf dem Spieltisch (alle Kartenspiele, wie bei Stichhaltig):
+   gelbe Überschrift in der Spielschrift, darunter weißer Text ohne Kasten ---------- */
+.tt-head { display: block; font: 700 clamp(1.2rem, 2.6vh, 1.7rem)/1.2 Fredoka, sans-serif; color: var(--accent); text-align: center; text-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.tt-head.calm { color: #fff; font-size: clamp(1.1rem, 2.3vh, 1.45rem); }
+.tt-head.bad { color: #ff9aa2; }
+.tt-text { margin: 0; color: #e8f6ee; font-size: clamp(.9rem, 1.7vh, 1.05rem); line-height: 1.4; text-align: center; max-width: 560px; }
+.tt-text b { color: #fff; }
+.tt-chip { padding: 4px 12px; border-radius: 99px; background: rgba(0, 0, 0, .25); color: var(--felt-ink); font-weight: 800; font-size: .84rem; }
+.bb-question { gap: 4px; }
+.sv-foot { gap: 6px; }
+/* Watten und Schnapsen: „Du bist dran“ als gelbe Überschrift statt Pille, Hinweis als weißer Text, wer sonst dran ist als ruhiger Text */
+.wturn.me { background: none; box-shadow: none; animation: none; padding: 0; color: var(--accent); font: 700 clamp(1.25rem, 2.8vh, 1.75rem) Fredoka, sans-serif; text-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.wturn.other { background: none; padding: 0; color: #fff; font: 700 clamp(1rem, 2vh, 1.25rem) Fredoka, sans-serif; text-shadow: 0 2px 0 rgba(0, 0, 0, .25); }
+.whint.tt-text { background: none; padding: 0; border-radius: 0; font-size: clamp(.9rem, 1.7vh, 1.05rem); }
+.whint.tt-text b { color: var(--accent); }
+@media (max-width: 899px) { .wturn.me { font-size: 1.15rem; padding: 0; } .wturn.other { font-size: .98rem; } }

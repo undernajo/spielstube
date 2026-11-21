@@ -188,7 +188,7 @@
             <div class="wtop">${combo}${myMove ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${tricksDots(opp)} ${callTag(opp)}</span><div class="whand opp">${oppCards}</div></div>
             ${table}
-            ${myMove ? turnBadge : ""}${hint ? `<p class="whint">${hint}</p>` : ""}${decide}
+            ${myMove ? turnBadge : ""}${hint ? `<p class="whint tt-text">${hint}</p>` : ""}${decide}
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${tricksDots(self)} ${callTag(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">
