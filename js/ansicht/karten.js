@@ -75,34 +75,41 @@
         const priv = hold || (seated && G.wattenPriv && G.wattenPriv.roundNo === st.round ? G.wattenPriv : null);
         const doneOf = (id) => (hold ? true : st.done[id]), countOf = (id) => (hold ? st.result[id].hand.length : st.count[id] || 0);
         let sounds = 0;
-        const others = st.seats.filter((id) => id !== G.myId).map((id) => `<div class="kg-opp" style="--pc:${colorOf(id)}"><b>${esc(nameOf(id))}</b>
-            <span class="kg-backs">${Array.from({ length: countOf(id) }, (_, k) => { const a = kgAnim(`${gk}:o:${id}:${k}`, k < 2 ? 450 + k * 300 : 0, 700); return kgCard(null, "mini", "", a ? "deal" : "", a ? a.d : 0); }).join("")}</span><span class="muted small">${doneOf(id) ? "fertig ✓" : "überlegt …"}</span></div>`).join("");
+        // Wirtshaustisch: oben die Mitspieler mit verdeckten Karten, unten deine Hand als Fächer und ein Ring bis 21
+        const seatsHtml = st.seats.filter((id) => id !== G.myId).map((id) => `<div class="sv-seat ${doneOf(id) ? "done" : ""}" style="--pc:${colorOf(id)}">
+            <span class="sv-nm"><span class="pdot"></span>${esc(nameOf(id))}<em>${st.total[id] || 0}</em></span>
+            <span class="sv-fan">${Array.from({ length: countOf(id) }, (_, k) => { const a = kgAnim(`${gk}:o:${id}:${k}`, k < 2 ? 450 + k * 300 : 0, 700); return kgCard(null, "sv-back", "", a ? "deal" : "", a ? a.d : 0); }).join("")}</span>
+            <small>${doneOf(id) ? "✋ fertig" : "überlegt …"}</small></div>`).join("");
         // eigene Karten: neue fliegen nacheinander heran und drehen sich um; Summe und Knöpfe erst danach
         let fresh = 0;
         let lateAt = null;
-        const handHtml = priv ? priv.hand.map((c) => {
+        const n = priv ? priv.hand.length : 0;
+        const handHtml = priv ? priv.hand.map((c, i) => {
           const a = kgAnim(`${gk}:m:${c}`, fresh * 380, 1000);
           if (a && a.first) fresh++;
           if (a) lateAt = Math.max(lateAt == null ? -1e9 : lateAt, a.d + 900);
-          return kgCard(c, "big", "", a ? "flip" : "", a ? a.d : 0);
+          const r = (i - (n - 1) / 2) * 7;
+          return `<span class="sv-c" style="--r:${r}deg;--y:${Math.abs(r) * .6}px">${kgCard(c, "sv-card", "", a ? "flip" : "", a ? a.d : 0)}</span>`;
         }).join("") : "";
         sounds = fresh;
         const late = lateAt != null ? `kg-late" style="--d:${lateAt}ms` : "";
-        const mine = priv ? `<div class="kg-hand" style="--n:${priv.hand.length}">${handHtml}</div>
-            <div class="${late}">${kgMeter(priv)}
-            <div class="kg-sum ${priv.feuer || priv.sum === 21 ? "top" : priv.sum > 21 ? "bust" : ""}">${priv.feuer ? "🔥 Feuer – zwei Asse!" : priv.sum > 21 ? `${priv.sum} – über 21, leider raus` : `Summe: <b>${priv.sum}</b>`}</div>
-            ${hold ? `<p class="muted">Alle sind fertig – gleich wird aufgedeckt …</p>` : st.done[G.myId] ? `<p class="muted">${priv.sum > 21 && !priv.feuer ? "Warte auf die anderen …" : "Du bist fertig – warte auf die anderen …"}</p>`
-              : `<div class="kg-actions"><button id="kg-hit" class="btn primary">Weitere Karte</button><button id="kg-stand" class="btn ghost">Genug</button></div>`}</div>`
-          : seated ? `<p class="muted">Karten werden ausgeteilt …</p>` : `<p class="muted">Du schaust in dieser Runde zu.</p>`;
+        let me = "";
+        if (priv) {
+          const v = priv.feuer ? 21 : priv.sum, over = v > 21, top = priv.feuer || v === 21, C = 2 * Math.PI * 56;
+          const tone = over ? "over" : top ? "top" : v >= 17 ? "near" : "";
+          const msg = priv.feuer ? "🔥 Feuer – zwei Asse!" : over ? `${priv.sum} – über 21, leider raus` : v === 21 ? "21 – Siebzehn und Vier!" : st.done[G.myId] || hold ? `Du bleibst bei ${v}` : `noch ${21 - v} bis 21`;
+          me = `<div class="sv-me"><div class="sv-hand">${handHtml}</div>
+              <div class="sv-dial ${tone} ${late}"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" class="sv-ring0"/>
+                <circle cx="66" cy="66" r="56" class="sv-ring" style="stroke-dasharray:${C * Math.min(1, v / 21)} ${C}"/></svg>
+                <div><b>${priv.feuer ? "🔥" : v}</b><small>von 21</small></div></div></div>
+            <div class="sv-foot ${late}"><div class="sv-msg ${tone}">${msg}<span class="sv-mine">Deine Punkte: <b>${st.total[G.myId] || 0}</b></span></div>
+              ${hold ? `<p class="sv-wait">Alle sind fertig – gleich wird aufgedeckt …</p>` : st.done[G.myId] ? `<p class="sv-wait">${priv.sum > 21 && !priv.feuer ? "Warte auf die anderen …" : "Du bist fertig – warte auf die anderen …"}</p>`
+                : `<div class="sv-acts"><button id="kg-hit" class="sv-hit">🂠 Karte!</button><button id="kg-stand" class="sv-stand">✋ Genug</button></div>`}</div>`;
+        } else me = `<p class="sv-wait sv-solo">${seated ? "Karten werden ausgeteilt …" : "Du schaust in dieser Runde zu."}</p>`;
         kgSound(sounds, 380, 0);
-        const valuesBox = `<div class="bus-scale kg-scale" aria-label="Kartenwerte"><span class="bs-end">Werte</span>${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
-          .map(([n, v]) => `<span><em>${n}</em><b>${v}</b></span>`).join("")}<span class="kg-feuer">2 Asse = 🔥</span></div>`;
-        // Handy ab der 2. Runde: Ziel ist bekannt, die Werte gibt's zum Aufklappen – der Tisch bleibt übersichtlich
-        const brief = innerWidth <= 640 && st.round > 1;
-        main = `<div class="panel kg-table">${brief ? "" : `<div class="kg-goal"><b>Ziel: so nah wie möglich an 21 – aber nicht darüber!</b></div>`}
-          ${brief ? `<div class="bus-q-main">${mine}</div><details class="kg-valfold"><summary>Kartenwerte</summary>${valuesBox}</details>`
-            : `<div class="bus-q with-scale"><div class="bus-q-main">${mine}</div>${valuesBox}</div>`}</div>
-          ${others ? `<div class="kg-opps">${others}</div>` : ""}`;
+        const legend = `<div class="sv-legend" aria-label="Kartenwerte">${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
+          .map(([nm, v]) => `<span>${nm} <b>${v}</b></span>`).join("")}<span>2 Asse = 🔥</span></div>`;
+        main = `<div class="sv-rim"><div class="sv-felt">${seatsHtml ? `<div class="sv-seats">${seatsHtml}</div>` : ""}${me}${legend}</div></div>`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
         const order = st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points || st.result[b].sum - st.result[a].sum);
@@ -117,7 +124,7 @@
             <span class="kg-hand small">${cards}</span>
             <span class="kg-rsum ${after}">${r.feuer ? "🔥 Feuer" : r.bust ? `${r.sum} – über 21` : r.sum === 21 ? "21 – Siebzehn und Vier!" : r.sum}</span><b class="qb-plus ${after}">+${r.points}</b></div>`; }).join("");
         if (ra && ra.first) { kgSound(flips, 160, 300); if (!kgOutcomeDelay) kgOutcomeDelay = t; }
-        main = `<div class="panel kg-table"><div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div>`;
+        main = `<div class="sv-rim"><div class="sv-felt sv-reveal"><div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div></div>`;
       }
     } else {
       main = stichMainHtml(v, st, colorOf, nameOf, readyBtn);
@@ -155,11 +162,6 @@
     });
   }
   // Fortschrittsbalken bis 21: grün bis 16, gelb 17–20, voll bei 21, rot darüber (nur 21 als Markierung)
-  function kgMeter(priv) {
-    const v = priv.feuer ? 21 : priv.sum, pct = Math.min(100, (v / 21) * 100);
-    const cls = v > 21 ? "bust" : v === 21 ? "full" : v >= 17 ? "near" : "";
-    return `<div class="kg-meter ${cls}" aria-hidden="true"><i style="width:${pct}%"></i><span class="kg-mark end">21</span></div>`;
-  }
   let busMine = null, stMine = null;
   // Stichhaltig: Kopfzeile (Runde, Trumpf, Ansagen-Bilanz), ein Kasten je Spieler (Punkte, Ansage als Kreise, was noch fehlt),
   // Stich mit festen Plätzen in Spielreihenfolge, darunter „Du bist dran“ und die eigene Hand

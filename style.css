@@ -3024,3 +3024,60 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .qb-skip { margin-left: auto; padding: 8px 14px; font-size: .88rem; }
 .qb-skipped { text-transform: none; letter-spacing: 0; color: var(--accent); font-weight: 700; }
 @media (max-width: 760px) { .qb-skip { margin-left: 0; flex-basis: 100%; } }
+/* ---------- Siebzehn und Vier: Wirtshaustisch (Filz mit Holzrand, Mitspieler oben, deine Hand als Fächer mit Ring bis 21) ---------- */
+.sv-rim { width: 100%; max-width: 980px; margin: 0 auto; padding: 12px; border-radius: 34px; background: linear-gradient(180deg, #7a4d2b, #5a361c);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 2px 0 rgba(255, 255, 255, .12); }
+.sv-felt { position: relative; display: grid; gap: clamp(10px, 2vh, 22px); justify-items: center; padding: clamp(16px, 2.6vh, 28px) 22px clamp(14px, 2.2vh, 24px); border-radius: 24px; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 40%, #237a51 0%, #17603e 55%, #0f4a2f 100%); box-shadow: inset 0 0 60px rgba(0, 0, 0, .45); }
+.sv-felt::before { content: "Ziel 21"; position: absolute; left: 50%; top: 44%; transform: translate(-50%, -50%) rotate(-4deg); font: 700 clamp(3rem, 9vw, 5rem) Fredoka, sans-serif;
+  color: rgba(255, 255, 255, .05); white-space: nowrap; pointer-events: none; }
+.sv-felt > * { position: relative; }
+.sv-seats { display: flex; justify-content: center; gap: clamp(14px, 4vw, 50px); flex-wrap: wrap; }
+.sv-seat { display: grid; justify-items: center; gap: 6px; }
+.sv-nm { display: flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; background: rgba(0, 0, 0, .28); font-weight: 800; font-size: .88rem; }
+.sv-nm .pdot { width: 9px; height: 9px; border-radius: 50%; background: var(--pc); }
+.sv-fan { display: flex; min-height: 58px; align-items: center; }
+.sv-fan .kg-card.sv-back { width: 38px; margin-left: -18px; box-shadow: 0 2px 6px rgba(0, 0, 0, .4); } .sv-fan .kg-card.sv-back:first-child { margin-left: 0; }
+.sv-fan .kg-card.sv-back:nth-child(odd) { rotate: -6deg; } .sv-fan .kg-card.sv-back:nth-child(even) { rotate: 5deg; translate: 0 2px; }
+.sv-seat small { font-size: .74rem; color: #cfe9da; font-weight: 700; } .sv-seat.done small { color: var(--accent); }
+.sv-me { display: grid; grid-template-columns: auto auto; align-items: center; gap: clamp(18px, 3vw, 34px); }
+.sv-hand { display: flex; justify-content: center; padding: 8px 0 4px; min-height: 150px; }
+.sv-c { display: block; margin-left: -26px; rotate: var(--r); translate: 0 var(--y); transform-origin: 50% 120%; } .sv-c:first-child { margin-left: 0; }
+.kg-card.sv-card { width: clamp(78px, 12vh, 108px); }
+.sv-dial { position: relative; width: clamp(110px, 16vh, 140px); aspect-ratio: 1; display: grid; place-items: center; --sv: #e8e4f4; }
+.sv-dial svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.sv-ring0 { fill: rgba(0, 0, 0, .25); stroke: rgba(255, 255, 255, .12); stroke-width: 10; }
+.sv-ring { fill: none; stroke: var(--sv); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray .5s; }
+.sv-dial > div { position: relative; display: grid; justify-items: center; } /* über dem Ring */ .sv-dial b { font: 700 clamp(2.1rem, 4.6vh, 2.9rem) Fredoka, sans-serif; line-height: 1; color: var(--sv); }
+.sv-dial small { font-weight: 800; font-size: .72rem; color: #cfe9da; margin-top: 2px; }
+.sv-dial.near { --sv: #7ee2b1; } .sv-dial.top { --sv: #ffc83d; } .sv-dial.over { --sv: #ff7d8a; }
+.sv-foot { display: grid; gap: 10px; justify-items: center; }
+.sv-msg { font-weight: 800; font-size: 1.05rem; } .sv-msg.top { color: var(--accent); } .sv-msg.over { color: #ffb3ba; } .sv-msg.near { color: #b8f0d2; }
+.sv-acts { display: flex; justify-content: center; gap: 12px; }
+.sv-hit, .sv-stand { padding: 12px 28px; border-radius: 14px; font: 700 1.15rem Fredoka, sans-serif; cursor: pointer; }
+.sv-hit { border: 0; background: var(--accent); color: var(--accent-ink); box-shadow: 0 5px 0 #c48f0a; }
+.sv-stand { border: 2px solid rgba(255, 255, 255, .35); background: rgba(0, 0, 0, .18); color: #fff; }
+@media (hover: hover) { .sv-hit:hover, .sv-stand:hover { transform: translateY(-2px); } }
+.sv-hit:active, .sv-stand:active { transform: translateY(2px); }
+.sv-wait { margin: 0; color: #cfe9da; font-weight: 700; } .sv-solo { min-height: 120px; display: grid; place-items: center; }
+.sv-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: .78rem; color: #cfe9da; padding: 5px 14px; border-radius: 99px; background: rgba(0, 0, 0, .22); }
+.sv-legend b { color: #fff; }
+.sv-reveal .kg-results { width: min(100%, 720px); }
+.sv-reveal .kg-res { background: rgba(10, 30, 20, .55); }
+@media (max-width: 640px) {
+  .sv-rim { padding: 7px; border-radius: 24px; } .sv-felt { padding: 12px 8px; border-radius: 18px; gap: 10px; }
+  .sv-me { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 6px; }
+  .sv-hand { min-height: 112px; } .kg-card.sv-card { width: 68px; } .sv-c { margin-left: -20px; }
+  .sv-dial { width: 96px; } .sv-dial b { font-size: 1.9rem; }
+  .sv-fan { min-height: 46px; } .sv-fan .kg-card.sv-back { width: 30px; margin-left: -15px; }
+  .sv-hit, .sv-stand { padding: 10px 20px; font-size: 1.02rem; }
+  .sv-legend { font-size: .7rem; gap: 2px 8px; border-radius: 14px; }
+}
+.sv-nm em { font-style: normal; font: 700 .85rem Fredoka, sans-serif; padding: 0 7px; border-radius: 99px; background: rgba(255, 255, 255, .14); }
+.sv-mine { display: block; margin-top: 2px; font-size: .78rem; font-weight: 700; color: #cfe9da; } .sv-mine b { color: #fff; }
+@media (min-width: 900px) {
+  /* Punkte stehen am Tisch – die Chip-Zeile darüber braucht es am PC nicht, die Runde steht oben */
+  .kg-siebzehn .geo-bar { display: none; }
+  .kg-siebzehn .kg-meta-round { display: inline; } .kg-siebzehn .kg-meta-round::before { content: " · "; }
+  .kg-siebzehn.screen.game { padding-bottom: 16px; }
+}
