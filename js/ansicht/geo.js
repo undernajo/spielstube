@@ -68,6 +68,10 @@
   const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
 
   // Kopfzeile (gemeinsamer Baustein): Symbol, Spiel · Runde · Region, Ort groß, Spieler mit Lämpchen, Zeitring, Knopf
+  const geoPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, ptsTxt: (st.total[p.id] || 0).toLocaleString("de-DE"),
+    done: st.step === "reveal" ? !!st.ready[p.id] : st.submitted.includes(p.id),
+    txt: st.step === "reveal" ? (st.ready[p.id] ? "bereit" : st.result && st.result[p.id] ? `+${st.result[p.id].points} in dieser Runde` : "schaut sich die Lösung an")
+      : st.submitted.includes(p.id) ? "hat getippt" : p.connected ? "sucht noch …" : "getrennt" }));
   const geoPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: (st.total[p.id] || 0).toLocaleString("de-DE"), done: st.submitted.includes(p.id) }));
   function geoHead(v, st, btn = "") {
     const oben = st.mode === "oben";
@@ -84,7 +88,7 @@
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(geoPills(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(geoPills(v, st)); G.pultUpdate(geoPult(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
       if (st.step === "reveal") G.nextBtnSwap("#geo-ready", { attr: 'id="geo-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "geoReady" }));
       return;
     }
@@ -102,6 +106,7 @@
         ${oben ? `<div class="oben-grid"><div class="geo-wrap oben-pic"><div id="oben-pic" class="geo-map"></div><span class="oben-tag"><b>1</b> Gesucht: ${esc(st.place.kind)}</span></div>
           <span class="oben-arrow" aria-hidden="true"></span>
           <div class="geo-wrap oben-pic oben-target"><div id="geo-map" class="geo-map"></div><span class="oben-tag"><b>2</b> Hier auf der Karte antippen</span></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
+      if (!oben) main = G.pultWrap(main, geoPult(v, st));
     } else if (st.step === "reveal") {
       main = `
         <div class="geo-bar">
@@ -110,6 +115,7 @@
           <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="geo-ready"', hostAttr: 'id="geo-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>
         </div>
         <div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`;
+      if (!oben) main = G.pultWrap(main, geoPult(v, st));
     } else {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
       const medal = ["🥇", "🥈", "🥉"];

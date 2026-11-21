@@ -12,6 +12,10 @@
   // Punkt für die Beschriftung (Mittel des größten Umrisses, vorberechnet) und größter Umriss (zum Hinzoomen)
   const landLabelPt = (c) => c.p;
   const landMainRing = (c) => { let big = c.g[0][0]; c.g.forEach((p) => { if (p[0].length > big.length) big = p[0]; }); return landRing(big); };
+  const landPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0,
+    done: st.step === "reveal" ? !!st.ready[p.id] : st.submitted.includes(p.id),
+    txt: st.step === "reveal" ? (st.ready[p.id] ? "bereit" : st.result && st.result[p.id] ? `+${st.result[p.id].points || 0} in dieser Runde` : "schaut sich die Lösung an")
+      : st.submitted.includes(p.id) ? "hat getippt" : p.connected ? "sucht noch …" : "getrennt" }));
   const landPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, done: st.submitted.includes(p.id) }));
   function landChips(v, st) {
     return v.players.map((p, i) => {
@@ -82,7 +86,7 @@
     const sub = !/^(europa|afrika|asien|amerika|welt)$/.test(st.region); // Bundesländer, Regionen, Kantone
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     if (landRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = landChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(landPills(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = landResults(v, st); }
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = landChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(landPills(v, st)); G.pultUpdate(landPult(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = landResults(v, st); }
       if (st.step === "reveal") G.nextBtnSwap("#land-ready", { attr: 'id="land-ready"', label: st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "landReady" }));
       return;
     }
@@ -97,6 +101,7 @@
           ring: st.endsIn != null ? G.ringHtml("land-timer", st.endsIn, st.timerMs || 30000) : "",
           btn: `<button id="land-lock" class="btn primary" ${locked || !landMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : landMine ? "Festlegen" : sub ? "Tippe auf die Karte" : "Tippe ein Land an"}</button>` }) + `
         <div class="geo-wrap"><div id="land-map" class="geo-map land-map"></div></div>`;
+      main = G.pultWrap(main, landPult(v, st));
     } else if (st.step === "reveal") {
       main = `
         <div class="geo-bar">
@@ -105,6 +110,7 @@
           <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="land-ready"', hostAttr: 'id="land-next"', label: st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>
         </div>
         <div class="geo-wrap"><div id="land-map" class="geo-map land-map"></div></div>`;
+      main = G.pultWrap(main, landPult(v, st));
     } else {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
       const medal = ["🥇", "🥈", "🥉"];

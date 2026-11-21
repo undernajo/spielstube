@@ -2046,6 +2046,29 @@
     const conn = (id) => { const p = pl.find((x) => x.id === id); return !p || p.connected; };
     return players.map((x) => `<span class="gh-p ${x.done ? "done" : ""} ${conn(x.id) ? "" : "off"}" style="--pc:${col(x.id)}"><span class="qz-lamp"></span><span class="gh-n">${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</span> <b>${x.pts}</b></span>`).join("");
   }
+  // Spieler-Pult rechts (wie beim Quiz-Trio) – nur auf breiten Bildschirmen (ab 1200 px), sonst bleiben die Pillen.
+  // players: [{ id, name, pts (Zahl), ptsTxt, done, txt, turn }]
+  function pultInner(players) {
+    const pl = view && view.players ? view.players : [];
+    const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const r = players.slice().sort((a, b) => b.pts - a.pts);
+    return `<span class="qz-lbl">Spieler</span>` + r.map((x, i) => { const place = 1 + r.filter((y) => y.pts > x.pts).length;
+      return `<div class="qz-pod pult-pod ${x.done ? "done" : ""} ${x.turn ? "turn" : ""}" style="--pc:${col(x.id)}"><span class="pult-rk">${place}</span><span class="qz-lamp"></span>
+        <div><b>${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</b><small>${esc(x.txt || "")}</small></div><span class="qz-sc">${x.ptsTxt != null ? x.ptsTxt : x.pts}</span></div>`; }).join("");
+  }
+  const pultWrap = (html, players) => `<div class="pult-lay"><div class="pult-main">${html}</div><aside class="qz-side pult"><div class="pult-list">${pultInner(players)}</div><div class="pult-acts"></div></aside></div>`;
+  function pultUpdate(players) { const el = app.querySelector(".pult-list"); if (el) el.innerHTML = pultInner(players); }
+  // Knöpfe (Festlegen, Weiter/Bereit, Gastgeber-weiter) auf breiten Bildschirmen unten ins Pult verschieben – als echte Elemente,
+  // damit ihre Klick-Funktionen erhalten bleiben; schmaler werdend kommen sie an ihren Platz zurück
+  const PULT_ACTS = ".pult-main .gh-btn, .pult-main .geo-actions, .pult-main .slf-actions";
+  const pultWide = window.matchMedia ? matchMedia("(min-width: 1200px)") : { matches: false };
+  function pultPlace() {
+    const slot = app.querySelector(".pult-acts"); if (!slot) return;
+    if (pultWide.matches) app.querySelectorAll(PULT_ACTS).forEach((el) => { const ph = document.createComment("pult"); el.before(ph); el._pultPh = ph; slot.appendChild(el); });
+    else [...slot.children].forEach((el) => { if (el._pultPh && el._pultPh.isConnected) el._pultPh.replaceWith(el); });
+  }
+  new MutationObserver(() => pultPlace()).observe(app, { childList: true });
+  if (pultWide.addEventListener) pultWide.addEventListener("change", pultPlace);
   function gameHeadHtml({ ico = "", icoHtml = "", small = "", big = "", sub = "", hint = "", players = [], ring = "", btn = "" }) {
     const pl = view && view.players ? view.players : [];
     const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
@@ -2941,6 +2964,8 @@
     podiumHtml,
     gameHeadHtml,
     ghPillsHtml,
+    pultWrap,
+    pultUpdate,
     ringHtml,
     ringSet,
     nextBtnSwap,

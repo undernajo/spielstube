@@ -32,6 +32,12 @@
   }, 250);
 
   // Spieler in der Kopfzeile: Lämpchen grün, wenn fertig (oder „weiß nicht weiter“)
+  const slfPult = (v, st) => v.players.map((p) => {
+    if (st.step === "review") { const r = !!(st.ready && st.ready[p.id]), rp = st.roundPoints && st.roundPoints[p.id] != null ? st.roundPoints[p.id] : null;
+      return { id: p.id, name: p.name, pts: st.total[p.id] || 0, done: r, txt: r ? "bereit" : rp != null ? `prüft … (+${rp})` : "prüft …" }; }
+    if (st.step === "collecting") return { id: p.id, name: p.name, pts: st.total[p.id] || 0, done: true, txt: "Zeit ist um" };
+    const done = !!st.done[p.id], stuck = !!(st.stuck && st.stuck[p.id]);
+    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, done: done || stuck, txt: done ? "fertig" : stuck ? "weiß nicht weiter 🤷" : p.connected ? "schreibt …" : "getrennt" }; });
   const slfPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, done: !!(st.done[p.id] || (st.stuck && st.stuck[p.id])) }));
   function slfChips(v, st) {
     return v.players.map((p, i) => {
@@ -103,7 +109,7 @@
     if (st.step === "writing" && slfRendered === key && app.querySelector(".slf-form")) {
       // Eingaben nicht neu zeichnen – nur Spieler, Stopp-Hinweis und Knopf aktualisieren
       app.querySelector(".players").innerHTML = slfChips(v, st);
-      { const gp = app.querySelector(".gh-pl"); if (gp) gp.innerHTML = G.ghPillsHtml(slfPills(v, st)); }
+      { const gp = app.querySelector(".gh-pl"); if (gp) gp.innerHTML = G.ghPillsHtml(slfPills(v, st)); G.pultUpdate(slfPult(v, st)); }
       app.querySelector("#slf-stop").innerHTML = slfStopHtml(st, nameOf);
       slfUpdDone(st);
       return;
@@ -125,8 +131,10 @@
         </form>
         <button id="slf-done" class="btn primary big" ${d.off ? "disabled" : ""}>${d.text}</button>
         ${slfStuckHtml(st)}`;
+      main = G.pultWrap(main, slfPult(v, st));
     } else if (st.step === "collecting") {
       main = `<div class="slf-wait"><div class="slf-letter small">${st.letter}</div><p><b>Zeit ist um!</b> Die Antworten werden eingesammelt …</p></div>`;
+      main = G.pultWrap(main, slfPult(v, st));
     } else if (st.step === "review") {
       const ci = st.ci, cat = st.cats[ci], row = st.table[cat], iReady = st.ready && st.ready[G.myId], last = ci >= st.cats.length - 1;
       const canVote = st.answered.includes(G.myId);
@@ -154,6 +162,7 @@
         <div class="slf-actions">
           ${G.nextBtnsHtml({ attr: 'id="slf-ready"', hostAttr: 'id="slf-next"', cls: "big", label: !last ? "Weiter zur nächsten Kategorie" : st.round >= st.rounds ? "Passt – zum Endstand" : "Passt – nächste Runde", ready: !!iReady, waiting: G.waitingNames(v, st.ready) })}
         </div>`;
+      main = G.pultWrap(main, slfPult(v, st));
     } else if (st.step === "final") {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
       const medal = ["🥇", "🥈", "🥉"];

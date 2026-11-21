@@ -6,6 +6,8 @@
 
   // ---------- Höher oder tiefer ----------
   let hlRendered = null;
+  const hlPult = (v, st) => v.players.map((p) => { const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id), ok = st.step === "reveal" && st.result ? st.result.ok[p.id] : undefined;
+    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, done: done || ok === true, txt: st.step === "guess" ? (done ? "hat gewählt" : p.connected ? "überlegt …" : "getrennt") : ok === true ? "✓ richtig" : ok === false ? "✗ falsch" : "" }; });
   function hlChips(v, st) {
     return v.players.map((p, i) => {
       const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id);
@@ -21,7 +23,7 @@
     if (!st) return;
     const key = v.code + ":" + st.catNo + ":" + st.pos + ":" + st.step;
     if (hlRendered === key && app.querySelector(".hl-main")) {
-      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = hlChips(v, st);
+      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = hlChips(v, st); G.pultUpdate(hlPult(v, st));
       return;
     }
     hlRendered = key;
@@ -58,6 +60,7 @@
           ${st.chain.length ? `<div class="hl-chain"><span class="hl-link">${esc(st.start.name)} <b>${esc(st.start.value)}</b></span>${st.chain.map((c) =>
             `<span class="hl-arrow">${c.right === "up" ? "▲" : c.right === "down" ? "▼" : "="}</span><span class="hl-link">${esc(c.name)} <b>${esc(c.value)}</b></span>`).join("")}</div>` : ""}
         </div>`;
+      main = G.pultWrap(main, hlPult(v, st));
     } else {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
       const medal = ["🥇", "🥈", "🥉"];

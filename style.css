@@ -3688,3 +3688,41 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .gh .slf-rule { display: block; }
 /* Karten unter der neuen Kopfzeile: am PC passt alles ohne Scrollen */
 @media (min-width: 900px) { .gh + .geo-wrap .geo-map, .gh + .oben-grid .geo-map { height: max(360px, calc(100vh - 246px)); } }
+
+/* ---------- Spieler-Pult rechts (ab 1200 px) – Wo liegt das?, Länder finden, Höher oder tiefer, Stadt Land Fluss ---------- */
+.pult { display: none; }
+.pult-main { min-width: 0; }
+.pult-pod { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+.pult-rk { font: 700 .8rem Fredoka, sans-serif; color: var(--muted); width: 16px; text-align: center; }
+.pult-pod.turn { border-color: var(--pc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent); }
+.pult-pod.done small { color: #7ee2b1; } .pult-pod small.no { color: #ff9aa2; }
+@media (min-width: 1200px) {
+  .pult-lay { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px; align-items: start; }
+  .pult { display: grid; position: sticky; top: 12px; }
+  .pult-lay .gh-pl, .pult-lay .hl-pills { display: none; }
+  .pult-lay .gh { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .screen.slf:has(.pult-lay) > :not(.top), .screen.slf:has(.pult-lay) > .slf-main { max-width: 1180px; }
+}
+.slf-main > .pult-lay > .pult-main, .pult-lay > .pult-main:has(> .slf-form) { display: grid; gap: 12px; align-content: start; }
+.pult-main > .gh { margin-bottom: 0; }
+.pult-main > #slf-done { width: 100%; }
+.pult-main > .slf-stuck, .pult-main > :last-child:not(.geo-wrap):not(.hl-main):not(#slf-done) { justify-self: center; }
+@media (min-width: 1200px) { .screen.slf.geo:not(.watten):has(.pult-lay) > :not(.top), .screen.slf:not(.geo):has(.pult-lay) > :not(.top) { max-width: none; } }
+@media (min-width: 1200px) { .slf-main:has(.pult-lay) > .players { display: none; } }
+@media (min-width: 1200px) {
+  .screen.slf:has(.pult-lay) > .players { display: none; }
+  .pult-main > .geo-bar + .geo-wrap .geo-map { height: max(340px, calc(100vh - 256px)); }
+}
+/* Pult als Steuerpult: so hoch wie die Spielfläche, Spieler oben (bei vielen scrollbar), Knöpfe unten verankert */
+@media (min-width: 1200px) {
+  .pult-lay { align-items: stretch; }
+  .pult-lay > .pult { display: flex; flex-direction: column; gap: 10px; position: static; contain: size; min-height: 320px; }
+  .pult-list { display: grid; gap: 10px; align-content: start; overflow-y: auto; min-height: 0; flex: 1 1 auto; scrollbar-width: thin; }
+  .pult-acts { display: grid; gap: 8px; margin-top: auto; }
+  .pult-acts:empty { display: none; }
+  .pult-acts > * { display: grid; gap: 8px; margin: 0; padding: 0; width: 100%; }
+  .pult-acts .btn { width: 100%; white-space: normal; padding: 14px 16px; font-size: 1rem; }
+  .pult-acts .next-host { padding: 9px 12px; font-size: .85rem; }
+  .pult-acts .next-off { text-align: center; font-size: .78rem; }
+  .pult-main .gh { grid-template-columns: auto minmax(0, 1fr) auto; }
+}
