@@ -19,7 +19,7 @@
     if (isFinal) b = box("off", `<b>Kein Joker</b><small>Das Finale zählt ohnehin doppelt</small>`, "disabled");
     else if (mine === next) b = box("set", `<b>Joker gesetzt</b><small>Diese Etappe zählt für dich doppelt · tippen zum Zurücknehmen</small>`, `data-qbjoker="off"`);
     else if (mine != null) b = box("off", `<b>Joker verbraucht</b><small>Schon in Etappe ${mine + 1} eingesetzt</small>`, "disabled");
-    else b = box("", `<b>Joker setzen</b><small>Diese Etappe zählt für dich doppelt – einmal pro Partie</small>`, `data-qbjoker="on"`);
+    else b = box("", `<b>Joker setzen</b><small>Diese Etappe zählt für dich doppelt – einmal pro Meisterschaft</small>`, `data-qbjoker="on"`);
     return `<div class="qbn-joker">${b}${who}</div>`;
   }
   function qbReadyBtnHtml(q, label) {

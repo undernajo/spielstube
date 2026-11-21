@@ -132,7 +132,7 @@
     if (!games.length) return null;
     const joker = !(opts && opts.joker === false);
     return { opts: { length, off: (opts && opts.off) || [], theme, level, joker }, plan: buildPlan(games, length, theme, level), idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false,
-      joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Partie, nicht im Finale)
+      joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Meisterschaft, nicht im Finale)
   }
 
   // Platzierungen einer Etappe in Partypunkte umrechnen (Gleichstand = gleiche, höhere Punkte)
@@ -158,7 +158,7 @@
     return res;
   }
 
-  // Joker setzen / zurücknehmen – vor einer Etappe (nicht vor dem Finale), einmal pro Partie
+  // Joker setzen / zurücknehmen – vor einer Etappe (nicht vor dem Finale), einmal pro Meisterschaft
   // Gastgeber überspringt die angekündigte Etappe: an ihre Stelle kommt ein anderes Spiel (die Meisterschaft bleibt gleich lang).
   // Bevorzugt ein Spiel, das noch nicht im Plan ist und nicht zur selben Art wie die Nachbar-Etappen gehört.
   function skipStage(q, players) {
