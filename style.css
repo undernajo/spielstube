@@ -3248,3 +3248,25 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .sv-me > .sv-foot { grid-column: 3; grid-row: 1; justify-self: start; }
 }
 @media (max-width: 899px) { .xleft { display: contents; } }
+/* Vorführung Busfahrt im Stil des neuen Spielfelds */
+.dm-stage.dm-felt { background: var(--felt); border-color: var(--felt-edge); }
+.dm-bst { top: 26px; width: 38px; height: 24px; border-radius: 7px; border: 1.5px solid rgba(255, 255, 255, .18); background: rgba(10, 30, 20, .55); display: grid; place-items: center; font: 700 11.5px Fredoka, sans-serif; }
+.dm-bsl { top: 56px; width: 38px; height: 59px; border-radius: 6px; border: 1.5px dashed rgba(255, 255, 255, .25); }
+.dm-stage .dm-bc { top: 57px; } .dm-stage .dm-bc .dm-card { width: 34px; height: 53px; }
+.dm-bbus { top: 4px; left: 0; z-index: 4; font-size: 20px; font-style: normal; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .45)); }
+.dm-bpot { left: 236px; top: 44px; width: 54px; padding: 6px 0; border-radius: 11px; display: grid; justify-items: center; color: var(--accent); background: rgba(0, 0, 0, .3); border: 1.5px solid rgba(255, 200, 61, .55); }
+.dm-bpot small { font: 800 8px Nunito, sans-serif; text-transform: uppercase; letter-spacing: 1px; } .dm-bpot small .dm-val > span { text-align: center; }
+.dm-bpot b { font: 700 20px Fredoka, sans-serif; line-height: 1.1; } .dm-bpot b .dm-val > span { text-align: center; }
+.dm-bq { left: 0; right: 0; top: 122px; height: 118px; opacity: 0; }
+.dm-bq > b { position: absolute; left: 0; right: 0; top: 0; text-align: center; font: 700 13.5px Fredoka, sans-serif; color: var(--accent); }
+.dm-bq > b.ok { color: #7ee2b1; font-size: 16px; top: 18px; }
+.dm-bq > span { position: absolute; left: 0; right: 0; top: 18px; text-align: center; font-size: 10.5px; color: #e8f6ee; } .dm-bq > b.ok + span { top: 42px; font-size: 11.5px; }
+.dm-ac { position: absolute; top: 38px; width: 70px; height: 62px; border-radius: 9px; background: #fbf6ea; color: #231d4d; display: grid; justify-items: center; align-content: center; gap: 2px; box-shadow: 0 3px 0 #c9bd9e; }
+.dm-ac .ill { display: flex; align-items: center; gap: 2px; height: 24px; } .dm-ac b { font: 700 11px Fredoka, sans-serif; }
+.dm-mc { display: block; width: 14px; height: 22px; } .dm-mc svg { width: 100%; height: 100%; display: block; }
+.dm-ar { font-style: normal; font-size: 13px; color: #4b33b5; } .dm-ar.dn { color: #b5336a; }
+.dm-dot { width: 5px; height: 5px; border-radius: 50%; background: #e0a417; }
+.dm-stop { position: absolute; top: 42px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; font: 800 8px Nunito, sans-serif; letter-spacing: .5px;
+  background: radial-gradient(circle at 40% 35%, #ff6b6b, #d42a3a 60%, #8f1424); box-shadow: 0 4px 0 #6d0f1b; }
+.dm-stop span { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, .65); }
+.dm-stopl { position: absolute; top: 92px; width: 64px; text-align: center; font-size: 9.5px; font-weight: 800; color: #ff9aa2; }

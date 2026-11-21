@@ -51,35 +51,42 @@
   const UI = `<div class="dm-tap"></div><div class="dm-cur" aria-hidden="true">👆</div>`;
 
   const SCENES = {
-    // ---------------- Busfahrt ----------------
+    // ---------------- Busfahrt (wie das Spielfeld: Spieltisch, Stationen mit Kartenfeldern, Topf, Antwortkarten, STOP) ----------------
     bus: { T: 10, still: 7.9, build(st, A, T) {
-      const SX = (i) => 8 + i * 57;
-      st.innerHTML = [1, 1, 2, 10, 30].map((p, i) => `<div class="dm-stn" style="left:${SX(i)}px"><small>Station ${i + 1}</small>+${p}</div>`).join("")
-        + [85, 130, 175].map((x) => `<div class="dm-slot" style="left:${x}px"></div>`).join("")
-        + `<div class="dm-bc" style="left:85px">${flipCard("herz-8")}<i class="dm-ck">✓</i></div><div class="dm-bc" style="left:130px">${flipCard("laub-K")}<i class="dm-ck">✓</i></div>
-        <div class="dm-pot"><small>Topf</small>${vals(0, 1, 2)}</div>
-        <div class="dm-q"><b>Erste Karte: Figur oder Zahl?</b><div class="dm-bb"><span>👑 Figur</span><span>🔢 Zahl</span></div></div>
-        <div class="dm-q"><b>Höher oder tiefer als die erste?</b><div class="dm-bb"><span>⬆️ Höher</span><span>⬇️ Tiefer</span></div></div>
-        <div class="dm-q"><b>Zwischen, außerhalb – oder aussteigen?</b><div class="dm-bb three"><span>↔️ Zwischen</span><span>↕️ Außerhalb</span><span class="y">🛑 Aussteigen</span></div></div>
-        <div class="dm-q"><b class="ok">✅ 2 Punkte gesichert!</b></div>
-        <div class="dm-chips" style="top:206px"><div class="dm-chip" id="dmA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 2)}</div><div class="dm-chip" style="--pc:${C.berta}"><i></i>Berta ${vals(1)}</div></div>
-        <div class="dm-float" id="dmF">+2</div>${UI}`;
+      st.classList.add("dm-felt");
+      const X = (i) => 10 + i * 44, mini = (id) => `<span class="dm-mc">${window.S10WattenCards.svg(id)}</span>`, dot = `<i class="dm-dot"></i>`;
+      const ac = (ill, b, x) => `<div class="dm-ac" style="left:${x}px"><span class="ill">${ill}</span><b>${b}</b></div>`;
+      st.innerHTML = [1, 1, 2, 10, 30].map((p, i) => `<div class="dm-bst" style="left:${X(i)}px">+${p}</div>`).join("")
+        + [0, 1, 2, 3, 4].map((i) => `<div class="dm-bsl" style="left:${X(i)}px"></div>`).join("")
+        + `<div class="dm-bc" style="left:${X(0) + 2}px">${flipCard("herz-8")}</div><div class="dm-bc" style="left:${X(1) + 2}px">${flipCard("laub-K")}</div>
+        <i class="dm-bbus" aria-hidden="true">🚌</i>
+        <div class="dm-bpot"><small>${vals("Topf", "Topf", "Topf", "Sicher")}</small><b>${vals(0, 1, 2, "+2")}</b></div>
+        <div class="dm-bq"><b>Figur oder Zahl?</b><span>Tippe auf eine Karte.</span>${ac(mini("herz-K"), "Figur", 70)}${ac(mini("laub-9"), "Zahl", 160)}</div>
+        <div class="dm-bq"><b>Höher oder tiefer als die erste?</b><span>Oder steig aus und nimm den Topf mit.</span>${ac(`<i class="dm-ar">▲</i>${mini("herz-8")}`, "Höher", 70)}${ac(`${mini("herz-8")}<i class="dm-ar dn">▼</i>`, "Tiefer", 160)}</div>
+        <div class="dm-bq"><b>Zwischen oder außerhalb?</b><span>Oder lieber aussteigen …</span>${ac(mini("herz-8") + dot + mini("laub-K"), "Zwischen", 26)}${ac(dot + mini("herz-8") + mini("laub-K") + dot, "Außerhalb", 104)}
+          <div class="dm-stop" style="left:196px"><span>STOP</span></div><small class="dm-stopl" style="left:186px">Aussteigen</small></div>
+        <div class="dm-bq"><b class="ok">🚏 Ausgestiegen!</b><span>2 Punkte sicher – der Bus fährt ohne dich weiter.</span></div>
+        ${UI}`;
       fade(A, st, T);
-      const stn = [...st.querySelectorAll(".dm-stn")], q = [...st.querySelectorAll(".dm-q")], bc = [...st.querySelectorAll(".dm-bc")];
-      const on = { borderColor: "#ffc83d", background: "rgba(255,200,61,.14)" }, done = { borderColor: "#2fbf71", background: "rgba(47,191,113,.14)" }, off = { borderColor: "#3a3378", background: "#1f1a4a" };
-      tl(A, stn[0], T, [[0, on], [2.6, {}], [2.8, done]]); tl(A, stn[1], T, [[0, off], [2.9, {}], [3.1, on], [5.2, {}], [5.4, done]]); tl(A, stn[2], T, [[0, off], [5.5, {}], [5.7, on]]);
+      const $ = (x) => st.querySelector(x), stn = [...st.querySelectorAll(".dm-bst")], q = [...st.querySelectorAll(".dm-bq")], bc = [...st.querySelectorAll(".dm-bc")], acs = [...st.querySelectorAll(".dm-ac")];
+      const on = { borderColor: "#ffc83d", background: "rgba(255,200,61,.22)" }, ok = { borderColor: "#2fbf71", background: "rgba(47,191,113,.3)" }, off = { borderColor: "rgba(255,255,255,.18)", background: "rgba(10,30,20,.55)" };
+      tl(A, stn[0], T, [[0, on], [2.6, {}], [2.8, ok]]); tl(A, stn[1], T, [[0, off], [3.3, {}], [3.5, on], [5.2, {}], [5.4, ok]]);
+      tl(A, stn[2], T, [[0, off], [5.9, {}], [6.1, on], [7.1, {}], [7.3, { borderColor: "#ffc83d", background: "rgba(255,200,61,.45)" }]]);
+      tl(A, $(".dm-bbus"), T, [[0, { transform: px(X(0) + 7, 0) }], [2.9, {}, "cubic-bezier(.55,0,.3,1)"], [3.5, { transform: px(X(1) + 7, 0) }], [5.5, {}, "cubic-bezier(.55,0,.3,1)"], [6.1, { transform: px(X(2) + 7, 0) }], [7.1, { opacity: 1 }], [7.5, { opacity: .3 }]]);
       show(A, q[0], T, .3, 2.9); show(A, q[1], T, 3.1, 5.5); show(A, q[2], T, 5.7, 7.0); show(A, q[3], T, 7.2);
-      finger(A, st, T, [[.6, 220, 215], [1.3, 215, 157, true], [3.9, 85, 157, true], [6.7, 247, 157, true]]);
-      [[1.7, 2.0, 2.5], [4.3, 4.6, 5.1]].forEach(([d, f, c], i) => {
+      finger(A, st, T, [[.6, 230, 225], [1.3, 195, 186, true], [3.9, 105, 186, true], [6.7, 218, 186, true]]);
+      const pick = (el, t) => tl(A, el, T, [[0, { transform: "none", boxShadow: "0 3px 0 #c9bd9e" }], [t, {}], [t + .15, { transform: "translateY(-5px) rotate(-2deg)", boxShadow: "0 0 0 2px #ffc83d, 0 3px 0 #c48f0a" }]]);
+      pick(acs[1], 1.4); pick(acs[2], 4.0);
+      tl(A, $(".dm-stop"), T, [[0, { transform: "none", boxShadow: "0 4px 0 #6d0f1b" }], [6.8, {}], [6.9, { transform: "translateY(3px)", boxShadow: "0 1px 0 #6d0f1b, 0 0 14px rgba(255,90,90,.8)" }]]);
+      [[1.7, 2.0], [4.3, 4.6]].forEach(([d, f], i) => {
         tl(A, bc[i], T, [[0, { opacity: 0, transform: "translateY(-18px)" }], [d, {}], [d + .3, { opacity: 1, transform: "none" }]]);
         tl(A, bc[i].querySelector(".dm-back"), T, [[0, { transform: "none" }], [f, {}], [f + .4, { transform: "rotateY(180deg)" }]]);
         tl(A, bc[i].querySelector(".dm-front"), T, [[0, { transform: "rotateY(-180deg)" }], [f, {}], [f + .4, { transform: "none" }]]);
-        pop(A, bc[i].querySelector(".dm-ck"), T, c);
       });
-      swap(A, [...st.querySelectorAll(".dm-pot .dm-val span")], T, [2.6, 5.2]);
-      tl(A, st.querySelector(".dm-pot"), T, [[0, { transform: "none", opacity: 1 }], [2.6, {}], [2.75, { transform: "scale(1.15)" }], [3, { transform: "none" }], [5.2, {}], [5.35, { transform: "scale(1.15)" }], [5.6, { transform: "none" }], [7.0, {}], [7.3, { opacity: .35 }]]);
-      fly(A, st.querySelector("#dmF"), T, 7.0, [242, 70], [58, 196]);
-      swap(A, [...st.querySelectorAll("#dmA .dm-val span")], T, [7.8]); bump(A, st.querySelector("#dmA"), T, 7.8);
+      swap(A, [...st.querySelectorAll(".dm-bpot b .dm-val > span")], T, [2.6, 5.2, 7.3]);
+      swap(A, [...st.querySelectorAll(".dm-bpot small .dm-val > span")], T, [2.6, 5.2, 7.3]);
+      tl(A, $(".dm-bpot"), T, [[0, { transform: "none", borderColor: "rgba(255,200,61,.55)", color: "#ffc83d" }], [2.6, {}], [2.75, { transform: "scale(1.12)" }], [3, { transform: "none" }],
+        [5.2, {}], [5.35, { transform: "scale(1.12)" }], [5.6, { transform: "none" }], [7.3, {}], [7.45, { transform: "scale(1.15)", borderColor: "#2fbf71", color: "#7ee2b1" }], [7.7, { transform: "none" }]]);
     } },
 
     // ---------------- Stichhaltig ----------------
