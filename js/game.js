@@ -60,7 +60,7 @@
     { key: "watten", group: "klassik", two: true, color: "#e05a5a", name: "Watten", desc: "Der Südtiroler Klassiker", icon: wattenIcon() },
     { key: "schnapsen", group: "klassik", two: true, color: "#c9883a", name: "Schnapsen", desc: "66 – Bummerl für Bummerl", icon: schnapsenIcon() },
     { key: "slf", color: "#3ccf8e", name: "Stadt, Land, Fluss", desc: "Buchstabe & Kategorien", icon: slfIcon() },
-    { key: "wl", min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Aufs selbe Wort kommen", icon: wlIcon() },
+    { key: "wl", hidden: true, min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Aufs selbe Wort kommen", icon: wlIcon() },
     { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen", icon: almIcon() },
     { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken & jagen", icon: jagdIcon() },
   ];
@@ -116,10 +116,11 @@
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Kreativ", ["wl", "frage"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]]];
+  // Gleiche Wellenlänge ist ausgeblendet (hidden) – Code bleibt, Zurückholen: hidden entfernen und hier wieder einen Abschnitt eintragen
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
-    const rest = GAMES.filter((g) => !g.group && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
+    const rest = GAMES.filter((g) => !g.group && !g.hidden && !listed.has(g.key)).map((g) => g.key); // neue Spiele ohne Abschnitt landen im letzten
     if (rest.length) SECTIONS[SECTIONS.length - 1][1].push(...rest);
   }
   const gameByKey = (k) => GAMES.find((g) => g.key === k);
@@ -129,7 +130,7 @@
   }
   const groupOf = (key) => { const g = GAMES.find((x) => x.key === key); return g ? g.group || g.key : key; };
   const isMode = (key) => GAMES.some((g) => g.key === key && g.group);
-  let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes) ? store.get("s10-game") : "zehn";
+  let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes && !g.hidden) ? store.get("s10-game") : "zehn";
   let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true, letters: "alle" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
