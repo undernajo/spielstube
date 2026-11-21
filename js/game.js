@@ -810,7 +810,7 @@
     for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
     pcOut.clear();
     for (const [id, pc] of pcIn) { pc.close(); rtcSend(id, { t: "hangup" }); forgetPeer(id); }
-    pcIn.clear(); remoteCams.clear();
+    pcIn.clear(); remoteCams.clear(); iceWait.clear(); wantQ.clear();
     if (camStage) setCamStage(false);
     camOpen = true; renderCamDock(); render();
     callHint();
@@ -903,7 +903,8 @@
         const old = pcIn.get(id); if (old) old.close();
         remoteMedia.set(id, { cam: m.cam !== false, mic: m.mic !== false }); sentQ.delete(id);
         const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc);
-        pc.ontrack = (e) => { remoteCams.set(id, e.streams[0] || new MediaStream([e.track])); renderCamDock(); };
+        pc.ontrack = (e) => { remoteCams.set(id, e.streams[0] || new MediaStream([e.track])); renderCamDock();
+          setTimeout(() => { const t = camVideos.get(id), v = t && t.querySelector("video"); if (v && v.paused) v.play().catch(() => camNeedTap(true)); }, 1200); };
         pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "in", c: e.candidate.toJSON() }); };
         pc.onconnectionstatechange = () => { if (pc.connectionState === "failed" && pcIn.get(id) === pc) { remoteCams.set(id, "failed"); renderCamDock(); } };
         await pc.setRemoteDescription({ type: "offer", sdp: m.sdp }); await flushIce("in:" + id, pc);
@@ -930,8 +931,8 @@
         if (!callLeft && REACTS.includes(m.e)) reactShow(id, m.e);
       } else if (m.t === "incall") { // jemand ist (nicht mehr) im Anruf – für den Hinweis „… sind im Anruf“
         if (m.cam || m.mic) callers.set(id, true); else callers.delete(id); callHint();
-      } else if (m.t === "rejoin") { // der andere ist wieder eingestiegen
-        hungUp.delete(id); camSync();
+      } else if (m.t === "rejoin") { // der andere ist wieder eingestiegen: Verbindung zu ihm frisch aufbauen
+        hungUp.delete(id); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id); iceWait.delete("out:" + id); wantQ.delete(id); camSync();
       } else if (m.t === "bye") {
         const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
       }
@@ -984,6 +985,17 @@
       tile.classList.toggle("speaking", talking);
     }
   }, 120);
+  // Mitspieler: Lautstärke aus der Verbindungsstatistik (audioLevel 0–1)
+  const talkAt = new Map();
+  setInterval(async () => {
+    for (const [id, pc] of pcIn) {
+      const tile = camVideos.get(id); if (!tile) continue;
+      let lvl = 0;
+      try { (await pc.getStats()).forEach((r) => { if (r.type === "inbound-rtp" && r.kind === "audio" && r.audioLevel != null) lvl = Math.max(lvl, r.audioLevel); }); } catch {}
+      if (lvl > 0.04 && !tile.classList.contains("muted")) talkAt.set(id, Date.now());
+      tile.classList.toggle("speaking", Date.now() - (talkAt.get(id) || 0) < 600);
+    }
+  }, 250);
   // Verbindungsgüte je empfangenem Bild: wenige Bilder pro Sekunde oder viel Verlust → „schwach“
   const weakPrev = new Map();
   setInterval(async () => {
@@ -1026,7 +1038,7 @@
     tile.classList.toggle("muted", stream !== "failed" && !hasAudio);
     const pl = view && view.players ? view.players : [], pi = pl.findIndex((p) => p.id === (id === "me" ? myId : id));
     tile.style.setProperty("--pc", pi >= 0 ? PLAYER_COLORS[pi % PLAYER_COLORS.length] : "#8a7fb8");
-    if (hasAudio) speakWatch(id, stream); else speakDrop(id);
+    if (hasAudio && id === "me") speakWatch(id, stream); else if (id === "me") speakDrop(id);
     return tile;
   }
   // „Im Anruf“-Hinweis: Wer nur zuschaut, bekommt im Kamera-Fenster eine Zeile zum Mitmachen;
