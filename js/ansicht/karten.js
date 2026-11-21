@@ -185,10 +185,28 @@
     const balance = !st.bids ? `<span class="st-bal">${st.seats.filter((id) => st.said[id]).length} von ${st.seats.length} haben angesagt</span>`
       : `<span class="st-bal ${sum > st.n ? "over" : sum < st.n ? "under" : "even"} ${lateAttr(ba ? ba.d + st.seats.length * 400 : null)}" title="${sum > st.n ? "Mehr angesagt als Stiche da sind – mindestens einer geht leer aus" : sum < st.n ? "Weniger angesagt als Stiche da sind – jemand bekommt ungewollt einen" : "Die Ansagen können für alle aufgehen"}">
           <b>${sum}</b> angesagt · <b>${st.n}</b> zu holen · ${sum > st.n ? "zu viele" : sum < st.n ? "zu wenige" : "geht auf"}</span>`;
-    const head = `<div class="st-head">
-        <span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds} · ${plural(st.n, "Karte", "Karten")}</span>
-        <span class="st-trumpchip">${st.trumpCard ? kgCard(st.trumpCard, "mini", "", ta ? "flip" : "", ta ? ta.d : 0) : ""}<span>Trumpf <b>${st.trump ? ST_SUIT[st.trump] : "keiner"}</b></span></span>
-        ${balance}</div>`;
+    // Leiste oben: Trumpf · Spieler als Chips (Ring „geholt/angesagt“, Punkte, was noch fehlt) · Runde und Ansagen-Bilanz
+    const trumpBox = `<div class="sc-trump">${st.trumpCard ? kgCard(st.trumpCard, "sc-tcard", "", ta ? "flip" : "", ta ? ta.d : 0) : ""}<div><small>Trumpf</small><b>${st.trump ? ST_SUIT[st.trump] : "keiner"}</b></div></div>`;
+    const roundBox = `<div class="sc-round"><small>${st.step === "reveal" ? "Auflösung" : "Runde"}</small><b>${st.round} / ${st.rounds}</b><span class="sc-n">${plural(st.n, "Karte", "Karten")}</span></div>`;
+    const balRow = `<div class="sc-balrow">${balance}</div>`;
+    const R = 17, CIRC = 2 * Math.PI * R;
+    const chips = `<div class="sc-chips">${st.seats.map((id, i) => {
+      // während der fertige Stich gezeigt wird, zählt er schon für den Gewinner (das Spiel bucht ihn erst beim Einsammeln)
+      const pending = st.step === "trick" && st.lastTrick && st.lastTrick.winner === id ? 1 : 0;
+      const bid = st.bids ? st.bids[id] : null, got = (st.tricks[id] || 0) + pending, turn = st.step === "play" && st.turn === id;
+      const leads = (st.step === "bid" || st.step === "bidShow") && id === st.lead;
+      let ring, state, cls = "";
+      if (bid == null) { ring = `<span class="sc-ring wait">${st.said[id] ? "✓" : "…"}</span>`; state = st.said[id] ? "angesagt" : "überlegt …"; }
+      else {
+        const need = bid - got, col = need < 0 ? "#ff7d8a" : need === 0 ? "#7ee2b1" : "#ffc83d", pct = bid ? Math.min(1, got / bid) : got ? 1 : 0;
+        cls = need < 0 ? "over" : need === 0 ? "hit" : "need";
+        ring = `<span class="sc-ring ${lateAttr(bidDelay(i))}"><svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="${R}" class="sc-r0"/><circle cx="21" cy="21" r="${R}" class="sc-r1" style="stroke:${col};stroke-dasharray:${CIRC * pct} ${CIRC}"/></svg>${got}/${bid}</span>`;
+        state = need > 0 ? `braucht noch ${need}` : need === 0 ? (bid === 0 ? "will keinen Stich" : "genau – keinen mehr!") : `${-need} zu viel`;
+      }
+      return `<div class="sc-chip ${turn ? "turn" : ""} ${id === G.myId ? "me" : ""} ${cls}" style="--pc:${colorOf(id)}">${ring}
+          <div><b><span class="pdot"></span>${id === G.myId ? "Du" : esc(nameOf(id))} · ${st.total[id] || 0}</b><small>${turn ? "am Zug" : leads ? "spielt an" : state}</small></div></div>`;
+    }).join("")}</div>`;
+    const bar = `<div class="sc-bar">${trumpBox}${chips}${roundBox}</div>${balRow}`;
 
     if (st.step === "reveal") {
       const rows = st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points).map((id) => { const r = st.result[id], ok = r.bid === r.got;
@@ -196,76 +214,58 @@
           <span class="muted small">Ansage ${r.bid} · Stiche ${r.got} ${ok ? "✓ genau getroffen" : `✗ ${Math.abs(r.bid - r.got)} daneben`}</span>
           <span class="st-rtotal">gesamt ${st.total[id] || 0}${st.ready[id] ? ' · <span class="st-ready">bereit ✓</span>' : ""}</span>
           <b class="qb-plus ${r.points < 0 ? "minus" : ""}">${r.points > 0 ? "+" : ""}${r.points}</b></div>`; }).join("");
-      return `<div class="panel kg-table st-table">${head}<div class="kg-results">${rows}</div>${readyBtn}</div>`;
+      return `<div class="kg-table st-table sc-table">${bar}<div class="kg-results sc-results">${rows}</div>${readyBtn}</div>`;
     }
 
-    // Spieler-Kästen: Punkte, Ansage als Kreise (gefüllt = geholt, rot = zu viel), was noch fehlt
-    const seats = `<div class="st-seats">${st.seats.map((id, i) => {
-      // während der fertige Stich gezeigt wird, zählt er schon für den Gewinner (das Spiel bucht ihn erst beim Einsammeln)
-      const pending = st.step === "trick" && st.lastTrick && st.lastTrick.winner === id ? 1 : 0;
-      const bid = st.bids ? st.bids[id] : null, got = (st.tricks[id] || 0) + pending, turn = st.step === "play" && st.turn === id;
-      const leads = (st.step === "bid" || st.step === "bidShow") && id === st.lead;
-      let goal, state = "", cls = "";
-      if (bid == null) { goal = `<span class="st-wait">${st.said[id] ? "✓ angesagt" : "überlegt …"}</span>`; }
-      else {
-        const dots = Array.from({ length: Math.max(bid, got) }, (_, k) => `<i class="${k < Math.min(got, bid) ? "got" : k >= bid ? "extra" : ""}"></i>`).join("");
-        goal = `<span class="st-goal ${lateAttr(bidDelay(i))}"><span class="st-dots">${dots}</span><b>${got}/${bid}</b></span>`;
-        const need = bid - got;
-        cls = need < 0 ? "over" : need === 0 ? "hit" : "";
-        state = need > 0 ? `braucht noch ${need}` : need === 0 ? (bid === 0 ? "will keinen Stich" : "✓ genug – keinen mehr!") : `${-need} zu viel`;
-      }
-      return `<div class="st-seat ${turn ? "turn" : ""} ${id === G.myId ? "me" : ""} ${cls}" style="--pc:${colorOf(id)}">
-          <div class="st-sname"><span class="pdot"></span><b>${id === G.myId ? "Du" : esc(nameOf(id))}</b>${turn ? '<span class="st-tag turn">am Zug</span>' : leads ? '<span class="st-tag">spielt an</span>' : ""}<span class="st-total" title="Punkte bisher">${st.total[id] || 0}</span></div>
-          ${goal}<div class="st-state">${state}</div></div>`;
-    }).join("")}</div>`;
-
-    let center = "";
+    // Mitte: links der Stich als Kartenhaufen, rechts groß, was gerade los ist bzw. was du tun musst
+    const myBid = st.bids && seated ? st.bids[G.myId] : null;
+    const myGot = (st.tricks[G.myId] || 0) + (st.step === "trick" && st.lastTrick && st.lastTrick.winner === G.myId ? 1 : 0);
+    const myNeed = myBid == null ? null : myBid - myGot;
+    const needChip = myNeed == null ? "" : `<span class="sc-need ${myNeed === 0 ? "ok" : myNeed < 0 ? "over" : ""}">Du: ${myNeed > 0 ? `braucht noch ${myNeed}` : myNeed === 0 ? (myBid === 0 ? "keinen Stich holen" : "genau – keinen mehr holen!") : `${-myNeed} zu viel`}</span>`;
+    let pile = "", info = "", ask = "";
     if (st.step === "bid") {
       const mine = stMine && stMine.gid === st.gid && stMine.r === st.round && st.said[G.myId] ? stMine.bid : null;
       const leadTxt = st.lead === G.myId ? "Du spielst an" : `<b style="color:${colorOf(st.lead)}">${esc(nameOf(st.lead))}</b> spielt an`;
-      center = seated ? `<div class="st-ask"><b>Wie viele Stiche machst du?</b><span class="muted small">${leadTxt} · alle sagen gleichzeitig und geheim an, umentscheiden geht bis zum Schluss</span></div>
-          <div class="st-say">${Array.from({ length: st.n + 1 }, (_, k) => `<button type="button" class="bus-choice ${mine === k ? "on" : ""}" data-say="${k}"><b>${k}</b><small>${k === 1 ? "Stich" : "Stiche"}</small></button>`).join("")}</div>`
-        : `<p class="muted">Die anderen sagen an …</p>`;
+      info = seated ? `<span class="sc-yt">Wie viele Stiche machst du?</span><p>Alle sagen gleichzeitig und geheim an – umentscheiden geht bis zum Schluss. ${leadTxt}.</p>` : `<span class="sc-yt sc-calm">Die anderen sagen an …</span>`;
+      ask = seated ? `<div class="st-say sc-say">${Array.from({ length: st.n + 1 }, (_, k) => `<button type="button" class="bus-choice ${mine === k ? "on" : ""}" data-say="${k}"><b>${k}</b><small>${k === 1 ? "Stich" : "Stiche"}</small></button>`).join("")}</div>` : "";
     } else if (st.step === "bidShow") {
-      center = `<p class="st-msg ${lateAttr(ba ? ba.d + st.seats.length * 400 + 300 : null)}">${sum > st.n ? `Zusammen ${sum} angesagt – aber nur ${plural(st.n, "Stich", "Stiche")} da. Da geht jemand leer aus!`
+      info = `<span class="sc-yt ${lateAttr(ba ? ba.d + st.seats.length * 400 + 300 : null)}">${sum > st.n ? "Zu viele Ansagen!" : sum < st.n ? "Zu wenige Ansagen!" : "Geht genau auf!"}</span>
+        <p class="${lateAttr(ba ? ba.d + st.seats.length * 400 + 300 : null)}">${sum > st.n ? `Zusammen ${sum} angesagt – aber nur ${plural(st.n, "Stich", "Stiche")} da. Da geht jemand leer aus!`
         : sum < st.n ? `Zusammen ${sum} angesagt – ${plural(st.n - sum, "Stich bleibt", "Stiche bleiben")} übrig. Wer schnappt ${st.n - sum === 1 ? "ihn" : "sie"} sich ungewollt?`
-        : `Zusammen genau ${sum} angesagt – das kann für alle aufgehen!`}</p>`;
+        : `Zusammen genau ${sum} angesagt – das kann für alle aufgehen!`}</p>${needChip}`;
     } else {
-      // Stich: feste Plätze in Spielreihenfolge ab dem, der anspielt; offene Plätze gestrichelt, der nächste leuchtet
       const done = st.step === "trick", tr = done ? st.lastTrick.cards : st.trick, winner = done ? st.lastTrick.winner : null;
-      const starter = tr.length ? tr[0].id : st.turn, s0 = Math.max(0, st.seats.indexOf(starter));
-      const order = done ? tr.map((t) => t.id) : st.seats.slice(s0).concat(st.seats.slice(0, s0));
       let dealt = 0;
-      const slots = order.map((id) => {
-        const t = tr.find((x) => x.id === id);
-        if (!t) return `<div class="st-slot ${id === st.turn ? "next" : ""}" style="--pc:${colorOf(id)}"><span class="st-empty">${id === st.turn ? "…" : ""}</span><span class="st-sn">${id === G.myId ? "Du" : esc(nameOf(id))}</span></div>`;
+      const n = tr.length, spread = Math.min(64, 200 / Math.max(1, st.seats.length - 1));
+      // höchste Karte bisher (wer den Stich gerade hätte) – leuchtet dezent
+      const led = tr.length ? tr[0].card.split("-")[0] : null;
+      const rkOf = (c) => ["7", "8", "9", "10", "U", "O", "K", "A"].indexOf(c.split("-")[1]);
+      const score = (c) => (c.split("-")[0] === st.trump ? 100 : c.split("-")[0] === led ? 0 : -100) + rkOf(c);
+      const best = tr.length ? tr.reduce((a, b) => (score(b.card) > score(a.card) ? b : a)) : null;
+      pile = `<div class="sc-pile" style="--n:${Math.max(1, n)}">${tr.map((t, i) => {
         const a = kgAnim(`${gk}:t:${t.card}`, 0, 600); if (a && a.first) dealt++;
-        return `<div class="st-slot played ${winner === id ? "win" : ""}" style="--pc:${colorOf(id)}">${kgCard(t.card, "mid", "", a ? "deal" : "", a ? a.d : 0)}<span class="st-sn">${id === G.myId ? "Du" : esc(nameOf(id))}</span></div>`;
-      }).join("");
+        const rot = [-10, 4, 12, -5, 8, -12][i % 6], dy = [6, -4, 8, -6, 4, 0][i % 6], x = (i - (n - 1) / 2) * spread;
+        return `<span class="sc-pc ${(done ? winner === t.id : best && best.id === t.id) ? (done ? "win" : "best") : ""}" style="--x:${x}px;--y:${dy}px;--r:${rot}deg;--pc:${colorOf(t.id)}">${kgCard(t.card, "sc-card", "", a ? "deal" : "", a ? a.d : 0)}<i>${t.id === G.myId ? "Du" : esc(nameOf(t.id))}</i></span>`;
+      }).join("")}${!n ? `<span class="sc-empty">${st.turn === G.myId ? "Spiel an!" : "noch leer"}</span>` : ""}</div>`;
       kgSound(dealt, 0, 0);
-      const led = st.trick.length ? st.trick[0].card.split("-")[0] : null;
       const mustFollow = st.turn === G.myId && led && priv && priv.playable.length && priv.playable.length < priv.hand.length && priv.playable.every((c) => c.startsWith(led + "-"));
-      const ledInfo = !done && led ? `<span class="st-led">angespielt: <b>${ST_SUIT[led]}</b></span>` : "";
-      const msg = done ? `<p class="st-msg kg-late" style="--d:400ms"><b style="color:${colorOf(winner)}">${esc(nameOf(winner))}</b> holt den Stich!</p>`
-        : st.turn === G.myId ? `<p class="st-yourturn">Du bist dran – ${st.trick.length ? (mustFollow ? `du musst <b>${ST_SUIT[led]}</b> bedienen` : "spiel eine Karte") : "spiel an"}</p>`
-        : `<p class="st-msg muted"><b style="color:${colorOf(st.turn)}">${esc(nameOf(st.turn))}</b> ist dran …</p>`;
-      center = `<div class="st-trick ${done ? "done" : ""}">${slots}${ledInfo}</div>${msg}`;
+      const bestTxt = best ? `Höchste Karte bisher: <b>${esc(kgName(best.card))}</b> von ${best.id === G.myId ? "dir" : esc(nameOf(best.id))}.` : "";
+      if (done) info = `<span class="sc-yt kg-late" style="--d:400ms"><span style="color:${colorOf(winner)}">${winner === G.myId ? "Du holst" : `${esc(nameOf(winner))} holt`}</span> den Stich!</span>${needChip}`;
+      else if (st.turn === G.myId) info = `<span class="sc-yt">Du bist dran</span><p>${!tr.length ? "Du spielst an – leg eine beliebige Karte." : mustFollow ? `Angespielt ist <b>${ST_SUIT[led]}</b> – du musst bedienen. ${bestTxt}` : `Angespielt ist <b>${ST_SUIT[led]}</b> – du hast keins: trumpfen oder abwerfen. ${bestTxt}`}</p>${needChip}`;
+      else info = `<span class="sc-yt sc-calm"><span style="color:${colorOf(st.turn)}">${esc(nameOf(st.turn))}</span> ist dran …</span>${tr.length ? `<p>Angespielt ist <b>${ST_SUIT[led]}</b>. ${bestTxt}</p>` : ""}${needChip}`;
     }
+    const center = `<div class="sc-center ${pile ? "" : "nopile"}">${pile}<div class="sc-info">${info}</div></div>${ask}`;
 
-    // eigene Hand: am Rundenanfang fliegen die Karten heran; spielbare Karten sind anklickbar
+    // eigene Hand: am Rundenanfang fliegen die Karten heran; spielbare sind angehoben, die übrigen abgeblendet
     let fresh = 0;
     const myTurn = st.step === "play" && st.turn === G.myId;
-    const myBid = st.bids && seated ? st.bids[G.myId] : null;
-    const myGot = (st.tricks[G.myId] || 0) + (st.step === "trick" && st.lastTrick && st.lastTrick.winner === G.myId ? 1 : 0);
-    const handHead = priv ? `<div class="st-handhead">Deine Karten${myBid != null ? ` · Ziel <b>${plural(myBid, "Stich", "Stiche")}</b>, geholt <b>${myGot}</b>` : ""}</div>` : "";
-    const hand = priv ? `${handHead}<div class="kg-hand st-hand ${myTurn ? "active" : ""}">${priv.hand.map((c) => {
+    const hand = priv ? `<div class="kg-hand st-hand sc-hand ${myTurn ? "active" : ""}">${priv.hand.map((c) => {
       const a = kgAnim(`${gk}:h:${c}`, fresh * 160, 900); if (a && a.first) fresh++;
       const can = myTurn && priv.playable.includes(c);
       return kgCard(c, `big ${can ? "pickable" : myTurn ? "off" : ""}`, can ? `data-stp="1" data-card="${c}" role="button" tabindex="0"` : "", a ? "flip" : "", a ? a.d : 0);
     }).join("")}</div>` : seated ? "" : `<p class="muted">Du schaust zu.</p>`;
     kgSound(fresh, 160, 0);
-    // beim Ansagen erst die eigenen Karten zeigen, dann die Knöpfe – zum Überlegen
-    return `<div class="panel kg-table st-table">${head}${seats}${st.step === "bid" ? hand + center : center + hand}</div>`;
+    return `<div class="kg-table st-table sc-table">${bar}${center}${hand}</div>`;
   }
   // Bus fährt von Station zu Station: Lage als Prozent der Stationsleiste (passt bei jeder Breite), Fahrt zeitbasiert –
   // wird währenddessen neu gezeichnet, fährt er an derselben Stelle weiter; neue Runde = sofort an Station 1
