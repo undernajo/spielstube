@@ -1724,6 +1724,8 @@
       </div>`;
     }).join("");
 
+    // Lichterkranz der Show-Bühne (28 Lämpchen am Rand, abwechselnd blinkend)
+    const ZK_BULBS = Array.from({ length: 28 }, (_, k) => { const a = k / 28 * 2 * Math.PI; return `<i style="left:${(50 + 50 * Math.cos(a)).toFixed(2)}%;top:${(50 + 50 * Math.sin(a)).toFixed(2)}%"></i>`; }).join("");
     const cardKey = v.code + ":" + v.round + ":" + card.q, batchOk = { n: 0 }, batchShown = { n: 0, flip: true };
     const slots = card.items.map((it, pos) => {
       const ang = (-90 + pos * 36) * Math.PI / 180;
@@ -1767,7 +1769,7 @@
         </div>`;
     } else if (v.phase === "playing") {
       banner = myTurn
-        ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "Passen"}</button>`
+        ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `✋ Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "✋ Passen"}</button>`
         : isHost && !cur.connected ? `<div class="banner row"><div class="banner-text"><b>${esc(cur.name)}</b> ist getrennt.</div><button id="skip" class="btn ghost sm">Überspringen</button></div>` : "";
     } else if (v.phase === "roundEnd") {
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
@@ -1794,6 +1796,7 @@
           <section class="action">${banner}${undoHtml(v, nameOf)}</section>
           <section class="board">
             <div class="ring ${myTurn && v.phase === "playing" ? "myturn" : ""} ${card.emoji ? "emo" : ""} ${card.emoji && card.items.every((it) => graphemes(it.t) === 1) ? "emo-solo" : ""}">
+              <div class="zk-bulbs" style="--bd:-${Math.round(performance.now() % 1600)}ms">${ZK_BULBS}</div>
               <div class="center">
                 ${myTurn && v.phase === "playing" ? `<div class="zturn">Du bist dran!</div>` : ""}
                 <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: new Set(card.items.map((x) => x.tol)).size > 1 ? "Schätzen · Toleranz je nach Begriff" : `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>

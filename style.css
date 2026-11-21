@@ -2572,6 +2572,11 @@ body.qb-play .banner.win .trophy { display: none; }
 @keyframes slot-flip { 0% { transform: translate(-50%, -50%) rotateY(90deg) scale(.9); } 100% { transform: translate(-50%, -50%) rotateY(0) scale(1); } }
 @keyframes slot-glow { 0% { box-shadow: 0 0 0 0 rgba(60, 207, 142, .9), 0 4px 0 rgba(0, 0, 0, .25); } 100% { box-shadow: 0 0 0 16px rgba(60, 207, 142, 0), 0 4px 0 rgba(0, 0, 0, .25); } }
 @keyframes slot-shake { 0%, 100% { margin-left: 0; } 20% { margin-left: -7px; } 40% { margin-left: 7px; } 60% { margin-left: -4px; } 80% { margin-left: 3px; } }
+/* am Handy stehen die Felder in der Tafel (ohne Verschiebung) – eigene Dreh-Animation, sonst blieben sie um die halbe Größe versetzt */
+@media (max-width: 640px) {
+  .slot.fx-flip { animation-name: slot-flip-m; } .slot.ok.fx-flip { animation-name: slot-flip-m, slot-glow; } .slot.fx-shake { animation-name: slot-flip-m, slot-shake; }
+}
+@keyframes slot-flip-m { 0% { transform: rotateY(90deg) scale(.9); } 100% { transform: rotateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .slot.fx-flip, .slot.fx-shake { animation: none; } }
 /* Umriss-Rätsel: Umriss zeichnet sich, dann füllt er sich */
 .umriss-svg.fx-draw .u-line { stroke-dasharray: 1; stroke-dashoffset: 1; stroke-width: var(--sw); animation: u-draw 1.2s ease-in-out forwards; }
@@ -3327,3 +3332,35 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .dm-fin { left: 10px; right: 10px; height: 30px; border-radius: 9px; border: 1.5px solid rgba(255, 255, 255, .25); background: rgba(0, 0, 0, .3); display: flex; align-items: center; padding: 0 10px; font-weight: 800; font-size: 12px; }
 .dm-fin .t { overflow: hidden; white-space: nowrap; max-width: 0; } .dm-fin .caret { width: 2px; height: 14px; background: var(--ink); margin-left: 1px; }
 #fa.dm-fin { opacity: 0; }
+/* ---------- Zehnkampf: Spielshow-Bühne – Lichterkranz, goldene Mitte, Felder als 3D-Knöpfe (Schrift unverändert groß) ---------- */
+.ring { background: radial-gradient(circle at 50% 50%, #2e2380 0%, #1b1550 62%, #120e35 63%, #0d0a28 100%);
+  box-shadow: 0 0 0 10px #241c66, 0 0 0 12px #4a3fa0, 0 20px 50px rgba(0, 0, 0, .5); }
+.zk-bulbs { position: absolute; inset: -10px; border-radius: 50%; pointer-events: none; }
+.zk-bulbs i { position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%; background: #ffe39a; box-shadow: 0 0 8px #ffc83d; animation: zk-bulb 1.6s ease-in-out infinite; animation-delay: var(--bd, 0ms); }
+.zk-bulbs i:nth-child(even) { animation-delay: calc(var(--bd, 0ms) - .8s); }
+@keyframes zk-bulb { 50% { opacity: .25; } }
+.ring .center { inset: 26%; background: radial-gradient(circle at 50% 35%, #3b2fa0, #1a1450 70%);
+  box-shadow: 0 0 0 4px var(--accent), 0 0 40px rgba(255, 200, 61, .3), inset 0 0 30px rgba(0, 0, 0, .4); }
+.ring.myturn .center { box-shadow: 0 0 0 4px var(--accent), 0 0 56px rgba(255, 200, 61, .5), inset 0 0 30px rgba(0, 0, 0, .4); }
+.slot { border: 0; border-radius: 16px; background: linear-gradient(180deg, #4b3cc2, #3a2c9e); color: #fff;
+  box-shadow: 0 5px 0 #231a6e, inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot.open { border-color: transparent; }
+.slot.open:hover { background: linear-gradient(180deg, #5747d0, #4433ae); }
+.slot.sel, .slot.open.sel:hover { background: linear-gradient(180deg, #5747d0, #4433ae); box-shadow: 0 0 0 3px var(--accent), 0 0 22px rgba(255, 200, 61, .4), 0 5px 0 #231a6e; }
+.slot.ok { background: linear-gradient(180deg, #2fbf71, #1f8f52); box-shadow: 0 5px 0 #145a34, inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot.bad { background: linear-gradient(180deg, #ef4b5a, #b52c3a); box-shadow: 0 5px 0 #6d1620, inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot.shown { background: linear-gradient(180deg, #2c2470, #221b5a); color: #c9c3ea; box-shadow: 0 5px 0 #15103f; }
+.slot.pending { background: linear-gradient(180deg, #ffd45e, #f0b42a); color: var(--accent-ink); box-shadow: 0 5px 0 #a87a12; }
+.slot.has-by { box-shadow: 0 5px 0 rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot.ok.has-by { box-shadow: 0 5px 0 #145a34, inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot.bad.has-by { box-shadow: 0 5px 0 #6d1620, inset 0 1px 0 rgba(255, 255, 255, .2); }
+.slot-by .pdot { width: 9px; height: 9px; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .85); }
+@media (prefers-reduced-motion: reduce) { .zk-bulbs i { animation: none; } }
+@media (max-width: 640px) {
+  .ring { background: radial-gradient(circle at 50% 0%, #2e2380, #1b1550 70%); box-shadow: 0 0 0 3px #4a3fa0, 0 12px 30px rgba(0, 0, 0, .4); }
+  .zk-bulbs { display: none; }
+  .ring .center, .ring.myturn .center { box-shadow: 0 8px 18px rgba(0, 0, 0, .4), 0 0 0 3px var(--accent); }
+}
+/* Zehnkampf: Passen als goldener Knopf (wie die Show-Bühne) */
+.pass-btn { border: 2px solid var(--accent); background: rgba(255, 200, 61, .12); color: var(--accent); font: 700 1.05rem Fredoka, sans-serif; box-shadow: none; }
+.pass-btn:hover { background: rgba(255, 200, 61, .22); }
