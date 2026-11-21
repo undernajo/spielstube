@@ -3773,3 +3773,15 @@ body.qb-play .fw-main { --fw-top: 370px; }
 #camdock .camctl-b.hang { background: #d93c4b; border-color: #d93c4b; padding: 0 24px; }
 #camdock .camctl-b.hang:hover { background: #ef4b5a; }
 #camdock .cambtns .camhang { width: 24px; height: 24px; padding: 0; margin-left: 4px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .78rem; vertical-align: middle; }
+/* im großen Anruf-Fenster steht Auflegen unten in der Leiste – oben rechts nicht doppelt */
+#camdock.stage .cambtns .camhang { display: none; }
+#camdock .camsize svg { display: block; }
+/* in der Lobby-Spalte und im großen Anruf-Fenster lässt sich die Kamera nicht verschieben – keine Griff-Punkte */
+#camdock .camdots { font-style: normal; }
+#camdock.docked .camdots, #camdock.stage .camdots { display: none; }
+#camdock.docked .camgrip, #camdock.stage .camgrip { cursor: default; }
+/* Knopfleiste im großen Anruf-Fenster schwebt über dem Bild – das Bild nutzt die ganze Höhe */
+#camdock.stage .camctl { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); padding: 0; z-index: 5; }
+#camdock.stage .camctl-b { background: rgba(20, 16, 50, .72); border-color: rgba(255, 255, 255, .25); backdrop-filter: blur(6px); box-shadow: 0 6px 18px rgba(0, 0, 0, .35); }
+#camdock.stage .camctl-b.on { background: rgba(31, 143, 82, .78); border-color: #2fbf71; }
+#camdock.stage .camctl-b.hang { background: #d93c4b; border-color: #d93c4b; }

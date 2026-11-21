@@ -965,7 +965,7 @@
     camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0 && !(remoteCams.size > 1 && !camDock.classList.contains("docked")));
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
-      camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
+      camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen"><i class="camdots">⠿</i> Kamera</span>
           <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button><button type="button" class="camhang" title="Auflegen – nur für dich" aria-label="Anruf beenden">📞</button></span></div><div class="camtiles"></div>
         <div class="camctl"><button type="button" class="camctl-b" data-cam aria-label="Kamera an/aus">📷</button><button type="button" class="camctl-b" data-mic aria-label="Mikrofon an/aus">🎤</button><button type="button" class="camctl-b hang" aria-label="Anruf beenden">📞 Auflegen</button></div>`;
       camDock.querySelector(".camhang").onclick = hangUp;
@@ -997,8 +997,11 @@
     if (camStage) camDock.classList.remove("closed");
     camBack.classList.toggle("show", camStage && camDock.classList.contains("show"));
     const sz = camDock.querySelector(".camsize");
-    sz.textContent = camStage ? "✕" : "⤢";
-    sz.title = camStage ? "Großes Anruf-Fenster schließen" : inLobby() ? "Großes Anruf-Fenster öffnen" : "Größer/kleiner";
+    // im großen Anruf-Fenster: Pfeile nach innen (verkleinern) statt Kreuz
+    if (camStage) sz.innerHTML = `<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 1.5v5h-5M9.5 14.5v-5h5M1.5 1.5l5 5M14.5 14.5l-5-5"/></svg>`;
+    else sz.textContent = "⤢";
+    sz.title = camStage ? "Verkleinern" : inLobby() ? "Großes Anruf-Fenster öffnen" : "Größer/kleiner";
+    sz.setAttribute("aria-label", sz.title);
     // Position merkt sich die Ecke rechts unten – beim Vergrößern/Verkleinern bleibt sie stehen
     const pos = store.get("s10-cam-pos");
     if (!camStage && pos && pos.rx != null && camDock.classList.contains("show") && !camDock.classList.contains("docked")) camPlace(pos.rx * innerWidth - camDock.offsetWidth, pos.by * innerHeight - camDock.offsetHeight);
