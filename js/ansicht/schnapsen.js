@@ -147,11 +147,11 @@
         </header>
         ${statusBarHtml()}
         <div class="wlayout">
-          <section class="wtable">
-            <div class="wtop">${combo}${myTurn ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}${talon}
+          <section class="wtable wt-schnapsen">
+            <div class="wtop">${combo}${myTurn ? "" : turnBadge}</div>${pile(opp, "top")}${pile(self, "bottom")}<div class="xleft">${talon}<div class="xcombo">${combo}</div></div>
             <div class="wside"><span class="muted small wname">${esc(nameOf(opp))} ${augen(opp)}</span><div class="whand opp">${oppCards}</div></div>
-            ${action && !xHold ? `<div class="wtrick wresult">${action}</div>` : table}
-            ${myTurn ? turnBadge : ""}${hint ? `<p class="whint tt-text">${hint}</p>` : ""}${decide}
+            <div class="wmid">${action && !xHold ? `<div class="wtrick wresult">${action}</div>` : table}
+            <div class="wmid-info">${myTurn ? turnBadge : ""}${hint ? `<p class="whint tt-text">${hint}</p>` : ""}${decide}</div></div>
             <div class="wside"><span class="muted small wname">${seated ? "Deine Karten" : esc(nameOf(self))} ${augen(self)}</span><div class="whand mine">${myCards}</div></div>
           </section>
           <aside class="wpanel">

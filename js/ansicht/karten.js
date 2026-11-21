@@ -105,10 +105,10 @@
           me = `<div class="sv-me"><div class="sv-hand">${handHtml}</div>
               <div class="sv-dial ${tone} ${late}"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" class="sv-ring0"/>
                 <circle cx="66" cy="66" r="56" class="sv-ring" style="stroke-dasharray:${C * Math.min(1, v / 21)} ${C}"/></svg>
-                <div><b>${priv.feuer ? "🔥" : v}</b><small>von 21</small></div></div></div>
+                <div><b>${priv.feuer ? "🔥" : v}</b><small>von 21</small></div></div>
             <div class="sv-foot ${late}"><span class="tt-head ${over ? "bad" : fin && !top ? "calm" : ""}">${headTxt}</span><p class="tt-text">${subTxt}</p>
               ${fin ? `<span class="tt-chip">Deine Punkte: ${st.total[G.myId] || 0}</span>`
-                : `<div class="sv-acts"><button id="kg-hit" class="sv-hit">🂠 Karte!</button><button id="kg-stand" class="sv-stand">✋ Genug</button></div>`}</div>`;
+                : `<div class="sv-acts"><button id="kg-hit" class="sv-hit">🂠 Karte!</button><button id="kg-stand" class="sv-stand">✋ Genug</button></div>`}</div></div>`;
         } else me = `<div class="sv-solo"><span class="tt-head calm">${seated ? "Karten werden ausgeteilt …" : "Du schaust in dieser Runde zu."}</span></div>`;
         kgSound(sounds, 380, 0);
         const legend = `<div class="sv-legend" aria-label="Kartenwerte">${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]

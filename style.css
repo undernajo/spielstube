@@ -3210,3 +3210,41 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .whint.tt-text { background: none; padding: 0; border-radius: 0; font-size: clamp(.9rem, 1.7vh, 1.05rem); }
 .whint.tt-text b { color: var(--accent); }
 @media (max-width: 899px) { .wturn.me { font-size: 1.15rem; padding: 0; } .wturn.other { font-size: .98rem; } }
+
+/* Beschriftung neben dem Stich bzw. neben der Summe (wie bei Stichhaltig); am Handy darunter */
+.wmid { display: grid; gap: 10px; justify-items: center; min-width: 0; }
+.wmid-info { display: grid; gap: 6px; justify-items: center; text-align: center; }
+.wmid-info:empty { display: none; }
+@media (min-width: 900px) {
+  /* Stich genau in der Mitte, Beschriftung rechts daneben (Schlag/Trumpf-Kasten bzw. Stapel stehen links) */
+  .wlayout .wmid { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 34px; align-self: center; width: 100%; }
+  .wlayout .wmid > .wtrick { grid-column: 2; }
+  .wlayout .wmid > .wmid-info { grid-column: 3; justify-self: start; }
+  .wlayout .wmid-info { justify-items: start; text-align: left; max-width: 300px; }
+  .wlayout .wmid-info .tt-text, .wlayout .wmid-info .whint { text-align: left; justify-self: start; }
+  .wlayout .wmid-info .wturn.me { justify-self: start; align-self: auto; }
+  .sv-foot { justify-items: start; text-align: left; }
+  .sv-foot .tt-head, .sv-foot .tt-text { text-align: left; }
+  .sv-foot .sv-acts { justify-content: flex-start; }
+}
+@media (max-width: 899px) { .sv-me .sv-foot { grid-column: 1 / -1; } }
+@media (min-width: 900px) {
+  /* Watten: Schlag/Trumpf-Kasten links (zwischen den Stichstapeln) */
+  .wtable.wt-watten .wcombo { right: auto; left: 18px; }
+}
+/* Schnapsen: Trumpf-Kasten links unter dem Stapel (rechts bleibt Platz für die Beschriftung) */
+.xcombo { display: none; }
+@media (min-width: 900px) {
+  .wt-schnapsen .wtop .wcombo { display: none; }
+  .xleft { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); z-index: 2; display: grid; justify-items: center; gap: 16px; }
+  .xleft .xtalon { position: static; transform: none; }
+  .xcombo { display: block; }
+  .wtable .xcombo .wcombo { position: static; transform: none; padding: 8px 14px; gap: 2px; }
+  .wtable .xcombo .wcombo .wsuit.big { width: 2.2rem; height: 2.2rem; } .wtable .xcombo .wcombo b { font-size: 1.05rem; }
+  /* Siebzehn und Vier: Ring links, Hand genau in der Mitte, Beschriftung rechts */
+  .sv-me { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); width: 100%; }
+  .sv-me > .sv-hand { grid-column: 2; grid-row: 1; }
+  .sv-me > .sv-dial { grid-column: 1; grid-row: 1; justify-self: end; }
+  .sv-me > .sv-foot { grid-column: 3; grid-row: 1; justify-self: start; }
+}
+@media (max-width: 899px) { .xleft { display: contents; } }
