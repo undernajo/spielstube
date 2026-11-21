@@ -2896,9 +2896,9 @@ body.qb-play .fw-main { --fw-top: 370px; }
   /* Höhe ausnutzen: Spielfeld reicht bis zum unteren Rand, Karten, Stationen und Knöpfe wachsen mit der Fensterhöhe */
   .bb-layout { grid-template-columns: minmax(0, 1fr) clamp(270px, 22vw, 330px); gap: 16px; align-items: stretch; max-width: 1240px; }
   /* Kartenreihe bleibt an ihrem Platz: Inhalt beginnt oben (fester Abstand), nur der Teil darunter wechselt */
-  .bb-board { min-height: calc(100dvh - 116px); align-content: start; gap: clamp(14px, 3.2vh, 40px); container-type: inline-size; padding-top: clamp(48px, 8vh, 96px); }
+  .bb-board { min-height: calc(100dvh - 116px); align-content: start; gap: clamp(14px, 3.2vh, 40px); container-type: inline-size; padding-top: clamp(40px, 7vh, 84px); }
   /* Kartenfeld: so hoch wie das Fenster erlaubt, aber nie breiter als das Spielfeld (5 Felder + Topf) */
-  .bb-track { --sw: min(calc(clamp(96px, calc(100dvh - 540px), 260px) * .66), calc((100cqw - 200px) / 5)); --sh: calc(var(--sw) / .66); }
+  .bb-track { --sw: min(calc(clamp(96px, calc(100dvh - 560px), 260px) * .66), calc((100cqw - 200px) / 5)); --sh: calc(var(--sw) / .66); }
   .bb-stops, .bb-slots { grid-template-columns: repeat(5, var(--sw)); gap: clamp(12px, 1.3vh, 16px); }
   .bb-stops::before { left: calc(var(--sw) / 2); right: calc(var(--sw) / 2); }
   .bb-stop { height: clamp(42px, 6vh, 66px); font-size: clamp(1rem, 2.2vh, 1.45rem); }
@@ -3092,3 +3092,19 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .sv-legend { font-size: clamp(.78rem, 1.45vh, .92rem); }
   .sv-reveal { align-content: center; }
 }
+/* Busfahrt: Spielfeld als grüner Spieltisch mit Holzrand (wie Siebzehn und Vier) */
+.bb-board { border: 12px solid #6b4224; border-radius: 34px; outline: 1px solid rgba(255, 255, 255, .08); outline-offset: -12px;
+  background: radial-gradient(120% 90% at 50% 40%, #237a51 0%, #17603e 55%, #0f4a2f 100%);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 0 60px rgba(0, 0, 0, .45), 0 0 0 1px #4f2f17; }
+.bb-board .bb-slot { border-color: rgba(255, 255, 255, .22); }
+.bb-board .bb-slot.cur { border-color: var(--accent); background: rgba(255, 200, 61, .1); }
+.bb-board .bb-stops::before { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .3) 0 6px, transparent 6px 11px); }
+.bb-board .bb-stop { background: rgba(10, 30, 20, .55); border-color: rgba(255, 255, 255, .18); }
+.bb-board .bb-stop.cur { background: color-mix(in srgb, var(--accent) 20%, rgba(10, 30, 20, .7)); border-color: var(--accent); }
+.bb-board .bb-stop.past { background: color-mix(in srgb, var(--ok) 28%, rgba(10, 30, 20, .7)); }
+.bb-board .bb-stop small, .bb-board .bb-note { color: #cfe9da; }
+.bb-board .bb-scale { background: rgba(0, 0, 0, .25); border-color: rgba(255, 255, 255, .12); }
+.bb-board .bb-scale span:not(.ref), .bb-board .bb-scale em { color: #cfe9da; }
+.bb-board .bb-pot.off, .bb-board .bb-halt { background: rgba(10, 30, 20, .6); }
+.bb-board .kg-res { background: rgba(10, 30, 20, .55); }
+@media (max-width: 640px) { .bb-board { border-width: 7px; border-radius: 22px; outline-offset: -7px; } }
