@@ -3080,4 +3080,15 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .kg-siebzehn .geo-bar { display: none; }
   .kg-siebzehn .kg-meta-round { display: inline; } .kg-siebzehn .kg-meta-round::before { content: " · "; }
   .kg-siebzehn.screen.game { padding-bottom: 16px; }
+  /* Höhe ausnutzen: Tisch reicht bis unten, Inhalt verteilt sich, Karten, Ring und Knöpfe wachsen mit der Fensterhöhe */
+  .sv-rim { max-width: 1120px; }
+  .sv-felt { min-height: calc(100dvh - 136px); align-content: space-evenly; gap: clamp(10px, 2.4vh, 30px); }
+  .sv-fan { min-height: clamp(58px, 9vh, 92px); } .sv-fan .kg-card.sv-back { width: clamp(38px, 5.6vh, 58px); margin-left: calc(clamp(38px, 5.6vh, 58px) * -.47); }
+  .sv-nm { font-size: clamp(.88rem, 1.7vh, 1.05rem); } .sv-seat small { font-size: clamp(.74rem, 1.4vh, .9rem); }
+  .sv-hand { min-height: 0; } .kg-card.sv-card { width: clamp(84px, 16vh, 170px); } .sv-c { margin-left: calc(clamp(84px, 16vh, 170px) * -.28); }
+  .sv-dial { width: clamp(110px, 21vh, 220px); } .sv-dial b { font-size: clamp(2.1rem, 6.2vh, 4.4rem); } .sv-dial small { font-size: clamp(.72rem, 1.4vh, .9rem); }
+  .sv-msg { font-size: clamp(1.05rem, 2.3vh, 1.4rem); } .sv-mine { font-size: clamp(.78rem, 1.5vh, .92rem); }
+  .sv-hit, .sv-stand { font-size: clamp(1.15rem, 2.4vh, 1.5rem); padding: clamp(12px, 1.8vh, 18px) clamp(28px, 4vh, 44px); }
+  .sv-legend { font-size: clamp(.78rem, 1.45vh, .92rem); }
+  .sv-reveal { align-content: center; }
 }
