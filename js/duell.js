@@ -165,10 +165,10 @@
       step: st.step, round: st.round, seats: st.seats.slice(), score: { ...st.score }, target: st.opts.target, timer: st.opts.timer,
       timerName: TIMERS[st.opts.timer].name, turn: st.turn, starter: st.starter,
       deadlineIn: st.deadline ? Math.max(0, st.deadline - now) : 0, timerMs: TIMERS[st.opts.timer].ms,
-      list: { q: li.q, cat: li.cat || "", note: li.note || "" },
-      // Liste füllt sich von oben in der Reihenfolge, in der genannt wurde (verrät keinen Rang);
-      // verdeckte Antworten nur nach der Runde
-      items: (() => {
+      list: { q: li.q, cat: li.cat || "", note: li.note || "", ranked: !!li.ranked },
+      // Liste mit fester Reihenfolge (ranked): gefundene Antworten stehen auf ihrem Platz.
+      // Sonst füllt sie sich von oben in der Reihenfolge, in der genannt wurde (verrät keinen Rang); verdeckte Antworten nur nach der Runde
+      items: li.ranked ? li.items.map((it, i) => (st.found[i] ? { t: it[0], by: st.found[i].by } : { t: open ? it[0] : null, by: null })) : (() => {
         const got = st.moves.filter((m) => m.ok).map((m) => m.item);
         const rest = li.items.map((_, i) => i).filter((i) => !st.found[i]);
         return [...got.map((i) => ({ t: li.items[i][0], by: st.found[i].by })), ...rest.map((i) => ({ t: open ? li.items[i][0] : null, by: null }))];

@@ -1,108 +1,109 @@
 // „Listen-Duell“ – Themen mit einer festen Liste von Antworten (meist zehn, manchmal mehr oder weniger).
-// Reihenfolge egal, es zählt nur, ob die Antwort dazugehört.
+// Reihenfolge beim Nennen egal, es zählt nur, ob die Antwort dazugehört. ranked: true = die Liste steht in fester Reihenfolge
+// (Rangfolge, Zeitfolge, Nummer) – gefundene Antworten erscheinen dann auf ihrem Platz. Nur setzen, wenn die Reihenfolge gesichert ist.
 // Jede Antwort: [Name, [andere Schreibweisen …]]. names: true = bei Personen reicht der Nachname.
 // Nur möglichst stabile Listen; wo sich etwas ändern kann, steht der Stand dabei.
 window.SCHLAU10_DUELL = [
   // ---------- Städte ----------
-  { cat: "Städte", q: "Die 10 größten Städte Deutschlands", note: "nach Einwohnern, Stand 2023", items: [
+  { cat: "Städte", q: "Die 10 größten Städte Deutschlands", ranked: true, note: "nach Einwohnern, Stand 2023", items: [
     ["Berlin"], ["Hamburg"], ["München", ["Muenchen", "Munich"]], ["Köln", ["Koeln", "Cologne"]], ["Frankfurt am Main", ["Frankfurt"]],
     ["Düsseldorf", ["Duesseldorf"]], ["Stuttgart"], ["Leipzig"], ["Dortmund"], ["Essen"]] },
-  { cat: "Städte", q: "Die 10 größten Städte Österreichs", note: "nach Einwohnern, Stand 2024", items: [
+  { cat: "Städte", q: "Die 10 größten Städte Österreichs", ranked: true, note: "nach Einwohnern, Stand 2024", items: [
     ["Wien", ["Vienna"]], ["Graz"], ["Linz"], ["Salzburg"], ["Innsbruck"], ["Klagenfurt", ["Klagenfurt am Wörthersee"]],
     ["Villach"], ["Wels"], ["Sankt Pölten", ["St. Pölten", "St Pölten", "St. Poelten"]], ["Dornbirn"]] },
-  { cat: "Städte", q: "Die 10 größten Städte der Schweiz", note: "nach Einwohnern, Stand 2023", items: [
+  { cat: "Städte", q: "Die 10 größten Städte der Schweiz", ranked: true, note: "nach Einwohnern, Stand 2023", items: [
     ["Zürich", ["Zuerich", "Zurich"]], ["Genf", ["Genève", "Geneva"]], ["Basel"], ["Lausanne"], ["Bern"], ["Winterthur"],
     ["Luzern", ["Lucerne"]], ["St. Gallen", ["Sankt Gallen", "St Gallen"]], ["Lugano"], ["Biel", ["Biel/Bienne", "Bienne"]]] },
-  { cat: "Städte", q: "Die 10 größten Städte Italiens", note: "nach Einwohnern der Gemeinde, Stand 2023", items: [
+  { cat: "Städte", q: "Die 10 größten Städte Italiens", ranked: true, note: "nach Einwohnern der Gemeinde, Stand 2023", items: [
     ["Rom", ["Roma"]], ["Mailand", ["Milano", "Milan"]], ["Neapel", ["Napoli"]], ["Turin", ["Torino"]], ["Palermo"], ["Genua", ["Genova"]],
     ["Bologna"], ["Florenz", ["Firenze"]], ["Bari"], ["Catania"]] },
-  { cat: "Städte", q: "Die 10 größten Städte Frankreichs", note: "nach Einwohnern der Gemeinde, Stand 2021", items: [
+  { cat: "Städte", q: "Die 10 größten Städte Frankreichs", ranked: true, note: "nach Einwohnern der Gemeinde, Stand 2021", items: [
     ["Paris"], ["Marseille"], ["Lyon"], ["Toulouse"], ["Nizza", ["Nice"]], ["Nantes"], ["Montpellier"], ["Straßburg", ["Strassburg", "Strasbourg"]],
     ["Bordeaux"], ["Lille"]] },
-  { cat: "Städte", q: "Die 10 größten Städte Nordrhein-Westfalens", note: "nach Einwohnern, Stand 2023", items: [
+  { cat: "Städte", q: "Die 10 größten Städte Nordrhein-Westfalens", ranked: true, note: "nach Einwohnern, Stand 2023", items: [
     ["Köln", ["Koeln"]], ["Düsseldorf", ["Duesseldorf"]], ["Dortmund"], ["Essen"], ["Duisburg"], ["Bochum"], ["Wuppertal"], ["Bielefeld"],
     ["Bonn"], ["Münster", ["Muenster"]]] },
 
   // ---------- Länder ----------
-  { cat: "Länder", q: "Die 10 flächengrößten Länder der Welt", items: [
-    ["Russland"], ["Kanada"], ["China"], ["USA", ["Vereinigte Staaten", "Amerika"]], ["Brasilien"], ["Australien"], ["Indien"], ["Argentinien"],
+  { cat: "Länder", q: "Die 10 flächengrößten Länder der Welt", ranked: true, items: [
+    ["Russland"], ["Kanada"], ["USA", ["Vereinigte Staaten", "Amerika"]], ["China"], ["Brasilien"], ["Australien"], ["Indien"], ["Argentinien"],
     ["Kasachstan"], ["Algerien"]] },
-  { cat: "Länder", q: "Die 10 kleinsten Länder der Welt", note: "nach Fläche, nur unabhängige Staaten", items: [
+  { cat: "Länder", q: "Die 10 kleinsten Länder der Welt", ranked: true, note: "nach Fläche, nur unabhängige Staaten", items: [
     ["Vatikanstadt", ["Vatikan"]], ["Monaco"], ["Nauru"], ["Tuvalu"], ["San Marino"], ["Liechtenstein"], ["Marshallinseln"],
     ["St. Kitts und Nevis", ["Saint Kitts und Nevis", "St Kitts", "St. Kitts"]], ["Malediven"], ["Malta"]] },
-  { cat: "Länder", q: "Die 10 flächengrößten Länder Europas", note: "ohne Türkei und Kasachstan", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten Länder Europas", ranked: true, note: "ohne Türkei und Kasachstan", items: [
     ["Russland"], ["Ukraine"], ["Frankreich"], ["Spanien"], ["Schweden"], ["Norwegen"], ["Deutschland"], ["Finnland"], ["Polen"], ["Italien"]] },
-  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Länder Europas", note: "ohne Türkei, Stand 2024", items: [
+  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Länder Europas", ranked: true, note: "ohne Türkei, Stand 2024", items: [
     ["Russland"], ["Deutschland"], ["Großbritannien", ["Vereinigtes Königreich", "UK", "England"]], ["Frankreich"], ["Italien"], ["Spanien"],
     ["Polen"], ["Ukraine"], ["Rumänien", ["Rumaenien"]], ["Niederlande", ["Holland"]]] },
-  { cat: "Länder", q: "Die 10 flächengrößten Länder der EU", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten Länder der EU", ranked: true, items: [
     ["Frankreich"], ["Spanien"], ["Schweden"], ["Deutschland"], ["Finnland"], ["Polen"], ["Italien"], ["Rumänien", ["Rumaenien"]],
     ["Griechenland"], ["Bulgarien"]] },
-  { cat: "Länder", q: "Die 10 flächengrößten Länder Afrikas", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten Länder Afrikas", ranked: true, items: [
     ["Algerien"], ["Demokratische Republik Kongo", ["Kongo", "DR Kongo"]], ["Sudan"], ["Libyen"], ["Tschad"], ["Niger"], ["Angola"], ["Mali"],
     ["Südafrika", ["Suedafrika"]], ["Äthiopien", ["Aethiopien", "Ethiopien"]]] },
-  { cat: "Länder", q: "Die 10 flächengrößten Länder Südamerikas", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten Länder Südamerikas", ranked: true, items: [
     ["Brasilien"], ["Argentinien"], ["Peru"], ["Kolumbien"], ["Bolivien"], ["Venezuela"], ["Chile"], ["Paraguay"], ["Ecuador"], ["Guyana"]] },
-  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Länder Südamerikas", note: "Stand 2024", items: [
+  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Länder Südamerikas", ranked: true, note: "Stand 2024", items: [
     ["Brasilien"], ["Kolumbien"], ["Argentinien"], ["Peru"], ["Venezuela"], ["Chile"], ["Ecuador"], ["Bolivien"], ["Paraguay"], ["Uruguay"]] },
   { cat: "Länder", q: "Die 10 Provinzen Kanadas", items: [
     ["Ontario"], ["Québec", ["Quebec"]], ["British Columbia", ["Britisch-Kolumbien"]], ["Alberta"], ["Manitoba"], ["Saskatchewan"],
     ["Nova Scotia", ["Neuschottland"]], ["New Brunswick", ["Neubraunschweig"]], ["Neufundland und Labrador", ["Neufundland", "Newfoundland"]],
     ["Prince Edward Island", ["Prinz-Edward-Insel"]]] },
-  { cat: "Länder", q: "Die 10 flächengrößten US-Bundesstaaten", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten US-Bundesstaaten", ranked: true, items: [
     ["Alaska"], ["Texas"], ["Kalifornien", ["California"]], ["Montana"], ["New Mexico", ["Neumexiko"]], ["Arizona"], ["Nevada"], ["Colorado"],
     ["Oregon"], ["Wyoming"]] },
-  { cat: "Länder", q: "Die 10 bevölkerungsreichsten US-Bundesstaaten", note: "Stand 2024", items: [
+  { cat: "Länder", q: "Die 10 bevölkerungsreichsten US-Bundesstaaten", ranked: true, note: "Stand 2024", items: [
     ["Kalifornien", ["California"]], ["Texas"], ["Florida"], ["New York"], ["Pennsylvania", ["Pennsylvanien"]], ["Illinois"], ["Ohio"],
     ["Georgia"], ["North Carolina", ["Nord-Carolina", "Nordcarolina"]], ["Michigan"]] },
-  { cat: "Länder", q: "Die 10 bevölkerungsreichsten deutschen Bundesländer", note: "Stand 2023", items: [
-    ["Nordrhein-Westfalen", ["NRW"]], ["Bayern"], ["Baden-Württemberg", ["BW"]], ["Niedersachsen"], ["Hessen"], ["Sachsen"], ["Rheinland-Pfalz"],
+  { cat: "Länder", q: "Die 10 bevölkerungsreichsten deutschen Bundesländer", ranked: true, note: "Stand 2023", items: [
+    ["Nordrhein-Westfalen", ["NRW"]], ["Bayern"], ["Baden-Württemberg", ["BW"]], ["Niedersachsen"], ["Hessen"], ["Rheinland-Pfalz"], ["Sachsen"],
     ["Berlin"], ["Schleswig-Holstein"], ["Brandenburg"]] },
-  { cat: "Länder", q: "Die 10 flächengrößten deutschen Bundesländer", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten deutschen Bundesländer", ranked: true, items: [
     ["Bayern"], ["Niedersachsen"], ["Baden-Württemberg", ["BW"]], ["Nordrhein-Westfalen", ["NRW"]], ["Brandenburg"],
     ["Mecklenburg-Vorpommern", ["MV", "Meck-Pomm"]], ["Hessen"], ["Sachsen-Anhalt"], ["Rheinland-Pfalz"], ["Sachsen"]] },
-  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Regionen Italiens", note: "Stand 2024", items: [
-    ["Lombardei", ["Lombardia"]], ["Latium", ["Lazio"]], ["Kampanien", ["Campania"]], ["Sizilien", ["Sicilia"]], ["Venetien", ["Veneto"]],
+  { cat: "Länder", q: "Die 10 bevölkerungsreichsten Regionen Italiens", ranked: true, note: "Stand 2024", items: [
+    ["Lombardei", ["Lombardia"]], ["Latium", ["Lazio"]], ["Kampanien", ["Campania"]], ["Venetien", ["Veneto"]], ["Sizilien", ["Sicilia"]],
     ["Emilia-Romagna"], ["Piemont", ["Piemonte"]], ["Apulien", ["Puglia"]], ["Toskana", ["Toscana"]], ["Kalabrien", ["Calabria"]]] },
-  { cat: "Länder", q: "Die 10 flächengrößten Regionen Italiens", items: [
+  { cat: "Länder", q: "Die 10 flächengrößten Regionen Italiens", ranked: true, items: [
     ["Sizilien", ["Sicilia"]], ["Piemont", ["Piemonte"]], ["Sardinien", ["Sardegna"]], ["Lombardei", ["Lombardia"]], ["Toskana", ["Toscana"]],
     ["Emilia-Romagna"], ["Apulien", ["Puglia"]], ["Venetien", ["Veneto"]], ["Latium", ["Lazio"]], ["Kalabrien", ["Calabria"]]] },
 
   // ---------- Natur ----------
-  { cat: "Natur", q: "Die 10 höchsten Berge der Welt", items: [
+  { cat: "Natur", q: "Die 10 höchsten Berge der Welt", ranked: true, items: [
     ["Mount Everest", ["Everest", "Mt. Everest", "Sagarmatha", "Chomolungma"]], ["K2"], ["Kangchendzönga", ["Kangchenjunga", "Kanchenjunga", "Kangchendzoenga"]],
     ["Lhotse"], ["Makalu"], ["Cho Oyu"], ["Dhaulagiri"], ["Manaslu"], ["Nanga Parbat"], ["Annapurna"]] },
-  { cat: "Natur", q: "Die 10 längsten Flüsse der Welt", note: "nach gängigen Längenangaben (inkl. Quellflüsse)", items: [
+  { cat: "Natur", q: "Die 10 längsten Flüsse der Welt", ranked: true, note: "nach gängigen Längenangaben (inkl. Quellflüsse)", items: [
     ["Nil"], ["Amazonas"], ["Jangtsekiang", ["Jangtse", "Yangtze"]], ["Mississippi", ["Mississippi-Missouri", "Missouri"]], ["Jenissei"],
     ["Gelber Fluss", ["Huang He", "Huanghe"]], ["Ob", ["Ob-Irtysch", "Irtysch"]], ["Paraná", ["Parana", "Río de la Plata"]], ["Kongo"], ["Amur"]] },
-  { cat: "Natur", q: "Die 10 größten Inseln der Welt", note: "ohne Australien (Kontinent)", items: [
+  { cat: "Natur", q: "Die 10 größten Inseln der Welt", ranked: true, note: "ohne Australien (Kontinent)", items: [
     ["Grönland", ["Groenland"]], ["Neuguinea", ["Papua"]], ["Borneo"], ["Madagaskar"], ["Baffininsel", ["Baffin Island", "Baffin"]], ["Sumatra"],
     ["Honshu", ["Honshū"]], ["Victoria-Insel", ["Victoria Island", "Victoriainsel"]], ["Großbritannien", ["Grossbritannien", "Great Britain"]],
     ["Ellesmere-Insel", ["Ellesmere", "Ellesmere Island"]]] },
-  { cat: "Natur", q: "Die 10 größten Seen der Welt", note: "nach Fläche, Kaspisches Meer zählt als See", items: [
+  { cat: "Natur", q: "Die 10 größten Seen der Welt", ranked: true, note: "nach Fläche, Kaspisches Meer zählt als See", items: [
     ["Kaspisches Meer"], ["Oberer See", ["Lake Superior"]], ["Victoriasee", ["Viktoriasee"]], ["Huronsee"], ["Michigansee"], ["Tanganjikasee"],
     ["Baikalsee", ["Baikal"]], ["Großer Bärensee", ["Grosser Baerensee"]], ["Malawisee", ["Njassasee"]], ["Großer Sklavensee", ["Grosser Sklavensee"]]] },
-  { cat: "Natur", q: "Die 10 längsten Flüsse Deutschlands", note: "Gesamtlänge, auch außerhalb Deutschlands", items: [
+  { cat: "Natur", q: "Die 10 längsten Flüsse Deutschlands", ranked: true, note: "Gesamtlänge, auch außerhalb Deutschlands", items: [
     ["Donau"], ["Rhein"], ["Elbe"], ["Oder"], ["Mosel"], ["Main"], ["Inn"], ["Weser"], ["Saale"], ["Spree"]] },
-  { cat: "Natur", q: "Die 10 größten Seen Deutschlands", note: "nach Fläche, Bodensee ganz gezählt", items: [
+  { cat: "Natur", q: "Die 10 größten Seen Deutschlands", ranked: true, note: "nach Fläche, Bodensee ganz gezählt", items: [
     ["Bodensee"], ["Müritz", ["Mueritz"]], ["Chiemsee"], ["Schweriner See"], ["Starnberger See"], ["Ammersee"], ["Plauer See"],
     ["Kummerower See"], ["Steinhuder Meer"], ["Großer Plöner See", ["Grosser Ploener See", "Plöner See"]]] },
 
   // ---------- Geschichte & Gesellschaft ----------
-  { cat: "Geschichte", q: "Die 10 deutschen Bundeskanzler", note: "bis Friedrich Merz, Stand 2025", names: true, items: [
+  { cat: "Geschichte", q: "Die 10 deutschen Bundeskanzler", ranked: true, note: "bis Friedrich Merz, Stand 2025", names: true, items: [
     ["Konrad Adenauer"], ["Ludwig Erhard"], ["Kurt Georg Kiesinger"], ["Willy Brandt"], ["Helmut Schmidt"], ["Helmut Kohl"],
     ["Gerhard Schröder", ["Schroeder"]], ["Angela Merkel"], ["Olaf Scholz"], ["Friedrich Merz"]] },
-  { cat: "Gesellschaft", q: "Die 10 häufigsten Nachnamen in Deutschland", items: [
+  { cat: "Gesellschaft", q: "Die 10 häufigsten Nachnamen in Deutschland", ranked: true, items: [
     ["Müller", ["Mueller"]], ["Schmidt"], ["Schneider"], ["Fischer"], ["Weber"], ["Meyer"], ["Wagner"], ["Becker"], ["Schulz"], ["Hoffmann"]] },
 
   // ---------- Wissen & Zahlen ----------
-  { cat: "Wissen", q: "Die ersten 10 Elemente des Periodensystems", note: "Name oder Symbol", items: [
+  { cat: "Wissen", q: "Die ersten 10 Elemente des Periodensystems", ranked: true, note: "Name oder Symbol", items: [
     ["Wasserstoff", ["H"]], ["Helium", ["He"]], ["Lithium", ["Li"]], ["Beryllium", ["Be"]], ["Bor", ["B"]], ["Kohlenstoff", ["C"]],
     ["Stickstoff", ["N"]], ["Sauerstoff", ["O"]], ["Fluor", ["F"]], ["Neon", ["Ne"]]] },
-  { cat: "Wissen", q: "Die ersten 10 Buchstaben des griechischen Alphabets", items: [
+  { cat: "Wissen", q: "Die ersten 10 Buchstaben des griechischen Alphabets", ranked: true, items: [
     ["Alpha"], ["Beta"], ["Gamma"], ["Delta"], ["Epsilon"], ["Zeta"], ["Eta"], ["Theta"], ["Iota", ["Jota"]], ["Kappa"]] },
-  { cat: "Zahlen", q: "Die 10 Primzahlen unter 30", items: [["2"], ["3"], ["5"], ["7"], ["11"], ["13"], ["17"], ["19"], ["23"], ["29"]] },
-  { cat: "Zahlen", q: "Die 10 Quadratzahlen von 1 bis 100", items: [["1"], ["4"], ["9"], ["16"], ["25"], ["36"], ["49"], ["64"], ["81"], ["100"]] },
+  { cat: "Zahlen", q: "Die 10 Primzahlen unter 30", ranked: true, items: [["2"], ["3"], ["5"], ["7"], ["11"], ["13"], ["17"], ["19"], ["23"], ["29"]] },
+  { cat: "Zahlen", q: "Die 10 Quadratzahlen von 1 bis 100", ranked: true, items: [["1"], ["4"], ["9"], ["16"], ["25"], ["36"], ["49"], ["64"], ["81"], ["100"]] },
   // ---------- längere (und kürzere) Listen ----------
   { cat: "Länder", q: "Die 27 Länder der EU", note: "Stand 2026", items: [
     ["Belgien"], ["Bulgarien"], ["Dänemark", ["Daenemark"]], ["Deutschland"], ["Estland"], ["Finnland"], ["Frankreich"], ["Griechenland"],
@@ -150,33 +151,33 @@ window.SCHLAU10_DUELL = [
   { cat: "Länder", q: "Die 7 Länder der G7", items: [
     ["USA", ["Vereinigte Staaten", "Amerika"]], ["Kanada"], ["Japan"], ["Deutschland"], ["Frankreich"], ["Italien"],
     ["Großbritannien", ["Grossbritannien", "Vereinigtes Königreich", "UK", "England"]]] },
-  { cat: "Sport", q: "Die 8 Fußball-Weltmeister (Länder)", note: "Männer, Stand 2026", items: [
+  { cat: "Sport", q: "Die 8 Fußball-Weltmeister (Länder)", ranked: true, note: "Männer, Stand 2026", items: [
     ["Brasilien"], ["Deutschland"], ["Italien"], ["Argentinien"], ["Frankreich"], ["Uruguay"], ["England"], ["Spanien"]] },
-  { cat: "Wissen", q: "Die 8 Planeten unseres Sonnensystems", items: [
+  { cat: "Wissen", q: "Die 8 Planeten unseres Sonnensystems", ranked: true, items: [
     ["Merkur"], ["Venus"], ["Erde"], ["Mars"], ["Jupiter"], ["Saturn"], ["Uranus"], ["Neptun"]] },
   { cat: "Wissen", q: "Die 7 Kontinente", items: [
     ["Afrika"], ["Antarktika", ["Antarktis"]], ["Asien"], ["Australien", ["Ozeanien", "Australien und Ozeanien"]], ["Europa"],
     ["Nordamerika"], ["Südamerika", ["Suedamerika"]]] },
   { cat: "Wissen", q: "Die 7 Edelgase", items: [
     ["Helium"], ["Neon"], ["Argon"], ["Krypton"], ["Xenon"], ["Radon"], ["Oganesson"]] },
-  { cat: "Wissen", q: "Die 12 Sternzeichen", items: [
+  { cat: "Wissen", q: "Die 12 Sternzeichen", ranked: true, items: [
     ["Widder"], ["Stier"], ["Zwillinge"], ["Krebs"], ["Löwe", ["Loewe"]], ["Jungfrau"], ["Waage"], ["Skorpion"], ["Schütze", ["Schuetze"]],
     ["Steinbock"], ["Wassermann"], ["Fische"]] },
-  { cat: "Wissen", q: "Die 12 Tiere des chinesischen Tierkreises", items: [
+  { cat: "Wissen", q: "Die 12 Tiere des chinesischen Tierkreises", ranked: true, items: [
     ["Ratte", ["Maus"]], ["Büffel", ["Bueffel", "Ochse", "Rind"]], ["Tiger"], ["Hase", ["Kaninchen"]], ["Drache"], ["Schlange"], ["Pferd"],
     ["Ziege", ["Schaf"]], ["Affe"], ["Hahn"], ["Hund"], ["Schwein"]] },
   { cat: "Wissen", q: "Die 5 Farben der Olympischen Ringe", items: [["Blau"], ["Gelb"], ["Schwarz"], ["Grün", ["Gruen"]], ["Rot"]] },
-  { cat: "Sprache", q: "Die 12 Monate auf Italienisch", items: [
+  { cat: "Sprache", q: "Die 12 Monate auf Italienisch", ranked: true, items: [
     ["gennaio"], ["febbraio"], ["marzo"], ["aprile"], ["maggio"], ["giugno"], ["luglio"], ["agosto"], ["settembre"], ["ottobre"], ["novembre"], ["dicembre"]] },
-  { cat: "Sprache", q: "Die 7 Wochentage auf Italienisch", items: [
+  { cat: "Sprache", q: "Die 7 Wochentage auf Italienisch", ranked: true, items: [
     ["lunedì", ["lunedi"]], ["martedì", ["martedi"]], ["mercoledì", ["mercoledi"]], ["giovedì", ["giovedi"]], ["venerdì", ["venerdi"]], ["sabato"], ["domenica"]] },
 
   // ---------- Erweiterung: feste Mengen ----------
-  { cat: "Sprache", q: "Die 26 Wörter des NATO-Buchstabieralphabets", items: [
+  { cat: "Sprache", q: "Die 26 Wörter des NATO-Buchstabieralphabets", ranked: true, items: [
     ["Alfa", ["Alpha"]], ["Bravo"], ["Charlie"], ["Delta"], ["Echo"], ["Foxtrot"], ["Golf"], ["Hotel"], ["India"], ["Juliett", ["Juliet"]],
     ["Kilo"], ["Lima"], ["Mike"], ["November"], ["Oscar"], ["Papa"], ["Quebec"], ["Romeo"], ["Sierra"], ["Tango"], ["Uniform"], ["Victor"],
     ["Whiskey", ["Whisky"]], ["X-Ray", ["Xray"]], ["Yankee"], ["Zulu"]] },
-  { cat: "Wissen", q: "Die 7 Monate mit 31 Tagen", items: [
+  { cat: "Wissen", q: "Die 7 Monate mit 31 Tagen", ranked: true, items: [
     ["Januar"], ["März", ["Maerz"]], ["Mai"], ["Juli"], ["August"], ["Oktober"], ["Dezember"]] },
   { cat: "Wissen", q: "Die 5 Sinne des Menschen", items: [
     ["Sehen", ["Sehsinn", "Augen"]], ["Hören", ["Hoeren", "Gehör", "Ohren"]], ["Riechen", ["Geruch", "Geruchssinn", "Nase"]],
@@ -249,7 +250,7 @@ window.SCHLAU10_DUELL = [
   { cat: "Unterhaltung", q: "Die 7 Zwerge aus Disneys „Schneewittchen“", note: "deutsche Namen (englisch geht auch)", items: [
     ["Chef", ["Doc"]], ["Brummbär", ["Brummbaer", "Grumpy"]], ["Happy"], ["Pimpel", ["Bashful"]], ["Hatschi", ["Sneezy"]], ["Schlafmütz", ["Schlafmuetz", "Sleepy"]],
     ["Seppl", ["Dopey"]]] },
-  { cat: "Unterhaltung", q: "Die 7 Harry-Potter-Bände", note: "Titel ohne „Harry Potter und …“ reicht", items: [
+  { cat: "Unterhaltung", q: "Die 7 Harry-Potter-Bände", ranked: true, note: "Titel ohne „Harry Potter und …“ reicht", items: [
     ["der Stein der Weisen", ["Stein der Weisen"]], ["die Kammer des Schreckens", ["Kammer des Schreckens"]], ["der Gefangene von Askaban", ["Gefangene von Askaban", "Askaban"]],
     ["der Feuerkelch", ["Feuerkelch"]], ["der Orden des Phönix", ["Orden des Phönix", "Orden des Phoenix"]], ["der Halbblutprinz", ["Halbblutprinz"]],
     ["die Heiligtümer des Todes", ["Heiligtümer des Todes"]]] },
@@ -273,7 +274,7 @@ window.SCHLAU10_DUELL = [
     ["USA", ["Vereinigte Staaten", "Amerika"]], ["Russland"], ["China"], ["Frankreich"], ["Großbritannien", ["Grossbritannien", "Vereinigtes Königreich", "UK", "England"]]] },
   { cat: "Natur", q: "Die 5 Großen Seen Nordamerikas", items: [
     ["Oberer See", ["Lake Superior"]], ["Michigansee", ["Lake Michigan"]], ["Huronsee", ["Lake Huron"]], ["Eriesee", ["Lake Erie"]], ["Ontariosee", ["Lake Ontario"]]] },
-  { cat: "Städte", q: "Die 23 Bezirke Wiens", items: [
+  { cat: "Städte", q: "Die 23 Bezirke Wiens", ranked: true, items: [
     ["Innere Stadt"], ["Leopoldstadt"], ["Landstraße", ["Landstrasse"]], ["Wieden"], ["Margareten"], ["Mariahilf"], ["Neubau"], ["Josefstadt"],
     ["Alsergrund"], ["Favoriten"], ["Simmering"], ["Meidling"], ["Hietzing"], ["Penzing"], ["Rudolfsheim-Fünfhaus", ["Rudolfsheim", "Fünfhaus"]],
     ["Ottakring"], ["Hernals"], ["Währing", ["Waehring"]], ["Döbling", ["Doebling"]], ["Brigittenau"], ["Floridsdorf"], ["Donaustadt"], ["Liesing"]] },
@@ -281,13 +282,13 @@ window.SCHLAU10_DUELL = [
     ["Mitte"], ["Friedrichshain-Kreuzberg", ["Friedrichshain", "Kreuzberg"]], ["Pankow"], ["Charlottenburg-Wilmersdorf", ["Charlottenburg", "Wilmersdorf"]],
     ["Spandau"], ["Steglitz-Zehlendorf", ["Steglitz", "Zehlendorf"]], ["Tempelhof-Schöneberg", ["Tempelhof", "Schöneberg"]], ["Neukölln", ["Neukoelln"]],
     ["Treptow-Köpenick", ["Treptow", "Köpenick"]], ["Marzahn-Hellersdorf", ["Marzahn", "Hellersdorf"]], ["Lichtenberg"], ["Reinickendorf"]] },
-  { cat: "Geschichte", q: "Die 12 deutschen Bundespräsidenten", note: "Stand 2026", names: true, items: [
+  { cat: "Geschichte", q: "Die 12 deutschen Bundespräsidenten", ranked: true, note: "Stand 2026", names: true, items: [
     ["Theodor Heuss"], ["Heinrich Lübke", ["Luebke"]], ["Gustav Heinemann"], ["Walter Scheel"], ["Karl Carstens"], ["Richard von Weizsäcker", ["Weizsäcker", "Weizsaecker"]],
     ["Roman Herzog"], ["Johannes Rau"], ["Horst Köhler", ["Koehler"]], ["Christian Wulff"], ["Joachim Gauck"], ["Frank-Walter Steinmeier", ["Steinmeier"]]] },
-  { cat: "Geschichte", q: "Die 9 österreichischen Bundespräsidenten seit 1945", note: "Stand 2026", names: true, items: [
+  { cat: "Geschichte", q: "Die 9 österreichischen Bundespräsidenten seit 1945", ranked: true, note: "Stand 2026", names: true, items: [
     ["Karl Renner"], ["Theodor Körner", ["Koerner"]], ["Adolf Schärf", ["Schaerf"]], ["Franz Jonas"], ["Rudolf Kirchschläger", ["Kirchschlaeger"]],
     ["Kurt Waldheim"], ["Thomas Klestil"], ["Heinz Fischer"], ["Alexander Van der Bellen", ["Van der Bellen", "VdB"]]] },
-  { cat: "Geschichte", q: "Die 6 Ehefrauen Heinrichs VIII.", note: "Nachname reicht", items: [
+  { cat: "Geschichte", q: "Die 6 Ehefrauen Heinrichs VIII.", ranked: true, note: "Nachname reicht", items: [
     ["Katharina von Aragon", ["Aragon", "Aragón"]], ["Anne Boleyn", ["Boleyn", "Anna Boleyn"]], ["Jane Seymour", ["Seymour"]], ["Anna von Kleve", ["Kleve", "Anne of Cleves"]],
     ["Catherine Howard", ["Howard"]], ["Catherine Parr", ["Parr"]]] },
   { cat: "Geschichte", q: "Die 7 Hügel Roms", items: [
@@ -300,7 +301,7 @@ window.SCHLAU10_DUELL = [
     ["Rachel"], ["Monica"], ["Phoebe"], ["Joey"], ["Chandler"], ["Ross"]] },
 
   // ---------- Erweiterung 3 ----------
-  { cat: "Geschichte", q: "Die 45 US-Präsidenten", note: "jede Person einmal, Stand 2026 · Nachname reicht (bei Adams, Bush usw. je einmal)", items: [
+  { cat: "Geschichte", q: "Die 45 US-Präsidenten", ranked: true, note: "jede Person einmal, Stand 2026 · Nachname reicht (bei Adams, Bush usw. je einmal)", items: [
     ["George Washington", ["Washington"]], ["John Adams", ["Adams"]], ["Thomas Jefferson", ["Jefferson"]], ["James Madison", ["Madison"]],
     ["James Monroe", ["Monroe"]], ["John Quincy Adams", ["Adams", "JQA"]], ["Andrew Jackson", ["Jackson"]], ["Martin Van Buren", ["Buren", "Van Buren"]],
     ["William Henry Harrison", ["Harrison"]], ["John Tyler", ["Tyler"]], ["James K. Polk", ["Polk", "James Polk"]], ["Zachary Taylor", ["Taylor"]],
@@ -313,12 +314,12 @@ window.SCHLAU10_DUELL = [
     ["Gerald Ford", ["Ford"]], ["Jimmy Carter", ["Carter"]], ["Ronald Reagan", ["Reagan"]], ["George H. W. Bush", ["Bush", "Bush senior", "Bush sen.", "George Bush senior"]],
     ["Bill Clinton", ["Clinton"]], ["George W. Bush", ["Bush", "Bush junior", "Bush jr.", "George Bush junior"]], ["Barack Obama", ["Obama"]], ["Donald Trump", ["Trump"]],
     ["Joe Biden", ["Biden"]]] },
-  { cat: "Geschichte", q: "Die 14 US-Präsidenten seit 1945", note: "jede Person einmal, Stand 2026", items: [
+  { cat: "Geschichte", q: "Die 14 US-Präsidenten seit 1945", ranked: true, note: "jede Person einmal, Stand 2026", items: [
     ["Harry S. Truman", ["Truman", "Harry Truman"]], ["Dwight D. Eisenhower", ["Eisenhower", "Dwight Eisenhower", "Ike"]], ["John F. Kennedy", ["Kennedy", "JFK", "John Kennedy"]], ["Lyndon B. Johnson", ["Johnson", "LBJ", "Lyndon Johnson"]],
     ["Richard Nixon", ["Nixon"]], ["Gerald Ford", ["Ford"]], ["Jimmy Carter", ["Carter"]], ["Ronald Reagan", ["Reagan"]],
     ["George H. W. Bush", ["Bush", "Bush senior", "Bush sen.", "George Bush senior"]], ["Bill Clinton", ["Clinton"]], ["George W. Bush", ["Bush", "Bush junior", "Bush jr.", "George Bush junior"]], ["Barack Obama", ["Obama"]],
     ["Donald Trump", ["Trump"]], ["Joe Biden", ["Biden"]]] },
-  { cat: "Geschichte", q: "Die 31 italienischen Ministerpräsidenten der Republik", note: "jede Person einmal, seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
+  { cat: "Geschichte", q: "Die 31 italienischen Ministerpräsidenten der Republik", ranked: true, note: "jede Person einmal, seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
     ["Alcide De Gasperi", ["De Gasperi"]], ["Giuseppe Pella"], ["Amintore Fanfani"], ["Mario Scelba"],
     ["Antonio Segni"], ["Adone Zoli"], ["Fernando Tambroni"], ["Giovanni Leone"],
     ["Aldo Moro"], ["Mariano Rumor"], ["Emilio Colombo"], ["Giulio Andreotti"],
@@ -336,13 +337,13 @@ window.SCHLAU10_DUELL = [
   { cat: "Südtirol", q: "Südtiroler Olympiasieger", note: "Goldmedaillen bis einschließlich 2022, Einzel und Team · Nachname reicht", names: true, items: [
     ["Gustav Thöni", ["Thoeni"]], ["Paul Hildgartner"], ["Walter Plaikner"], ["Erika Lechner"], ["Armin Zöggeler", ["Zoeggeler"]], ["Gerda Weissensteiner", ["Weißensteiner"]],
     ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"]] },
-  { cat: "Südtirol", q: "Die 5 Landeshauptleute Südtirols", note: "seit 1948, Stand 2026 · Nachname reicht", names: true, items: [
+  { cat: "Südtirol", q: "Die 5 Landeshauptleute Südtirols", ranked: true, note: "seit 1948, Stand 2026 · Nachname reicht", names: true, items: [
     ["Karl Erckert"], ["Alois Pupp"], ["Silvius Magnago"], ["Luis Durnwalder", ["Alois Durnwalder"]], ["Arno Kompatscher"]] },
-  { cat: "Geschichte", q: "Die 18 österreichischen Bundeskanzler seit 1945", note: "jede Person einmal, Stand 2026 · Nachname reicht", names: true, items: [
+  { cat: "Geschichte", q: "Die 18 österreichischen Bundeskanzler seit 1945", ranked: true, note: "jede Person einmal, Stand 2026 · Nachname reicht", names: true, items: [
     ["Karl Renner"], ["Leopold Figl"], ["Julius Raab"], ["Alfons Gorbach"], ["Josef Klaus"], ["Bruno Kreisky"], ["Fred Sinowatz"], ["Franz Vranitzky"],
     ["Viktor Klima"], ["Wolfgang Schüssel", ["Schuessel"]], ["Alfred Gusenbauer"], ["Werner Faymann"], ["Christian Kern"], ["Sebastian Kurz"],
     ["Brigitte Bierlein"], ["Alexander Schallenberg"], ["Karl Nehammer"], ["Christian Stocker"]] },
-  { cat: "Geschichte", q: "Die 12 italienischen Staatspräsidenten", note: "seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
+  { cat: "Geschichte", q: "Die 12 italienischen Staatspräsidenten", ranked: true, note: "seit 1946, Stand 2026 · Nachname reicht", names: true, items: [
     ["Enrico De Nicola", ["De Nicola"]], ["Luigi Einaudi"], ["Giovanni Gronchi"], ["Antonio Segni"], ["Giuseppe Saragat"], ["Giovanni Leone"],
     ["Sandro Pertini"], ["Francesco Cossiga"], ["Oscar Luigi Scalfaro", ["Oscar Scalfaro"]], ["Carlo Azeglio Ciampi", ["Carlo Ciampi"]],
     ["Giorgio Napolitano"], ["Sergio Mattarella"]] },

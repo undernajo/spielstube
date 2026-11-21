@@ -85,9 +85,9 @@
         <section class="du-main du-arena">
           <div class="du-sa">${side(st.seats[0])}</div><div class="du-sb">${side(st.seats[1])}</div>
           <div class="du-mid">
-          <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
+          <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden${st.list.ranked ? " · Antworten erscheinen auf ihrem Platz" : ""}</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
           <div class="du-action">${action}</div>
-          <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / (st.items.length > 10 ? 2 : 1))}">${rows}${badRow}</ol>
+          <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""} ${st.list.ranked ? "ranked" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / (st.items.length > 10 ? 2 : 1))}">${rows}${badRow}</ol>
           ${log ? `<ul class="du-log">${log}</ul>` : ""}
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
           </div>

@@ -3759,3 +3759,5 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .gh .slf-dots { margin-top: 6px; justify-content: flex-start; }
 .gh-t .hint:empty { display: none; }
 .gh-pl:empty { display: none; }
+/* Listen-Duell mit fester Reihenfolge: Platznummer auch bei langen Listen zeigen */
+.du-arena .du-list.many.ranked .du-no { display: grid; width: 24px; height: 24px; font-size: .72rem; flex: none; }
