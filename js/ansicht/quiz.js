@@ -138,7 +138,9 @@
     if (st.mode === "umriss" && !needLandData()) { quizRendered = null; app.innerHTML = head(`<div class="panel"><p class="muted">Länderkarte wird geladen …</p></div>`); return; }
     quizDeadline = st.endsIn != null ? Date.now() + st.endsIn : 0;
     quizHintAt = st.item && st.item.nextIn != null ? Date.now() + st.item.nextIn : 0;
-    const key = v.code + ":" + st.round + ":" + st.step;
+    // Schlüssel je Frage (nicht nur je Runde): eine neue Partie oder Etappe mit derselben Rundennummer zählt als neue Frage
+    const it0 = st.item || {}, rk = v.code + ":" + st.round + ":" + (it0.c || it0.q || (it0.hints && it0.hints[0]) || "") + ":";
+    const key = rk + st.step;
     if (quizRendered === key && app.querySelector(".quiz-main")) {
       const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = quizChips(v, st);
       const hl = app.querySelector(".quiz-hintbox"); if (hl && st.mode === "hinweis" && hl.dataset.n !== String(st.item.hints.length)) {
@@ -149,13 +151,13 @@
       if (st.step === "reveal") G.nextBtnSwap("#quiz-ready", { attr: 'id="quiz-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Weiter", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "quizReady" }));
       return;
     }
-    if (st.step === "ask" && (!quizRendered || !quizRendered.startsWith(v.code + ":" + st.round + ":"))) { quizSent = null; quizMine = null; }
+    if (st.step === "ask" && (!quizRendered || !quizRendered.startsWith(rk))) { quizSent = null; quizMine = null; }
     if (st.step === "ask" && st.submitted.includes(G.myId) && quizSent !== st.round) { quizSent = st.round; }
     // Schätzen: Auflösung direkt nach dem Tippen (nicht nach Neuladen) wird animiert
-    const estFresh = st.mode === "schaetzen" && st.step === "reveal" && quizRendered === v.code + ":" + st.round + ":ask"
+    const estFresh = st.mode === "schaetzen" && st.step === "reveal" && quizRendered === rk + "ask"
       && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     // Umriss-Rätsel: neue Frage (nicht nach Neuladen) – der Umriss zeichnet sich wie mit dem Stift gezogen
-    const umrissFresh = st.mode === "umriss" && st.step === "ask" && (quizRendered !== null || st.round === 1) && !(quizRendered || "").startsWith(v.code + ":" + st.round + ":")
+    const umrissFresh = st.mode === "umriss" && st.step === "ask" && (quizRendered !== null || st.round === 1) && !(quizRendered || "").startsWith(rk)
       && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     quizRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
