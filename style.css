@@ -3657,3 +3657,34 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .board > .podium-wrap { padding-top: 30px; }
 .fw-card.fw-pod { width: min(640px, 100%); }
 .fw-pod .podium-wrap { padding: 0; }
+
+/* ---------- Gemeinsame Kopfzeile der Spielfläche (Wo liegt das?, Von oben, Länder finden, Stadt Land Fluss) ---------- */
+.gh { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto auto; gap: 14px; align-items: center; padding: 12px 16px; border-radius: 22px; background: var(--panel); border: 1px solid var(--line); margin-bottom: 12px; }
+.gh .qz-ico { width: 52px; height: 52px; font-size: 1.7rem; }
+.gh-t { min-width: 0; }
+.gh-t small { display: block; font: 800 .7rem Nunito, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gh-t b { display: block; font: 700 clamp(1.35rem, 2.6vw, 1.9rem)/1.15 Fredoka, sans-serif; }
+.gh-t b span { font: 700 .95rem Nunito, sans-serif; color: var(--muted); margin-left: 8px; }
+.gh-t .hint { font-size: .85rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+.gh-pl { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; min-width: 0; }
+.gh-p { display: flex; align-items: center; gap: 7px; padding: 6px 12px 6px 8px; border-radius: 99px; background: #1c1846; border: 1.5px solid var(--line); font-weight: 700; font-size: .92rem; white-space: nowrap; }
+.gh-p .qz-lamp { width: 12px; height: 12px; } .gh-p.done .qz-lamp { background: #2fbf71; box-shadow: 0 0 10px #2fbf71, inset 0 0 0 2px rgba(255, 255, 255, .4); }
+.gh-p.off { opacity: .55; }
+.gh-p b { font: 700 1rem Fredoka, sans-serif; color: var(--pc); } .gh-p em { font-style: normal; font-weight: 600; color: var(--muted); font-size: .8em; }
+.gh .qz-ring { margin: 0; } .qz-ring b.long { font-size: 1.05rem; }
+.gh-btn .btn { padding: 14px 20px; font-size: 1rem; white-space: nowrap; }
+.gh .slf-letter { width: 64px; height: 64px; font-size: 2.3rem; margin: 0; }
+@media (max-width: 899px) {
+  .gh { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 10px; padding: 10px 12px; }
+  .gh-pl { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 5px; }
+  .gh-ring { grid-column: 3; grid-row: 1; }
+  .gh-btn { grid-column: 1 / -1; grid-row: 3; } .gh-btn .btn { width: 100%; white-space: normal; }
+  .gh .qz-ring { width: 58px; height: 58px; } .gh .qz-ring b { font-size: 1.2rem; } .gh .qz-ring b.long { font-size: .95rem; }
+  .gh .qz-ico { width: 44px; height: 44px; font-size: 1.4rem; } .gh .slf-letter { width: 52px; height: 52px; font-size: 1.9rem; }
+  .gh-t small { font-size: .62rem; letter-spacing: 1px; } .gh-t b { font-size: 1.3rem; } .gh-t b span { display: block; margin: 0; }
+  .gh-p { padding: 4px 9px 4px 6px; font-size: .82rem; gap: 5px; } .gh-p em { display: none; } .gh-p b { font-size: .9rem; }
+}
+.players[hidden] { display: none !important; }
+.gh .slf-rule { display: block; }
+/* Karten unter der neuen Kopfzeile: am PC passt alles ohne Scrollen */
+@media (min-width: 900px) { .gh + .geo-wrap .geo-map, .gh + .oben-grid .geo-map { height: max(360px, calc(100vh - 246px)); } }

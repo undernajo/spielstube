@@ -2023,6 +2023,38 @@
   // Gemeinsamer „Weiter“-Knopf für alle Spiele: gelb, solange man selbst noch nicht bereit ist; danach ruhig mit
   // „✓ Bereit – warte auf …“ (nochmal tippen nimmt zurück). Der Gastgeber bekommt daneben „Als Gastgeber sofort weiter“.
   // attr / hostAttr: z. B. 'id="geo-ready"' bzw. 'id="geo-next"'; waiting: Namen derer, auf die man noch wartet.
+  // ---------- Gemeinsame Kopfzeile der Spielfläche (Erdkunde-Spiele, Stadt Land Fluss): Symbol · klein Spiel/Runde · groß die Aufgabe ·
+  // Spieler mit Lämpchen (grün = hat getippt) · Zeitring · Knopf. Am Handy: Ring oben rechts, Spieler und Knopf darunter.
+  const RING_C = 2 * Math.PI * 31;
+  const ringTxt = (ms, clock) => { const t = Math.ceil(ms / 1000); return clock || t >= 60 ? Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : String(t); };
+  function ringHtml(id, ms, total, clock) {
+    const p = total ? Math.max(0, Math.min(1, ms / total)) : 0, txt = ringTxt(ms, clock);
+    return `<div id="${id}" class="qz-ring ${ms <= 10000 ? "urgent" : ""}" style="--rc:${p > .5 ? "#7ee2b1" : p > .2 ? "#ffc83d" : "#ff7d8a"}"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="r0"/><circle cx="37" cy="37" r="31" class="r1" style="stroke-dasharray:${RING_C * p} ${RING_C}"/></svg><b class="${txt.length > 3 ? "long" : ""}">${txt}</b></div>`;
+  }
+  function ringSet(el, ms, total, clock) {
+    if (!el) return;
+    const p = total ? Math.max(0, Math.min(1, ms / total)) : 0, r1 = el.querySelector(".r1"), b = el.querySelector("b"), txt = ringTxt(ms, clock);
+    el.style.setProperty("--rc", p > .5 ? "#7ee2b1" : p > .2 ? "#ffc83d" : "#ff7d8a");
+    if (r1) r1.style.strokeDasharray = `${RING_C * p} ${RING_C}`;
+    if (b) { b.textContent = txt; b.classList.toggle("long", txt.length > 3); }
+    el.classList.toggle("urgent", ms <= 10000);
+  }
+  // players: [{ id, name, pts (Text), done }]
+  function ghPillsHtml(players) {
+    const pl = view && view.players ? view.players : [];
+    const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const conn = (id) => { const p = pl.find((x) => x.id === id); return !p || p.connected; };
+    return players.map((x) => `<span class="gh-p ${x.done ? "done" : ""} ${conn(x.id) ? "" : "off"}" style="--pc:${col(x.id)}"><span class="qz-lamp"></span><span class="gh-n">${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</span> <b>${x.pts}</b></span>`).join("");
+  }
+  function gameHeadHtml({ ico = "", icoHtml = "", small = "", big = "", sub = "", hint = "", players = [], ring = "", btn = "" }) {
+    const pl = view && view.players ? view.players : [];
+    const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    const conn = (id) => { const p = pl.find((x) => x.id === id); return !p || p.connected; };
+    return `<div class="gh">${icoHtml || `<span class="qz-ico">${ico}</span>`}<div class="gh-t"><small>${small}</small><b>${big}${sub ? `<span>${sub}</span>` : ""}</b>${hint ? `<div class="hint">${hint}</div>` : ""}</div>
+      <div class="gh-pl">${ghPillsHtml(players)}</div>
+      ${ring ? `<div class="gh-ring">${ring}</div>` : ""}${btn ? `<div class="gh-btn">${btn}</div>` : ""}</div>`;
+  }
+
   // ---------- Gemeinsame Siegerehrung: Treppchen (Platz 1 Mitte, 2 links, 3 rechts), ab Platz 4 Liste ----------
   // items: [{ id, name, pts (Zahl zum Sortieren), txt (Anzeige, z. B. „31 Punkte“), sub }]; winners: Sieger-IDs (Gleichstand möglich)
   // Die Animation läuft nur beim ersten Zeigen dieses Endstands (nicht nach Neuladen/Neuzeichnen).
@@ -2907,6 +2939,10 @@
     nextBtnsHtml,
     checkHtml,
     podiumHtml,
+    gameHeadHtml,
+    ghPillsHtml,
+    ringHtml,
+    ringSet,
     nextBtnSwap,
     waitingNames,
     invite,

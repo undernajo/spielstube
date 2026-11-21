@@ -43,7 +43,7 @@
     const st = G.view && G.view.geo, el = document.getElementById("geo-timer");
     if (!st || st.step !== "guess" || !el || st.endsIn == null) return;
     const ms = Math.max(0, geoDeadline - Date.now());
-    el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000);
+    G.ringSet(el, ms, st.timerMs || 30000);
     sfx.countdown("geo:" + G.view.code + ":" + st.round, ms, geoSent !== st.round);
     if (ms <= 300) geoSubmit(); // gesetzte Nadel bei Zeitablauf automatisch abgeben
     if (st.mode === "oben" && st.pic && obenMap) obenUpdate(st.pic);
@@ -67,6 +67,15 @@
 
   const pin = (color, big) => LF.divIcon({ className: "geo-pin-wrap", html: `<span class="geo-pin ${big ? "big" : ""}" style="--pc:${color}"></span>`, iconSize: [big ? 30 : 22, big ? 30 : 22], iconAnchor: [big ? 15 : 11, big ? 15 : 11] });
 
+  // Kopfzeile (gemeinsamer Baustein): Symbol, Spiel · Runde · Region, Ort groß, Spieler mit Lämpchen, Zeitring, Knopf
+  const geoPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: (st.total[p.id] || 0).toLocaleString("de-DE"), done: st.submitted.includes(p.id) }));
+  function geoHead(v, st, btn = "") {
+    const oben = st.mode === "oben";
+    return G.gameHeadHtml({ ico: oben ? "🛰️" : "📍", small: `${oben ? "Von oben" : "Wo liegt das?"} · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`,
+      big: oben ? "Was ist das?" : esc(st.place.name), sub: oben ? `Gesucht: ${esc(st.place.kind)} · <span id="oben-factor">Punkte ×1</span>` : esc(st.place.kind),
+      players: geoPills(v, st),
+      ring: st.endsIn != null ? G.ringHtml("geo-timer", st.endsIn, st.timerMs || 30000) : "", btn });
+  }
   function renderGeo() {
     const v = G.view, st = v.geo;
     if (!st) return;
@@ -75,7 +84,7 @@
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (geoRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = geoChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(geoPills(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = geoResults(v, st); }
       if (st.step === "reveal") G.nextBtnSwap("#geo-ready", { attr: 'id="geo-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächster Ort", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "geoReady" }));
       return;
     }
@@ -89,15 +98,7 @@
     if (oben && st.step === "guess") geoStart = Date.now() - (st.elapsed || 0);
     if (st.step === "guess") {
       const locked = st.submitted.includes(G.myId);
-      main = `
-        <div class="geo-bar">
-          <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
-            ${oben ? `<div class="geo-name">Was ist das?</div><div class="muted small">Gesucht: ${esc(st.place.kind)} · <span id="oben-factor">Punkte ×1</span></div>`
-              : `<div class="geo-name">${esc(st.place.name)} <span class="geo-kind">${esc(st.place.kind)}</span></div>`}</div>
-          <div class="geo-scores">${geoChips(v, st)}</div>
-          ${st.endsIn != null ? `<div id="geo-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
-          <button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>
-        </div>
+      main = geoHead(v, st, `<button id="geo-lock" class="btn primary" ${locked || !geoMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : geoMine ? "Nadel festlegen" : "Tippe auf die Karte"}</button>`) + `
         ${oben ? `<div class="oben-grid"><div class="geo-wrap oben-pic"><div id="oben-pic" class="geo-map"></div><span class="oben-tag"><b>1</b> Gesucht: ${esc(st.place.kind)}</span></div>
           <span class="oben-arrow" aria-hidden="true"></span>
           <div class="geo-wrap oben-pic oben-target"><div id="geo-map" class="geo-map"></div><span class="oben-tag"><b>2</b> Hier auf der Karte antippen</span></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;

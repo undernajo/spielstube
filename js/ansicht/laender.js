@@ -12,6 +12,7 @@
   // Punkt für die Beschriftung (Mittel des größten Umrisses, vorberechnet) und größter Umriss (zum Hinzoomen)
   const landLabelPt = (c) => c.p;
   const landMainRing = (c) => { let big = c.g[0][0]; c.g.forEach((p) => { if (p[0].length > big.length) big = p[0]; }); return landRing(big); };
+  const landPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, done: st.submitted.includes(p.id) }));
   function landChips(v, st) {
     return v.players.map((p, i) => {
       const done = st.step === "guess" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
@@ -44,7 +45,7 @@
     const st = G.view && G.view.land, el = document.getElementById("land-timer");
     if (!st || st.step !== "guess" || !el || st.endsIn == null) return;
     const ms = Math.max(0, landDeadline - Date.now());
-    el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 5000);
+    G.ringSet(el, ms, st.timerMs || 30000);
     sfx.countdown("land:" + G.view.code + ":" + st.round, ms, landSent !== st.round);
     if (ms <= 300) landSubmit(); // angetipptes Land bei Zeitablauf automatisch abgeben
   }, 250);
@@ -81,7 +82,7 @@
     const sub = !/^(europa|afrika|asien|amerika|welt)$/.test(st.region); // Bundesländer, Regionen, Kantone
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     if (landRendered === key && app.querySelector(".geo-wrap, .slf-final")) {
-      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = landChips(v, st); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = landResults(v, st); }
+      { const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = landChips(v, st); const gp = app.querySelector(".gh-pl"); if (gp && st.step === "guess") gp.innerHTML = G.ghPillsHtml(landPills(v, st)); const rs = app.querySelector(".geo-results"); if (rs) rs.innerHTML = landResults(v, st); }
       if (st.step === "reveal") G.nextBtnSwap("#land-ready", { attr: 'id="land-ready"', label: st.round >= st.rounds ? "Zum Endstand" : sub ? "Weiter" : "Nächstes Land", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "landReady" }));
       return;
     }
@@ -91,14 +92,10 @@
     let main = "";
     if (st.step === "guess") {
       const locked = landSent === st.round;
-      main = `
-        <div class="geo-bar">
-          <div class="geo-target"><span class="game-label">Runde ${st.round}/${st.rounds} · ${esc(st.regionName)}</span>
-            <div class="geo-name">${esc(st.targetName)} <span class="land-hint">${sub ? "Tippe es auf der Karte an" : "Tippe das Land auf der Karte an"}</span></div></div>
-          <div class="geo-scores">${landChips(v, st)}</div>
-          ${st.endsIn != null ? `<div id="land-timer" class="slf-timer">${Math.ceil(st.endsIn / 1000)} s</div>` : ""}
-          <button id="land-lock" class="btn primary" ${locked || !landMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : landMine ? "Festlegen" : sub ? "Tippe auf die Karte" : "Tippe ein Land an"}</button>
-        </div>
+      main = G.gameHeadHtml({ ico: "🗺️", small: `Länder finden · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`, big: esc(st.targetName),
+          hint: sub ? "Tippe es auf der Karte an" : "Tippe das Land auf der Karte an", players: landPills(v, st),
+          ring: st.endsIn != null ? G.ringHtml("land-timer", st.endsIn, st.timerMs || 30000) : "",
+          btn: `<button id="land-lock" class="btn primary" ${locked || !landMine ? "disabled" : ""}>${locked ? "Festgelegt ✓ – warte auf die anderen …" : landMine ? "Festlegen" : sub ? "Tippe auf die Karte" : "Tippe ein Land an"}</button>` }) + `
         <div class="geo-wrap"><div id="land-map" class="geo-map land-map"></div></div>`;
     } else if (st.step === "reveal") {
       main = `

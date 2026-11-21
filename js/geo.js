@@ -136,7 +136,7 @@
     const reg = data()[st.region], pl = reg.places[st.place];
     const out = {
       step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: reg.name, levelName: LEVELS[st.level || "gemischt"].name, bounds: reg.bounds,
-      timerName: TIMERS[st.timer].name, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
+      timerName: TIMERS[st.timer].name, timerMs: TIMERS[st.timer].ms, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
       mode: st.mode || "karte",
       place: pl ? (st.mode === "oben" && st.step === "guess" ? { name: null, kind: pl[1] } : { name: pl[0], kind: pl[1] }) : null, submitted: Object.keys(st.guesses || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };

@@ -125,7 +125,7 @@
     if (!st) return null;
     const out = { // ohne Kartendaten (noch nicht geladen) nur ohne Ländernamen
       step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: REGION_NAMES[st.region] || st.region, levelName: LEVELS[st.level].name,
-      timerName: TIMERS[st.timer].name, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
+      timerName: TIMERS[st.timer].name, timerMs: TIMERS[st.timer].ms, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
       target: st.target, targetName: nameOf(st.region, st.target),
       submitted: Object.keys(st.picks || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };

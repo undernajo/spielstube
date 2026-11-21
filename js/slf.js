@@ -266,6 +266,7 @@
       cats: st.cats, surpriseCat: st.surpriseCat, rounds: st.rounds, round: st.round, letter: st.letter, step: st.step, timer: st.timer,
       timerName: TIMERS[st.timer].name, stoppedBy: st.stoppedBy, used: st.used.slice(), done: { ...st.done }, stuck: { ...(st.stuck || {}) }, total: { ...st.total },
       endsIn: st.step === "writing" ? Math.max(0, st.deadline - now) : 0,
+      timerMs: TIMERS[st.timer] ? TIMERS[st.timer].limit : 0,
       startsIn: st.step === "writing" ? Math.max(0, st.startAt - now) : 0,
     };
     if (st.step === "review" && st.review) {

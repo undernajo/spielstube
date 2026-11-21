@@ -26,11 +26,13 @@
     if (!el || !G.view || !G.view.slf || G.view.slf.step !== "writing") return;
     // während der Buchstabe sich dreht, steht die Uhr noch still
     const ms = Math.max(0, slfDeadline - Math.max(Date.now(), slfStartAt));
-    el.textContent = fmtClock(ms); el.classList.toggle("urgent", ms <= 10000);
+    G.ringSet(el, ms, G.view.slf.timerMs || ms || 1, true);
     const st = G.view.slf;
     if (Date.now() >= slfStartAt) sfx.countdown("slf:" + G.view.code + ":" + st.round, ms, !(st.done[G.myId] || (st.stuck && st.stuck[G.myId])));
   }, 250);
 
+  // Spieler in der Kopfzeile: Lämpchen grün, wenn fertig (oder „weiß nicht weiter“)
+  const slfPills = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, done: !!(st.done[p.id] || (st.stuck && st.stuck[p.id])) }));
   function slfChips(v, st) {
     return v.players.map((p, i) => {
       let badge = "";
@@ -101,6 +103,7 @@
     if (st.step === "writing" && slfRendered === key && app.querySelector(".slf-form")) {
       // Eingaben nicht neu zeichnen – nur Spieler, Stopp-Hinweis und Knopf aktualisieren
       app.querySelector(".players").innerHTML = slfChips(v, st);
+      { const gp = app.querySelector(".gh-pl"); if (gp) gp.innerHTML = G.ghPillsHtml(slfPills(v, st)); }
       app.querySelector("#slf-stop").innerHTML = slfStopHtml(st, nameOf);
       slfUpdDone(st);
       return;
@@ -112,12 +115,10 @@
     if (st.step === "writing") {
       const d = slfDoneState(st);
       main = `
-        <div class="slf-head">
-          <div class="slf-headrow">
-            <div id="slf-letter" class="slf-letter ${spinning ? "spinning" : "landed"}" aria-label="Buchstabe ${spinning ? "wird gezogen" : st.letter}">${spinning ? "?" : st.letter}</div>
-            <div class="slf-clock"><div id="slf-timer" class="slf-timer">${fmtClock(Math.max(0, st.endsIn - (st.startsIn || 0)))}</div><div id="slf-stop" class="muted small slf-rule">${slfStopHtml(st, nameOf)}</div></div>
-          </div>
-        </div>
+        ${G.gameHeadHtml({ icoHtml: `<div id="slf-letter" class="slf-letter ${spinning ? "spinning" : "landed"}" aria-label="Buchstabe ${spinning ? "wird gezogen" : st.letter}">${spinning ? "?" : st.letter}</div>`,
+          small: `Stadt, Land, Fluss · Runde ${st.round} / ${st.rounds}`, big: spinning ? "Der Buchstabe wird gezogen …" : `Alles mit ${esc(st.letter)}`,
+          hint: `<span id="slf-stop" class="slf-rule">${slfStopHtml(st, nameOf)}</span>`, players: slfPills(v, st),
+          ring: G.ringHtml("slf-timer", Math.max(0, st.endsIn - (st.startsIn || 0)), st.timerMs || Math.max(1, st.endsIn - (st.startsIn || 0)), true) })}
         <form class="slf-form ${spinning ? "waiting" : ""}" autocomplete="off" onsubmit="return false">
           ${st.cats.map((c, i) => `<label class="slf-field ${c === st.surpriseCat ? "surprise" : ""}"><span>${c === st.surpriseCat ? "🎁 " : ""}${esc(c)}</span>
             <input data-cat="${i}" maxlength="60" autocapitalize="words" spellcheck="false" ${spinning ? "disabled" : ""} placeholder="${spinning ? "…" : st.letter + " …"}" value="${esc(slfLocal.answers[c] || "")}"></label>`).join("")}
@@ -166,7 +167,7 @@
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
-        <section class="players">${slfChips(v, st)}</section>
+        <section class="players" ${st.step === "writing" ? "hidden" : ""}>${slfChips(v, st)}</section>
         <section class="slf-main">${main}</section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
