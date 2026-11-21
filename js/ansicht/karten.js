@@ -7,6 +7,7 @@
 
   // ---------- Kartenspaß für alle: Siebzehn und Vier · Stichhaltig · Busfahrt ----------
   const KG_RANK = { 7: "Sieben", 8: "Acht", 9: "Neun", 10: "Zehner", U: "Unter", O: "Ober", K: "König", A: "Ass" };
+  const KG_VAL = { 7: 7, 8: 8, 9: 9, 10: 10, U: 2, O: 3, K: 4, A: 11 };
   const kgName = (id) => { const [su, r] = id.split("-"); return `${{ herz: "Herz", laub: "Laub", eichel: "Eichel", schelle: "Schell" }[su]}-${KG_RANK[r]}`; };
   // anim: "deal" = heranfliegen, "flip" = heranfliegen und umdrehen, "turn" = nur umdrehen (an Ort und Stelle); d = Verzögerung in ms
   const kgCard = (id, cls = "", attr = "", anim = "", d = 0) => {
@@ -27,6 +28,7 @@
   let kgSoundAt = 0, kgOutcomeDelay = 0; // Verzögerung für den Gewinn-/Verlust-Ton (passend zur Animation)
   const kgSound = (n, gapMs, startMs) => { if (n > 0 && Date.now() > kgSoundAt) { sfx.card(n, gapMs / 1000, startMs / 1000); kgSoundAt = Date.now() + 150; } };
   let kgRendered = null;
+  const BANK_C = "#d9dde6"; // Siebzehn und Vier allein: die Bank
   function kgChips(v, st) {
     return st.seats.map((id) => {
       const i = v.players.findIndex((p) => p.id === id), p = v.players[i] || { name: "?", connected: false };
@@ -35,7 +37,7 @@
         : st.step === "play" ? !!st.done[id] : st.step === "reveal" ? !!st.ready[id] : false;
       return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[Math.max(0, i) % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
         <span class="geo-score-name">${esc(p.name)}${id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[id] || 0}</b>${st.step !== "final" && (st.mode === "siebzehn" || (st.mode === "bus" && (st.step === "guess" || st.step === "roundEnd")) || (st.mode === "stich" && (st.step === "bid" || st.step === "reveal"))) ? `<span class="geo-mark">${done ? "✓" : "…"}</span>` : ""}</span>`;
-    }).join("");
+    }).join("") + (st.bank ? `<span class="geo-score" style="--pc:${BANK_C}"><span class="pdot"></span><span class="geo-score-name">🏦 Bank</span><b>${st.bank.total}</b></span>` : "");
   }
   function renderKarten() {
     const v = G.view, st = v.karten;
@@ -54,7 +56,16 @@
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     const readyBtn = `<div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="kg-ready"', hostAttr: 'id="kg-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) })}</div>`;
     let main = "";
-    if (st.step === "final") {
+    if (st.step === "final" && st.bank) {
+      const me = st.seats[0], mt = st.total[me] || 0, bt = st.bank.total;
+      const head = mt > bt ? `${esc(nameOf(me))} schlägt die Bank!` : bt > mt ? "Die Bank gewinnt!" : "Unentschieden gegen die Bank!";
+      main = `<div class="banner ${mt > bt ? "win" : ""}"><div class="trophy">${mt > bt ? "🏆" : bt > mt ? "🏦" : "🤝"}</div><b>${head}</b>
+          <div class="banner-actions"><button id="kg-restart" class="btn primary">${mt > bt ? "Nochmal spielen" : "Revanche"}</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
+        <div class="panel slf-final"><div class="slf-rank" style="--pc:${colorOf(me)}"><span class="slf-medal">${mt >= bt ? "🥇" : "🥈"}</span><span class="pdot"></span>
+          <span class="slf-name">${esc(nameOf(me))}${me === G.myId ? " <em>(du)</em>" : ""}</span><b>${mt} ${mt === 1 ? "Runde" : "Runden"}</b></div>
+          <div class="slf-rank" style="--pc:${BANK_C}"><span class="slf-medal">${bt >= mt ? "🥇" : "🥈"}</span><span class="pdot"></span><span class="slf-name">🏦 Bank</span><b>${bt} ${bt === 1 ? "Runde" : "Runden"}</b></div>
+          <p class="muted small">${esc(st.modeName)} gegen die Bank · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
+    } else if (st.step === "final") {
       const ranking = st.seats.slice().sort((a, b) => (st.total[b] || 0) - (st.total[a] || 0)), medal = ["🥇", "🥈", "🥉"];
       main = `<div class="banner win"><div class="trophy">🏆</div><b>${ranking.filter((id) => (st.winners || []).includes(id)).map((id) => esc(nameOf(id))).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"}!</b>
           <div class="banner-actions"><button id="kg-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>
@@ -68,9 +79,15 @@
       // Hat die eigene letzte Karte die Runde beendet (21, über 21 oder als Letzter fertig), bleibt der Tisch kurz stehen:
       // erst wird die Karte ausgeteilt, dann geht es zur Auflösung
       const myR = st.step === "reveal" && st.result[G.myId], heldNew = myR ? myR.hand.filter((c) => !kgSeen.has(`${gk}:m:${c}`)) : [];
-      const hold = heldNew.length ? { hand: myR.hand, sum: myR.sum, feuer: myR.feuer } : null;
-      if (st.step === "reveal") kgOutcomeDelay = hold ? heldNew.length * 380 + 950 : 0;
-      if (hold) setTimeout(() => { const k = G.view && G.view.karten; if (k && k.round === st.round && k.step === "reveal") { kgRendered = null; render(); } }, heldNew.length * 380 + 1700);
+      // Allein gegen die Bank: danach bleibt der Tisch stehen, bis die Bank aufgedeckt und Karte für Karte bis 17 gezogen hat
+      const bres = st.bank && st.step === "reveal" && st.bank.res, BK = 950;
+      const bBase = heldNew.length ? heldNew.length * 380 + 900 : 500, bEnd = bres ? bBase + (bres.hand.length - 1) * BK + 1200 : 0;
+      const bShow = bres ? kgAnim(`${gk}:bankshow`, 0, bEnd) : null;
+      const hold = heldNew.length || bShow ? { hand: myR.hand, sum: myR.sum, feuer: myR.feuer } : null;
+      if (st.step === "reveal") kgOutcomeDelay = bShow ? bBase + (bres.hand.length - 1) * BK + 400 + bShow.d : hold ? heldNew.length * 380 + 950 : 0;
+      const holdLeft = bShow ? bEnd + bShow.d + 60 : heldNew.length * 380 + 1700;
+      if (hold) setTimeout(() => { const k = G.view && G.view.karten; if (k && k.round === st.round && k.step === "reveal") { kgRendered = null; render(); } }, holdLeft);
+      if (bShow && bShow.first) kgSound(bres.hand.length - 1, BK, bBase);
       if (st.step === "play" || hold) {
         const priv = hold || (seated && G.wattenPriv && G.wattenPriv.roundNo === st.round ? G.wattenPriv : null);
         const doneOf = (id) => (hold ? true : st.done[id]), countOf = (id) => (hold ? st.result[id].hand.length : st.count[id] || 0);
@@ -79,7 +96,22 @@
         const seatsHtml = st.seats.filter((id) => id !== G.myId).map((id) => `<div class="sv-seat ${doneOf(id) ? "done" : ""}" style="--pc:${colorOf(id)}">
             <span class="sv-nm"><span class="pdot"></span>${esc(nameOf(id))}<em>${st.total[id] || 0}</em></span>
             <span class="sv-fan">${Array.from({ length: countOf(id) }, (_, k) => { const a = kgAnim(`${gk}:o:${id}:${k}`, k < 2 ? 450 + k * 300 : 0, 700); return kgCard(null, "sv-back", "", a ? "deal" : "", a ? a.d : 0); }).join("")}</span>
-            <small>${doneOf(id) ? "✋ fertig" : "überlegt …"}</small></div>`).join("");
+            <small>${doneOf(id) ? "✋ fertig" : "überlegt …"}</small></div>`).join("")
+          + (bShow ? (() => {
+            // Bank deckt die zweite Karte auf und zieht nach; die Summe zählt mit (gestapelte Anzeigen, jede später darüber)
+            const h = bres.hand, off = bShow.d;
+            const cards = h.map((c, k) => { if (k === 0) return kgCard(c, "sv-back sv-up");
+              const a = kgAnim(`${gk}:bk:${k}`, bBase + (k - 1) * BK, 1000); return kgCard(c, "sv-back", "", a ? (k === 1 ? "turn" : "flip") : "", a ? a.d : 0); }).join("");
+            let run = 0;
+            const sums = h.map((c, k) => { run += KG_VAL[c.split("-")[1]]; if (k === 0) return "";
+              const last = k === h.length - 1, txt = last ? (bres.feuer ? "🔥 Feuer!" : run > 21 ? `${run} – über 21!` : `${run} – bleibt stehen`) : `${run} – zieht …`;
+              return `<span class="${last ? (run > 21 ? "bad" : "fin") : ""}" style="--d:${bBase + (k - 1) * BK + 450 + off}ms">${txt}</span>`; }).join("");
+            return `<div class="sv-seat sv-bank done" style="--pc:${BANK_C}"><span class="sv-nm">🏦 Bank<em>${st.bank.total - bres.points}</em></span>
+              <span class="sv-fan">${cards}</span><span class="sv-bsum"><span>deckt auf …</span>${sums}</span></div>`; })()
+          : st.bank ? `<div class="sv-seat sv-bank" style="--pc:${BANK_C}"><span class="sv-nm">🏦 Bank<em>${st.bank.total}</em></span>
+            <span class="sv-fan">${Array.from({ length: hold ? 2 : Math.max(2, st.bank.count) }, (_, k) => { const a = kgAnim(`${gk}:b:${k}`, 450 + k * 300, 700), up = st.bank.up || (st.bank.res && st.bank.res.hand[0]);
+              return k === 0 && up ? kgCard(up, "sv-back sv-up", "", a ? "deal" : "", a ? a.d : 0) : kgCard(null, "sv-back", "", a ? "deal" : "", a ? a.d : 0); }).join("")}</span>
+            <small>${hold ? "deckt gleich auf …" : "wartet auf dich"}</small></div>` : "");
         // eigene Karten: neue fliegen nacheinander heran und drehen sich um; Summe und Knöpfe erst danach
         let fresh = 0;
         let lateAt = null;
@@ -100,7 +132,7 @@
           // Tisch-Beschriftung wie bei Stichhaltig: gelbe Überschrift, darunter weißer Text
           const fin = st.done[G.myId] || hold;
           const headTxt = priv.feuer ? "🔥 Feuer – zwei Asse!" : over ? "Über 21 – leider raus" : v === 21 ? "21 – Siebzehn und Vier!" : fin ? `Du bleibst bei ${v}` : "Noch eine Karte?";
-          const subTxt = hold ? "Alle sind fertig – gleich wird aufgedeckt …" : over ? `Du hast ${priv.sum}. ${st.done[G.myId] ? "Warte auf die anderen …" : ""}`
+          const subTxt = hold ? (st.bank ? (over ? "Die Bank gewinnt diese Runde …" : "Jetzt ist die Bank dran …") : "Alle sind fertig – gleich wird aufgedeckt …") : over ? `Du hast ${priv.sum}. ${st.done[G.myId] ? "Warte auf die anderen …" : ""}`
             : fin ? "Du bist fertig – warte auf die anderen …" : v === 21 || priv.feuer ? "Mehr geht nicht – tippe auf „Genug“." : `Du hast ${v} – bis 21 fehlen noch ${21 - v}.`;
           me = `<div class="sv-me"><div class="sv-hand">${handHtml}</div>
               <div class="sv-dial ${tone} ${late}"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" class="sv-ring0"/>
@@ -116,19 +148,24 @@
         main = `<div class="sv-rim"><div class="sv-felt">${seatsHtml ? `<div class="sv-seats">${seatsHtml}</div>` : ""}${me}${legend}</div></div>`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
-        const order = st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points || st.result[b].sum - st.result[a].sum);
-        const ra = kgAnim(`${gk}:reveal`, 0, 8000), animate = !!ra, off = ra ? ra.d : 0;
+        const order = st.bank ? st.seats.concat("_bank") : st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points || st.result[b].sum - st.result[a].sum);
+        const resOf = (id) => (id === "_bank" ? st.bank.res : st.result[id]);
+        const ra = kgAnim(`${gk}:reveal`, 0, 8000), animate = !!ra && !st.bank, off = ra && !st.bank ? ra.d : 0;
         let t = 300, flips = 0;
-        const rows = order.map((id) => { const r = st.result[id], mine = id === G.myId;
-          const cards = r.hand.map((c, k) => kgCard(c, "mini", "", animate && !mine ? "turn" : "", t + k * 160 + off)).join("");
+        const rows = order.map((id) => { const r = resOf(id), mine = id === G.myId, bank = id === "_bank";
+          const cards = r.hand.map((c, k) => kgCard(c, "mini", "", animate && !mine && !(bank && k === 0) ? "turn" : "", t + k * 160 + off)).join("");
           if (animate && !mine) { t += r.hand.length * 160; flips += r.hand.length; }
           const after = animate ? `kg-late" style="--d:${t + 150 + off}ms` : "";
           if (animate) t += 550;
-          return `<div class="kg-res ${r.bust ? "bust" : r.place === 1 ? "win" : ""} ${animate ? "anim-row" : ""}" style="--pc:${colorOf(id)};--d:${t + 150 + off}ms"><span class="kg-rname"><span class="pdot"></span>${esc(nameOf(id))}${mine ? " <em>(du)</em>" : ""}</span>
+          const win = st.bank ? r.points > 0 : r.place === 1;
+          return `<div class="kg-res ${r.bust ? "bust" : win ? "win" : ""} ${animate ? "anim-row" : ""}" style="--pc:${bank ? BANK_C : colorOf(id)};--d:${t + 150 + off}ms"><span class="kg-rname"><span class="pdot"></span>${bank ? "🏦 Bank" : esc(nameOf(id))}${mine ? " <em>(du)</em>" : ""}</span>
             <span class="kg-hand small">${cards}</span>
             <span class="kg-rsum ${after}">${r.feuer ? "🔥 Feuer" : r.bust ? `${r.sum} – über 21` : r.sum === 21 ? "21 – Siebzehn und Vier!" : r.sum}</span><b class="qb-plus ${after}">+${r.points}</b></div>`; }).join("");
         if (ra && ra.first) { kgSound(flips, 160, 300); if (!kgOutcomeDelay) kgOutcomeDelay = t; }
-        main = `<div class="sv-rim"><div class="sv-felt sv-reveal"><div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div></div>`;
+        const oc = st.bank && st.result[st.seats[0]].outcome;
+        const verdict = oc ? `<div class="sv-verdict ${animate ? `kg-late" style="--d:${t + off}ms` : ""}"><span class="tt-head ${oc === "lose" ? "bad" : oc === "tie" ? "calm" : ""}">${oc === "win" ? "Gewonnen – die Runde geht an dich!" : oc === "tie" ? "Gleichstand – die Runde zählt für keinen." : st.result[st.seats[0]].bust ? "Über 21 – die Bank gewinnt." : st.bank.res.feuer ? "🔥 Feuer – die Bank gewinnt." : "Die Bank gewinnt diese Runde."}</span>
+          <span class="tt-chip">Du ${st.total[st.seats[0]] || 0} : ${st.bank.total} Bank</span></div>` : "";
+        main = `<div class="sv-rim"><div class="sv-felt sv-reveal">${verdict}<div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div></div>`;
       }
     } else {
       main = stichMainHtml(v, st, colorOf, nameOf, readyBtn);

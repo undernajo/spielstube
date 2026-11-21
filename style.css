@@ -3365,3 +3365,17 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .pass-btn:hover { background: rgba(255, 200, 61, .22); }
 /* Zehnkampf: aus welchem Fragen-Set die Karte stammt */
 .progress .zset { white-space: nowrap; color: #cfc6ff; font-weight: 700; }
+/* Siebzehn und Vier allein: die Bank oben am Tisch, erste Karte offen; Urteil über den Ergebnissen */
+.sv-bank .sv-nm { color: #fff; }
+.sv-fan .kg-card.sv-up { rotate: -4deg; }
+.sv-verdict { display: grid; gap: 8px; justify-items: center; text-align: center; }
+.sv-bank .sv-fan .kg-card.sv-back { width: clamp(46px, 8vh, 78px); margin-left: calc(clamp(46px, 8vh, 78px) * -.3); }
+.sv-bank .sv-fan .kg-card.sv-back:first-child { margin-left: 0; }
+@media (max-width: 640px) { .sv-bank .sv-fan .kg-card.sv-back { width: 44px; margin-left: -12px; } }
+/* Bank zieht: Summe zählt mit (jede neue Anzeige legt sich über die vorige) */
+.sv-bsum { display: grid; justify-items: center; }
+.sv-bsum > span { grid-area: 1 / 1; padding: 3px 12px; border-radius: 99px; background: #17402c; color: #fff; font: 700 clamp(.9rem, 1.8vh, 1.1rem) Fredoka, sans-serif; white-space: nowrap; }
+.sv-bsum > span[style] { opacity: 0; animation: sv-bs .25s ease-out forwards; animation-delay: var(--d); }
+.sv-bsum > span.fin { color: var(--accent); } .sv-bsum > span.bad { color: #ff9aa2; }
+@keyframes sv-bs { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .sv-bsum > span[style] { animation-duration: .01s; } }

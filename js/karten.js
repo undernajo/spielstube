@@ -1,6 +1,8 @@
 // „Kartenspaß für alle“ – Kartenspiele mit dem eigenen Blatt (läuft beim Gastgeber, testbar in Node). Zustand in s.karten.
 //  siebzehn: jeder für sich gegen die anderen – wer am nächsten an 21 liegt, gewinnt die Runde (über 21 = raus).
 //            Zwei Asse („Feuer“) schlagen alles, genau 21 gibt einen Bonuspunkt. Die eigenen Karten sieht nur man selbst.
+//            Allein gegen die Bank: Die Bank zeigt eine Karte offen; ist man fertig, deckt sie auf und zieht, bis sie mindestens 17 hat.
+//            Wer näher an 21 liegt, bekommt die Runde (1 Punkt); über 21 verliert sofort, Gleichstand zählt für keinen.
 //  bus:      Busfahrt – Station für Station tippen, weiterfahren oder aussteigen.
 //  stich:    Stichhaltig – Stichspiel mit Ansage. Runde 1 eine Karte pro Spieler, Runde 2 zwei usw.; alle sagen gleichzeitig
 //            geheim an, wie viele Stiche sie machen, dann wird reihum gespielt (Farbe bedienen, Trumpf sticht).
@@ -28,7 +30,7 @@
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.karten = { gid: Math.random().toString(36).slice(2, 9), opts: { mode, rounds }, mode, seats, total: Object.fromEntries(seats.map((id) => [id, 0])), round: 0, history: [] };
     s.players.forEach((p) => { p.waiting = !seats.includes(p.id); p.status = "active"; });
-    if (mode === "siebzehn") { s.karten.rounds = rounds; nextSiebzehn(s.karten); }
+    if (mode === "siebzehn") { s.karten.rounds = rounds; if (seats.length === 1) { s.karten.bank = true; s.karten.bankTotal = 0; } nextSiebzehn(s.karten); }
     else if (mode === "bus") startBus(s.karten, now, opts);
     else startStich(s.karten, now, opts);
     return true;
@@ -41,11 +43,30 @@
     st.deck = deck(Math.max(1, Math.ceil(st.seats.length / 4))); // ab fünf Spielern zwei Blätter
     st.hands = {}; st.done = {}; st.result = null; st.ready = {};
     st.seats.forEach((id) => { st.hands[id] = [st.deck.pop(), st.deck.pop()]; if (isFeuer(st.hands[id])) st.done[id] = "stand"; });
+    st.bankRes = null;
+    if (st.bank) st.bankHand = [st.deck.pop(), st.deck.pop()];
     st.step = "play";
     checkSiebzehn(st);
   }
+  // Allein gegen die Bank: Bank zieht bis mindestens 17 (nicht, wenn man sich schon überkauft hat)
+  function bankSiebzehn(st) {
+    const id = st.seats[0], me = st.hands[id], bust = sum(me) > 21, feuer = isFeuer(me);
+    const bh = st.bankHand;
+    if (!bust && !feuer && !isFeuer(bh)) while (sum(bh) < 17) { if (!st.deck.length) st.deck = deck(1).filter((c) => !me.concat(bh).includes(c)); bh.push(st.deck.pop()); }
+    const val = (h) => (isFeuer(h) ? 100 : sum(h) > 21 ? -1 : sum(h));
+    const mv = val(me), bv = val(bh);
+    const outcome = mv < 0 ? "lose" : bv < 0 || mv > bv ? "win" : mv === bv ? "tie" : "lose";
+    const pts = outcome === "win" ? 1 : 0;
+    st.result = { [id]: { hand: me.slice(), sum: sum(me), feuer, bust, place: outcome === "win" ? 1 : null, points: pts, outcome } };
+    st.bankRes = { hand: bh.slice(), sum: sum(bh), feuer: isFeuer(bh), bust: sum(bh) > 21, points: outcome === "lose" ? 1 : 0 };
+    st.total[id] += pts; st.bankTotal += st.bankRes.points;
+    st.step = "reveal"; st.ready = {};
+    st.history.push({ points: { [id]: pts }, bank: st.bankRes.points });
+    return true;
+  }
   function checkSiebzehn(st) {
     if (!st.seats.every((id) => st.done[id])) return false;
+    if (st.bank) return bankSiebzehn(st);
     const val = (id) => (isFeuer(st.hands[id]) ? 100 : sum(st.hands[id]) > 21 ? -1 : sum(st.hands[id]));
     const alive = st.seats.filter((id) => val(id) >= 0).sort((a, b) => val(b) - val(a));
     const res = {};
@@ -298,6 +319,8 @@
     if (st.mode === "siebzehn") {
       out.count = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).length]));
       out.done = Object.fromEntries(st.seats.map((id) => [id, st.step === "play" ? (st.done[id] ? "fertig" : "") : st.done[id] || ""]));
+      // Bank: beim Spielen nur die erste Karte offen, danach alles
+      if (st.bank) out.bank = { total: st.bankTotal, up: st.step === "play" && st.bankHand ? st.bankHand[0] : null, count: st.bankHand ? st.bankHand.length : 0, res: st.step !== "play" ? st.bankRes : null };
     } else if (st.mode === "bus") {
       out.q = st.q; out.question = BUS_Q[Math.min(st.q, BUS_Q.length - 1)]; out.stations = BUS_Q.map((x) => x.pts);
       out.cards = (st.cards || []).slice(); out.reach = { ...(st.reach || {}) };
@@ -312,7 +335,11 @@
       out.untilIn = st.until ? Math.max(0, st.until - Date.now()) : 0;
     }
     if (st.result) out.result = st.result;
-    if (st.step === "final") { const max = Math.max(...Object.values(st.total)); out.winners = st.seats.filter((id) => st.total[id] === max); }
+    if (st.step === "final") {
+      const max = Math.max(...Object.values(st.total));
+      out.winners = st.bank ? (max > st.bankTotal ? st.seats.slice() : []) : st.seats.filter((id) => st.total[id] === max);
+      if (st.bank) out.bankWins = st.bankTotal > max;
+    }
     return out;
   }
 

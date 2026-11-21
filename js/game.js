@@ -1337,7 +1337,7 @@
         if (v.karten.step === "reveal" && v.karten.result) {
           // Gewinn-/Verlust-Ton erst, wenn die entscheidende Karte fertig aufgedeckt ist
           const r = v.karten.result[myId];
-          const win = r && (v.karten.mode === "stich" ? r.bid === r.got : r.points > 0), lose = r && (v.karten.mode === "stich" ? r.bid !== r.got : r.bust);
+          const win = r && (v.karten.mode === "stich" ? r.bid === r.got : r.points > 0), lose = r && (v.karten.mode === "stich" ? r.bid !== r.got : r.bust || r.outcome === "lose");
           if (win || lose) setTimeout(() => (win ? sfx.win() : sfx.lose()), G.kgOutcomeDelay);
         }
         if (v.karten.step === "final") { if ((v.karten.winners || []).includes(myId)) sfx.win(); else sfx.lose(); confetti(); }
@@ -2097,7 +2097,7 @@
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (KG.MODES[view.game] && lb.kg) {
-      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt` : view.game === "bus" ? `${lb.kg.busRounds} ${lb.kg.busRounds === 1 ? "Runde" : "Runden"} · 5 Stationen, nach jeder: weiterfahren oder aussteigen` : `${lb.kg.stichRounds || 6} Runden · Stiche ansagen und genau so viele holen`}</p>`;
+      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt (allein: gegen die Bank)` : view.game === "bus" ? `${lb.kg.busRounds} ${lb.kg.busRounds === 1 ? "Runde" : "Runden"} · 5 Stationen, nach jeder: weiterfahren oder aussteigen` : `${lb.kg.stichRounds || 6} Runden · Stiche ansagen und genau so viele holen`}</p>`;
     }
     if (QZ.MODES[view.game] && lb.quiz) {
       const det = view.game === "umriss" ? esc(LAND.REGION_NAMES[lb.quiz.region] || "Europa") + " · " + esc((QZ.LEVELS[lb.quiz.level] || QZ.LEVELS.gemischt).name)
@@ -2502,6 +2502,7 @@
         <li>Alle entscheiden gleichzeitig: <b>„Weitere Karte“</b> zieht noch eine, <b>„Genug“</b> hört auf. Wer über 21 kommt, ist für die Runde raus.</li>
         <li>Wenn alle fertig sind, wird aufgedeckt: Wer am nächsten an 21 liegt, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Genau 21 gibt einen Bonuspunkt.</li>
         <li><b>Feuer:</b> Zwei Asse auf der Hand schlagen alles (und zählen wie 21).</li>
+        <li><b>Allein gegen die Bank:</b> Spielst du allein, zeigt die Bank eine Karte offen. Bist du fertig, deckt sie auf und zieht, bis sie mindestens 17 hat. Wer näher an 21 liegt, holt die Runde; über 21 verliert sofort, Gleichstand zählt für keinen. Wer mehr Runden holt, gewinnt.</li>
         <li>Von den anderen sieht man nur, wie viele Karten sie haben und ob sie schon fertig sind.</li>
       </ul>
     </details>`;
