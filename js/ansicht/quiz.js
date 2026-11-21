@@ -12,13 +12,24 @@
   const quizFmt = (n) => { n = Number(n);
     if (quizYear && Math.abs(n) < 10000) return String(Math.round(n));
     return n.toLocaleString("de-DE", { maximumFractionDigits: Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 3 }); };
-  function quizChips(v, st) {
-    return v.players.map((p, i) => {
+  // Spieler-Pult (rechts neben der Quizkarte): Lämpchen leuchtet, sobald jemand geantwortet hat bzw. bereit ist
+  function quizPods(v, st) {
+    return `<span class="qz-lbl">Spieler</span>` + v.players.map((p, i) => {
       const done = st.step === "ask" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
-      const mark = st.step === "ask" ? (done ? "✓" : "…") : done ? "✓" : "";
-      return `<span class="geo-score ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="pdot ${p.connected ? "" : "off"}"></span>
-        <span class="geo-score-name">${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
+      const txt = st.step === "ask" ? (done ? "hat geantwortet" : p.connected ? "überlegt …" : "getrennt") : done ? "bereit" : "schaut sich die Lösung an";
+      return `<div class="qz-pod ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="qz-lamp"></span>
+        <div><b>${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</b><small>${txt}</small></div><span class="qz-sc">${st.total[p.id] || 0}</span></div>`;
     }).join("");
+  }
+  // Zeitring rechts oben in der Quizkarte (grün → gelb → rot)
+  const QZ_RING = 2 * Math.PI * 31;
+  const quizTotalMs = (st) => (st.mode === "hinweis" ? 4 * QZ.HINT_MS + (QZ.AFTER_LAST_HINT_MS || 15000) : (QZ.ASK_MS || {})[st.mode] || 30000);
+  function quizRingSet(el, ms, total) {
+    const p = Math.max(0, Math.min(1, ms / total)), r1 = el.querySelector(".r1");
+    el.style.setProperty("--rc", p > .5 ? "#7ee2b1" : p > .2 ? "#ffc83d" : "#ff7d8a");
+    if (r1) r1.style.strokeDasharray = `${QZ_RING * p} ${QZ_RING}`;
+    const b = el.querySelector("b"); if (b) b.textContent = Math.ceil(ms / 1000);
+    el.classList.toggle("urgent", ms <= 10000);
   }
   // Frage passend zur Art des Gebiets (Code ohne Bindestrich = Land, sonst Unterteilung mit Länderkürzel vorn)
   const UMRISS_ART = { DE: "Welches deutsche Bundesland", AT: "Welches österreichische Bundesland", IT: "Welche italienische Region", CH: "Welcher Schweizer Kanton" };
@@ -45,9 +56,13 @@
     return `<svg class="umriss-svg" viewBox="${(x0 - pad).toFixed(3)} ${(y0 - pad).toFixed(3)} ${(w + 2 * pad).toFixed(3)} ${(h + 2 * pad).toFixed(3)}" preserveAspectRatio="xMidYMid meet">
       <path d="${d}" fill="#ffd24d" fill-opacity=".9" stroke="#fff6cf" stroke-width="${(Math.max(w, h) / 220).toFixed(4)}" fill-rule="evenodd" stroke-linejoin="round"/></svg>`;
   }
+  // Hinweise als Kärtchen: aufgedeckte im Sandton, noch verdeckte gestrichelt (der nächste mit Countdown); rechts der Punktwert
   function quizHintsHtml(st) {
     const it = st.item; if (!it || !it.hints) return "";
-    return `<ol class="quiz-hints">${it.hints.map((h, i) => `<li class="${i === it.hints.length - 1 && st.step === "ask" ? "new" : ""}"><span class="qh-n">${i + 1}</span>${esc(h)}</li>`).join("")}</ol>`;
+    const n = it.hints.length, all = st.step === "ask" ? 5 : n;
+    return `<ol class="quiz-hints">${Array.from({ length: all }, (_, i) => i < n
+      ? `<li class="qz-hint ${i === n - 1 && st.step === "ask" ? "new" : ""}"><span class="qh-n">${i + 1}</span><span class="qh-t">${esc(it.hints[i])}</span><span class="qh-p">${5 - i} P.</span></li>`
+      : `<li class="qz-hint lock"><span class="qh-n">${i + 1}</span><span class="qh-t" ${i === n ? 'id="quiz-nexthint"' : ""}>${i === n ? "nächster Hinweis gleich …" : "noch verdeckt"}</span><span class="qh-p">${5 - i} P.</span></li>`).join("")}</ol>`;
   }
   // Schätzen: Zahlenstrahl – richtige Antwort in der Mitte, Schätzungen als farbige Nadeln (zu tief links, zu hoch rechts)
   function estLineHtml(v, st) {
@@ -124,7 +139,7 @@
     const st = G.view && G.view.quiz;
     if (!st || st.step !== "ask") return;
     const el = document.getElementById("quiz-timer"), ms = Math.max(0, quizDeadline - Date.now());
-    if (el) { el.textContent = Math.ceil(ms / 1000) + " s"; el.classList.toggle("urgent", ms <= 10000); sfx.countdown("quiz:" + G.view.code + ":" + st.round, ms, quizSent !== st.round); }
+    if (el) { quizRingSet(el, ms, quizTotalMs(st)); sfx.countdown("quiz:" + G.view.code + ":" + st.round, ms, quizSent !== st.round); }
     const nh = document.getElementById("quiz-nexthint");
     if (nh && quizHintAt) { const left = Math.max(0, Math.ceil((quizHintAt - Date.now()) / 1000)); nh.textContent = left ? `nächster Hinweis in ${left} s` : "gleich kommt der nächste Hinweis …"; }
     if (ms <= 300) quizSubmit(); // Eingetipptes bei Zeitablauf abgeben
@@ -142,10 +157,11 @@
     const it0 = st.item || {}, rk = v.code + ":" + st.round + ":" + (it0.c || it0.q || (it0.hints && it0.hints[0]) || "") + ":";
     const key = rk + st.step;
     if (quizRendered === key && app.querySelector(".quiz-main")) {
-      const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = quizChips(v, st);
+      const sc = app.querySelector(".qz-side"); if (sc) sc.innerHTML = quizPods(v, st);
       const hl = app.querySelector(".quiz-hintbox"); if (hl && st.mode === "hinweis" && hl.dataset.n !== String(st.item.hints.length)) {
         hl.dataset.n = st.item.hints.length; hl.querySelector(".quiz-hints").outerHTML = quizHintsHtml(st);
         const pts = app.querySelector("#quiz-pts"); if (pts) pts.textContent = 6 - st.item.hints.length;
+        const hs = app.querySelector("#quiz-hsub"); if (hs) hs.textContent = `Hinweis ${st.item.hints.length} von 5 · alle antworten gleichzeitig`;
       }
       const rs = app.querySelector(".geo-results"); if (rs && st.result) rs.innerHTML = quizResultsHtml(v, st);
       if (st.step === "reveal") G.nextBtnSwap("#quiz-ready", { attr: 'id="quiz-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Weiter", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) }, () => send({ type: "quizReady" }));
@@ -161,7 +177,7 @@
       && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     quizRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
-    const label = `<span class="game-label">${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "umriss" ? " · " + esc(LAND.REGION_NAMES[st.region] || "") : ""}</span>`;
+    const label = `${esc(st.modeName)} · Runde ${st.round} / ${st.rounds}${st.mode === "umriss" ? " · " + esc(LAND.REGION_NAMES[st.region] || "") : ""}`;
     let main;
     if (st.step === "final") {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0)), medal = ["🥇", "🥈", "🥉"];
@@ -173,19 +189,24 @@
     } else {
       const sent = quizSent === st.round, it = st.item || {};
       let q = "";
-      if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>${estLineHtml(v, st)}` : ""}`;
-      else if (st.mode === "hinweis") q = `<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">Wer oder was ist gemeint?</div>`}
-          ${quizHintsHtml(st)}${st.step === "ask" ? `<p class="muted small">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte · <span id="quiz-nexthint"></span></p>` : ""}</div>`;
-      else q = `<div class="umriss-box">${umrissSvg(it.c, umrissFresh)}</div>${st.step === "reveal" ? `<div class="quiz-answer">${esc(it.a)}</div>` : `<div class="quiz-q small">${umrissFrage(it.c)}</div>`}`;
+      const ask = st.step === "ask";
+      if (st.mode === "schaetzen") q = `<div class="quiz-q">${esc(it.q)}</div>${!ask ? `<div class="quiz-answer">${quizFmt(it.v)}${it.unit ? " " + esc(it.unit) : ""}</div>${estLineHtml(v, st)}` : ""}`;
+      else if (st.mode === "hinweis") q = `<div class="quiz-q">Wer oder was ist gemeint?</div>${!ask ? `<div class="quiz-answer">${esc(it.a)}</div>` : ""}<div class="quiz-hintbox" data-n="${it.hints ? it.hints.length : 0}">
+          ${quizHintsHtml(st)}${ask ? `<p class="qz-pts">Richtig jetzt: <b id="quiz-pts">${6 - (it.hints || [1]).length}</b> Punkte</p>` : ""}</div>`;
+      else q = `<div class="quiz-q">${umrissFrage(it.c)}</div><div class="umriss-box">${umrissSvg(it.c, umrissFresh)}</div>${!ask ? `<div class="quiz-answer">${esc(it.a)}</div>` : ""}`;
+      // Kopfzeile: Symbol, Spiel · Runde, Stand – rechts oben der Zeitring
+      const ico = { schaetzen: "🎯", hinweis: "🔎", umriss: "🗺️" }[st.mode] || "❓";
+      const sub = !ask ? "Auflösung" : st.mode === "hinweis" ? `Hinweis ${(it.hints || []).length} von 5 · alle antworten gleichzeitig` : "Alle antworten gleichzeitig";
+      const ms0 = st.endsIn || 0, tot = quizTotalMs(st), p0 = Math.max(0, Math.min(1, ms0 / tot));
+      const ring = ask ? `<div id="quiz-timer" class="qz-ring" style="--rc:${p0 > .5 ? "#7ee2b1" : p0 > .2 ? "#ffc83d" : "#ff7d8a"}"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="r0"/><circle cx="37" cy="37" r="31" class="r1" style="stroke-dasharray:${QZ_RING * p0} ${QZ_RING}"/></svg><b>${Math.ceil(ms0 / 1000)}</b></div>` : "";
+      q = `<div class="qz-head"><span class="qz-ico">${ico}</span><div><small>${label}</small><b id="quiz-hsub">${sub}</b></div>${ring}</div>` + q;
       const foot = st.step === "ask" ? `<div class="quiz-foot">${sent ? "" : `<form class="quiz-form" onsubmit="return false">
           <input id="quiz-in" ${st.mode === "schaetzen" ? `inputmode="decimal" placeholder="Deine Schätzung"` : `placeholder="Deine Antwort"`} autocomplete="off" maxlength="60">
           ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>
           ${st.mode !== "schaetzen" ? `<p class="muted small quiz-note">Nur ein Versuch – kleine Tippfehler sind kein Problem.</p>` : `<p class="muted small quiz-note">Kommazahlen mit Komma, z. B. 9,1</p>`}`}</div>`
         : `<div class="geo-results">${quizResultsHtml(v, st)}</div>
            <div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="quiz-ready"', hostAttr: 'id="quiz-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Weiter", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready) })}</div>`;
-      main = `<div class="geo-bar">${label}<div class="geo-scores">${quizChips(v, st)}</div>
-          ${st.step === "ask" ? `<div id="quiz-timer" class="slf-timer">${Math.ceil((st.endsIn || 0) / 1000)} s</div>` : ""}</div>
-        <div class="panel quiz-card">${q}${foot}</div>`;
+      main = `<div class="qz-layout"><div class="panel quiz-card qz-card qz-${st.mode} ${st.step === "ask" ? "is-ask" : "is-reveal"}">${q}${foot}</div><aside class="qz-side">${quizPods(v, st)}</aside></div>`;
     }
     app.innerHTML = head(main);
     if (estFresh) estReveal(st);

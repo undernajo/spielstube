@@ -202,5 +202,5 @@
     return out;
   }
 
-  root.S10Quiz = { MODES, ROUND_CHOICES, THEMES, LEVELS, UMRISS_REGIONS, HINT_MS, start, apply, tick, publicState, pool, countNew, keyItem, isRight, parseNum };
+  root.S10Quiz = { MODES, ROUND_CHOICES, THEMES, LEVELS, UMRISS_REGIONS, HINT_MS, ASK_MS, AFTER_LAST_HINT_MS, start, apply, tick, publicState, pool, countNew, keyItem, isRight, parseNum };
 })(typeof window !== "undefined" ? window : globalThis);

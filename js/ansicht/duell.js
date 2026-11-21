@@ -27,14 +27,17 @@
       sfx.countdown("du:" + v.code + ":" + st.round + ":" + st.turn + ":" + st.moves.length, left, st.step === "turn" && st.turn === G.myId);
     }, 200);
     const key = [v.code, st.round, st.step, st.turn, st.moves.length, st.judge ? st.judge.text : ""].join(":");
-    const pills = () => st.seats.map((id) => `<div class="du-pill ${st.step === "turn" && st.turn === id ? "on" : ""}" style="--pc:${colorOf(id)}">
-        <i class="pdot"></i><span>${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><b>${st.score[id]}</b><small>/${st.target}</small></div>`).join("");
-    if (duRendered === key && app.querySelector(".du-main")) { const sc = app.querySelector(".du-pills"); if (sc) sc.innerHTML = pills(); return; }
+    // Duell-Arena: die beiden Spieler stehen sich links und rechts gegenüber, wer dran ist, leuchtet
+    const side = (id) => { const on = st.step === "turn" && st.turn === id;
+      return `<div class="du-side ${on ? "turn" : ""}" style="--pc:${colorOf(id)}"><span class="du-av">${esc((nameOf(id)[0] || "?").toUpperCase())}</span>
+        <b class="du-nm">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</b><span class="du-sc">${st.score[id]}<small>/${st.target}</small></span>
+        <span class="du-tag">${on ? (id === G.myId ? "du bist dran" : "ist dran") : st.step === "turn" ? "wartet" : st.step === "judge" ? (opp(st.judge.by) === id ? "entscheidet" : "wartet") : st.result && !st.result.voided && st.result.winner === id ? "Punkt!" : "–"}</span></div>`; };
+    if (duRendered === key && app.querySelector(".du-main")) { const a = app.querySelector(".du-sa"), b = app.querySelector(".du-sb"); if (a) a.innerHTML = side(st.seats[0]); if (b) b.innerHTML = side(st.seats[1]); return; }
     duRendered = key;
     const rows = st.items.map((it, i) => {
       const found = it.by != null;
       return `<li class="du-row ${found ? "found" : it.t ? "missed" : ""} ${st.judge && it.t === st.judge.t && !found ? "" : ""}" style="${found ? `--pc:${colorOf(it.by)}` : ""}">
-        <span class="du-no">${i + 1}</span><span class="du-t">${it.t ? esc(it.t) : "?"}</span>${found ? `<span class="du-by">${esc(nameOf(it.by))}</span>` : ""}</li>`;
+        <span class="du-no">${i + 1}</span><span class="du-t">${it.t ? esc(it.t) : "?"}</span>${found ? `<span class="du-by" title="${esc(nameOf(it.by))}">${esc((nameOf(it.by)[0] || "?").toUpperCase())}</span>` : ""}</li>`;
     }).join("");
     const last = st.moves.slice(-1)[0];
     const why = { wrong: "gehört nicht dazu", dup: "wurde schon genannt", time: "", full: "" };
@@ -43,7 +46,7 @@
       action = myTurn
         ? `<form class="du-form" autocomplete="off"><input id="du-in" maxlength="60" placeholder="Deine Antwort …" enterkeyhint="send" autocapitalize="sentences"><button class="btn primary">Nennen</button></form>`
         : `<p class="du-wait"><b style="color:${colorOf(st.turn)}">${esc(nameOf(st.turn))}</b> ist dran …</p>`;
-      if (st.timerMs) action = `<div class="du-time"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${Math.ceil(st.deadlineIn / 1000)} s</b></div>` + action;
+      if (st.timerMs) action = `<div class="du-time" style="--pc:${colorOf(st.turn)}"><i style="width:${100 * st.deadlineIn / st.timerMs}%"></i><b>${Math.ceil(st.deadlineIn / 1000)} s</b></div>` + action;
     } else if (st.step === "judge") {
       const j = st.judge, judge = opp(j.by) === G.myId;
       action = `<div class="banner judge du-judge"><div class="judge-q"><b>${esc(nameOf(j.by))}</b> sagt: „${esc(j.text)}“</div>
@@ -71,13 +74,15 @@
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
-        <section class="du-main">
-          <div class="du-pills">${pills()}</div>
+        <section class="du-main du-arena">
+          <div class="du-sa">${side(st.seats[0])}</div><div class="du-sb">${side(st.seats[1])}</div>
+          <div class="du-mid">
           <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
           <div class="du-action">${action}</div>
           <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil(st.items.length / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil(st.items.length / (st.items.length > 10 ? 2 : 1))}">${rows}</ol>
           ${log ? `<ul class="du-log">${log}</ul>` : ""}
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
+          </div>
         </section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };

@@ -32,21 +32,26 @@
       const mine = st.step === "guess" ? hlMine(st) : st.picks && st.picks[G.myId];
       const right = st.result && st.result.right;
       const whoPicked = (dir) => st.step === "reveal" ? Object.entries(st.picks).filter(([, d]) => d === dir).map(([pid]) => `<i class="pdot" style="--pc:${colorOf(pid)}"></i>`).join("") : "";
-      const btn = (dir, label, icon) => `<button class="hl-btn ${mine === dir ? "on" : ""} ${right && (right === dir || right === "both") ? "right" : ""}" data-dir="${dir}" ${st.step !== "guess" ? "disabled" : ""}>
+      const btn = (dir, label, icon) => `<button class="hl-btn hl-${dir} ${mine === dir ? "on" : ""} ${right && (right === dir || right === "both") ? "right" : ""}" data-dir="${dir}" ${st.step !== "guess" ? "disabled" : ""}>
           <span class="hl-ico">${icon}</span><span>${label}</span><span class="hl-who">${whoPicked(dir)}</span></button>`;
+      // Kartenduell: Symbol passend zur Kategorie, Fortschritt als Balken
+      const c = st.cat, nm = (c.name + " " + c.q).toLowerCase();
+      const emo = c.year ? "📅" : /berg|gipfel|alpen/.test(nm) ? "🏔️" : /fluss|flüsse|see|meer/.test(nm) ? "🌊" : /stadt|städte|einwohner|land|länder/.test(nm) ? "🏙️"
+        : /tier|vogel|vögel/.test(nm) ? "🐾" : /film|serie|kino/.test(nm) ? "🎬" : /musik|song|album/.test(nm) ? "🎵" : /sport|fußball|olymp/.test(nm) ? "🏆" : /turm|gebäude|brücke/.test(nm) ? "🏗️" : "🃏";
+      const pips = Array.from({ length: st.steps }, (_, k) => `<i class="${k + 1 < st.pos || (k + 1 === st.pos && st.step === "reveal") ? "done" : k + 1 === st.pos ? "now" : ""}"></i>`).join("");
       const okMe = st.step === "reveal" && st.result ? st.result.ok[G.myId] : undefined;
       main = `
         <div class="geo-scores hl-pills">${hlChips(v, st)}</div>
         <div class="hl-title"><div class="hl-catname">${esc(st.cat.name)}</div>
           <div class="muted small">${esc(st.cat.q)}${st.cat.approx ? " · Werte ca." : ""}${st.cat.note ? " · " + esc(st.cat.note) : ""}</div></div>
         <div class="hl-main">
+          <div class="hl-pips">${pips}</div>
           <div class="hl-cards">
-            <div class="hl-card known"><div class="hl-name">${esc(st.prev.name)}</div><div class="hl-val">${esc(st.prev.value)}</div></div>
-            <div class="hl-vs ${st.step === "reveal" ? "res" : ""}">${st.step === "reveal" ? (right === "up" ? "▲" : right === "down" ? "▼" : "=") : "VS"}</div>
-            <div class="hl-card ${st.step === "reveal" ? "shown" + (okMe === true ? " good" : okMe === false ? " badres" : "") : "unknown"}"><div class="hl-name">${esc(st.cur.name)}</div>
+            <div class="hl-card known"><span class="hl-emo">${emo}</span><div class="hl-name">${esc(st.prev.name)}</div><div class="hl-val">${esc(st.prev.value)}</div></div>
+            <div class="hl-btns">${btn("up", up, "▲")}<span class="hl-vs ${st.step === "reveal" ? "res" : ""}">${st.step === "reveal" ? (right === "up" ? "▲" : right === "down" ? "▼" : "=") : "vs"}</span>${btn("down", down, "▼")}</div>
+            <div class="hl-card ${st.step === "reveal" ? "shown" + (okMe === true ? " good" : okMe === false ? " badres" : "") : "unknown"}"><span class="hl-emo">${emo}</span><div class="hl-name">${esc(st.cur.name)}</div>
               <div class="hl-val" ${st.step === "reveal" ? `data-count="${esc(st.cur.value)}"` : ""}>${st.step === "reveal" ? esc(st.cur.value) : "?"}</div></div>
           </div>
-          <div class="hl-btns">${btn("up", up, "▲")}${btn("down", down, "▼")}</div>
           <p class="muted small hl-status">${st.step === "guess"
             ? (mine ? `Du hast „${mine === "up" ? up : down}“ gewählt – warte auf die anderen … (du kannst noch umentscheiden)` : "")
             : okMe === true ? "✓ Richtig! Gleich geht es weiter …" : okMe === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
