@@ -3622,3 +3622,4 @@ body.qb-play .fw-main { --fw-top: 370px; }
 @media (prefers-reduced-motion: reduce) { .fq-wait2 .ico { animation: none; } }
 @media (max-width: 899px) { .fq-role { display: none; } .fq-ri { display: inline; } .fq-card .fq-choices { grid-template-columns: 1fr; } .fq-card .fq-choice { min-height: 54px; } }
 @media (max-width: 560px) { .fq-cmp { grid-template-columns: 1fr; } .fq-wait2 { padding: 16px; font-size: 1rem; } }
+.fq-card .fq-complain { justify-self: center; align-self: center; font-size: .92rem; padding: 9px 16px; }

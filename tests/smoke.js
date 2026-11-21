@@ -43,7 +43,7 @@ function serve() {
 
 // Spiele, bei denen ein paar zufällige Klicks nicht weit genug kommen: gezielt eine ganze Runde durchspielen
 const DEEP = {
-  // Antwort sucht Frage: Frage stellen, nicht wortgleich antworten, Fragesteller entscheidet „Zählt“ → Auflösung muss erscheinen
+  // Antwort sucht Frage: Frage stellen, nicht wortgleich antworten, Einspruch, Fragesteller entscheidet „Zählt“ → Auflösung muss erscheinen
   async frage(host, guest, errs) {
     const asker = (await host.evaluate(() => !!document.querySelector("#fq-q"))) ? host : guest, guesser = asker === host ? guest : host;
     const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
@@ -55,6 +55,9 @@ const DEEP = {
     if (!(await until(guesser, "#fq-a"))) return errs.push("Antwort sucht Frage: Antwortfeld erscheint nicht");
     await guesser.type("#fq-a", "etwas ganz anderes");
     await guesser.evaluate(() => document.querySelector(".fq-aform").requestSubmit());
+    // nicht erkannt: der Antwortende sieht die Lösung und legt Einspruch ein, dann entscheidet der Fragesteller
+    if (!(await until(guesser, "[data-chk=appeal]"))) return errs.push("Antwort sucht Frage: „Weiter / Einspruch“ erscheint nicht beim Antwortenden");
+    await guesser.evaluate(() => document.querySelector("[data-chk=appeal]").click());
     if (!(await until(asker, "[data-fqjudge]"))) return errs.push("Antwort sucht Frage: Knöpfe „Zählt / Zählt nicht“ erscheinen nicht");
     await asker.evaluate(() => document.querySelector('[data-fqjudge="1"]').click());
     for (const [p, who] of [[asker, "Fragesteller"], [guesser, "Antwortender"]])

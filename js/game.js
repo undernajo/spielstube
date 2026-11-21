@@ -2400,9 +2400,9 @@
         <li>Er denkt sich eine <b>Frage</b> aus, die in die Kategorie passt und genau diese Antwort hat – z. B. „Wie viele Weise kamen zur Krippe?“.</li>
         <li>Mit <b>„3 Antworten zur Auswahl“</b> (einstellbar in der Lobby) bekommt der Fragensteller zur Kategorie drei Antworten und sucht sich die aus, zu der ihm die kniffligste Frage einfällt.</li>
         <li>Der andere sieht die Frage und tippt seine <b>Antwort</b>. Stimmt sie, bekommt <b>er</b> den Punkt – sonst der <b>Fragensteller</b>.</li>
-        <li>Ist die Antwort nicht wörtlich gleich (z. B. „die drei Könige“), entscheidet der Fragensteller ehrlich, ob sie zählt.</li>
+        <li>Wird die Antwort nicht erkannt (z. B. „die drei Könige“), sieht der Antwortende die Lösung: „Weiter“, wenn er danebenlag, oder „⚖️ Einspruch“ – dann entscheidet der Fragensteller ehrlich, ob sie zählt. Im selben Moment kann er auch „👎 Die Frage war unpassend“ melden.</li>
         <li>Fällt dem Fragensteller keine Frage ein, kann er <b>passen</b> – dann bekommt der andere den Punkt (ebenso, wenn die Zeit abläuft); antwortet der andere nicht rechtzeitig, der Fragensteller.</li>
-        <li><b>Beschwerde:</b> Hat der Antwortende den Punkt verloren und findet die Frage danach unpassend (passt nicht zur Antwort oder Kategorie, nicht eindeutig), kann er sich beschweren. Gibt der Fragensteller ihm recht, zählt die Runde nicht.</li>
+        <li><b>Beschwerde:</b> Findet der Antwortende beim Ansehen der Lösung die Frage unpassend (passt nicht zur Antwort oder Kategorie, nicht eindeutig), tippt er „👎 Die Frage war unpassend“ (auch möglich, wenn seine Zeit abgelaufen ist). Gibt der Fragensteller ihm recht, zählt die Runde nicht.</li>
         <li>Die Rollen wechseln jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
       </ul>
     </details>`;

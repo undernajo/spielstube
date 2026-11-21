@@ -67,7 +67,7 @@
     st.round++;
     if (st.round > 1) st.asker = other(st, st.asker); // abwechselnd fragen
     pick(st);
-    st.question = ""; st.guess = ""; st.result = null; st.step = "write";
+    st.question = ""; st.guess = ""; st.result = null; st.step = "write"; st.appeal = false;
     setDeadline(st, now, "write");
   }
   // nächste Aufgabe aus dem Stapel; bei Auswahl kommen zwei weitere Antworten derselben Kategorie dazu
@@ -129,14 +129,20 @@
         if (!g) return false;
         st.guess = g;
         if (correct(cur(st).a, g)) finish(s, guesser, "right");
-        else { st.step = "judge"; st.deadline = 0; } // nicht wörtlich gleich – der Fragensteller entscheidet
+        else { st.step = "check"; st.deadline = 0; st.appeal = false; } // nicht erkannt – der Antwortende sieht die Lösung: „Weiter“ oder Einspruch
+        return true;
+      }
+      case "fqCheck": { // Antwortender nach „nicht erkannt“: gibt auf (Punkt an den Fragesteller) oder legt Einspruch ein (Fragesteller entscheidet)
+        if (st.step !== "check" || pid !== guesser || a.round !== st.round) return false;
+        if (a.appeal) { st.step = "judge"; st.appeal = true; } else finish(s, st.asker, "wrong");
         return true;
       }
       case "fqJudge":
         if (st.step !== "judge" || pid !== st.asker) return false;
         finish(s, a.ok ? guesser : st.asker, a.ok ? "right" : "wrong");
         return true;
-      case "fqComplain": // der Antwortende findet die Frage unpassend (nur wenn er dadurch den Punkt verloren hat)
+      case "fqComplain": // der Antwortende findet die Frage unpassend – gleich beim Ansehen der Lösung (oder nach abgelaufener Zeit)
+        if (st.step === "check" && pid === guesser && a.round === st.round) { finish(s, st.asker, "wrong"); st.complaint = { state: "open" }; return true; }
         if ((st.step !== "reveal" && st.step !== "final") || pid !== guesser || !st.result || st.result.winner !== st.asker || st.complaint) return false;
         st.complaint = { state: "open" };
         return true;
@@ -173,11 +179,11 @@
     const c = cur(st), open = st.step === "reveal" || st.step === "final";
     return {
       step: st.step, round: st.round, seats: st.seats.slice(), score: { ...st.score }, target: st.opts.target, asker: st.asker, guesser: other(st, st.asker),
-      cat: c.cat, choices: st.options ? st.options.length : 1, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || open ? st.guess : "", li: st.li,
+      cat: c.cat, choices: st.options ? st.options.length : 1, question: st.step === "write" ? "" : st.question, guess: st.step === "judge" || st.step === "check" || open ? st.guess : "", li: st.li, appeal: !!st.appeal,
       deadlineIn: st.deadline ? Math.max(0, st.deadline - now) : 0,
       timerMs: (st.step === "write" ? WRITE[st.opts.write] : ANSWER[st.opts.answer]).ms,
       writeName: WRITE[st.opts.write].name, answerName: ANSWER[st.opts.answer].name,
-      answer: open ? c.a[0] : null, result: st.result ? { ...st.result } : null, history: st.history.slice(),
+      answer: open || st.step === "check" || st.step === "judge" ? c.a[0] : null, result: st.result ? { ...st.result } : null, history: st.history.slice(),
       complaint: st.complaint ? { ...st.complaint } : null,
     };
   }
