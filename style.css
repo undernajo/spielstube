@@ -3733,3 +3733,24 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .pult-main > .gh.gh-rev ~ .geo-bar { display: none; }
   .pult-main > .gh.gh-rev ~ .geo-wrap .geo-map { height: max(360px, calc(100vh - 246px)); }
 }
+
+/* ---------- Zehnkampf: Spielerkarten im Pult-Stil ---------- */
+.zp { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 3px 10px; align-items: center; padding: 12px 14px 14px; border-radius: 16px; background: var(--panel); border: 1.5px solid var(--line); overflow: hidden; transition: border-color .2s, box-shadow .2s, opacity .2s; }
+.zp-lamp { width: 16px; height: 16px; border-radius: 50%; background: #2c2660; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .12); }
+.zp.turn { border-color: var(--pc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent); }
+.zp.turn .zp-lamp { background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: zp-l 1.2s ease-in-out infinite; } @keyframes zp-l { 50% { opacity: .45; } }
+.zp.passed .zp-lamp { background: #2fbf71; box-shadow: 0 0 10px #2fbf71, inset 0 0 0 2px rgba(255, 255, 255, .4); }
+.zp.out .zp-lamp { background: #ef4b5a; box-shadow: 0 0 10px rgba(239, 75, 90, .7); }
+.zp.out { opacity: .72; }
+.zp.winner { border-color: var(--accent); }
+.zp-nm { font: 700 1.05rem Fredoka, sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .zp-nm em { font: 600 .8rem Nunito, sans-serif; font-style: normal; color: var(--muted); }
+.zp small { grid-column: 2; font-weight: 700; font-size: .8rem; color: var(--muted); }
+.zp.turn small { color: var(--pc); } .zp.passed small { color: #7ee2b1; } .zp.out small { color: #ff9aa2; }
+.zp-sc { grid-row: span 2; text-align: right; line-height: 1; } .zp-sc b { font: 700 1.6rem Fredoka, sans-serif; color: var(--pc); } .zp-sc i { font-style: normal; font-size: .8rem; color: var(--muted); font-weight: 700; }
+.zp-open { display: block; font: 700 .8rem Fredoka, sans-serif; color: var(--accent); margin-top: 2px; }
+.zp-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255, 255, 255, .06); }
+.zp-bar i { display: block; height: 100%; background: var(--pc); transition: width .5s; }
+@media (prefers-reduced-motion: reduce) { .zp.turn .zp-lamp { animation: none; } }
+@media (max-width: 640px) {
+  .zp { padding: 8px 10px 10px; gap: 2px 8px; } .zp-lamp { width: 12px; height: 12px; } .zp-nm { font-size: .92rem; } .zp small { font-size: .72rem; } .zp-sc b { font-size: 1.25rem; } .zp-open { font-size: .72rem; }
+}

@@ -1708,21 +1708,29 @@
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
 
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
+    // Spielerkarten im Pult-Stil: Lämpchen (gelb pulsierend = am Zug, grün = gesichert, rot = raus), Status in Worten, Punkte groß, feiner Balken bis zum Ziel
     const chips = v.players.map((p, i) => {
       const turn = v.phase === "playing" && i === v.turn;
       const res = v.roundResult && v.roundResult.find((r) => r.id === p.id);
       const pct = v.qb ? (p.score / 10) * 100 : Math.min(100, (p.score / v.target) * 100); // Querbeet: nur eine Karte
-      // Rundenpunkte nur zeigen, wenn es welche gibt: „+3 offen“ während der Runde, „+3“ nach der Runde
-      const rp = v.phase === "playing" ? (p.status !== "out" && p.roundPts ? `+${p.roundPts} offen` : "") : res && res.gained ? `+${res.gained}` : "";
-      const badge = v.phase === "playing" ? (turn ? "am Zug" : p.paused ? "pausiert" : p.waiting ? "ab nächster Runde" : statusLabel[p.status]) : "";
-      return `<div class="chip ${turn ? "turn" : ""} st-${p.status} ${p.waiting ? "waiting" : ""} ${p.paused ? "paused" : ""} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
-        <div class="chip-l1"><span class="pdot ${p.connected ? "" : "off"}" title="${p.connected ? "verbunden" : "getrennt"}"></span>
-          <span class="chip-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
-          <span class="chip-score"><b>${p.score}</b>${v.qb ? "" : `<small>/${v.target}</small>`}</span></div>
-        <div class="bar"><i style="width:${pct}%"></i></div>
-        <div class="chip-l2"><span class="rpts ${res && res.gained ? "pos" : ""}">${rp}</span>
-          ${badge ? `<span class="badge">${badge}</span>` : ""}</div>
-      </div>`;
+      let st = "wait", txt = "wartet";
+      if (v.phase === "playing") {
+        if (p.paused) txt = "pausiert"; else if (p.waiting) txt = "ab nächster Runde";
+        else if (turn) { st = "turn"; txt = p.id === myId ? "du bist dran" : "ist am Zug"; }
+        else if (p.status === "passed") { st = "passed"; txt = `gesichert +${p.roundPts || 0}`; }
+        else if (p.status === "out") { st = "out"; txt = p.lostPts ? `raus – ${p.lostPts} ${p.lostPts === 1 ? "Punkt" : "Punkte"} weg` : "raus"; }
+      } else if (res) {
+        if (res.how === "wrong") { st = "out"; txt = res.lost ? `raus – ${res.lost} ${res.lost === 1 ? "Punkt" : "Punkte"} weg` : "raus"; }
+        else if (res.gained) { st = "passed"; txt = `+${res.gained} in dieser Runde`; }
+        else txt = "nichts geholt";
+        if (v.phase === "roundEnd" && v.ready && v.ready[p.id]) txt = "bereit · " + txt;
+      }
+      if (!p.connected) txt = "getrennt";
+      const open = v.phase === "playing" && p.status !== "out" && p.roundPts && st !== "passed" ? p.roundPts : 0;
+      return `<div class="zp ${st} ${v.winners && v.winners.includes(p.id) ? "winner" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="zp-lamp"></span>
+        <b class="zp-nm">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</b>
+        <span class="zp-sc"><b>${p.score}</b>${v.qb ? "" : `<i>/${v.target}</i>`}${open ? `<span class="zp-open">+${open} offen</span>` : ""}</span>
+        <small>${esc(txt)}</small><span class="zp-bar"><i style="width:${pct}%"></i></span></div>`;
     }).join("");
 
     // Lichterkranz der Show-Bühne (28 ruhige Lämpchen am Rand)
