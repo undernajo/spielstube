@@ -1,7 +1,7 @@
 # Spielstube
 
 Kleine Online-Spielesammlung für zwei oder mehr Spieler: Quiz- und Wissensspiele, Erdkunde, Karten-, Würfel- und Taktikspiele und die Stubenmeisterschaft quer durch alle Spiele.
-Es braucht keinen eigenen Server. Die Spielzüge laufen über einen öffentlichen MQTT-Vermittlungsserver (HiveMQ, bei Ausfall EMQX). Das funktioniert hinter jedem Router.
+Es braucht keinen eigenen Server. Die Schriften (Fredoka, Nunito, Noto Color Emoji für Flaggen) liegen im Ordner `fonts/` und werden nicht von Google geladen. Die Spielzüge laufen über einen öffentlichen MQTT-Vermittlungsserver (HiveMQ, bei Ausfall EMQX). Das funktioniert hinter jedem Router.
 
 ## Spielen
 
