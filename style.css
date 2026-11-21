@@ -3093,9 +3093,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .sv-reveal { align-content: center; }
 }
 /* Busfahrt: Spielfeld als grüner Spieltisch mit Holzrand (wie Siebzehn und Vier) */
-.bb-board { border: 12px solid #6b4224; border-radius: 34px; outline: 1px solid rgba(255, 255, 255, .08); outline-offset: -12px;
-  background: radial-gradient(120% 90% at 50% 40%, #237a51 0%, #17603e 55%, #0f4a2f 100%);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, .45), inset 0 0 60px rgba(0, 0, 0, .45), 0 0 0 1px #4f2f17; }
+
 .bb-board .bb-slot { border-color: rgba(255, 255, 255, .22); }
 .bb-board .bb-slot.cur { border-color: var(--accent); background: rgba(255, 200, 61, .1); }
 .bb-board .bb-stops::before { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .3) 0 6px, transparent 6px 11px); }
@@ -3107,7 +3105,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .bb-board .bb-scale span:not(.ref), .bb-board .bb-scale em { color: #cfe9da; }
 .bb-board .bb-pot.off, .bb-board .bb-halt { background: rgba(10, 30, 20, .6); }
 .bb-board .kg-res { background: rgba(10, 30, 20, .55); }
-@media (max-width: 640px) { .bb-board { border-width: 7px; border-radius: 22px; outline-offset: -7px; } }
+
 
 /* Rundenende: eigene Box schmal über der Wertung, Wertungszeilen flacher */
 .bb-note-box.slim { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 4px 12px; padding: 8px 18px; max-width: 640px; }
@@ -3120,3 +3118,13 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .bb-results.two { width: min(100%, 780px); grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bb-results.two .kg-res { grid-template-columns: minmax(0, 1fr) auto 36px; } .bb-results.two .kg-res > span:nth-child(3) { display: none; }
 }
+
+/* ---------- Gemeinsamer Spieltisch aller Kartenspiele (Watten, Schnapsen, Busfahrt, Siebzehn und Vier, Stichhaltig):
+   satter Filz, dünner dunkelgrüner Rand, leichte Tiefe nach innen, Ecken wie die übrigen Kästen ---------- */
+:root { --felt: radial-gradient(120% 90% at 50% 40%, #237a51 0%, #17603e 55%, #0f4a2f 100%); --felt-edge: #0b3d26; --felt-ink: #cfe9da; }
+.wtable, .bb-board, .sv-felt, .st-table {
+  background: var(--felt); border: 1px solid var(--felt-edge); border-radius: 22px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06), inset 0 0 60px rgba(0, 0, 0, .4), 0 10px 26px rgba(0, 0, 0, .3); }
+.sv-rim { padding: 0; background: none; box-shadow: none; border-radius: 22px; }
+@media (max-width: 640px) { .wtable, .bb-board, .sv-felt, .st-table { border-radius: 16px; } }
+.st-table .muted, .st-table .small.muted, .wtable .muted { color: var(--felt-ink); }
