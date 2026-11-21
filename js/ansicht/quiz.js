@@ -48,8 +48,7 @@
       x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); d += (i ? "L" : "M") + x.toFixed(3) + " " + y.toFixed(3); } return d + "Z"; };
     const ds = polys.flatMap((p) => p.map(pathOf)), d = ds.join("");
     const w = x1 - x0, h = y1 - y0, pad = Math.max(w, h) * 0.06;
-    if (draw) { // jeder Teilumriss einzeln: Strich läuft einmal herum (pathLength 1), danach füllt er sich; leises Stiftgeräusch
-      const K = window.S10Klang; if (K) K.play(sfx, (c, t) => K.noise(c, t, 1.1, { type: "bandpass", freq: 3200, q: 1.2, a: 0.05, peak: 0.05, sweepTo: 4200 }));
+    if (draw) { // jeder Teilumriss einzeln: Strich läuft einmal herum (pathLength 1), danach füllt er sich (ohne Geräusch)
       return `<svg class="umriss-svg fx-draw" style="--sw:${(Math.max(w, h) / 140).toFixed(4)}" viewBox="${(x0 - pad).toFixed(3)} ${(y0 - pad).toFixed(3)} ${(w + 2 * pad).toFixed(3)} ${(h + 2 * pad).toFixed(3)}" preserveAspectRatio="xMidYMid meet">
         <path class="u-fill" d="${d}" fill="#ffd24d" fill-rule="evenodd"/>${ds.map((x) => `<path class="u-line" d="${x}" pathLength="1" fill="none" stroke="#fff6cf" stroke-linejoin="round"/>`).join("")}</svg>`;
     }
