@@ -761,7 +761,7 @@
     for (const [id, pc] of [...pcOut]) {
       const tr = pc.getTransceivers().find((x) => x.receiver && x.receiver.track && x.receiver.track.kind === kind);
       if (tr && tr.sender) { try { await tr.sender.replaceTrack(track); if (track && kind === "video") applyQuality(id); continue; } catch {} }
-      if (track) { pc.close(); pcOut.delete(id); rtcSend(id, { t: "bye" }); }
+      if (track) { pc.close(); pcOut.delete(id); rtcSend(id, { t: "bye", cid: pc._cid }); }
     }
   }
   let mediaBusy = false;
@@ -794,7 +794,7 @@
     for (const id of hungUp) rtcSend(id, { t: "incall", cam: false, mic: false });
     if (camStream) camStream.getTracks().forEach((t) => t.stop());
     camStream = null; camOn = micOn = false;
-    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
+    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye", cid: pc._cid }); }
     pcOut.clear(); camOpen = true;
     renderCamDock(); render();
   }
@@ -807,7 +807,7 @@
     callLeft = true; try { sessionStorage.setItem("s10-call-left", "1"); } catch {}
     if (camStream) camStream.getTracks().forEach((t) => t.stop());
     camStream = null; camOn = micOn = false;
-    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
+    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye", cid: pc._cid }); }
     pcOut.clear();
     for (const [id, pc] of pcIn) { pc.close(); rtcSend(id, { t: "hangup" }); forgetPeer(id); }
     pcIn.clear(); remoteCams.clear(); iceWait.clear(); wantQ.clear();
@@ -881,18 +881,22 @@
     for (const [id, pc] of pcOut) if (hungUp.has(id) || !ps.includes(id) || pc.connectionState === "failed" || pc.connectionState === "closed") { pc.close(); pcOut.delete(id); }
     for (const id of ps) if (!pcOut.has(id) && !hungUp.has(id)) {
       const pc = new RTCPeerConnection(RTC_CFG); pcOut.set(id, pc);
+      pc._cid = Math.random().toString(36).slice(2, 10); // Kennung: Antworten/Kandidaten einer alten Verbindung nie auf eine neue anwenden
       // für Bild und Ton je einen Kanal – auch wenn eines gerade aus ist, damit späteres Einschalten nur die Spur tauscht
       for (const kind of ["audio", "video"]) { const t = liveTrack(kind); if (t) pc.addTrack(t, camStream); else pc.addTransceiver(kind, { direction: "sendonly", streams: [camStream] }); }
-      pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "out", c: e.candidate.toJSON() }); };
-      try { await pc.setLocalDescription(await pc.createOffer()); rtcSend(id, { t: "offer", sdp: pc.localDescription.sdp, ...mediaState() }); } catch { pcOut.delete(id); }
+      pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "out", cid: pc._cid, c: e.candidate.toJSON() }); };
+      try { await pc.setLocalDescription(await pc.createOffer()); rtcSend(id, { t: "offer", cid: pc._cid, sdp: pc.localDescription.sdp, ...mediaState() }); } catch { pcOut.delete(id); }
     }
   }
   setInterval(camSync, 4000);
-  async function addIce(key, pc, c) {
-    if (pc && pc.remoteDescription) { try { await pc.addIceCandidate(c); } catch {} }
-    else { if (!iceWait.has(key)) iceWait.set(key, []); iceWait.get(key).push(c); }
+  async function addIce(key, pc, c, cid) {
+    if (pc && pc.remoteDescription && (!cid || !pc._cid || cid === pc._cid)) { try { await pc.addIceCandidate(c); } catch {} }
+    else if (!pc || !pc.remoteDescription) { if (!iceWait.has(key)) iceWait.set(key, []); iceWait.get(key).push({ c, cid }); }
   }
-  async function flushIce(key, pc) { for (const c of iceWait.get(key) || []) { try { await pc.addIceCandidate(c); } catch {} } iceWait.delete(key); }
+  async function flushIce(key, pc, cid) {
+    for (const x of iceWait.get(key) || []) if (!x.cid || !cid || x.cid === cid) { try { await pc.addIceCandidate(x.c); } catch {} }
+    iceWait.delete(key);
+  }
   async function onRtc(m) {
     if (!m || typeof m !== "object" || !m.from || m.from === myId) return;
     const id = String(m.from).slice(0, 40);
@@ -902,19 +906,19 @@
         hungUp.delete(id); // wer mir sendet, ist (wieder) im Anruf
         const old = pcIn.get(id); if (old) old.close();
         remoteMedia.set(id, { cam: m.cam !== false, mic: m.mic !== false }); sentQ.delete(id);
-        const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc);
+        const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc); pc._cid = m.cid || null;
         pc.ontrack = (e) => { remoteCams.set(id, e.streams[0] || new MediaStream([e.track])); renderCamDock();
           setTimeout(() => { const t = camVideos.get(id), v = t && t.querySelector("video"); if (v && v.paused) v.play().catch(() => camNeedTap(true)); }, 1200); };
-        pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "in", c: e.candidate.toJSON() }); };
+        pc.onicecandidate = (e) => { if (e.candidate) rtcSend(id, { t: "ice", dir: "in", cid: pc._cid, c: e.candidate.toJSON() }); };
         pc.onconnectionstatechange = () => { if (pc.connectionState === "failed" && pcIn.get(id) === pc) { remoteCams.set(id, "failed"); renderCamDock(); } };
-        await pc.setRemoteDescription({ type: "offer", sdp: m.sdp }); await flushIce("in:" + id, pc);
+        await pc.setRemoteDescription({ type: "offer", sdp: m.sdp }); await flushIce("in:" + id, pc, pc._cid);
         await pc.setLocalDescription(await pc.createAnswer());
         const q = myQ(); sentQ.set(id, q);
-        rtcSend(id, { t: "answer", sdp: pc.localDescription.sdp, q }); // gleich mitteilen, wie groß ich das Bild sehe
+        rtcSend(id, { t: "answer", cid: pc._cid, sdp: pc.localDescription.sdp, q }); // gleich mitteilen, wie groß ich das Bild sehe
       } else if (m.t === "answer") {
         const pc = pcOut.get(id);
-        if (pc && pc.signalingState === "have-local-offer") {
-          await pc.setRemoteDescription({ type: "answer", sdp: m.sdp }); await flushIce("out:" + id, pc);
+        if (pc && pc.signalingState === "have-local-offer" && (!m.cid || m.cid === pc._cid)) {
+          await pc.setRemoteDescription({ type: "answer", sdp: m.sdp }); await flushIce("out:" + id, pc, pc._cid);
           if (isQ(m.q)) wantQ.set(id, m.q);
           applyQuality(id);
         }
@@ -923,7 +927,7 @@
       } else if (m.t === "media") { // der andere hat Kamera oder Mikrofon ein-/ausgeschaltet
         remoteMedia.set(id, { cam: !!m.cam, mic: !!m.mic }); renderCamDock();
       } else if (m.t === "ice" && m.c) {
-        if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c); else await addIce("out:" + id, pcOut.get(id), m.c);
+        if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c, m.cid); else await addIce("out:" + id, pcOut.get(id), m.c, m.cid);
       } else if (m.t === "hangup") { // der andere hat aufgelegt: ihm nichts mehr schicken (nur melden, dass ich im Anruf bin)
         hungUp.add(id); if (camOn || micOn) rtcSend(id, { t: "incall", ...mediaState() }); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id);
         const pi = pcIn.get(id); if (pi) pi.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
@@ -934,7 +938,8 @@
       } else if (m.t === "rejoin") { // der andere ist wieder eingestiegen: Verbindung zu ihm frisch aufbauen
         hungUp.delete(id); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id); iceWait.delete("out:" + id); wantQ.delete(id); camSync();
       } else if (m.t === "bye") {
-        const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
+        const pc = pcIn.get(id); if (pc && m.cid && pc._cid && m.cid !== pc._cid) return; // gilt einer älteren Verbindung
+        if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
       }
     } catch (e) { /* einzelne Fehler beim Verbindungsaufbau ignorieren – camSync versucht es erneut */ }
   }
