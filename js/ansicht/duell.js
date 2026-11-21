@@ -28,8 +28,8 @@
     }, 200);
     const key = [v.code, st.round, st.step, st.turn, st.moves.length, st.judge ? st.judge.text : ""].join(":");
     // Duell-Arena: die beiden Spieler stehen sich links und rechts gegenüber, wer dran ist, leuchtet
-    const side = (id) => { const on = st.step === "turn" && st.turn === id;
-      return `<div class="du-side ${on ? "turn" : ""}" style="--pc:${colorOf(id)}"><span class="du-av">${esc((nameOf(id)[0] || "?").toUpperCase())}</span>
+    const side = (id) => { const on = st.step === "turn" && st.turn === id, res = st.step === "roundEnd" && st.result && !st.result.voided;
+      return `<div class="du-side ${on ? "turn" : ""} ${res ? (st.result.winner === id ? "won" : "dim") : ""}" style="--pc:${colorOf(id)}"><span class="du-av">${esc((nameOf(id)[0] || "?").toUpperCase())}</span>
         <b class="du-nm">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</b><span class="du-sc">${st.score[id]}<small>/${st.target}</small></span>
         <span class="du-tag">${on ? (id === G.myId ? "du bist dran" : "ist dran") : st.step === "turn" ? "wartet" : st.step === "judge" ? (opp(st.judge.by) === id ? "entscheidet" : "wartet") : st.result && !st.result.voided && st.result.winner === id ? "Punkt!" : "–"}</span></div>`; };
     if (duRendered === key && app.querySelector(".du-main")) { const a = app.querySelector(".du-sa"), b = app.querySelector(".du-sb"); if (a) a.innerHTML = side(st.seats[0]); if (b) b.innerHTML = side(st.seats[1]); return; }
@@ -40,6 +40,8 @@
         <span class="du-no">${i + 1}</span><span class="du-t">${it.t ? esc(it.t) : "?"}</span>${found ? `<span class="du-by" title="${esc(nameOf(it.by))}">${esc((nameOf(it.by)[0] || "?").toUpperCase())}</span>` : ""}</li>`;
     }).join("");
     const last = st.moves.slice(-1)[0];
+    const badRow = (st.step === "roundEnd" || st.step === "final") && st.result && st.result.why === "wrong" && last && last.text
+      ? `<li class="du-row bad"><span class="du-no">✗</span><span class="du-t">${esc(last.text)}</span></li>` : "";
     const why = { wrong: "gehört nicht dazu", dup: "wurde schon genannt", time: "", full: "" };
     let action = "";
     if (st.step === "turn") {
@@ -58,8 +60,16 @@
       const reason = r.why === "full" ? `Alle ${st.items.length} gefunden – ${esc(nameOf(r.winner))} hat die letzte genannt.`
         : r.why === "time" ? `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`
         : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
-      if (st.step === "roundEnd") action = `<div class="banner ${iWon ? "win" : seated ? "lose" : ""}"><b>Punkt für ${esc(nameOf(r.winner))}${iWon ? " – das bist du!" : ""}</b>
-          <div class="small">${reason}</div>
+      // Wertungskarte: große Plakette (+1 bzw. ✗), schiebt sich von der Seite des Punktenden herein
+      const who = r.loser === G.myId ? "Du" : esc(nameOf(r.loser)), said = `<span class="du-q">„${esc(last ? last.text : "")}“</span>`;
+      const why2 = r.why === "full" ? `Alle ${st.items.length} gefunden – ${r.winner === G.myId ? "du hast" : esc(nameOf(r.winner)) + " hat"} die letzte genannt.`
+        : r.why === "time" ? (r.loser === G.myId ? "Deine Zeit ist abgelaufen." : `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`)
+        : `${who}: ${said} ${why[r.why]}.`;
+      const iLost = seated && !iWon;
+      if (st.step === "roundEnd" && !r.voided) action = `<div class="du-score ${r.winner === st.seats[1] ? "from-r" : ""} ${iLost ? "lose" : ""}" style="--pc:${colorOf(r.winner)}">
+          <span class="du-plq">${iLost ? "✗" : "+1"}</span><h3>${iWon ? "Punkt für dich!" : `Punkt für ${esc(nameOf(r.winner))}`}</h3><p>${why2}</p>
+          <div class="du-score-nb">${seated || G.isHost ? `<button id="du-next" class="btn primary next-btn">Nächste Runde</button>` : ""}<span class="du-stand">Stand ${st.score[st.seats[0]]} : ${st.score[st.seats[1]]}</span></div></div>`;
+      else if (st.step === "roundEnd") action = `<div class="banner"><b>Runde zählt nicht</b><div class="small">${reason}</div>
           <div class="banner-actions">${seated || G.isHost ? `<button id="du-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`;
       else action = `<div class="banner win"><div class="trophy">🏆</div><b>${esc(nameOf(r.winner))} gewinnt ${st.score[r.winner]} : ${st.score[opp(r.winner)]}!</b>
           <div class="small">${reason}</div>
@@ -79,7 +89,7 @@
           <div class="du-mid">
           <div class="du-title">${st.list.cat ? `<div class="du-cat">${esc(st.list.cat)}</div>` : ""}<h2>${esc(st.list.q)}</h2><div class="du-count">${st.items.filter((x) => x.by).length} von ${st.items.length} gefunden</div>${st.list.note ? `<div class="muted small">${esc(st.list.note)}</div>` : ""}</div>
           <div class="du-action">${action}</div>
-          <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil(st.items.length / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil(st.items.length / (st.items.length > 10 ? 2 : 1))}">${rows}</ol>
+          <ol class="du-list ${duCols(st.items.length) > 2 ? "many" : ""}" style="--cols:${duCols(st.items.length)};--rows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / duCols(st.items.length))};--mcols:${st.items.length > 10 ? 2 : 1};--mrows:${Math.ceil((st.items.length + (badRow ? 1 : 0)) / (st.items.length > 10 ? 2 : 1))}">${rows}${badRow}</ol>
           ${log ? `<ul class="du-log">${log}</ul>` : ""}
           ${!seated ? `<p class="muted small du-watch">Du schaust zu – es spielen ${esc(nameOf(st.seats[0]))} und ${esc(nameOf(st.seats[1]))}.</p>` : ""}
           </div>
