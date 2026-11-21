@@ -1772,6 +1772,18 @@
       banner = myTurn
         ? `<button id="pass" class="btn pass-btn">${me.roundPts ? `✋ Passen und ${me.roundPts} Punkt${me.roundPts > 1 ? "e" : ""} sichern` : "✋ Passen"}</button>`
         : isHost && !cur.connected ? `<div class="banner row"><div class="banner-text"><b>${esc(cur.name)}</b> ist getrennt.</div><button id="skip" class="btn ghost sm">Überspringen</button></div>` : "";
+    } else if (v.phase === "roundEnd" && v.roundResult && v.roundResult.find((r) => r.id === myId && r.how !== "pause")) {
+      // Wertungskarte: was hast du in dieser Runde gesichert oder verloren?
+      const r = v.roundResult.find((x) => x.id === myId), g = r.gained;
+      const plq = r.how === "wrong" ? "✗" : g > 0 ? "+" + g : "0";
+      const h = r.how === "wrong" ? (r.lost ? `Raus – ${r.lost} ${r.lost === 1 ? "Punkt" : "Punkte"} weg` : "Raus in dieser Runde") : g > 0 ? `${g} ${g === 1 ? "Punkt" : "Punkte"} gesichert!` : "Diesmal nichts geholt";
+      const best = v.roundResult.filter((x) => x.id !== myId && x.gained > 0).sort((a, b) => b.gained - a.gained)[0];
+      const p = r.how === "wrong" ? `<span class="du-q">„${esc(r.item)}“</span> war falsch.${r.lost ? ` Deine ${r.lost} offenen Punkte sind verloren.` : ""}`
+        : g > 0 ? (r.how === "passed" ? "Du hast rechtzeitig gepasst." : "Alle Felder sind aufgedeckt – deine Punkte zählen.")
+        : best ? `${esc(nameOf(best.id))} hat ${best.gained} ${best.gained === 1 ? "Punkt" : "Punkte"} gesichert.` : "Niemand hat in dieser Runde gepunktet.";
+      banner = `<div class="du-score zk-score ${r.how === "wrong" ? "lose" : g > 0 ? "" : "zero"}" style="--pc:${g > 0 ? colorOf(myId) : "#8a7fb8"}"><span class="du-plq">${plq}</span>
+        <h3>${h}</h3><p>${p}</p>
+        <div class="du-score-nb">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}<span class="du-stand">Gesamt ${me.score} / ${v.target}</span></div></div>`;
     } else if (v.phase === "roundEnd") {
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
         <div class="banner-actions">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}</div></div>`;

@@ -7,7 +7,7 @@
   // ---------- Fragewand ----------
   // Animationen nur für Neues (nicht nach Neuladen): Frage wächst aus dem Feld, Ergebnis kurz zeigen, dann dreht sich das Feld um.
   // Zeitbasiert, damit Neuzeichnen sie nur fortsetzt.
-  const RES_MS = 2600, FLIP_MS = 600;
+  const RES_MS = 4500, FLIP_MS = 600;
   let fwKey = null, fwOpenAt = { key: null, t: 0 }, fwRes = { n: null, t: 0 }, fwTimer = null, fwSent = null;
   const reduce = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -81,11 +81,16 @@
         ${head(c.t, cat, c.pts, c.c ? "4 Antworten zur Auswahl" : "eintippen")}${body}</div>`;
     } else if (showRes) {
       const l = st.last, cat = st.cats[l.k];
-      card = `<div class="fw-card res" style="animation:none">${head(l.t, cat, l.pts)}
-        <div class="fw-ans ${l.ok ? "" : "no"}">${l.ok ? "✓" : "✗"} ${esc(l.a)}</div>
-        <div class="fw-line" style="--pc:${colorOf(l.by)}"><span class="pdot"></span><b>${esc(nameOf(l.by))}</b>
-          <span class="g">${l.given ? `„${esc(l.given)}“${l.judged ? (l.ok ? " · Einspruch anerkannt" : " · Einspruch abgelehnt") : ""}` : "wusste es nicht"}</span>
-          ${l.ok ? `<b class="ok">+${l.pts}</b>` : `<b class="no">0</b>`}</div></div>`;
+      // Wertungskarte: große Plakette (+Punkte bzw. ✗), Frage, richtige Antwort, Stand; verschwindet von selbst (Balken)
+      const mineR = l.by === me, who = mineR ? "dich" : esc(nameOf(l.by)), lane = st.seats.indexOf(l.by) >= st.seats.length / 2;
+      const said = l.given ? `${mineR ? "du sagtest" : esc(nameOf(l.by)) + " sagte"} <span class="du-q">„${esc(l.given)}“</span>` : `${mineR ? "du wusstest" : esc(nameOf(l.by)) + " wusste"} es nicht`;
+      const judged = l.judged ? (l.ok ? " · Einspruch anerkannt" : " · Einspruch abgelehnt") : "";
+      const stand = st.seats.map((id) => `${id === me ? "Du" : esc(nameOf(id))} ${st.score[id] || 0}`).join(" · ");
+      card = `<div class="du-score fw-score ${lane ? "from-r" : ""} ${l.ok ? "" : "lose"}" style="--pc:${l.ok ? colorOf(l.by) : "#8a7fb8"};--rms:${Math.max(0, resMs - resAge)}ms">
+        <span class="du-plq ${String(l.pts).length > 1 ? "n2" : ""}">${l.ok ? "+" + l.pts : "✗"}</span>
+        <h3>${l.ok ? (mineR ? `Richtig – ${l.pts} Punkte für dich!` : `${l.pts} Punkte für ${who}`) : mineR ? "Leider falsch" : `${esc(nameOf(l.by))} lag falsch`}</h3>
+        <p>„${esc(l.t)}“${l.ok ? judged : ` – ${said}${judged}. Die ${l.pts} Punkte bekommt niemand.`}<br><span class="fw-sans">${esc(l.a)}</span></p>
+        <div class="du-score-nb"><span class="du-stand">${stand}</span></div><span class="fw-sbar"><i></i></span></div>`;
     } else if (st.step === "final") {
       const rank = st.seats.slice().sort((a, b) => (st.score[b] || 0) - (st.score[a] || 0));
       const w = st.winners || [];

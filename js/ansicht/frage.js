@@ -89,12 +89,17 @@
           ${iAsk ? `<div class="judge-ask">Passt die Frage nicht zur Antwort oder Kategorie, oder war sie nicht eindeutig? Dann zählt die Runde nicht.</div>
             <div class="banner-actions"><button class="btn primary" data-fqcomplaint="1">Stimmt – Runde zählt nicht</button><button class="btn ghost" data-fqcomplaint="0">Nein, die Frage war fair</button></div>`
             : `<div class="muted small">${esc(nameOf(st.asker))} entscheidet …</div>`}</div>` : ""}
-        <div class="banner fq-result ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
+        ${st.step !== "final" && !r.voided ? `<div class="du-score ${r.winner === st.seats[1] ? "from-r" : ""} ${seated && !iWon ? "lose" : ""}" style="--pc:${colorOf(r.winner)}">
+          <span class="du-plq">${seated && !iWon ? "✗" : "+1"}</span><h3>${iWon ? "Punkt für dich!" : "Punkt für " + esc(nameOf(r.winner))}</h3>
+          <p>${reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</p>
+          <div class="du-score-nb">${cp && cp.state === "open" ? "" : seated || G.isHost ? `<button id="fq-next" class="btn primary next-btn">Nächste Runde</button>` : ""}
+            ${iGuess && r.winner === st.asker && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}<span class="du-stand">Stand ${st.score[st.seats[0]]} : ${st.score[st.seats[1]]}</span></div></div>`
+        : `<div class="banner fq-result ${iWon ? "win" : seated && !r.voided ? "lose" : ""}">${st.step === "final" ? `<div class="trophy">🏆</div><b>${iWon ? "Du gewinnst" : esc(nameOf(r.winner)) + " gewinnt"} ${st.score[r.winner]} : ${st.score[st.seats.find((x) => x !== r.winner)]}!</b>`
           : r.voided ? `<b>Diese Runde zählt nicht</b>` : `<b>${iWon ? "Punkt für dich!" : "Punkt für " + esc(nameOf(r.winner))}</b>`}
           <div class="small">${r.voided ? `Beschwerde angenommen – die Frage war unpassend.` : reason}${cp && cp.state === "rejected" ? ` Beschwerde abgelehnt – ${esc(nameOf(st.asker))} fand die Frage fair.` : ""}</div>
           <div class="banner-actions">${iGuess && r.winner === st.asker && !r.voided && !cp ? `<button id="fq-complain" class="btn ghost">👎 Frage war unpassend</button>` : ""}
             ${cp && cp.state === "open" ? "" : st.step === "final" ? `<button id="fq-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}`
-            : seated || G.isHost ? `<button id="fq-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`;
+            : seated || G.isHost ? `<button id="fq-next" class="btn primary next-btn">Nächste Runde</button>` : ""}</div></div>`}`;
     }
     app.innerHTML = `
       <main class="screen game slf du fq">

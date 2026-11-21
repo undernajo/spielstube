@@ -116,7 +116,7 @@
     s.round++;
     s.roundResult = null; s.pending = null;
     // Pausierte (in der Lobby gesetzt) spielen nicht mit: gelten als „raus“ und werden beim Reihum übersprungen
-    s.players.forEach((p) => { p.roundPts = 0; p.status = p.paused ? "out" : "active"; p.waiting = false; });
+    s.players.forEach((p) => { p.roundPts = 0; p.status = p.paused ? "out" : "active"; p.waiting = false; p.lostPts = 0; p.lostItem = null; });
     s.startPlayer = (s.startPlayer + 1) % s.players.length;
     for (let k = 0; k < s.players.length && s.players[s.startPlayer].status !== "active"; k++) s.startPlayer = (s.startPlayer + 1) % s.players.length;
     s.turn = s.startPlayer;
@@ -271,7 +271,7 @@
         : `${p.name}: „${item[0]}“ → ${fmt(card, v)} ✓${card.type === "estimate" || card.type === "decade" ? ` (genau: ${fmt(card, item[1])})` : ""}${note} (+1, jetzt ${p.roundPts})`);
     } else {
       const lost = p.roundPts;
-      p.roundPts = 0; p.status = "out";
+      p.roundPts = 0; p.status = "out"; p.lostPts = lost; p.lostItem = item[0]; // für die Wertungskarte am Rundenende
       event(s, "bad", (card.type === "tf"
         ? `${p.name}: „${item[0]}“ trifft NICHT zu ✗`
         : card.type === "estimate"
@@ -322,7 +322,7 @@
     s.roundResult = s.players.map((p) => {
       const gained = p.status === "out" ? 0 : p.roundPts;
       p.score += gained;
-      return { id: p.id, gained };
+      return { id: p.id, gained, how: p.paused ? "pause" : p.lostItem ? "wrong" : p.status === "passed" ? "passed" : "end", lost: p.lostPts || 0, item: p.lostItem || null };
     });
     const max = Math.max(...s.players.map((p) => p.score));
     if (max >= s.target) {
