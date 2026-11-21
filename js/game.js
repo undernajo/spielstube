@@ -737,6 +737,7 @@
   // hungUp: wer bei mir aufgelegt hat – dem schicke ich kein Bild, bis er „rejoin“ meldet
   let callLeft = false; try { callLeft = sessionStorage.getItem("s10-call-left") === "1"; } catch {}
   const hungUp = new Set();
+  const callers = new Map(); // id → true: wer laut eigener Meldung gerade im Anruf ist (wenn ich aufgelegt habe)
   const pcOut = new Map(), pcIn = new Map(), remoteCams = new Map(), iceWait = new Map();
   const remoteMedia = new Map(); // ID → { cam, mic }: was der andere gerade eingeschaltet hat (Spuren bleiben bestehen, auch wenn aus)
   function rtcSend(to, msg) { if (mq && roomTopic) sendSealed(T("rtc/" + to), { ...msg, from: myId }, { qos: 1 }); }
@@ -790,6 +791,7 @@
   }
   // beides aus: alles beenden und die Verbindungen schließen
   function mediaOff() {
+    for (const id of hungUp) rtcSend(id, { t: "incall", cam: false, mic: false });
     if (camStream) camStream.getTracks().forEach((t) => t.stop());
     camStream = null; camOn = micOn = false;
     for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
@@ -798,6 +800,7 @@
   }
   function callRejoin() {
     callLeft = false; try { sessionStorage.removeItem("s10-call-left"); } catch {}
+    callers.clear(); callHint();
     for (const id of camPeers()) rtcSend(id, { t: "rejoin" });
   }
   function hangUp() {
@@ -810,12 +813,31 @@
     pcIn.clear(); remoteCams.clear();
     if (camStage) setCamStage(false);
     camOpen = true; renderCamDock(); render();
-    toast("Anruf beendet – mit 📷 oder 🎤 steigst du wieder ein.");
+    callHint();
+    // Hinweis nur, wenn nicht ohnehin „… ist im Anruf · Beitreten“ erscheint (die anderen melden sich kurz nach dem Auflegen)
+    setTimeout(() => { if (callLeft && !callHintEl.classList.contains("show")) toast("Anruf beendet – mit 📷 oder 🎤 steigst du wieder ein."); }, 1500);
+  }
+  // Schnelle Reaktionen: steigen kurz über dem eigenen Kamerabild auf – alle im Anruf sehen sie
+  const REACTS = ["👏", "😂", "🎉", "😮"];
+  let reactAt = 0;
+  function reactShow(id, e) {
+    const tile = camVideos.get(id); if (!tile || !REACTS.includes(e)) return;
+    const box = tile.querySelector(".camreacts"), r = document.createElement("i");
+    r.textContent = e; r.style.left = 20 + Math.random() * 60 + "%"; box.appendChild(r);
+    setTimeout(() => r.remove(), 2200);
+  }
+  function react(e) {
+    if (!(camOn || micOn) || Date.now() - reactAt < 600) return;
+    reactAt = Date.now(); reactShow("me", e);
+    for (const id of camPeers()) if (!hungUp.has(id)) rtcSend(id, { t: "react", e });
   }
   const camToggle = () => mediaToggle("video");
   const micToggle = () => mediaToggle("audio");
   const mediaState = () => ({ cam: camOn, mic: micOn });
-  function sendMediaState() { for (const id of pcOut.keys()) rtcSend(id, { t: "media", ...mediaState() }); }
+  function sendMediaState() {
+    for (const id of pcOut.keys()) rtcSend(id, { t: "media", ...mediaState() });
+    for (const id of hungUp) rtcSend(id, { t: "incall", ...mediaState() }); // wer aufgelegt hat, erfährt, dass ich im Anruf bin
+  }
 
   // Bildqualität je Empfänger: Jeder meldet, wie groß er das Bild gerade sieht; geschickt wird nur so viel, wie dort ankommt.
   // Die Kamera nimmt weiter in HD auf – verkleinert wird nur beim Versenden, im laufenden Betrieb und ohne Neuaufbau.
@@ -901,9 +923,13 @@
         remoteMedia.set(id, { cam: !!m.cam, mic: !!m.mic }); renderCamDock();
       } else if (m.t === "ice" && m.c) {
         if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c); else await addIce("out:" + id, pcOut.get(id), m.c);
-      } else if (m.t === "hangup") { // der andere hat aufgelegt: ihm nichts mehr schicken
-        hungUp.add(id); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id);
+      } else if (m.t === "hangup") { // der andere hat aufgelegt: ihm nichts mehr schicken (nur melden, dass ich im Anruf bin)
+        hungUp.add(id); if (camOn || micOn) rtcSend(id, { t: "incall", ...mediaState() }); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id);
         const pi = pcIn.get(id); if (pi) pi.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
+      } else if (m.t === "react") { // Reaktion eines Mitspielers
+        if (!callLeft && REACTS.includes(m.e)) reactShow(id, m.e);
+      } else if (m.t === "incall") { // jemand ist (nicht mehr) im Anruf – für den Hinweis „… sind im Anruf“
+        if (m.cam || m.mic) callers.set(id, true); else callers.delete(id); callHint();
       } else if (m.t === "rejoin") { // der andere ist wieder eingestiegen
         hungUp.delete(id); camSync();
       } else if (m.t === "bye") {
@@ -929,11 +955,58 @@
     camDock.style.bottom = "auto";
   }
   addEventListener("resize", () => { const p = store.get("s10-cam-pos"); if (p && p.rx != null && camDock.classList.contains("show")) camPlace(p.rx * innerWidth - camDock.offsetWidth, p.by * innerHeight - camDock.offsetHeight); });
+  const MIC_OFF = `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"/></svg>`;
+  // Wer spricht, leuchtet: Lautstärke jeder Tonspur messen (nur lokal, nichts geht über die Leitung)
+  let audioCtx = null;
+  const speakers = new Map(); // id → { stream, an, buf, src, lvl }
+  function speakWatch(id, stream) {
+    const old = speakers.get(id); if (old && old.stream === stream) return;
+    speakDrop(id);
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+      const src = audioCtx.createMediaStreamSource(stream), an = audioCtx.createAnalyser(); an.fftSize = 512; src.connect(an);
+      speakers.set(id, { stream, an, src, buf: new Uint8Array(an.fftSize), lvl: 0, on: 0 });
+    } catch {}
+  }
+  function speakDrop(id) { const x = speakers.get(id); if (x) { try { x.src.disconnect(); } catch {} speakers.delete(id); } }
+  addEventListener("pointerdown", () => { if (audioCtx && audioCtx.state === "suspended") audioCtx.resume().catch(() => {}); });
+  setInterval(() => {
+    for (const [id, x] of speakers) {
+      x.an.getByteTimeDomainData(x.buf);
+      let sum = 0; for (let i = 0; i < x.buf.length; i++) { const d = (x.buf[i] - 128) / 128; sum += d * d; }
+      const rms = Math.sqrt(sum / x.buf.length);
+      x.lvl = x.lvl * 0.6 + rms * 0.4;
+      const tile = camVideos.get(id); if (!tile) continue;
+      if (id === "me") tile.querySelector(".camlevel i").style.width = Math.min(100, x.lvl * 600) + "%";
+      if (x.lvl > 0.02) x.on = Date.now();
+      const talking = Date.now() - x.on < 600;
+      tile.classList.toggle("speaking", talking);
+    }
+  }, 120);
+  // Verbindungsgüte je empfangenem Bild: wenige Bilder pro Sekunde oder viel Verlust → „schwach“
+  const weakPrev = new Map();
+  setInterval(async () => {
+    for (const [id, pc] of pcIn) {
+      const tile = camVideos.get(id); if (!tile) continue;
+      let weak = pc.connectionState === "disconnected";
+      try {
+        const st = await pc.getStats(); let lost = 0, got = 0, fps = null;
+        st.forEach((r) => { if (r.type === "inbound-rtp") { lost += r.packetsLost || 0; got += r.packetsReceived || 0; if (r.kind === "video" && r.framesPerSecond != null) fps = r.framesPerSecond; } });
+        const prev = weakPrev.get(id) || { lost, got }; weakPrev.set(id, { lost, got });
+        const dl = lost - prev.lost, dg = got - prev.got;
+        const md = remoteMedia.get(id) || { cam: true };
+        if (dg + dl > 20 && dl / (dg + dl) > 0.05) weak = true;
+        if (md.cam && fps != null && fps < 6) weak = true;
+      } catch {}
+      tile.classList.toggle("weak", weak);
+    }
+  }, 3000);
   function camTile(id, stream, label, mirror) {
     let tile = camVideos.get(id);
     if (!tile) {
       tile = document.createElement("div"); tile.className = "camtile";
-      tile.innerHTML = `<video autoplay playsinline></video><span class="caminit"></span><span class="camname"></span>`;
+      tile.innerHTML = `<video autoplay playsinline></video><span class="caminit"></span><span class="camname"></span><span class="cammute" title="Mikrofon aus">${MIC_OFF}</span><span class="camlevel"><i></i></span><span class="camweak" title="Bild oder Ton kommt gerade schlecht an">📶 schwach</span><span class="camturn">am Zug</span><span class="camreacts"></span>`;
       camVideos.set(id, tile);
     }
     const vid = tile.querySelector("video");
@@ -949,15 +1022,49 @@
     tile.classList.toggle("novideo", !hasVideo && stream !== "failed");
     tile.querySelector(".caminit").textContent = (label || "?").charAt(0).toUpperCase();
     vid.classList.toggle("mirror", !!mirror);
-    tile.querySelector(".camname").textContent = stream === "failed" ? label + " – keine Verbindung" : label + (hasAudio ? " 🎤" : "");
+    tile.querySelector(".camname").textContent = stream === "failed" ? label + " – keine Verbindung" : label;
+    tile.classList.toggle("muted", stream !== "failed" && !hasAudio);
+    const pl = view && view.players ? view.players : [], pi = pl.findIndex((p) => p.id === (id === "me" ? myId : id));
+    tile.style.setProperty("--pc", pi >= 0 ? PLAYER_COLORS[pi % PLAYER_COLORS.length] : "#8a7fb8");
+    if (hasAudio) speakWatch(id, stream); else speakDrop(id);
     return tile;
+  }
+  // „Im Anruf“-Hinweis: Wer nur zuschaut, bekommt im Kamera-Fenster eine Zeile zum Mitmachen;
+  // wer aufgelegt hat, sieht unten rechts, wer noch im Anruf ist, mit „Beitreten“
+  const callHintEl = document.createElement("div"); callHintEl.id = "callhint"; document.body.appendChild(callHintEl);
+  const nameList = (ids) => { const pl = view && view.players ? view.players : []; const n = ids.map((id) => (pl.find((p) => p.id === id) || {}).name).filter(Boolean);
+    return n.length <= 2 ? n.map(esc).join(" und ") : n.slice(0, 2).map(esc).join(", ") + ` und ${n.length - 2} weitere`; };
+  function callHint() {
+    const pl = view && view.players ? view.players.filter((p) => p.connected).map((p) => p.id) : [];
+    const ids = [...callers.keys()].filter((id) => pl.includes(id));
+    const show = callLeft && !camOn && !micOn && ids.length > 0 && !!view && view.phase;
+    callHintEl.classList.toggle("show", !!show);
+    if (show) {
+      callHintEl.innerHTML = `<span>📞 <b>${nameList(ids)}</b> ${ids.length > 1 ? "sind" : "ist"} im Anruf</span><button type="button" class="btn primary sm" data-calljoin>Beitreten</button><button type="button" class="ch-x" data-callhide aria-label="Ausblenden">✕</button>`;
+      callHintEl.querySelector("[data-calljoin]").onclick = () => callRejoin(); // im Kamera-Fenster steht dann „Du schaust zu“ mit 📷 und 🎤
+      callHintEl.querySelector("[data-callhide]").onclick = () => { callers.clear(); callHint(); };
+    }
+  }
+  // Wer gerade am Zug ist (Spiele mit Zügen) – dessen Kamerabild wird hervorgehoben und steht vorn
+  function camTurnId() {
+    const v = view; if (!v) return null;
+    try {
+      if (v.phase === "playing" && v.players[v.turn]) return v.players[v.turn].id;
+      if (v.phase === "wand" && v.wand) return v.wand.step === "pick" ? v.wand.chooser : v.wand.cur ? v.wand.cur.by : null;
+      if (v.phase === "duell" && v.duell && v.duell.step === "turn") return v.duell.turn;
+      if (v.phase === "frage" && v.frage) { const f = v.frage; return f.step === "write" || f.step === "judge" ? f.asker : f.step === "answer" || f.step === "check" ? f.guesser : null; }
+      if (v.phase === "karten" && v.karten && v.karten.mode === "stich" && v.karten.step === "play") return v.karten.turn;
+      if (v.phase === "watten" && v.watten) return v.watten.turn || null;
+      if (v.phase === "schnapsen" && v.schnapsen) return v.schnapsen.turn || null;
+    } catch {}
+    return null;
   }
   function renderCamDock() {
     const nameOf = (id) => (view && view.players ? (view.players.find((p) => p.id === id) || {}).name : "") || "?";
     const items = [];
     if (camStream && camOn) items.push(["me", camStream, "Du", true]);
     for (const [id, st] of remoteCams) items.push([id, st, nameOf(id), false]);
-    for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); }
+    for (const [id, tile] of camVideos) if (!items.some((x) => x[0] === id)) { tile.remove(); camVideos.delete(id); speakDrop(id); }
     camDock.classList.toggle("show", items.length > 0);
     // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
     // im großen Anruf-Fenster schwebt das eigene Bild nur bei genau einem Gegenüber, sonst ist es eine normale Kachel
@@ -966,8 +1073,12 @@
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen"><i class="camdots">⠿</i> Kamera</span>
-          <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button><button type="button" class="camhang" title="Auflegen – nur für dich" aria-label="Anruf beenden">📞</button></span></div><div class="camtiles"></div>
-        <div class="camctl"><button type="button" class="camctl-b" data-cam aria-label="Kamera an/aus">📷</button><button type="button" class="camctl-b" data-mic aria-label="Mikrofon an/aus">🎤</button><button type="button" class="camctl-b hang" aria-label="Anruf beenden">📞 Auflegen</button></div>`;
+          <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camreact" title="Reaktion senden" aria-label="Reaktion senden">😊</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button><button type="button" class="camhang" title="Auflegen – nur für dich" aria-label="Anruf beenden">📞</button></span></div><div class="camtiles"></div>
+        <div class="camctl"><button type="button" class="camctl-b" data-cam aria-label="Kamera an/aus">📷</button><button type="button" class="camctl-b" data-mic aria-label="Mikrofon an/aus">🎤</button><button type="button" class="camctl-b hang" aria-label="Anruf beenden">📞 Auflegen</button></div>
+        <div class="camctl-r">${REACTS.map((e) => `<button type="button" class="camctl-b re" data-react="${e}" aria-label="Reaktion ${e}">${e}</button>`).join("")}</div>
+        <div class="campick">${REACTS.map((e) => `<button type="button" data-react="${e}" aria-label="Reaktion ${e}">${e}</button>`).join("")}</div>`;
+      camDock.querySelector(".camreact").onclick = () => camDock.classList.toggle("picking");
+      camDock.querySelectorAll("[data-react]").forEach((b) => b.onclick = () => { react(b.dataset.react); camDock.classList.remove("picking"); });
       camDock.querySelector(".camhang").onclick = hangUp;
       camDock.querySelector(".camctl .hang").onclick = hangUp;
       camDock.querySelector(".camtoggle").onclick = () => { camOpen = !camOpen; renderCamDock(); };
@@ -988,6 +1099,9 @@
     }
     dockGridLayout(items.length);
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
+    camDock.querySelector(".camreact").style.display = camOn || micOn ? "" : "none";
+    camDock.querySelector(".camctl-r").style.display = camOn || micOn ? "" : "none";
+    if (!(camOn || micOn)) camDock.classList.remove("picking");
     camDock.querySelectorAll(".camctl [data-cam]").forEach((b) => b.classList.toggle("on", camOn));
     camDock.querySelectorAll(".camctl [data-mic]").forEach((b) => b.classList.toggle("on", micOn));
     const anyAudio = [...remoteCams].some(([id, st]) => st && st !== "failed" && st.getAudioTracks().length && (remoteMedia.get(id) || { mic: true }).mic);
@@ -1010,10 +1124,20 @@
     const camCorner = !camStage && camDock.classList.contains("show") && !camDock.classList.contains("docked") && !(pos && pos.rx != null);
     document.body.style.setProperty("--cam-h", camCorner ? camDock.offsetHeight + 16 + "px" : "0px");
     document.body.style.setProperty("--cam-w", camCorner ? camDock.offsetWidth + 16 + "px" : "0px");
+    // nur zuschauen (eigene Kamera und Mikro aus): Zeile zum Mitmachen
+    let join = camDock.querySelector(".camjoin");
+    const watching = !camOn && !micOn && remoteCams.size > 0;
+    if (watching && !join) { join = document.createElement("div"); join.className = "camjoin";
+      join.innerHTML = `<span>Du schaust zu</span><button type="button" class="btn ghost sm" data-cam>📷</button><button type="button" class="btn ghost sm" data-mic>🎤</button>`;
+      camDock.querySelector(".camhead").after(join); }
+    if (!watching && join) join.remove();
     const box = camDock.querySelector(".camtiles");
-    items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me"); if (t.parentNode !== box) box.appendChild(t); });
+    const tid = camTurnId();
+    items.forEach(([id, st, label, mirror]) => { const t = camTile(id, st, label, mirror); t.classList.toggle("self", id === "me");
+      t.classList.toggle("turn", !!tid && (id === "me" ? tid === myId : tid === id)); if (t.parentNode !== box) box.appendChild(t); });
     stageLayout();
     sendView();
+    callHint();
   }
   // Kleines Kamerafenster im Spiel bei mehreren Gegenübern: Größe bleibt etwa wie bei einem Mitspieler,
   // die Bilder werden kleiner und stehen im Raster (2 Spalten, ab 5 Bildern 3) – sonst wächst das Fenster über Knöpfe und Karten
@@ -1085,6 +1209,14 @@
       b.onclick = () => { camDock.querySelectorAll("video").forEach((v) => v.play().catch(() => {})); camNeedTap(false); }; }
     if (!on && b) b.remove();
   }
+  // Tastenkürzel am PC: M = Mikro, K = Kamera (nicht beim Tippen in ein Feld)
+  addEventListener("keydown", (e) => {
+    if (!camOK || !view || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    const t = e.target; if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    const k = e.key.toLowerCase();
+    if (k === "m") { e.preventDefault(); micToggle(); }
+    else if (k === "k") { e.preventDefault(); camToggle(); }
+  });
   document.addEventListener("click", (e) => {
     if (!e.target.closest) return;
     if (e.target.closest("[data-cam]")) camToggle();
