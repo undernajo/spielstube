@@ -181,6 +181,95 @@
       swap(A, [...st.querySelectorAll("#dmB .dm-val > span")], T, [5.3]); bump(A, $("#dmB"), T, 5.3);
     } },
 
+    // ---------------- Hinweis für Hinweis ----------------
+    hinweis: { T: 8.5, still: 5.4, build(st, A, T) {
+      st.innerHTML = `<div class="dm-hq">Gesucht: <b>eine Stadt</b></div><div class="dm-hpts">${vals("5 Punkte", "4 Punkte")}</div>
+        <div class="dm-htimer"><i></i></div>
+        <div class="dm-hint" id="h1"><span>1</span>liegt an der Donau</div>
+        <div class="dm-hint" id="h2"><span>2</span>hat ein Riesenrad im Prater</div>
+        <div class="dm-hin"><span class="typed">Wien</span><span class="caret"></span><b class="dm-hgo">Raten</b></div>
+        <div class="dm-hok">✓ Richtig! +4</div>
+        <div class="dm-note" id="hn" style="top:176px">Nur ein Versuch – früh raten bringt mehr!</div>
+        <div class="dm-chips" style="top:206px"><div class="dm-chip" id="dmA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 4)}</div><div class="dm-chip" style="--pc:${C.berta}"><i></i>Berta <span class="dm-st">rät noch …</span></div></div>
+        <div class="dm-float" id="dmF">+4</div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      show(A, $("#h1"), T, .4); show(A, $("#h2"), T, 2.4);
+      // Zeitleiste je Hinweis: läuft ab, beim 2. Hinweis bleibt sie stehen, sobald geraten ist
+      tl(A, $(".dm-htimer i"), T, [[0, { width: "100%" }], [.4, {}, "linear"], [2.3, { width: "0%" }], [2.35, { width: "100%" }], [2.4, {}, "linear"], [3.9, { width: "25%" }]]);
+      swap(A, [...st.querySelectorAll(".dm-hpts .dm-val > span")], T, [2.35]); bump(A, $(".dm-hpts"), T, 2.35);
+      tl(A, $(".dm-hin .typed"), T, [[0, { maxWidth: "0px" }], [2.8, {}, "steps(4)"], [3.4, { maxWidth: "40px" }]]);
+      finger(A, st, T, [[2.3, 230, 225], [3.7, 262, 141, true]]);
+      tl(A, $(".dm-hin"), T, [[0, { borderColor: "rgba(255,255,255,.25)", background: "rgba(0,0,0,.3)" }], [3.85, {}], [4.0, { borderColor: "#2fbf71", background: "rgba(47,191,113,.22)" }]]);
+      pop(A, $(".dm-hok"), T, 4.0); show(A, $("#hn"), T, 5.0);
+      fly(A, $("#dmF"), T, 4.5, [150, 160], [52, 202]);
+      swap(A, [...st.querySelectorAll("#dmA .dm-val > span")], T, [5.3]); bump(A, $("#dmA"), T, 5.3);
+    } },
+
+    // ---------------- Von oben ----------------
+    oben: { T: 9, still: 6.4, build(st, A, T) {
+      st.classList.add("dm-felt");
+      const sat = `<svg viewBox="0 0 150 150" aria-hidden="true"><rect width="150" height="150" fill="#5d6b4f"/>
+        ${Array.from({ length: 36 }, (_, k) => { const x = (k % 6) * 25 + 3, y = Math.floor(k / 6) * 25 + 3; return `<rect x="${x}" y="${y}" width="19" height="19" rx="2" fill="${["#b9b3a6", "#a69f90", "#c9c2b2", "#8f9a7a"][k % 4]}"/>`; }).join("")}
+        <path d="M-5 105 C 40 90, 60 120, 95 95 S 140 70, 160 80" stroke="#4f86b8" stroke-width="12" fill="none"/>
+        <circle cx="75" cy="60" r="14" fill="#7fa56a"/><circle cx="75" cy="60" r="5" fill="#d8d2c4"/></svg>`;
+      const map = `<svg viewBox="0 0 120 150" aria-hidden="true"><rect width="120" height="150" fill="#2a5b8c"/>
+        <path d="M10 10 C 40 0, 90 5, 112 25 S 118 90, 100 120 S 40 148, 18 130 S -2 40, 10 10Z" fill="#4c8c5a"/>
+        <path d="M30 40 C 50 60, 70 50, 95 70" stroke="#7cc4ff" stroke-width="2" fill="none" opacity=".8"/></svg>`;
+      st.innerHTML = `<div class="dm-oq">📡 Wo ist das?</div>
+        <div class="dm-sat"><div class="dm-satin">${sat}</div><span class="dm-fac">${vals("×1", "×0,85", "×0,7")}</span></div>
+        <div class="dm-omap">${map}</div>
+        <svg class="dm-lines" viewBox="0 0 300 240"><line id="lA" x1="226" y1="112" x2="236" y2="96" stroke="${C.anna}" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="dm-pin" id="pA" style="left:226px;top:112px;--pc:${C.anna}"></div><div class="dm-goal" style="left:236px;top:96px">⭐</div>
+        <div class="dm-km" id="kA" style="left:244px;top:110px">3 km</div>
+        <div class="dm-note" style="top:186px;color:#fff" id="on">je näher und je früher, desto mehr Punkte</div>
+        <div class="dm-chips" style="top:206px"><div class="dm-chip" id="dmA" style="--pc:${C.anna}"><i></i>Anna ${vals(0, 680)}</div></div>
+        <div class="dm-float" id="dmF">+680</div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      // Satellitenbild zoomt in Stufen heraus, der Faktor sinkt mit
+      tl(A, $(".dm-satin"), T, [[0, { transform: "scale(3.2)" }], [1.6, {}], [2.0, { transform: "scale(2.1)" }], [3.0, {}], [3.4, { transform: "scale(1.4)" }], [4.8, {}], [5.2, { transform: "scale(1)" }]]);
+      swap(A, [...st.querySelectorAll(".dm-fac .dm-val > span")], T, [1.8, 3.2]);
+      finger(A, st, T, [[3.0, 240, 220], [3.9, 226, 112, true]]);
+      tl(A, $("#pA"), T, [[0, { opacity: 0, transform: "translateY(-22px)" }], [4.0, {}, "cubic-bezier(.3,1.5,.5,1)"], [4.35, { opacity: 1, transform: "none" }]]);
+      tl(A, $(".dm-goal"), T, [[0, { opacity: 0, transform: "scale(.2) rotate(-90deg)" }], [4.8, {}, "cubic-bezier(.3,1.6,.5,1)"], [5.15, { opacity: 1, transform: "none" }]]);
+      const L = $("#lA"), len = Math.hypot(10, 16); L.style.strokeDasharray = len; tl(A, L, T, [[0, { strokeDashoffset: len }], [5.2, {}], [5.6, { strokeDashoffset: 0 }]]);
+      pop(A, $("#kA"), T, 5.6); show(A, $("#on"), T, 6.0);
+      fly(A, $("#dmF"), T, 6.1, [210, 120], [48, 202]);
+      swap(A, [...st.querySelectorAll("#dmA .dm-val > span")], T, [6.9]); bump(A, $("#dmA"), T, 6.9);
+    } },
+
+    // ---------------- Siebzehn und Vier ----------------
+    siebzehn: { T: 9.5, still: 6.6, build(st, A, T) {
+      st.classList.add("dm-felt");
+      const R = 26, CI = 2 * Math.PI * R;
+      const opp = (name, c, x, ids) => `<div class="dm-sseat" style="left:${x}px"><span class="dm-snm" style="--pc:${c}"><i></i>${name}</span><span class="dm-sfan">${ids.map((id) => flipCard(id)).join("")}</span></div>`;
+      st.innerHTML = opp("Berta", C.berta, 34, ["eichel-10", "schelle-8"]) + opp("Chris", C.chris, 176, ["herz-A", "laub-K", "eichel-8"])
+        + `<div class="dm-sres" id="rB" style="left:34px">18</div><div class="dm-sres bad" id="rC" style="left:176px">23 – raus</div>
+        <div class="dm-shand"><span class="c1">${card("laub-9")}</span><span class="c2">${card("herz-O")}</span><span class="c3">${card("schelle-8")}</span></div>
+        <div class="dm-sring"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${R}" class="r0"/><circle cx="32" cy="32" r="${R}" class="r1" id="ring"/></svg><b>${vals(12, 20)}</b><small>von 21</small></div>
+        <div class="dm-sacts"><span class="hit">🂠 Karte!</span><span class="stand">✋ Genug</span></div>
+        <div class="dm-smsg" id="m1">Du bleibst bei 20</div>
+        <div class="dm-smsg win" id="m2">Am nächsten an 21 – Runde gewonnen! +3</div>${UI}`;
+      fade(A, st, T);
+      const $ = (x) => st.querySelector(x);
+      finger(A, st, T, [[.6, 230, 225], [1.3, 104, 196, true], [3.2, 194, 196, true]]);
+      tl(A, $(".dm-shand .c3"), T, [[0, { opacity: 0, transform: px(60, -70, .7) }], [1.5, {}, "cubic-bezier(.2,.8,.25,1)"], [1.95, { opacity: 1, transform: "rotate(7deg)" }]]);
+      tl(A, $("#ring"), T, [[0, { strokeDasharray: `${CI * 12 / 21} 200`, stroke: "#e8e4f4" }], [2.0, {}], [2.4, { strokeDasharray: `${CI * 20 / 21} 200`, stroke: "#7ee2b1" }]]);
+      swap(A, [...st.querySelectorAll(".dm-sring b .dm-val > span")], T, [2.1]); bump(A, $(".dm-sring"), T, 2.1);
+      tl(A, $(".dm-sacts .hit"), T, [[0, { transform: "none" }], [1.35, {}], [1.45, { transform: "translateY(2px)" }], [1.6, { transform: "none" }]]);
+      tl(A, $(".dm-sacts"), T, [[0, { opacity: 1 }], [3.4, {}], [3.6, { opacity: 0 }]]);
+      show(A, $("#m1"), T, 3.6, 5.6);
+      // Auflösung: die anderen decken auf
+      st.querySelectorAll(".dm-sseat").forEach((seat, k) => seat.querySelectorAll(".dm-card.flip").forEach((c, i) => {
+        const f = 4.3 + k * .5 + i * .12;
+        tl(A, c.querySelector(".dm-back"), T, [[0, { transform: "none" }], [f, {}], [f + .4, { transform: "rotateY(180deg)" }]]);
+        tl(A, c.querySelector(".dm-front"), T, [[0, { transform: "rotateY(-180deg)" }], [f, {}], [f + .4, { transform: "none" }]]);
+      }));
+      pop(A, $("#rB"), T, 4.9); pop(A, $("#rC"), T, 5.4);
+      show(A, $("#m2"), T, 5.9);
+    } },
+
     // ---------------- Almsommer ----------------
     alm: { T: 10, still: 5.4, build(st, A, T) {
       // Gelände (H = Hof) und Flächen; Fläche D (3 Wiesen neben dem Hof) wird in der Vorführung fertig
