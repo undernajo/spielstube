@@ -3230,9 +3230,8 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .wlayout .wmid-info .wturn.me { justify-self: start; align-self: auto; }
   .sv-foot { justify-items: start; text-align: left; }
   .sv-foot .tt-head, .sv-foot .tt-text { text-align: left; }
-  .sv-foot .sv-acts { justify-content: flex-start; }
 }
-@media (max-width: 899px) { .sv-me .sv-foot { grid-column: 1 / -1; } }
+@media (max-width: 899px) { .sv-me .sv-foot, .sv-me > .sv-acts { grid-column: 1 / -1; } }
 @media (min-width: 900px) {
   /* Watten: Schlag/Trumpf-Kasten links (zwischen den Stichstapeln) */
   .wtable.wt-watten .wcombo { right: auto; left: 18px; }
@@ -3251,6 +3250,7 @@ body.qb-play .fw-main { --fw-top: 370px; }
   .sv-me > .sv-hand { grid-column: 2; grid-row: 1; }
   .sv-me > .sv-dial { grid-column: 1; grid-row: 1; justify-self: end; }
   .sv-me > .sv-foot { grid-column: 3; grid-row: 1; justify-self: start; }
+  .sv-me > .sv-acts { grid-column: 2; grid-row: 2; margin-top: calc(-1 * clamp(18px, 3vw, 34px) + 12px); } /* Knöpfe direkt unter den Karten */
 }
 @media (max-width: 899px) { .xleft { display: contents; } }
 /* Vorführung Busfahrt im Stil des neuen Spielfelds */
