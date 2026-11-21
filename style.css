@@ -3363,3 +3363,5 @@ body.qb-play .fw-main { --fw-top: 370px; }
 /* Zehnkampf: Passen als goldener Knopf (wie die Show-Bühne) */
 .pass-btn { border: 2px solid var(--accent); background: rgba(255, 200, 61, .12); color: var(--accent); font: 700 1.05rem Fredoka, sans-serif; box-shadow: none; }
 .pass-btn:hover { background: rgba(255, 200, 61, .22); }
+/* Zehnkampf: aus welchem Fragen-Set die Karte stammt */
+.progress .zset { white-space: nowrap; color: #cfc6ff; font-weight: 700; }

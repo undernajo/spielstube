@@ -1802,7 +1802,7 @@
                 <div class="qtype">${({ tf: "Finde die zutreffenden", num: "Zahl eintippen", rank: "Rang 1–10", decade: "Jahrzehnt", estimate: new Set(card.items.map((x) => x.tol)).size > 1 ? "Schätzen · Toleranz je nach Begriff" : `Schätzen · ±${Math.round((card.tol || 0.1) * 100)} % zählt` })[card.type] || "Antwort eintippen"}</div>
                 <div class="q">${esc(card.q)}</div>
                 ${card.hint ? `<div class="hint">${esc(card.hint)}</div>` : ""}
-                <div class="progress">${card.items.filter((it) => it.r && !it.r.pending && it.r.by).length} von 10 aufgedeckt</div>
+                <div class="progress">${card.items.filter((it) => it.r && !it.r.pending && it.r.by).length} von 10 aufgedeckt${SET_NAMES[card.set] ? ` · <span class="zset">Set ${esc(SET_NAMES[card.set])}</span>` : ""}</div>
               </div>
               ${slots}
             </div>
