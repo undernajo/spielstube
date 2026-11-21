@@ -733,6 +733,10 @@
   const RTC_CFG = { iceServers: [{ urls: ["stun:stun.cloudflare.com:3478", "stun:stun.l.google.com:19302"] }] };
   const camOK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.RTCPeerConnection);
   let camStream = null, camOpen = true, camOn = false, micOn = false, camMuteAll = false;
+  // Auflegen gilt nur für mich: ich sende und empfange nichts mehr, bis ich Kamera oder Mikro wieder einschalte.
+  // hungUp: wer bei mir aufgelegt hat – dem schicke ich kein Bild, bis er „rejoin“ meldet
+  let callLeft = false; try { callLeft = sessionStorage.getItem("s10-call-left") === "1"; } catch {}
+  const hungUp = new Set();
   const pcOut = new Map(), pcIn = new Map(), remoteCams = new Map(), iceWait = new Map();
   const remoteMedia = new Map(); // ID → { cam, mic }: was der andere gerade eingeschaltet hat (Spuren bleiben bestehen, auch wenn aus)
   function rtcSend(to, msg) { if (mq && roomTopic) sendSealed(T("rtc/" + to), { ...msg, from: myId }, { qos: 1 }); }
@@ -776,6 +780,7 @@
         catch (e) { toast(mediaError(e, kind), "bad"); return; }
         if (!camStream) camStream = new MediaStream();
         camStream.addTrack(t);
+        if (callLeft) callRejoin();
         if (kind === "video") camOn = true; else micOn = true;
         camOpen = true;
         await swapTrack(kind, t);
@@ -790,6 +795,22 @@
     for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
     pcOut.clear(); camOpen = true;
     renderCamDock(); render();
+  }
+  function callRejoin() {
+    callLeft = false; try { sessionStorage.removeItem("s10-call-left"); } catch {}
+    for (const id of camPeers()) rtcSend(id, { t: "rejoin" });
+  }
+  function hangUp() {
+    callLeft = true; try { sessionStorage.setItem("s10-call-left", "1"); } catch {}
+    if (camStream) camStream.getTracks().forEach((t) => t.stop());
+    camStream = null; camOn = micOn = false;
+    for (const [id, pc] of pcOut) { pc.close(); rtcSend(id, { t: "bye" }); }
+    pcOut.clear();
+    for (const [id, pc] of pcIn) { pc.close(); rtcSend(id, { t: "hangup" }); forgetPeer(id); }
+    pcIn.clear(); remoteCams.clear();
+    if (camStage) setCamStage(false);
+    camOpen = true; renderCamDock(); render();
+    toast("Anruf beendet – mit 📷 oder 🎤 steigst du wieder ein.");
   }
   const camToggle = () => mediaToggle("video");
   const micToggle = () => mediaToggle("audio");
@@ -835,8 +856,8 @@
     for (const id of [...remoteCams.keys()]) if (!ps.includes(id)) { const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock(); }
     for (const id of [...wantQ.keys()]) if (!ps.includes(id)) wantQ.delete(id);
     if (!camStream || !mq || !roomTopic) return;
-    for (const [id, pc] of pcOut) if (!ps.includes(id) || pc.connectionState === "failed" || pc.connectionState === "closed") { pc.close(); pcOut.delete(id); }
-    for (const id of ps) if (!pcOut.has(id)) {
+    for (const [id, pc] of pcOut) if (hungUp.has(id) || !ps.includes(id) || pc.connectionState === "failed" || pc.connectionState === "closed") { pc.close(); pcOut.delete(id); }
+    for (const id of ps) if (!pcOut.has(id) && !hungUp.has(id)) {
       const pc = new RTCPeerConnection(RTC_CFG); pcOut.set(id, pc);
       // für Bild und Ton je einen Kanal – auch wenn eines gerade aus ist, damit späteres Einschalten nur die Spur tauscht
       for (const kind of ["audio", "video"]) { const t = liveTrack(kind); if (t) pc.addTrack(t, camStream); else pc.addTransceiver(kind, { direction: "sendonly", streams: [camStream] }); }
@@ -855,6 +876,8 @@
     const id = String(m.from).slice(0, 40);
     try {
       if (m.t === "offer") { // jemand schickt mir sein Kamerabild
+        if (callLeft) { rtcSend(id, { t: "hangup" }); return; } // ich habe aufgelegt
+        hungUp.delete(id); // wer mir sendet, ist (wieder) im Anruf
         const old = pcIn.get(id); if (old) old.close();
         remoteMedia.set(id, { cam: m.cam !== false, mic: m.mic !== false }); sentQ.delete(id);
         const pc = new RTCPeerConnection(RTC_CFG); pcIn.set(id, pc);
@@ -878,6 +901,11 @@
         remoteMedia.set(id, { cam: !!m.cam, mic: !!m.mic }); renderCamDock();
       } else if (m.t === "ice" && m.c) {
         if (m.dir === "out") await addIce("in:" + id, pcIn.get(id), m.c); else await addIce("out:" + id, pcOut.get(id), m.c);
+      } else if (m.t === "hangup") { // der andere hat aufgelegt: ihm nichts mehr schicken
+        hungUp.add(id); const pc = pcOut.get(id); if (pc) pc.close(); pcOut.delete(id);
+        const pi = pcIn.get(id); if (pi) pi.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
+      } else if (m.t === "rejoin") { // der andere ist wieder eingestiegen
+        hungUp.delete(id); camSync();
       } else if (m.t === "bye") {
         const pc = pcIn.get(id); if (pc) pc.close(); pcIn.delete(id); remoteCams.delete(id); forgetPeer(id); renderCamDock();
       }
@@ -938,7 +966,10 @@
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen">⠿ Kamera</span>
-          <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button></span></div><div class="camtiles"></div>`;
+          <span class="cambtns"><button type="button" class="camaud" title="Ton der Mitspieler an/aus"></button><button type="button" class="camsize" title="Größer/kleiner">⤢</button><button type="button" class="camtoggle" title="Ein-/ausklappen"></button><button type="button" class="camhang" title="Auflegen – nur für dich" aria-label="Anruf beenden">📞</button></span></div><div class="camtiles"></div>
+        <div class="camctl"><button type="button" class="camctl-b" data-cam aria-label="Kamera an/aus">📷</button><button type="button" class="camctl-b" data-mic aria-label="Mikrofon an/aus">🎤</button><button type="button" class="camctl-b hang" aria-label="Anruf beenden">📞 Auflegen</button></div>`;
+      camDock.querySelector(".camhang").onclick = hangUp;
+      camDock.querySelector(".camctl .hang").onclick = hangUp;
       camDock.querySelector(".camtoggle").onclick = () => { camOpen = !camOpen; renderCamDock(); };
       camDock.querySelector(".camaud").onclick = () => { camMuteAll = !camMuteAll; camNeedTap(false); renderCamDock(); camDock.querySelectorAll("video").forEach((v) => v.play && v.play().catch(() => {})); };
       camDock.querySelector(".camsize").onclick = () => {
@@ -957,6 +988,8 @@
     }
     dockGridLayout(items.length);
     camDock.querySelector(".camtoggle").textContent = camOpen ? "–" : "+";
+    camDock.querySelectorAll(".camctl [data-cam]").forEach((b) => b.classList.toggle("on", camOn));
+    camDock.querySelectorAll(".camctl [data-mic]").forEach((b) => b.classList.toggle("on", micOn));
     const anyAudio = [...remoteCams].some(([id, st]) => st && st !== "failed" && st.getAudioTracks().length && (remoteMedia.get(id) || { mic: true }).mic);
     const ab = camDock.querySelector(".camaud"); ab.style.display = anyAudio ? "" : "none"; ab.textContent = camMuteAll ? "🔇" : "🔊";
     camDock.classList.toggle("big", camBig && !camStage);

@@ -3761,3 +3761,15 @@ body.qb-play .fw-main { --fw-top: 370px; }
 .gh-pl:empty { display: none; }
 /* Listen-Duell mit fester Reihenfolge: Platznummer auch bei langen Listen zeigen */
 .du-arena .du-list.many.ranked .du-no { display: grid; width: 24px; height: 24px; font-size: .72rem; flex: none; }
+
+/* Anruf beenden (nur für mich): roter Hörer im Kamera-Fenster; im großen Anruf-Fenster zusätzlich eine Knopfleiste unten */
+#camdock .camhang { background: #d93c4b; color: #fff; border-color: #d93c4b; }
+#camdock .camhang:hover { background: #ef4b5a; }
+#camdock .camhang { display: inline-block; transform: rotate(135deg); }
+#camdock .camctl { display: none; }
+#camdock.stage .camctl { display: flex; justify-content: center; gap: 12px; padding-top: 12px; }
+#camdock .camctl-b { min-width: 56px; height: 52px; padding: 0 18px; border-radius: 99px; border: 1.5px solid var(--line); background: #2a2366; color: #fff; font: 700 1.05rem Fredoka, sans-serif; cursor: pointer; }
+#camdock .camctl-b.on { background: rgba(47, 191, 113, .2); border-color: #2fbf71; }
+#camdock .camctl-b.hang { background: #d93c4b; border-color: #d93c4b; padding: 0 24px; }
+#camdock .camctl-b.hang:hover { background: #ef4b5a; }
+#camdock .cambtns .camhang { width: 24px; height: 24px; padding: 0; margin-left: 4px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .78rem; vertical-align: middle; }
