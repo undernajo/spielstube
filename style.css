@@ -3837,3 +3837,5 @@ body.qb-play .fw-main { --fw-top: 370px; }
 #camdock.stage { width: min(96vw, 1600px) !important; height: 92vh !important; box-sizing: border-box; display: flex !important; flex-direction: column; }
 #camdock.stage .camtiles { margin: auto; flex: none; align-content: center; }
 #camdock.stage .camjoin { display: none; } /* im großen Fenster stehen Kamera und Mikro ohnehin unten */
+/* Meisterschaft: Zehnkampf-Etappe mit mehreren Karten – „Nächste Runde“ bis zur letzten Karte zeigen */
+body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now { display: inline-flex !important; }

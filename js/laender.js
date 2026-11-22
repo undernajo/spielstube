@@ -37,7 +37,7 @@
     opts = opts || {};
     const reg = data().regions[opts.region] ? opts.region : "europa";
     const level = LEVELS[opts.level] ? opts.level : "gemischt";
-    const rounds = ROUND_CHOICES.includes(Number(opts.rounds)) ? Number(opts.rounds) : 10;
+    const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 20) ? rn : 10; // free: Querbeet
     const timer = TIMERS[opts.timer] ? opts.timer : "t30";
     const pool = poolFor(reg, level);
     // Ungespielte zuerst. Reichen sie nicht mehr für eine Partie, beginnt diese Auswahl von vorn.

@@ -71,7 +71,8 @@
   let kgOpts = Object.assign({ rounds: 5, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
-  let qbOpts = Object.assign({ length: 8, off: [], joker: true }, store.get("s10-qb") || {});
+  let qbOpts = Object.assign({ length: 5, off: [], joker: true }, store.get("s10-qb") || {});
+  if (!QB.LENGTHS[qbOpts.length]) qbOpts.length = 5; // alte Auswahl (12 Etappen) gibt es nicht mehr
   const LAND = window.S10Land;
   // Länderkarte (gut 400 KB) erst laden, wenn „Länder finden“ gebraucht wird – gleiche Versionsnummer wie game.js
   const ASSET_V = ((document.currentScript && /[?&]v=([\w.]+)/.exec(document.currentScript.src)) || [])[1] || "1";
@@ -339,7 +340,8 @@
     }
     if (type.startsWith("qb")) return qbAction(pid, action, host, now);
     // In Querbeet kein „Nochmal spielen“ / „Nächste Runde“ innerhalb einer Etappe – weiter geht es über die Querbeet-Leiste
-    if (S.qb && S.phase !== "querbeet" && (/Restart$/.test(type) || type === "restart" || type === "next")) return false;
+    // Meisterschaft: kein Neustart; „Nächste Runde“ nur, solange die Zehnkampf-Etappe noch Karten hat
+    if (S.qb && S.phase !== "querbeet" && (/Restart$/.test(type) || type === "restart" || (type === "next" && qbStageDone()))) return false;
     if (type === "start" && action.game === "slf") {
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
@@ -429,7 +431,7 @@
     const st = qbStage();
     if (!st || S.phase === "querbeet") return false;
     switch (st.game) {
-      case "zehn": return (S.phase === "roundEnd" || S.phase === "gameOver") && !S.undoReq;
+      case "zehn": return (S.phase === "gameOver" || (S.phase === "roundEnd" && S.round >= ((st.opts && st.opts.cards) || 1))) && !S.undoReq;
       case "hl": return !!S.hl && S.hl.step === "final";
       case "geo": case "oben": return !!S.geo && S.geo.step === "final";
       case "land": return !!S.land && S.land.step === "final";
@@ -544,7 +546,7 @@
     const LAND_RULE = { de: "Tippt das genannte Bundesland auf der Karte an.", at: "Tippt das genannte Bundesland auf der Karte an.",
       it: "Tippt die genannte Region auf der Karte an.", ch: "Tippt den genannten Kanton auf der Karte an." };
     const rule = (st) => st.game === "land" ? LAND_RULE[st.opts.region] || "Tippt das genannte Land auf der Karte an." : QB.STAGES[st.game].rule;
-    const q = S.qb, info = (st) => st ? { game: st.game, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] || null } : null;
+    const q = S.qb, info = (st) => st ? { game: st.game, cards: (st.opts && st.opts.cards) || null, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] || null } : null;
     const nextSt = q.step === "intro" || q.step === "break" ? q.plan[q.idx + 1] : null;
     return {
       step: q.step, idx: q.idx, n: q.plan.length, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready },
@@ -1968,15 +1970,16 @@
     } else if (v.phase === "roundEnd" && v.roundResult && v.roundResult.find((r) => r.id === myId && r.how !== "pause")) {
       // Wertungskarte: was hast du in dieser Runde gesichert oder verloren?
       const r = v.roundResult.find((x) => x.id === myId), g = r.gained;
+      const qbMore = v.qb && v.qb.cur && v.round < (v.qb.cur.cards || 1); // Meisterschaft: noch weitere Karten in dieser Etappe
       const plq = r.how === "wrong" ? "✗" : g > 0 ? "+" + g : "0";
       const h = r.how === "wrong" ? (r.lost ? `Raus – ${r.lost} ${r.lost === 1 ? "Punkt" : "Punkte"} weg` : "Raus in dieser Runde") : g > 0 ? `${g} ${g === 1 ? "Punkt" : "Punkte"} gesichert!` : "Diesmal nichts geholt";
       const best = v.roundResult.filter((x) => x.id !== myId && x.gained > 0).sort((a, b) => b.gained - a.gained)[0];
       const p = r.how === "wrong" ? `<span class="du-q">„${esc(r.item)}“</span> war falsch.${r.lost ? ` Deine ${r.lost} offenen Punkte sind verloren.` : ""}`
         : g > 0 ? (r.how === "passed" ? "Du hast rechtzeitig gepasst." : "Alle Felder sind aufgedeckt – deine Punkte zählen.")
         : best ? `${esc(nameOf(best.id))} hat ${best.gained} ${best.gained === 1 ? "Punkt" : "Punkte"} gesichert.` : "Niemand hat in dieser Runde gepunktet.";
-      banner = `<div class="du-score zk-score ${r.how === "wrong" ? "lose" : g > 0 ? "" : "zero"}" style="--pc:${g > 0 ? colorOf(myId) : "#8a7fb8"}"><span class="du-plq">${plq}</span>
+      banner = `<div class="du-score zk-score ${qbMore ? "qb-more" : ""} ${r.how === "wrong" ? "lose" : g > 0 ? "" : "zero"}" style="--pc:${g > 0 ? colorOf(myId) : "#8a7fb8"}"><span class="du-plq">${plq}</span>
         <h3>${h}</h3><p>${p}</p>
-        <div class="du-score-nb">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}<span class="du-stand">Gesamt ${me.score} / ${v.target}</span></div></div>`;
+        <div class="du-score-nb">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}<span class="du-stand">${v.qb ? `Gesamt ${me.score} · Karte ${v.round} / ${(v.qb.cur && v.qb.cur.cards) || 1}` : `Gesamt ${me.score} / ${v.target}`}</span></div></div>`;
     } else if (v.phase === "roundEnd") {
       banner = `<div class="banner end row"><div class="banner-text"><b>Runde ${v.round} vorbei.</b> Alle Antworten sind aufgedeckt.</div>
         <div class="banner-actions">${nextBtnsHtml({ attr: 'id="next"', hostAttr: 'id="next-now"', label: "Nächste Runde", ready: !!(v.ready && v.ready[myId]), waiting: waitingNames(v, v.ready) })}</div></div>`;
@@ -1988,7 +1991,7 @@
       <main class="screen game">
         <header class="top topbar">
           ${headBrandHtml("zehn")}
-          <div class="meta">${setLabel(v.cardSet)}${v.qb ? "Meisterschafts-Etappe · 1 Karte" : `Runde ${v.round} · bis ${v.target}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
+          <div class="meta">${setLabel(v.cardSet)}${v.qb ? `Meisterschafts-Etappe · Karte ${v.round} / ${(v.qb.cur && v.qb.cur.cards) || 1}` : `Runde ${v.round} · bis ${v.target}`}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}

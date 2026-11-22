@@ -2,27 +2,28 @@
 // Jede Etappe ist eine Kurzfassung eines Spiels. Gezählt wird nur die Platzierung pro Etappe (Partypunkte),
 // damit Spiele mit 1000 Punkten und Spiele mit 1 Punkt gleich viel zählen. Die letzte Etappe zählt doppelt.
 (function (root) {
-  const LENGTHS = { 5: { name: "Kurz – 5 Etappen (ca. 20 Min.)" }, 8: { name: "Mittel – 8 Etappen (ca. 35 Min.)" }, 12: { name: "Lang – 12 Etappen (ca. 50 Min.)" } };
+  // Jede Etappe ist ein kleines Spiel (ca. 5–8 Min.) – die Dauer regelt die Zahl der Etappen
+  const LENGTHS = { 3: { name: "Kurz – 3 Etappen (ca. 20 Min.)" }, 5: { name: "Mittel – 5 Etappen (ca. 35 Min.)" }, 8: { name: "Lang – 8 Etappen (ca. 55 Min.)" } };
   const POINTS = [5, 3, 2]; // Platz 1, 2, 3 – alle weiteren bekommen 1 Partypunkt
   // Spiele mit Kurzfassung; kind sorgt für Abwechslung (nicht zweimal dieselbe Art hintereinander)
   const STAGES = {
-    zehn: { kind: "wissen", name: "Zehnkampf", short: "1 Karte", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
-    wand: { kind: "wissen", min2: true, name: "Fragewand", short: "3 Kategorien", rule: "Reihum ein Feld wählen und die Frage beantworten – je mehr Punkte, desto schwerer. Falsch kostet nichts." },
-    hl: { kind: "wissen", name: "Höher oder tiefer", short: "1 Kategorie, 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig." },
-    geo: { kind: "karte", name: "Wo liegt das?", short: "3 Orte", rule: "Tippt auf der Karte, wo der Ort liegt – je näher, desto mehr Punkte." },
-    land: { kind: "karte", name: "Länder finden", short: "5 Gebiete", rule: "Tippt das genannte Land (oder Bundesland, Region, Kanton) auf der Karte an." },
-    oben: { kind: "karte", name: "Von oben", short: "2 Satellitenbilder", rule: "Erkennt den Ort von oben und tippt ihn auf der Karte an – wer früh tippt, bekommt mehr." },
-    slf: { kind: "wort", name: "Stadt, Land, Fluss", short: "1 Buchstabe", rule: "Ein Buchstabe, sechs Kategorien. Wer fertig ist, ruft Stopp – dann bleiben noch 10 Sekunden." },
-    duell: { kind: "wort", two: true, name: "Listen-Duell", short: "bis 2 Punkte", rule: "Abwechselnd Antworten aus der Liste nennen – wer patzt, verliert die Runde." },
-    frage: { kind: "wort", two: true, name: "Antwort sucht Frage", short: "bis 2 Punkte", rule: "Zur vorgegebenen Antwort eine Frage erfinden – der andere muss sie beantworten." },
-    schaetzen: { kind: "wissen", name: "Schätzen", short: "3 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
-    hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "2 Begriffe", rule: "Alle 8 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
-    siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "3 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
-    bus: { kind: "karten", name: "Busfahrt", short: "1 Runde, 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
-    stich: { kind: "karten", name: "Stichhaltig", short: "3 Runden (1, 2, 3 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
-    alm: { kind: "wuerfel", name: "Almsommer", short: "6 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
-    jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "8 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
-    umriss: { kind: "karte", name: "Umriss-Rätsel", short: "4 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
+    zehn: { kind: "wissen", name: "Zehnkampf", short: "3 Karten", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
+    wand: { kind: "wissen", min2: true, name: "Fragewand", short: "5 Kategorien", rule: "Reihum ein Feld wählen und die Frage beantworten – je mehr Punkte, desto schwerer. Falsch kostet nichts." },
+    hl: { kind: "wissen", name: "Höher oder tiefer", short: "2 Kategorien, je 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig." },
+    geo: { kind: "karte", name: "Wo liegt das?", short: "5 Orte", rule: "Tippt auf der Karte, wo der Ort liegt – je näher, desto mehr Punkte." },
+    land: { kind: "karte", name: "Länder finden", short: "8 Gebiete", rule: "Tippt das genannte Land (oder Bundesland, Region, Kanton) auf der Karte an." },
+    oben: { kind: "karte", name: "Von oben", short: "3 Satellitenbilder", rule: "Erkennt den Ort von oben und tippt ihn auf der Karte an – wer früh tippt, bekommt mehr." },
+    slf: { kind: "wort", name: "Stadt, Land, Fluss", short: "2 Buchstaben", rule: "Ein Buchstabe, sechs Kategorien. Wer fertig ist, ruft Stopp – dann bleiben noch 10 Sekunden." },
+    duell: { kind: "wort", two: true, name: "Listen-Duell", short: "bis 3 Punkte", rule: "Abwechselnd Antworten aus der Liste nennen – wer patzt, verliert die Runde." },
+    frage: { kind: "wort", two: true, name: "Antwort sucht Frage", short: "bis 3 Punkte", rule: "Zur vorgegebenen Antwort eine Frage erfinden – der andere muss sie beantworten." },
+    schaetzen: { kind: "wissen", name: "Schätzen", short: "5 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
+    hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "4 Begriffe", rule: "Alle 8 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
+    siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "5 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
+    bus: { kind: "karten", name: "Busfahrt", short: "3 Runden à 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
+    stich: { kind: "karten", name: "Stichhaltig", short: "4 Runden (1 bis 4 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
+    alm: { kind: "wuerfel", name: "Almsommer", short: "8 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
+    jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "12 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
+    umriss: { kind: "karte", name: "Umriss-Rätsel", short: "6 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
   // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
   const HOWTO = {
@@ -41,8 +42,8 @@
     siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus."], win: "Die meisten Punkte nach allen Runden." },
     bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
     stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
-    alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 6 Wochen." },
-    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 8 Runden." },
+    alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 8 Wochen." },
+    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
@@ -99,33 +100,33 @@
     const lv = (region) => level === "leicht" || level === "profi" ? level : region === "welt" ? "leicht" : "gemischt";
     const pro = level === "profi";
     switch (game) {
-      case "zehn": return st ? { sets: ["suedtirol"] } : {};
-      case "wand": return { n: 3, theme: st ? "suedtirol" : w ? "welt" : null }; // 3 Kategorien ausgelost (12 Felder)
-      case "hl": return { ...(st ? { cats: 1, only: HL_ST } : w ? { cats: 1, not: HL_ST } : { cats: 1 }), level: LEVELS[level] ? level : "gemischt" };
-      case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: LEVELS[level] ? level : "gemischt", rounds: 3, timer: "t60" };
-      case "oben": return { mode: "oben", rounds: 2 };
-      case "land": { // österreichische Bundesländer haben auf „Profi“ nur 4 Gebiete – zu wenig für 5 Runden
-        const region = pick(st ? (pro ? ["it", "it", "europa"] : ["it", "at", "it", "europa"]) : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", "de", ...(pro ? [] : ["at"]), "it"]);
-        return { region, level: lv(region), rounds: 5, timer: "t30" }; }
+      case "zehn": return st ? { sets: ["suedtirol"], cards: 3 } : { cards: 3 };
+      case "wand": return { n: 5, theme: st ? "suedtirol" : w ? "welt" : null }; // 5 Kategorien ausgelost (20 Felder)
+      case "hl": return { ...(st ? { cats: 2, only: HL_ST } : w ? { cats: 2, not: HL_ST } : { cats: 2 }), level: LEVELS[level] ? level : "gemischt" };
+      case "geo": return { mode: "karte", region: pick(st ? ["suedtirol"] : w ? ["europa", "welt"] : ["suedtirol", "italien", "dach", "europa", "welt"]), level: LEVELS[level] ? level : "gemischt", rounds: 5, timer: "t60" };
+      case "oben": return { mode: "oben", rounds: 3 };
+      case "land": { // 8 Gebiete: Österreich (9, auf „Leicht“ 5) und Deutschland auf „Leicht“/„Profi“ (9/7) haben zu wenige
+        const region = pick(st ? ["it", "it", "europa"] : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", ...(level === "gemischt" ? ["de"] : []), "it"]);
+        return { region, level: lv(region), rounds: 8, timer: "t30", free: true }; }
       case "umriss": { const region = pick(st ? ["it", "at"] : w ? ["welt", "europa"] : ["europa", "welt", "de", "at", "it"]);
-        return { mode: "umriss", region, level: lv(region), rounds: 4 }; }
-      case "schaetzen": return { mode: "schaetzen", rounds: 3, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
-      case "hinweis": return { mode: "hinweis", rounds: 2, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
-      case "siebzehn": return { mode: "siebzehn", rounds: 3 };
-      case "stich": return { mode: "stich", rounds: 3 };
-      case "bus": return { mode: "bus", rounds: 1 };
+        return { mode: "umriss", region, level: lv(region), rounds: 6 }; }
+      case "schaetzen": return { mode: "schaetzen", rounds: 5, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
+      case "hinweis": return { mode: "hinweis", rounds: 4, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
+      case "siebzehn": return { mode: "siebzehn", rounds: 5 };
+      case "stich": return { mode: "stich", rounds: 4 };
+      case "bus": return { mode: "bus", rounds: 3 };
       // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien
-      case "slf": return { ...(st ? { preset: "suedtirol", rounds: 1, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 1, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
-      case "alm": return { weeks: 6, storms: 0, map: "zufall" }; // Kurzsommer: 6 Wochen ohne Gewitter, Tal ausgelost
-      case "jagd": return { rounds: 8, map: "zufall" }; // kurze Jagd: 8 Runden, Jagdgebiet ausgelost
-      case "duell": return { target: 2, timer: "45" };
-      case "frage": return { target: 2, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben
+      case "slf": return { ...(st ? { preset: "suedtirol", rounds: 2, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 2, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
+      case "alm": return { weeks: 8, storms: 0, map: "zufall" }; // Kurzsommer: 8 Wochen ohne Gewitter, Tal ausgelost
+      case "jagd": return { rounds: 12, map: "zufall" }; // 12 Runden, Jagdgebiet ausgelost
+      case "duell": return { target: 3, timer: "45" };
+      case "frage": return { target: 3, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben
     }
     return {};
   }
 
   function create(opts, players) {
-    const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 8;
+    const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 5;
     const theme = THEMES[opts && opts.theme] ? opts.theme : "mix";
     const level = LEVELS[opts && opts.level] ? opts.level : "gemischt";
     const games = eligible(opts && opts.off, players);
