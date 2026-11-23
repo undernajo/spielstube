@@ -117,7 +117,7 @@
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   const JG = window.S10Jagd;
   const WER = window.S10Wer;
-  let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut" }, store.get("s10-wer") || {});
+  let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
   const SEIL = window.S10Seil;
   let seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
   const seilKey = () => "s10-seil-" + roomCode; // Fortschritt der Seilschaft pro Stube (Stammstube = gleicher Code)
@@ -628,7 +628,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
-      wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut" },
+      wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -660,7 +660,10 @@
     view.wer = S.phase === "wer" ? WER.publicState(S) : null;
     if (view.wer) { // verteilte Personen merken – sie kommen erst wieder, wenn alle einmal dran waren
       const seen = store.get("s10-wer-seen") || [], add = WER.names(S.wer).filter((n) => !seen.includes(n));
-      if (add.length) { const all = (window.SCHLAU10_WER || []).map((p) => p.n), next = seen.concat(add).filter((x) => all.includes(x)); store.set("s10-wer-seen", all.every((x) => next.includes(x)) ? add : next); }
+      if (add.length) { // von vorn, sobald die gewählte Auswahl (Thema, Bekanntheit) durch ist
+        const D = window.SCHLAU10_WER || [], all = D.map((p) => p.n), cur = WER.pool(S.wer.opts.theme, S.wer.opts.level).map((i) => D[i].n);
+        const next = seen.concat(add).filter((x) => all.includes(x));
+        store.set("s10-wer-seen", cur.every((x) => next.includes(x)) ? next.filter((x) => !cur.includes(x)).concat(add) : next); }
     }
     view.seil = S.phase === "seil" ? SEIL.publicState(S) : null;
     if (S.seil && isHost) store.set(seilKey(), S.seil.prog); // Fortschritt beim Gastgeber merken
@@ -2622,7 +2625,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
     if (view.game === "wer" && lb.wer) {
-      return `<p class="muted small">Ab 2 Spielern · ${lb.wer.ask === "tippen" ? "Fragen eintippen" : "laut fragen"} · ${esc((WER.THEMES[lb.wer.theme] || WER.THEMES.mix).name)} · ${lb.wer.hint === "bereich" ? "Bereich wird verraten" : "ohne Hinweis"} · ${lb.wer.end === "erster" ? "bis der Erste errät" : "bis alle erraten haben"}</p>`;
+      return `<p class="muted small">Ab 2 Spielern · ${lb.wer.ask === "tippen" ? "Fragen eintippen" : "laut fragen"} · ${esc((WER.THEMES[lb.wer.theme] || WER.THEMES.mix).name)}${lb.wer.level === "alle" ? "" : " (nur sehr bekannte)"} · ${lb.wer.hint === "bereich" ? "Bereich wird verraten" : "ohne Hinweis"} · ${lb.wer.end === "erster" ? "bis der Erste errät" : "bis alle erraten haben"}</p>`;
     }
     if (view.game === "frage" && lb.frage) {
       return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${lb.frage.choices === "1" ? "1 Antwort vorgegeben" : "3 Antworten zur Auswahl"} · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
@@ -2695,7 +2698,7 @@
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const sgSw = app.querySelector("#seil-swap");
     if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
-    [["#wer-theme", "theme"], ["#wer-hint", "hint"], ["#wer-endopt", "end"], ["#wer-ask", "ask"]].forEach(([id, k]) => {
+    [["#wer-theme", "theme"], ["#wer-hint", "hint"], ["#wer-endopt", "end"], ["#wer-ask", "ask"], ["#wer-level", "level"]].forEach(([id, k]) => {
       const el = app.querySelector(id);
       if (el) el.onchange = () => { werOpts[k] = el.value; store.set("s10-wer", werOpts); publish(); };
     });
@@ -3137,10 +3140,11 @@
   }
   function werSettingsHtml() {
     const n = playing().length, sel = (id, obj, val, desc) => `<select id="${id}">${Object.entries(obj).map(([k, t]) => `<option value="${k}" ${String(val) === k ? "selected" : ""}>${esc(t.name)}${desc && t.desc ? " – " + esc(t.desc) : ""}</option>`).join("")}</select>`;
-    const theme = WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", pool = WER.pool(theme), seen = store.get("s10-wer-seen") || [];
+    const theme = WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", level = WER.LEVELS[werOpts.level] ? werOpts.level : "leicht", pool = WER.pool(theme, level), seen = store.get("s10-wer-seen") || [];
     const fresh = pool.filter((i) => !seen.includes(window.SCHLAU10_WER[i].n)).length;
     return `<label class="field"><span>Fragen</span>${sel("wer-ask", WER.MODES, WER.MODES[werOpts.ask] ? werOpts.ask : "laut")}</label>
       <label class="field"><span>Personen</span>${sel("wer-theme", WER.THEMES, theme, true)}</label>
+      <label class="field"><span>Bekanntheit</span>${sel("wer-level", WER.LEVELS, level)}</label>
       <label class="field"><span>Hinweis für dich</span>${sel("wer-hint", WER.HINTS, werOpts.hint)}</label>
       <label class="field"><span>Spielende</span>${sel("wer-endopt", WER.ENDS, werOpts.end)}</label>
       ${freshHtml(fresh, pool.length, "Personen", "wer")}
@@ -3158,7 +3162,7 @@
         <li>Wenn du dran bist, kannst du statt einer Frage <b>raten</b>. Erkennt das Spiel den Namen nicht sicher, entscheiden die anderen. Falsch geraten: der Nächste ist dran.</li>
         <li><b>Neue Person losen:</b> Glaubst du, jemand kennt seine Person nicht, tippe bei deren Steckbrief auf „🎲 Neue Person losen“. Das geht, solange diese Person noch keine Frage gestellt hat.</li>
         <li>Wer seine Person <b>zuerst</b> errät, gewinnt; die anderen spielen um die Plätze weiter (einstellbar: Schluss schon nach dem Ersten). Aufgeben geht auch – du antwortest dann weiter für die anderen.</li>
-        <li>Einstellbar: nur echte Menschen, nur Südtirol &amp; Alpen, nur erfundene Figuren oder gemischt; auf Wunsch wird dir der Bereich verraten. Personen kommen erst wieder, wenn alle einmal dran waren.</li>
+        <li>Einstellbar: nur echte Menschen, nur Südtirol &amp; Alpen, nur erfundene Figuren oder gemischt; auf Wunsch wird dir der Bereich verraten. Mit „Nur sehr bekannte Personen“ (Standard) fallen weniger bekannte weg. Personen kommen erst wieder, wenn alle einmal dran waren.</li>
       </ul>
     </details>`;
   function jagdSettingsHtml() {

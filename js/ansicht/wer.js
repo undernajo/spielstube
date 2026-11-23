@@ -13,6 +13,7 @@
   function lifeTxt(p) {
     if (p.fik) return { chip: "", line: esc(p.aus) };
     const now = new Date().getFullYear(), um = p.ca ? "um " : "";
+    if (p.geb == null) return { chip: "🟢 lebt", line: "lebt – Geburtsjahr nicht hinterlegt" };
     if (p.tot == null) { const age = now - p.geb; return { chip: `🟢 lebt · ca. ${age} Jahre`, line: `geboren ${yr(p.geb)} – heute etwa ${age - 1}–${age} Jahre alt` }; }
     const age = p.tot - p.geb;
     return { chip: `✝ gestorben ${um}${yr(p.tot)}`, line: `geboren ${um}${yr(p.geb)}, gestorben ${um}${yr(p.tot)} mit ${p.ca ? "etwa " : "ca. "}${age} Jahren${now - p.tot <= 3 ? " (erst vor Kurzem)" : ""}` };

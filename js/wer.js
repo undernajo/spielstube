@@ -23,21 +23,22 @@
   const data = () => root.SCHLAU10_WER || [];
   const L = () => root.S10Logic;
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const pool = (theme) => data().map((p, i) => i).filter((i) => (THEMES[theme] || THEMES.mix).ok(data()[i]));
+  const LEVELS = { leicht: { name: "Nur sehr bekannte Personen" }, alle: { name: "Alle – auch weniger bekannte" } };
+  const pool = (theme, level) => data().map((p, i) => i).filter((i) => (THEMES[theme] || THEMES.mix).ok(data()[i]) && (level === "alle" || !data()[i].sch));
 
   function start(s, opts) {
     opts = opts || {};
     const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (seats.length < 2) return false;
-    const theme = THEMES[opts.theme] ? opts.theme : "mix", hint = HINTS[opts.hint] ? opts.hint : "aus", end = ENDS[opts.end] ? opts.end : "alle", ask = MODES[opts.ask] ? opts.ask : "laut";
-    const avoid = new Set(opts.avoid || []), all = pool(theme);
+    const theme = THEMES[opts.theme] ? opts.theme : "mix", hint = HINTS[opts.hint] ? opts.hint : "aus", end = ENDS[opts.end] ? opts.end : "alle", ask = MODES[opts.ask] ? opts.ask : "laut", level = LEVELS[opts.level] ? opts.level : "leicht";
+    const avoid = new Set(opts.avoid || []), all = pool(theme, level);
     if (all.length < seats.length) return false;
     const fresh = shuffle(all.filter((i) => !avoid.has(data()[i].n))), old = shuffle(all.filter((i) => avoid.has(data()[i].n)));
     const picks = [...fresh, ...old].slice(0, seats.length), who = {};
     seats.forEach((id, k) => { who[id] = picks[k]; });
     s.game = "wer"; s.phase = "wer";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.wer = { opts: { theme, hint, end, ask }, seats, avoid: [...avoid], used: picks.slice(), rr: {}, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
+    s.wer = { opts: { theme, hint, end, ask, level }, seats, avoid: [...avoid], used: picks.slice(), rr: {}, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
       q: null, guess: null, last: null, solved: {}, solvedN: 0, qn: Object.fromEntries(seats.map((id) => [id, 0])), log: Object.fromEntries(seats.map((id) => [id, []])) };
     s.wer.turn = s.wer.order[0];
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -115,7 +116,7 @@
       case "wbReroll": { // neue Person für einen anderen, solange er noch nicht gefragt hat
         const t = a.target;
         if (!canReroll(st, pid, t)) return false;
-        const all = pool(st.opts.theme).filter((i) => !st.used.includes(i));
+        const all = pool(st.opts.theme, st.opts.level).filter((i) => !st.used.includes(i));
         if (!all.length) return false;
         const av = new Set(st.avoid), fresh = all.filter((i) => !av.has(data()[i].n)), list = fresh.length ? fresh : all;
         const i = list[Math.floor(Math.random() * list.length)];
@@ -169,7 +170,7 @@
 
   // nur vor der ersten eigenen Frage und nicht mitten in einer laufenden Frage oder einem Tipp
   const canReroll = (st, pid, t) => st.step !== "final" && st.seats.includes(pid) && st.seats.includes(t) && pid !== t && !st.solved[t] && !st.qn[t] && !(t === st.turn && st.step !== "ask")
-    && pool(st.opts.theme).some((i) => !st.used.includes(i));
+    && pool(st.opts.theme, st.opts.level).some((i) => !st.used.includes(i));
   const card = (i) => { const p = data()[i]; return p ? { n: p.n, b: p.b, g: p.g, geb: p.geb, tot: p.tot, ca: !!p.ca, fik: !!p.fik, aus: p.aus || "", land: p.land, beruf: p.beruf, f: p.f.slice(),
     k: p.k || "", sp: p.sp || "", a: (p.a || []).slice(), fam: p.fam || "", w: p.w || "", art: p.art || "", kraft: p.kraft || "", gut: p.gut || "" } : null; };
   // Personen der anderen (nie die eigene, solange sie nicht erraten ist) – nur an den jeweiligen Spieler
@@ -204,5 +205,5 @@
   }
   const names = (st) => st.seats.map((id) => data()[st.who[id]].n);
 
-  root.S10Wer = { start, apply, tick, publicState, privateState, names, pool, THEMES, HINTS, ENDS, MODES };
+  root.S10Wer = { start, apply, tick, publicState, privateState, names, pool, THEMES, HINTS, ENDS, MODES, LEVELS };
 })(typeof window !== "undefined" ? window : globalThis);
