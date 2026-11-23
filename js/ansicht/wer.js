@@ -104,9 +104,9 @@
           <div class="wer-row"><button type="button" id="wer-back" class="btn ghost sm">← Doch lieber fragen</button></div>
           <p class="muted small">Liegst du falsch, ist der Nächste dran.</p>`
         : loud ? `<div class="wer-me">🗣️ Du bist dran – stell deine Frage laut!</div>${hint}
-          <p class="wer-loud">Frag einfach im Anruf oder am Tisch, z. B. „Bin ich ein Mann?“. Die anderen antworten per Knopf, das Ergebnis siehst du hier. Was du dir merken willst, schreib unten auf deinen Notizzettel.</p>
+          <p class="wer-loud">Frag im Anruf oder am Tisch, z. B. „Bin ich ein Mann?“ – die anderen antworten per Knopf.</p>
           <div class="wer-row"><button type="button" id="wer-loudguess" class="btn primary">🎯 Ich rate jetzt laut</button><button type="button" id="wer-guess" class="btn ghost sm">⌨️ Namen eintippen</button><button type="button" id="wer-giveup" class="btn ghost sm">Aufgeben</button></div>
-          <p class="muted small">Bei <b>Ja</b> darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran.</p>`
+          ${(st.log[me] || []).filter((x) => !x.n).length < 2 ? `<p class="muted small">Bei <b>Ja</b> darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran.</p>` : ""}`
         : `<div class="wer-me">❓ Du bist dran – wer bist du?</div>${hint}
           <form class="du-form wer-qform" autocomplete="off"><input id="wer-q" maxlength="200" placeholder="Ja/Nein-Frage über dich …" enterkeyhint="send"><button class="btn primary">Fragen</button></form>
           ${(st.log[me] || []).length < 3 ? `<div class="wer-ideas">${IDEAS.map((x) => `<button type="button" class="wer-idea" data-weridea="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}

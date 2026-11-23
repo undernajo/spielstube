@@ -57,11 +57,9 @@
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
-        <section class="ku-main">
-          <div class="ku-left">
-            ${st.step !== "final" ? `<div class="ku-board ${c ? "small" : ""}" style="--cols:${st.cols}">${tiles}</div>` : ""}
-            <div class="panel quiz-card qz-card ku-card">${panel}</div>
-          </div>
+        <section class="ku-main ${c && st.step !== "final" ? "has-q" : ""}">
+          ${st.step !== "final" ? `<div class="ku-board" style="--cols:${st.cols}">${tiles}</div>` : ""}
+          <div class="panel quiz-card qz-card ku-card">${panel}</div>
           <aside class="tk-side"><div class="wer-flbl">Punkte</div><ul class="tk-board">${board}</ul></aside>
           ${!seated ? `<p class="muted small du-watch">Du schaust zu.</p>` : ""}
         </section>
