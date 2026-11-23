@@ -13,6 +13,26 @@
   let almNewsSeen = null; // zuletzt gemeldete Erstbonus-Nachricht
   let almLook = null;     // welches Tal groß gezeigt wird (eigenes oder angetipptes)
   let almConfetti = null;
+  // ---------- Unwetter am Ende: Blitz, Regen, Donner – danach erst der Endstand ----------
+  let almStormUntil = 0;
+  function almStormShow(st, wait) {
+    const ms = 5200, el = document.createElement("div");
+    el.className = "alm-unwetter"; el.setAttribute("role", "alert");
+    el.innerHTML = `<div class="au-rain"></div><div class="au-flash"></div>
+      <div class="au-box"><svg class="au-cloud" viewBox="0 0 160 120" aria-hidden="true">
+        <path d="M30 70 a22 22 0 0 1 22 -24 a32 32 0 0 1 60 6 a20 20 0 0 1 20 34 H40 a20 20 0 0 1 -10 -16Z" fill="#4a4870"/>
+        <path d="M44 58 a18 18 0 0 1 20 -18 a26 26 0 0 1 48 6" fill="none" stroke="#6c6a96" stroke-width="5" stroke-linecap="round"/>
+        <path class="au-bolt" d="M84 78 L70 100 H82 L74 120 L98 92 H86 L94 78Z" fill="#ffd84a"/></svg>
+        <small>⚡ ${st.storms}. Gewitter</small><b>Unwetter auf der Alm!</b><span>Der Almsommer ist vorbei – gleich kommt der Endstand …</span></div>`;
+    const end = () => { el.classList.add("out"); setTimeout(() => el.remove(), 400); };
+    el.onclick = end;
+    // sofort einblenden (deckt den Endstand ab, bevor er zu sehen ist); der Donner wartet auf einen evtl. noch laufenden Zweiklang
+    document.body.appendChild(el);
+    setTimeout(() => { SND.donner(0); setTimeout(() => SND.donner(0), 2300); }, wait * 1000);
+    almStormUntil = Date.now() + wait * 1000 + ms;
+    setTimeout(end, wait * 1000 + ms);
+    return ms;
+  }
 
   // ---------- Klänge (live erzeugt über js/klang.js; 🔇 schaltet sie mit ab) ----------
   // Würfeln (ausrollen), Bleistift-Kreuz beim Anklicken eines Feldes, Fläche fertig
@@ -41,6 +61,11 @@
     // Bleistift-Kreuz beim Anklicken eines Feldes: zwei schnelle Striche
     kreuze: (n = 1) => snd((c, t0) => { for (let k = 0; k < n; k++) [0, 0.13].forEach((d) => noise(c, t0 + k * 0.28 + d, 0.085, { type: "bandpass", freq: 3800, q: 1.4, a: 0.008, peak: 0.22, sweepTo: 5200 })); }),
     // Fläche fertig: kleiner, heller Zweiklang
+    // Donner: heller Knall, dann langes Grollen
+    donner: (d = 0) => snd((c, t0) => { const t = t0 + d;
+      noise(c, t, 0.35, { type: "highpass", freq: 900, a: 0.002, peak: 0.32, rev: 0.5 });
+      noise(c, t + 0.05, 2.6, { type: "lowpass", freq: 260, q: 0.9, a: 0.04, peak: 0.75, sweepTo: 90, brown: true, rev: 0.6 });
+      noise(c, t + 0.9, 1.8, { type: "lowpass", freq: 180, a: 0.2, peak: 0.45, sweepTo: 70, brown: true }); }),
     flaeche: (d = 0) => snd((c, t0) => { tone(c, t0 + d, 0.35, { type: "triangle", f0: 784, a: 0.005, peak: 0.12, rev: 0.4 }); tone(c, t0 + d + 0.11, 0.5, { type: "triangle", f0: 1175, a: 0.005, peak: 0.11, rev: 0.4 }); }),
   };
   // ---------- Würfel-Animation (Variante B): fallen, hüpfen im Takt des Klangs, Seiten wechseln beim Rollen, dann liegen ----------
@@ -296,8 +321,10 @@
         if (st.step === "final" && almHeard.step !== "final") {
           const last = st.week !== almHeard.week; // Sommer durchs letzte Gewitter vorbei: erst die letzten Würfel
           if (last) almThrow(wait);
-          // Sieg- bzw. Niederlage-Ton der Spielstube (nur für Mitspieler) – nach Zweiklang und Würfeln
-          if (seated) setTimeout(() => ((st.winners || []).includes(G.myId) ? sfx.win() : sfx.lose()), wait * 1000 + (last ? 1300 : 300));
+          // Letztes Gewitter: erst das Unwetter in der Bildmitte, dann der Endstand
+          const stormMs = st.endReason === "storm" ? almStormShow(st, wait) : 0;
+          // Sieg- bzw. Niederlage-Ton der Spielstube (nur für Mitspieler) – nach Zweiklang, Würfeln bzw. Unwetter
+          if (seated) setTimeout(() => ((st.winners || []).includes(G.myId) ? sfx.win() : sfx.lose()), wait * 1000 + (stormMs || (last ? 1300 : 300)));
         }
         almHeard.week = st.week; almHeard.step = st.step; almHeard.done = myDone;
       }
@@ -311,7 +338,7 @@
 
     let main;
     if (st.step === "final") {
-      if (almConfetti !== key) { almConfetti = key; if (st.winners && st.winners.includes(G.myId)) confetti(); }
+      if (almConfetti !== key) { almConfetti = key; if (st.winners && st.winners.includes(G.myId)) setTimeout(confetti, Math.max(0, almStormUntil - Date.now())); }
       const rank = st.seats.slice().sort((a, b) => (st.totals[b] || 0) - (st.totals[a] || 0)), medal = ["🥇", "🥈", "🥉"];
       main = G.podiumHtml({ items: rank.map((id) => ({ id, name: nameOf(v, id), pts: st.totals[id] || 0, txt: `${st.totals[id] || 0} Punkte` })), winners: st.winners, restartId: "alm-restart",
           info: st.endReason === "storm" ? "⛈️ Ein Unwetter hat den Sommer beendet." : "🏔️ Der Sommer ist vorbei." }) + `
