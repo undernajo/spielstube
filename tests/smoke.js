@@ -13,7 +13,7 @@ const path = require("path");
 const puppeteer = require("puppeteer-core");
 
 const ROOT = path.resolve(__dirname, "..");
-const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer",
+const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer", "tick",
   "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "alm", "jagd", "seil", "querbeet"];
 const GAMES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -43,6 +43,22 @@ function serve() {
 
 // Spiele, bei denen ein paar zufällige Klicks nicht weit genug kommen: gezielt eine ganze Runde durchspielen
 const DEEP = {
+  // Wie tickst du? (laut, Standard): Hinweisgeber sieht seine Zahl und schreibt freiwillig einen Hinweis, der andere tippt → Auflösung bei beiden
+  async tick(host, guest, errs) {
+    const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
+    if (!(await until(host, ".tk-secret, [data-tkv]"))) return errs.push("Wie tickst du?: keine Skala zu sehen");
+    const giver = (await host.evaluate(() => !!document.querySelector(".tk-secret"))) ? host : guest, other = giver === host ? guest : host;
+    if (!(await until(giver, ".tk-cell.target"))) errs.push("Wie tickst du?: Hinweisgeber sieht seine Zahl nicht");
+    if (await other.evaluate(() => !!document.querySelector(".tk-cell.target"))) errs.push("Wie tickst du?: der Ratende sieht die geheime Zahl");
+    await giver.type("#tk-h", "Ein Testhinweis");
+    await giver.evaluate(() => document.querySelector(".tk-hform").requestSubmit());
+    if (!(await until(other, ".tk-bubble"))) errs.push("Wie tickst du?: aufgeschriebener Hinweis kommt nicht an");
+    if (!(await until(other, '[data-tkv="5"]'))) return errs.push("Wie tickst du?: Felder zum Tippen fehlen");
+    await other.evaluate(() => document.querySelector('[data-tkv="5"]').click());
+    await sleep(300);
+    await other.evaluate(() => document.querySelector("#tk-lock").click());
+    for (const [p, w] of [[giver, "Hinweisgeber"], [other, "Ratender"]]) if (!(await until(p, "#tk-next"))) errs.push(`Wie tickst du?: keine Auflösung beim ${w}`);
+  },
   // Wer bin ich? (laut fragen, Standard): wer dran ist, merkt sich ein Stichwort; der andere sieht den Steckbrief und antwortet
   // gleich „Nein“ → der andere ist dran und rät laut → der Erste entscheidet „Falsch“ → der Erste ist wieder dran
   async wer(host, guest, errs) {

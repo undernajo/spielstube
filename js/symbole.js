@@ -205,9 +205,19 @@
       <g transform="rotate(-7 32 16)"><rect x="22" y="6" width="20" height="17" rx="1.5" fill="#ffe066" stroke="#c9a400" stroke-width="1.2"/>
       <text x="32" y="20.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="15" fill="#d6336c">?</text></g></svg>`;
   }
+  // Wie tickst du?: Halbkreis-Skala von Blau nach Rot mit Zeiger
+  function tickIcon() {
+    const seg = [0, 1, 2, 3, 4].map((i) => { const a0 = Math.PI * (1 - i / 5), a1 = Math.PI * (1 - (i + 1) / 5), r = 24, cx = 32, cy = 44;
+      const p = (a, rr) => `${(cx + rr * Math.cos(a)).toFixed(1)} ${(cy - rr * Math.sin(a)).toFixed(1)}`;
+      return `<path d="M${p(a0, r)} A${r} ${r} 0 0 1 ${p(a1, r)} L${p(a1, 12)} A12 12 0 0 0 ${p(a0, 12)}Z" fill="${["#4aa8ff", "#4fd1c5", "#8fcf6a", "#ffc83d", "#ef4b5a"][i]}" stroke="#1b1640" stroke-width="1.2"/>`; }).join("");
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">${seg}
+      <path d="M32 44 L47 25" stroke="#fbf6ea" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="44" r="4" fill="#fbf6ea" stroke="#1b1640" stroke-width="1.2"/>
+      <text x="16" y="58" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="#4aa8ff">1</text>
+      <text x="48" y="58" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="#ef4b5a">10</text></svg>`;
+  }
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon
   };
 })();
