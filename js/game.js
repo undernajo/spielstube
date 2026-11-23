@@ -34,7 +34,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -63,6 +63,7 @@
     { key: "wl", hidden: true, min2: true, color: "#ff6fae", name: "Gleiche Wellenlänge", desc: "Aufs selbe Wort kommen", icon: wlIcon() },
     { key: "alm", color: "#7cc95a", name: "Almsommer", desc: "Würfeln & ankreuzen", icon: almIcon() },
     { key: "jagd", min2: true, color: "#c98a3c", name: "Auf der Jagd", desc: "Wild verstecken & jagen", icon: jagdIcon() },
+    { key: "seil", color: "#ff8a3d", name: "Seilschaft", desc: "Zu zweit auf den Gipfel", icon: seilIcon() },
   ];
   const GEO = window.S10Geo, GEODATA = window.SCHLAU10_GEO || {}, LF = window.L; // LF = Leaflet (Kartenbibliothek)
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
@@ -114,10 +115,13 @@
   let almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   const JG = window.S10Jagd;
+  const SEIL = window.S10Seil;
+  let seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
+  const seilKey = () => "s10-seil-" + roomCode; // Fortschritt der Seilschaft pro Stube (Stammstube = gleicher Code)
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Abenteuer", ["seil"]]];
   // Gleiche Wellenlänge ist ausgeblendet (hidden) – Code bleibt, Zurückholen: hidden entfernen und hier wieder einen Abschnitt eintragen
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
@@ -193,6 +197,9 @@
   }
   // Verschlüsselte Nachrichten der Reihe nach senden (Reihenfolge bleibt erhalten)
   let outChain = Promise.resolve();
+  // Live-Kanal: schnelle, kurzlebige Nachrichten an alle in der Stube (z. B. Figuren-Positionen bei der Seilschaft) – nicht gespeichert
+  const liveHandlers = [];
+  function liveSend(m) { if (mq && roomTopic) sendSealed(T("live"), { ...m, from: myId }, { qos: 0 }); }
   function sendSealed(topic, obj, opts) {
     const c = mq;
     outChain = outChain.then(async () => { const p = await seal(obj); if (c) c.publish(topic, p, opts); }).catch(() => {});
@@ -257,7 +264,7 @@
     }, 9000);
     let ready = false;
     c.on("connect", async () => {
-      if (ready) { status = ""; c.subscribe([T("up"), T("rtc/" + myId)], { qos: 1 }); sendSealed(T("host"), "online", { qos: 1, retain: true }); publish(); return; } // Wiederverbinden
+      if (ready) { status = ""; c.subscribe([T("up"), T("rtc/" + myId), T("live")], { qos: 1 }); sendSealed(T("host"), "online", { qos: 1, retain: true }); publish(); return; } // Wiederverbinden
       if (opened) return;
       opened = true; clearTimeout(fail); status = "";
       // Stammstube wieder öffnen: ist sie gerade schon offen (anderes Gerät/Tab), nicht ein zweites Mal öffnen
@@ -267,7 +274,7 @@
         errorMsg = `Die Stube ${roomCode} ist gerade schon offen – auf einem anderen Gerät oder in einem anderen Tab. Dort weiterspielen oder später nochmal versuchen.`;
         roomCode = null; return renderStart();
       }
-      c.subscribe([T("up"), T("rtc/" + myId)], { qos: 1 });
+      c.subscribe([T("up"), T("rtc/" + myId), T("live")], { qos: 1 });
       sendSealed(T("host"), "online", { qos: 1, retain: true });
       roomsPut("s10-myrooms", { code: roomCode, broker: idx, name: S.roomName || undefined });
       ready = true;
@@ -278,6 +285,7 @@
       const m = await unseal(buf);
       if (!m || typeof m !== "object") return;
       if (topic === T("rtc/" + myId)) { onRtc(m); return; }
+      if (topic === T("live")) { if (m && m.from !== myId) liveHandlers.forEach((h) => h(m)); return; }
       const cid = String(m.clientId || "").slice(0, 40);
       if (!cid || cid === myId) return;
       lastSeen.set(cid, Date.now());
@@ -313,7 +321,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -378,6 +386,10 @@
     if (type === "start" && action.game === "slf") {
       if (!host || S.phase !== "lobby") return false;
       SLF.start(S, action.opts, now); return true;
+    }
+    if (type === "start" && action.game === "seil") {
+      if (!host || S.phase !== "lobby") return false;
+      return SEIL.start(S, { swap: !!(action.opts && action.opts.swap), prog: store.get(seilKey()) });
     }
     if (type === "start" && action.game === "jagd") {
       if (!host || S.phase !== "lobby") return false;
@@ -452,8 +464,9 @@
     if (type.startsWith("wl")) return S.phase === "wl" && WL.apply(S, pid, action, host);
     if (type.startsWith("alm")) return S.phase === "alm" && ALM.apply(S, pid, action, host);
     if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
+    if (type.startsWith("sg")) return S.phase === "seil" && SEIL.apply(S, pid, action, host, now);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -524,7 +537,7 @@
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -598,7 +611,7 @@
     view.game = S.game || "zehn";
     view.roomName = S.roomName || "";
     view.kicked = (S.kicked || []).slice();
-    if (S.phase === "lobby") view.lobby = {
+    if (S.phase === "lobby") view.lobby = { seilSwap: !!seilOpts.swap,
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
@@ -633,6 +646,8 @@
     view.karten = S.phase === "karten" ? KG.publicState(S) : null;
     view.alm = S.phase === "alm" ? ALM.publicState(S) : null;
     view.jagd = S.phase === "jagd" ? JG.publicState(S) : null;
+    view.seil = S.phase === "seil" ? SEIL.publicState(S) : null;
+    if (S.seil && isHost) store.set(seilKey(), S.seil.prog); // Fortschritt beim Gastgeber merken
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
     view.frage = S.phase === "frage" ? FQ.publicState(S, Date.now()) : null;
     view.wand = S.phase === "wand" ? WAND.publicState(S) : null;
@@ -697,7 +712,7 @@
     c.on("connect", () => {
       if (mq !== c) return;
       status = view ? "" : `Suche Stube ${code} …`; render();
-      c.subscribe([T("state"), T("host"), T("hand/" + myId), T("rtc/" + myId)], { qos: 1 });
+      c.subscribe([T("state"), T("host"), T("hand/" + myId), T("rtc/" + myId), T("live")], { qos: 1 });
       sendUp({ type: "join", name: myName });
     });
     c.on("reconnect", () => { if (mq === c) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
@@ -710,6 +725,7 @@
       const m = await unseal(buf);
       if (m === undefined || mq !== c) return;
       if (topic === T("rtc/" + myId)) { onRtc(m); return; }
+      if (topic === T("live")) { if (m && m.from !== myId) liveHandlers.forEach((h) => h(m)); return; }
       if (topic === T("hand/" + myId)) {
         if (m && (!wattenPriv || !wattenPriv._seq || m.seq >= wattenPriv._seq)) { wattenPriv = m.priv ? { ...m.priv, _seq: m.seq } : null; render(); }
         return;
@@ -1393,7 +1409,7 @@
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase !== "watten" && view.phase !== "schnapsen") G.dealReset();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
     camDockPlace();
     chipFx();
     G.qbBarRender();
@@ -1797,6 +1813,7 @@
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${chosenGame === "alm" ? almSettingsHtml() : ""}
           ${chosenGame === "jagd" ? jagdSettingsHtml() : ""}
+          ${chosenGame === "seil" ? seilSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
           ${chosenGame === "querbeet" ? qbSettingsHtml() : ""}
@@ -1904,6 +1921,7 @@
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "alm") return send({ type: "start", game: "alm", opts: almOpts });
       if (chosenGame === "jagd") return send({ type: "start", game: "jagd", opts: jagdOpts });
+      if (chosenGame === "seil") return send({ type: "start", game: "seil", opts: seilOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
@@ -2141,7 +2159,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, wand: fwRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -2405,6 +2423,8 @@
       rules: [["3️⃣", "Gegner ohne Stich: <b>+3</b>"], ["2️⃣", "Gegner unter 33 Augen: <b>+2</b>"], ["1️⃣", "Sonst <b>+1</b>"]] };
     if (ph === "alm" && v.alm) return { goal: `<em>${N(v.alm.weeks, "Woche", "Wochen")}</em>${v.alm.stormLimit ? ` (oder bis zum ${v.alm.stormLimit}. Gewitter)` : ""} – Punkte gibt es für jede ganz ausgefüllte Fläche. Wer am Ende die meisten hat, gewinnt.`, path: { type: "rounds", n: v.alm.weeks, fin: false, unit: "W" },
       rules: [["⛰️", "Volle Fläche = <b>Punkte im Eck</b>"], ["🥇", "Wer eine Fläche zuerst füllt, bekommt mehr"], ["🎲", "Gleiche Würfel für alle"]] };
+    if (ph === "seil" && v.seil) return { goal: "Bringt <em>beide</em> ans Ziel jeder Etappe – vom Tal bis zum <em>Gipfelkreuz</em>.", path: null,
+      rules: [["⭐", "Je Etappe bis <b>3 Sterne</b>: geschafft, alle Edelweiß, unter der Zielzeit"], ["💦", "Fällt einer, startet das Level <b>für beide</b> neu"], ...(v.seil.mode === "solo" ? [["🙋", "Allein: mit <b>Q</b> die Figur wechseln"]] : [["🤝", "Nur gemeinsam: Platten halten, huckepack, Fels schieben"]])] };
     if (ph === "jagd" && v.jagd) { const n = v.jagd.rounds;
       return { goal: `${n ? `<em>${n} Runden</em>` : "Bis einer das Revier seines Nachbarn leergejagt hat"} – Punkte gibt es für Treffer und erlegtes Wild. Die größte Strecke gewinnt.`, path: n ? { type: "rounds", n, fin: false } : null,
         rules: [["🎯", "Treffer <b>+1</b>"], ["🦌", "Tier ganz erlegt <b>+2</b> bis <b>+4</b>"], ["🔭", "Einmal den Hochsitz nutzen"]] }; }
@@ -2583,6 +2603,7 @@
     if (view.game === "hl" && lb.hl) {
       return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
     }
+    if (view.game === "seil") return `<p class="muted small">${seilTeamText()}</p>`;
     if (view.game === "jagd" && lb.jagd) {
       const l = JG.LENGTHS[lb.jagd.length] || JG.LENGTHS.normal, m = JG.MAP_LIST.find((x) => x.id === lb.jagd.map);
       return `<p class="muted small">Jagdgebiet: ${m ? `<b>${esc(m.name)}</b> – ${esc(m.desc)}` : "<b>Zufall</b> – eines der Gebiete wird ausgelost"} · ${esc(l.name)} – ${esc(l.desc)} · 2 bis 8 Spieler · jeder jagt im Revier seines Nachbarn, alle gleichzeitig</p>`;
@@ -2638,6 +2659,8 @@
     if (almL) almL.onchange = () => { almOpts.length = almL.value; store.set("s10-alm", almOpts); publish(); };
     const almM = app.querySelector("#alm-map");
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
+    const sgSw = app.querySelector("#seil-swap");
+    if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
     const jgL = app.querySelector("#jagd-length");
     if (jgL) jgL.onchange = () => { jagdOpts.length = jgL.value; store.set("s10-jagd", jagdOpts); publish(); };
     const jgM = app.querySelector("#jagd-map");
@@ -3058,6 +3081,22 @@
         `<option value="${k}" ${(ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>`;
   }
+  // Seilschaft: Spielerzahl wird erkannt – allein beide Figuren (Q wechselt), zu zweit je eine, ab drei schauen die übrigen zu
+  function seilTeamText() {
+    const ps = playing(), sw = !!(view.lobby && view.lobby.seilSwap);
+    if (!ps.length) return "Noch niemand da.";
+    if (ps.length === 1) return `🙋 <b>${esc(ps[0].name)}</b> spielt allein und steuert beide Figuren – mit <b>Q</b> (oder ⇄) wechseln.`;
+    const [k, g] = sw ? [ps[1], ps[0]] : [ps[0], ps[1]];
+    return `🧔 Kraxler: <b>${esc(k.name)}</b> · 🐐 Gams: <b>${esc(g.name)}</b>${ps.length > 2 ? ` · ${ps.slice(2).map((p) => esc(p.name)).join(", ")} ${ps.length > 3 ? "schauen" : "schaut"} zu` : ""}`;
+  }
+  function seilSettingsHtml() {
+    const ps = playing(), prog = SEIL.cleanProg(store.get(seilKey())), done = Object.keys(prog).length;
+    const stars = Object.values(prog).reduce((a, x) => a + x.stars, 0);
+    return `<div class="field"><span>Seilschaft – wird automatisch erkannt</span><p class="seil-team">${seilTeamText()}</p>
+        ${ps.length >= 2 ? `<button type="button" class="btn ghost sm" id="seil-swap">⇄ Figuren tauschen</button>` : ""}</div>
+      <p class="muted small">Fortschritt dieser Stube: ${done ? `${done} von ${SEIL.LEVELS.length} Etappen geschafft · ⭐ ${stars}` : "noch keine Etappe geschafft"} – auf der Tourenkarte geht es weiter.</p>
+      <button id="start" class="btn primary big" ${ps.length < 1 ? "disabled" : ""}>Seilschaft starten</button>`;
+  }
   function jagdSettingsHtml() {
     const len = JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", mapSel = jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall";
     return `<label class="field"><span>Jagdgebiet</span><select id="jagd-map"><option value="zufall" ${mapSel === "zufall" ? "selected" : ""}>🎲 Zufall – eines der Gebiete auslosen</option>
@@ -3066,6 +3105,18 @@
         `<option value="${k}" ${len === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${playing().length < 2 ? "disabled" : ""}>Spiel starten</button>`;
   }
+  const seilRulesHtml = `
+    <details class="rules"><summary>Regeln: Seilschaft</summary>
+      <ul>
+        <li>Zu zweit vom Tal bis zum Gipfelkreuz: 5 Welten mit je 3 Etappen, nach jeder Welt eine Hütte. Die Tourenkarte zeigt den ganzen Weg; spielbar ist bisher Welt 1 (Almwiese), die übrigen Etappen sind geplant.</li>
+        <li><b>Der Kraxler</b> ist schwer und stark: er schiebt Felsen und drückt die roten (schweren) Platten. <b>Die Gams</b> ist leicht und flink: Doppelsprung, passt durch niedrige Spalten und läuft über dünnes Eis.</li>
+        <li>Platten öffnen Gatter in derselben Farbe. ● Gatter gehen auf, solange die Platte gedrückt ist (bei zwei gleichen Platten müssen beide gedrückt sein), ⊘ Gatter gehen dagegen zu. Man kann auf dem Kopf des anderen stehen.</li>
+        <li>Fällt einer ins Wasser oder stürzt ab, beginnt das Level für beide von vorn. <b>R</b> startet neu, <b>Esc</b> geht zur Tourenkarte.</li>
+        <li>Pro Etappe bis zu 3 Sterne: geschafft, alle Edelweiß gesammelt, unter der Zielzeit. Der Fortschritt bleibt in der Stube gespeichert.</li>
+        <li><b>Spielerzahl wird automatisch erkannt:</b> allein steuerst du beide Figuren (Q oder ⇄ wechselt), zu zweit jeder eine, ab drei schauen die übrigen zu.</li>
+        <li>Steuerung: ←/→ oder A/D laufen, ↑/W/Leertaste springen (länger halten = höher); am Handy Knöpfe unter dem Spielfeld (am besten quer halten).</li>
+      </ul>
+    </details>`;
   const jagdRulesHtml = `
     <details class="rules"><summary>Regeln: Auf der Jagd</summary>
       <ul>
@@ -3359,6 +3410,8 @@
     toast,
     topActionsHtml,
     get view() { return view; }, set view(v) { view = v; },
+    liveSend,
+    onLive: (fn) => { liveHandlers.push(fn); },
     get wattenPriv() { return wattenPriv; }, set wattenPriv(v) { wattenPriv = v; },
   }));
   for (const f of window.S10Views || []) Object.defineProperties(G, Object.getOwnPropertyDescriptors(f(G)));

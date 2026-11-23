@@ -160,6 +160,17 @@
       <text x="46" y="52.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="17" fill="#2a1d00" transform="rotate(8 46 46)">3</text></svg>`;
   }
 
+  // Seilschaft: zwei Gipfel, verbunden durch ein Seil, oben das Gipfelkreuz
+  function seilIcon() {
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 58 L22 22 L32 34 L44 12 L62 58Z" fill="#8f8799"/><path d="M22 22 L27 28 L24 30 L19 28Z M44 12 L50 22 L46 24 L43 20 L39 22Z" fill="#fff"/>
+      <path d="M2 58 Q20 46 34 52 Q48 58 62 50 V60 H2Z" fill="#6fae5c"/>
+      <path d="M44 4 V13 M41 7 H47" stroke="#7a4e2a" stroke-width="2" stroke-linecap="round"/>
+      <path d="M14 44 Q26 52 30 40 Q34 28 46 34" fill="none" stroke="#ff8a3d" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="14" cy="44" r="4" fill="#d6453d"/><circle cx="14" cy="39.5" r="2.6" fill="#f2c9a0"/><rect x="11.5" y="36" width="5" height="2" rx="1" fill="#2f6b35"/>
+      <ellipse cx="47" cy="35" rx="4.2" ry="3" fill="#8b6a4f"/><circle cx="50" cy="31.5" r="2.2" fill="#8b6a4f"/><path d="M49.5 29.5 Q50 26.5 48 26 M51 29.5 Q52 27 50.5 26" stroke="#2a1e16" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`;
+  }
+
   // Auf der Jagd: Hochsitz am Waldrand, davor eine Fuchsspur
   function jagdIcon() {
     const rung = (y, w) => `<path d="M${32 - w} ${y} H${32 + w}" stroke="#7a4e2a" stroke-width="2.2" stroke-linecap="round"/>`;
@@ -186,6 +197,6 @@
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon
   };
 })();

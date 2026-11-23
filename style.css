@@ -3943,3 +3943,90 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .room-name { margin-top: 4px; } .room-name small { font-weight: 600; color: var(--muted); }
 .room-name-g { margin: 0; text-align: center; font: 700 1rem Fredoka, sans-serif; }
 .gc-room { font: 700 .9rem Fredoka, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+
+/* ---------- Seilschaft (Koop-Jump'n'Run) ---------- */
+.seil .sg-main { display: grid; gap: 10px; justify-items: center; padding-bottom: 14px; }
+.seil .sg-game { position: relative; width: 100%; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #1a1545; touch-action: none; user-select: none; -webkit-user-select: none; }
+.seil .sg-cv { display: block; width: 100%; }
+.seil .sg-hud { position: absolute; left: 10px; right: 10px; top: 8px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+.seil .sg-hud span { padding: 4px 10px; border-radius: 99px; background: rgba(20, 16, 50, .72); font: 700 .85rem Nunito, sans-serif; color: #fff; }
+.seil .sg-hud span b { color: var(--accent); } .seil .sg-hud small { color: var(--muted); }
+.seil .sg-over { position: absolute; inset: 0; display: grid; place-items: center; padding: 14px; background: rgba(14, 11, 40, .6); backdrop-filter: blur(2px); overflow: auto; }
+.seil .sg-card { width: min(100%, 500px); border-radius: 22px; padding: 18px 20px; background: #d9cfb6; color: #231d4d; box-shadow: 0 7px 0 #a89c7d; display: grid; gap: 10px; text-align: center; animation: wz-in .45s cubic-bezier(.3, 1.3, .5, 1) both; }
+.seil .sg-card h2 { margin: 0; font: 700 1.5rem Fredoka, sans-serif; } .seil .sg-card p { margin: 0; font-weight: 600; line-height: 1.4; }
+.seil .sg-card .big { font-size: 2.4rem; line-height: 1; } .seil .sg-card .hut-big svg { width: 84px; height: 84px; }
+.seil .sg-card .stats { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.seil .sg-card .stats span { padding: 6px 12px; border-radius: 99px; background: rgba(35, 29, 77, .08); font-weight: 800; }
+.seil .sg-card .muted2 { color: #6e6491; font-size: .9rem; }
+.seil .sg-card .row { display: flex; gap: 8px; flex-wrap: wrap; } .seil .sg-card .row .btn { flex: 1; }
+.seil .sg-card .btn.ghost { color: #231d4d; border-color: #8a7fb8; }
+.seil .sg-keys { margin: 0; color: var(--muted); font-size: .85rem; text-align: center; }
+.seil .sg-touch { display: none; width: 100%; justify-content: space-between; padding: 4px 6px; }
+.seil .sg-touch div { display: flex; gap: 12px; }
+.seil .sg-touch button { width: 66px; height: 66px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); background: rgba(40, 32, 100, .7); color: #fff; font: 700 1.5rem Fredoka, sans-serif; touch-action: none; }
+.seil .sg-touch button.on { background: rgba(255, 200, 61, .6); }
+@media (pointer: coarse) { .seil .sg-touch { display: flex; } .seil .sg-keys { display: none; } }
+.seil .tour-team { padding: 0 16px 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.seil .tour-team .btn { color: #231d4d; border-color: #8a7fb8; }
+  /* Tourenkarte: der ganze Weg vom Tal bis zum Gipfel */
+  .seil .tour { width: min(100%, 720px); border-radius: 22px; overflow: hidden; background: #d9cfb6; box-shadow: 0 7px 0 #a89c7d; color: #231d4d; display: grid; }
+  .seil .tour-head { display: flex; align-items: baseline; gap: 10px; padding: 12px 16px 6px; flex-wrap: wrap; }
+  .seil .tour-head h2 { margin: 0; font: 700 1.35rem Fredoka, sans-serif; } .tour-head small { font-weight: 700; color: #6e6491; }
+  .seil .tour-map { position: relative; aspect-ratio: 600 / 690; }
+  .seil .tour-map > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .seil .tour-node { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 1px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; color: inherit; }
+  .seil .tour-node i { width: clamp(26px, 5.4vw, 38px); height: clamp(26px, 5.4vw, 38px); border-radius: 50%; display: grid; place-items: center; font: 700 clamp(.8rem, 2.2vw, 1.05rem) Fredoka, sans-serif; font-style: normal; background: #fff8e6; color: #4b33b5; box-shadow: 0 3px 0 #a89c7d, 0 0 0 3px #4b33b5; }
+  .seil .tour-node.next i { background: #ffc83d; color: #2a1300; animation: tn 1.2s ease-in-out infinite; }
+@keyframes tn { 50% { transform: scale(1.1); } }
+  .seil .tour-node.done i { background: #2fbf71; color: #fff; box-shadow: 0 3px 0 #1f7a49, 0 0 0 3px #fff; }
+  .seil .tour-node.lock i { background: #cfc6dc; color: #6e6491; box-shadow: 0 3px 0 #8f86a3; }
+  .seil .tour-node.plan i { background: #ece6f3; color: #8a7fb8; box-shadow: 0 0 0 2px #8a7fb8; border: 2px dashed transparent; }
+  .seil .tour-node.sel i { outline: 3px solid #fff; outline-offset: 3px; }
+  /* oben am Gipfel ist es eng: Namen neben dem Kreis statt darunter */
+  .seil .tour-node.side { grid-template-columns: auto auto; align-items: center; gap: 4px; transform: translate(calc(-1 * clamp(13px, 2.7vw, 19px)), -50%); }
+  .seil .tour-node.side em { grid-column: 2; }
+  .seil .tour-node b { font: 800 clamp(.56rem, 1.5vw, .72rem) Nunito, sans-serif; background: rgba(255, 248, 230, .92); padding: 0 5px; border-radius: 7px; white-space: nowrap; }
+  .seil .tour-node.plan b { background: rgba(255, 248, 230, .6); color: #6e6491; }
+  .seil .tour-node em { color: #d99a00; font-style: normal; font-size: clamp(.55rem, 1.5vw, .74rem); letter-spacing: -1px; line-height: 1; }
+  .seil .tour-hut { position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center; pointer-events: none; }
+  .seil .tour-hut span { font-size: clamp(1.2rem, 3.6vw, 1.8rem); filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .25)); }
+  .seil .tour-hut b { font: 800 clamp(.56rem, 1.5vw, .72rem) Nunito, sans-serif; background: #231d4d; color: #fff8e6; padding: 1px 6px; border-radius: 7px; white-space: nowrap; }
+  .seil .tour-hut .hut-ico { display: block; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .25)); }
+  .seil .tour-hut .hut-ico svg { display: block; width: clamp(30px, 6.6vw, 48px); height: auto; }
+  .seil .tour-hut.peak .hut-ico svg { width: clamp(38px, 8.4vw, 62px); }
+  /* Gipfelkreuz: steht mit seinem Fuß genau auf der Bergspitze; Name links daneben, damit Level 15 frei bleibt */
+  .seil .tour-hut.peak { transform: translate(-50%, -92%); } .tour-hut.peak b { position: absolute; right: 100%; top: 55%; margin-right: 2px; }
+  .seil .tour-hut.plan { opacity: .9; } .tour-hut.plan .hut-ico { filter: saturate(.55) drop-shadow(0 2px 2px rgba(0, 0, 0, .2)); }
+  .card .hut-big svg { width: 84px; height: 84px; }
+  .seil .tour-world { position: absolute; right: 1.5%; transform: translateY(-50%); font: 800 clamp(.55rem, 1.5vw, .74rem) Nunito, sans-serif; color: #fff; background: rgba(35, 29, 77, .55); padding: 2px 8px; border-radius: 8px; letter-spacing: .5px; pointer-events: none; }
+  .seil .tour-info { padding: 10px 16px 12px; display: grid; gap: 6px; border-top: 1px solid rgba(35, 29, 77, .12); }
+  .seil .tour-info .ti-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .seil .tour-info .ti-h b { font: 700 1.1rem Fredoka, sans-serif; }
+  .seil .tour-info .tag { font: 800 .72rem Nunito, sans-serif; padding: 2px 8px; border-radius: 99px; background: rgba(35, 29, 77, .1); color: #4b33b5; }
+  .seil .tour-info .tag.plan { background: #8a7fb8; color: #fff; } .tour-info .tag.ok { background: #2fbf71; color: #fff; }
+  .seil .tour-info p { margin: 0; font-weight: 600; line-height: 1.35; }
+  .seil .tour-info .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .seil .tour-info .sp { flex: 1; } .tour-info small { color: #6e6491; font-weight: 700; }
+  /* Handy: nur der Name des angetippten Levels, keine Welt-Schilder (stehen unten im Infokasten) */
+  @media (max-width: 560px) {
+    .seil .tour-node b, .tour-world { display: none; } .tour-node.sel b { display: block; position: relative; z-index: 2; }
+    .seil .tour-hut b { display: none; } .tour-node em { display: none; } .tour-hut .hut-ico svg { width: 28px; } .tour-hut.peak .hut-ico svg { width: 36px; }
+    .seil .tour-node i { width: 23px; height: 23px; font-size: .72rem; box-shadow: 0 2px 0 #a89c7d, 0 0 0 2px #4b33b5; }
+    .seil .tour-head small { font-size: .78rem; }
+  }
+  /* Handy: nur der Name des angetippten Levels, keine Welt-Schilder (stehen unten im Infokasten) */
+  @media (max-width: 560px) {
+    .seil .tour-node b, .tour-world { display: none; } .tour-node.sel b { display: block; position: relative; z-index: 2; }
+    .seil .tour-hut b { display: none; } .tour-node em { display: none; } .tour-hut .hut-ico svg { width: 28px; } .tour-hut.peak .hut-ico svg { width: 36px; }
+    .seil .tour-node i { width: 23px; height: 23px; font-size: .72rem; box-shadow: 0 2px 0 #a89c7d, 0 0 0 2px #4b33b5; }
+    .seil .tour-head small { font-size: .78rem; }
+  }
+.seil .tour { width: min(100%, 720px); }
+@media (prefers-reduced-motion: reduce) { .seil .tour-node.next i { animation: none; } }
+@media (pointer: coarse) and (orientation: landscape) {
+  .seil .sg-main { position: relative; }
+  .seil .sg-touch { position: absolute; left: 0; right: 0; bottom: 22px; padding: 0 14px; pointer-events: none; }
+  .seil .sg-touch button { pointer-events: auto; width: 60px; height: 60px; background: rgba(40, 32, 100, .45); }
+  .seil .topbar { margin-bottom: 4px; }
+}
