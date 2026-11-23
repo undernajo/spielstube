@@ -3151,7 +3151,7 @@
     <details class="rules"><summary>Regeln: Wer bin ich?</summary>
       <ul>
         <li>Jeder bekommt geheim eine <b>Person</b> – echte Menschen oder erfundene Figuren. Alle anderen sehen sie, nur du nicht (wie ein Zettel auf der Stirn).</li>
-        <li>Zu jeder Person gibt es einen <b>Steckbrief</b> (Bereich, Mann oder Frau, lebt noch oder wann gestorben, Alter, Herkunft, Beruf, wofür sie bekannt ist). So können alle deine Fragen sicher beantworten, auch wenn sie die Person nicht so gut kennen.</li>
+        <li>Zu jeder Person gibt es einen <b>Steckbrief</b> (Bereich, Mann oder Frau, lebt noch oder wann gestorben, Alter, Herkunft, Sprache, Beruf, Familie, Aussehen, wofür sie bekannt ist – bei Figuren auch Wesen, Kräfte, gut oder böse – und ein Link zu Wikipedia). So können alle deine Fragen sicher beantworten, auch wenn sie die Person nicht so gut kennen.</li>
         <li>Reihum stellst du <b>Ja/Nein-Fragen</b> über dich, z. B. „Bin ich eine Frau?“. Die anderen tippen <b>Ja</b>, <b>Nein</b> oder <b>Weiß nicht</b> – es zählt die Mehrheit.</li>
         <li><b>Laut fragen</b> (Standard, ideal im Videoanruf oder am selben Tisch): Du stellst die Frage einfach laut, niemand muss tippen. Für deinen Notizzettel kannst du dir ein Stichwort notieren. Auch raten geht laut – die anderen tippen dann „Richtig“ oder „Falsch“. Wer lieber schreibt, stellt in der Lobby „Fragen eintippen“ ein.</li>
         <li>Bei <b>Ja</b> (oder unklar) darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran. Dein <b>Notizzettel</b> merkt sich alle Antworten.</li>

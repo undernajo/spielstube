@@ -22,8 +22,15 @@
     return `<div class="wer-stb" style="--pc:${color}">
       <div class="wer-stb-h"><small>${owner}</small><b>${esc(p.n)}</b></div>
       <div class="wer-chips"><span>${esc(p.b)}</span><span>${p.g === "w" ? "♀ Frau" : "♂ Mann"}</span>${life.chip ? `<span>${life.chip}</span>` : ""}</div>
-      <dl class="wer-dl"><dt>Herkunft</dt><dd>${esc(p.land)}</dd><dt>${p.fik ? "Was" : "Beruf"}</dt><dd>${esc(p.beruf)}</dd><dt>${p.fik ? "Aus" : "Lebenszeit"}</dt><dd>${life.line}</dd></dl>
-      <div class="wer-flbl">Bekannt für</div><ul class="wer-facts">${p.f.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+      <dl class="wer-dl"><dt>Herkunft</dt><dd>${esc(p.land)}${p.k ? ` <span class="wer-k">· ${esc(p.k)}</span>` : ""}</dd>
+        ${p.sp ? `<dt>Sprache</dt><dd>${esc(p.sp)}</dd>` : ""}
+        <dt>${p.fik ? "Was" : "Beruf"}</dt><dd>${esc(p.beruf)}</dd>
+        ${p.art ? `<dt>Wesen</dt><dd>${esc(p.art)}</dd>` : ""}${p.kraft ? `<dt>Kräfte</dt><dd>${esc(p.kraft)}</dd>` : ""}${p.gut ? `<dt>Gut/böse</dt><dd>${esc(p.gut)}</dd>` : ""}
+        <dt>${p.fik ? "Aus" : "Lebenszeit"}</dt><dd>${life.line}</dd>
+        ${p.fam ? `<dt>Familie</dt><dd>${esc(p.fam)}</dd>` : ""}</dl>
+      ${p.a && p.a.length ? `<div class="wer-flbl">Aussehen</div><div class="wer-look">${p.a.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : ""}
+      <div class="wer-flbl">Bekannt für</div><ul class="wer-facts">${p.f.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      <a class="wer-wiki" href="https://de.wikipedia.org/w/index.php?title=Spezial:Suche&go=Artikel&search=${encodeURIComponent(p.w || p.n)}" target="_blank" rel="noopener noreferrer">Mehr auf Wikipedia ↗</a></div>`;
   }
   const resTxt = { ja: "✓ Ja", nein: "✗ Nein", unklar: "🤷 Unklar", egal: "🤷 Weiß nicht" };
 

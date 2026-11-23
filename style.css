@@ -4102,6 +4102,11 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .wer-dl dd { margin: 0; }
 .wer-flbl { font: 800 .68rem Nunito, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: #8a7a5a; }
 .wer-notes .wer-flbl { color: var(--muted); margin-bottom: 6px; }
+.wer-k { color: #8a7a5a; }
+.wer-look { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
+.wer-look span { font-size: .85rem; padding: 3px 10px; border-radius: 8px; background: #fff; border: 1px solid #e3d7b8; }
+.wer-wiki { justify-self: start; font-size: .85rem; font-weight: 700; color: #6b4fd8; text-decoration: none; }
+.wer-wiki:hover { text-decoration: underline; }
 .wer-facts { margin: -4px 0 0; padding-left: 18px; display: grid; gap: 3px; font-size: .95rem; }
 .wer-notes { padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px dashed var(--line); }
 .wer-notes ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: .92rem; }
