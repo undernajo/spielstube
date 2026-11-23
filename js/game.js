@@ -34,7 +34,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -45,6 +45,7 @@
     { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Früh raten lohnt sich", icon: hinweisIcon() },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Erfinde die Frage", icon: frageIcon() },
+    { key: "wer", min2: true, color: "#ff7eb6", name: "Wer bin ich?", desc: "Ja/Nein-Fragen über dich", icon: werIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
     { key: "schaetzen", color: "#ffb347", name: "Schätzen", desc: "Wer liegt am nächsten?", icon: schaetzenIcon() },
     { key: "siebzehn", color: "#2fbf71", name: "Siebzehn und Vier", desc: "So nah wie möglich an 21", icon: siebzehnIcon() },
@@ -115,13 +116,15 @@
   let almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   const JG = window.S10Jagd;
+  const WER = window.S10Wer;
+  let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle" }, store.get("s10-wer") || {});
   const SEIL = window.S10Seil;
   let seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
   const seilKey = () => "s10-seil-" + roomCode; // Fortschritt der Seilschaft pro Stube (Stammstube = gleicher Code)
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Abenteuer", ["seil"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage", "wer"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Abenteuer", ["seil"]]];
   // Gleiche Wellenlänge ist ausgeblendet (hidden) – Code bleibt, Zurückholen: hidden entfernen und hier wieder einen Abschnitt eintragen
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
@@ -321,7 +324,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -391,6 +394,13 @@
       if (!host || S.phase !== "lobby") return false;
       return SEIL.start(S, { swap: !!(action.opts && action.opts.swap), prog: store.get(seilKey()) });
     }
+    if (type === "start" && action.game === "wer") {
+      if (!host || S.phase !== "lobby") return false;
+      return WER.start(S, { ...action.opts, avoid: store.get("s10-wer-seen") || [] });
+    }
+    if (type === "wbRestart" && S.phase === "wer" && S.wer && S.wer.step === "final")
+      return WER.start(S, { ...S.wer.opts, avoid: store.get("s10-wer-seen") || [] });
+    if (type.startsWith("wb")) return S.phase === "wer" && WER.apply(S, pid, action, host);
     if (type === "start" && action.game === "jagd") {
       if (!host || S.phase !== "lobby") return false;
       return JG.start(S, action.opts);
@@ -466,7 +476,7 @@
     if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
     if (type.startsWith("sg")) return S.phase === "seil" && SEIL.apply(S, pid, action, host, now);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -537,7 +547,7 @@
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -618,6 +628,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
+      wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
@@ -646,6 +657,11 @@
     view.karten = S.phase === "karten" ? KG.publicState(S) : null;
     view.alm = S.phase === "alm" ? ALM.publicState(S) : null;
     view.jagd = S.phase === "jagd" ? JG.publicState(S) : null;
+    view.wer = S.phase === "wer" ? WER.publicState(S) : null;
+    if (view.wer) { // verteilte Personen merken – sie kommen erst wieder, wenn alle einmal dran waren
+      const seen = store.get("s10-wer-seen") || [], add = WER.names(S.wer).filter((n) => !seen.includes(n));
+      if (add.length) { const all = (window.SCHLAU10_WER || []).map((p) => p.n), next = seen.concat(add).filter((x) => all.includes(x)); store.set("s10-wer-seen", all.every((x) => next.includes(x)) ? add : next); }
+    }
     view.seil = S.phase === "seil" ? SEIL.publicState(S) : null;
     if (S.seil && isHost) store.set(seilKey(), S.seil.prog); // Fortschritt beim Gastgeber merken
     view.duell = S.phase === "duell" ? DU.publicState(S, Date.now()) : null;
@@ -670,7 +686,7 @@
     if (S.qb && S.qb.plan.some((p) => p.game === "land" || p.game === "umriss")) needLandData(); // Länderkarte rechtzeitig laden
     view.watten = S.phase === "watten" ? WAT.publicState(S) : null;
     view.schnapsen = S.phase === "schnapsen" ? SCH.publicState(S) : null;
-    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ, karten: KG, jagd: JG }; // private Infos nur an den jeweiligen Spieler
+    const CARD_GAMES = { watten: WAT, schnapsen: SCH, frage: FQ, karten: KG, jagd: JG, wer: WER }; // private Infos nur an den jeweiligen Spieler
     if (CARD_GAMES[S.phase]) {
       // Hände nur privat verteilen: eigene direkt, Gäste über ihren eigenen Kanal
       const M = CARD_GAMES[S.phase];
@@ -1124,6 +1140,7 @@
       if (v.phase === "playing" && v.players[v.turn]) return v.players[v.turn].id;
       if (v.phase === "wand" && v.wand) return v.wand.step === "pick" ? v.wand.chooser : v.wand.cur ? v.wand.cur.by : null;
       if (v.phase === "duell" && v.duell && v.duell.step === "turn") return v.duell.turn;
+      if (v.phase === "wer" && v.wer) return v.wer.turn;
       if (v.phase === "frage" && v.frage) { const f = v.frage; return f.step === "write" || f.step === "judge" ? f.asker : f.step === "answer" || f.step === "check" ? f.guesser : null; }
       if (v.phase === "karten" && v.karten && v.karten.mode === "stich" && v.karten.step === "play") return v.karten.turn;
       if (v.phase === "watten" && v.watten) return v.watten.turn || null;
@@ -1409,7 +1426,7 @@
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase !== "watten" && view.phase !== "schnapsen") G.dealReset();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "wer") G.renderWer(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
     camDockPlace();
     chipFx();
     G.qbBarRender();
@@ -1559,6 +1576,10 @@
       laid: [v.watten, v.schnapsen].filter(Boolean).map((st) => st.roundNo + ":" + (st.seats.reduce((a, id) => a + st.tricks[id], 0) * st.seats.length + st.trick.length))[0] || null,
       zRes: v.phase === "playing" && v.card ? v.round + ":" + v.card.q + ":" + v.card.items.filter((it) => it.r && !it.r.pending).length : null,
       duFin: !!(v.duell && v.duell.step === "final"), fqFin: !!(v.frage && v.frage.step === "final"),
+      // Wer bin ich?: selbst fragen, antworten oder einen Tipp prüfen
+      werMine: !!(v.wer && ((v.wer.step === "ask" && v.wer.turn === myId) || (v.wer.step === "answer" && v.wer.need.includes(myId) && !(v.wer.q && v.wer.q.answers[myId]))
+        || (v.wer.step === "judge" && v.wer.turn !== myId && v.wer.seats.includes(myId)))),
+      werKey: v.wer ? v.wer.step + ":" + (v.wer.last ? JSON.stringify(v.wer.last) : "") : null,
       fwLast: v.wand && v.wand.last ? v.wand.last.n : 0, fwFin: !!(v.wand && v.wand.step === "final"),
       fwCheck: v.wand && v.wand.step === "check" && v.wand.cur ? v.wand.round + ":" + v.wand.cur.k + "/" + v.wand.cur.r : null,
       fwMine: !!(v.wand && ((v.wand.step === "pick" && v.wand.chooser === myId) || (v.wand.step === "judge" && v.wand.cur && v.wand.cur.judges.includes(myId)))),
@@ -1613,6 +1634,11 @@
         const st = v[k];
         if (st.seats.includes(myId)) { if (st.score[myId] >= st.target) sfx.win(); else sfx.lose(); }
         confetti();
+      }
+      if (v.wer) {
+        if (now.werKey !== prev.werKey && v.wer.last && v.wer.last.kind === "guess" && v.wer.step !== "final") (v.wer.last.ok ? sfx.right : sfx.wrong)();
+        if (now.werMine && !prev.werMine) setTimeout(sfx.turn, 300);
+        if (v.wer.step === "final" && prev.werKey && !prev.werKey.startsWith("final")) { const r = v.wer.ranking || []; if (r[0] && r[0].id === myId && r[0].at) sfx.win(); else if (v.wer.seats.includes(myId)) sfx.lose(); confetti(); }
       }
       // Fragewand: Auflösung für alle hörbar (Pling/Bong), „Du bist dran“ erst danach; am Ende Sieg/Niederlage
       if (v.wand) {
@@ -1756,6 +1782,7 @@
     land: () => { S.landSeen = {}; store.set("s10-land-seen", {}); },
     duell: () => store.set("s10-du-seen", []),
     frage: () => store.set("s10-fq-seen", []),
+    wer: () => store.set("s10-wer-seen", []),
     wand: () => store.set("s10-fw-seen", []),
   };
   // Einheitliche Anmerkung unter „Spiel starten“ bei Spielen ab 2 Spielern – nur wenn sie etwas erklärt
@@ -1813,6 +1840,7 @@
           ${chosenGame === "wl" ? wlSettingsHtml() : ""}
           ${chosenGame === "alm" ? almSettingsHtml() : ""}
           ${chosenGame === "jagd" ? jagdSettingsHtml() : ""}
+          ${chosenGame === "wer" ? werSettingsHtml() : ""}
           ${chosenGame === "seil" ? seilSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
@@ -1921,6 +1949,7 @@
       if (chosenGame === "wl") return send({ type: "start", game: "wl", opts: wlOpts });
       if (chosenGame === "alm") return send({ type: "start", game: "alm", opts: almOpts });
       if (chosenGame === "jagd") return send({ type: "start", game: "jagd", opts: jagdOpts });
+      if (chosenGame === "wer") return send({ type: "start", game: "wer", opts: werOpts });
       if (chosenGame === "seil") return send({ type: "start", game: "seil", opts: seilOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
@@ -2159,7 +2188,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ wer: werRulesHtml, seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, wand: fwRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -2425,6 +2454,8 @@
       rules: [["⛰️", "Volle Fläche = <b>Punkte im Eck</b>"], ["🥇", "Wer eine Fläche zuerst füllt, bekommt mehr"], ["🎲", "Gleiche Würfel für alle"]] };
     if (ph === "seil" && v.seil) return { goal: "Bringt <em>beide</em> ans Ziel jeder Etappe – vom Tal bis zum <em>Gipfelkreuz</em>.", path: null,
       rules: [["⭐", "Je Etappe bis <b>3 Sterne</b>: geschafft, alle Edelweiß, unter der Zielzeit"], ["💦", "Fällt einer, startet das Level <b>für beide</b> neu"], ...(v.seil.mode === "solo" ? [["🙋", "Allein: mit <b>Q</b> die Figur wechseln"]] : [["🤝", "Nur gemeinsam: Platten halten, huckepack, Fels schieben"]])] };
+    if (ph === "wer" && v.wer) return { goal: `Finde heraus, <em>wer du bist</em> – mit Ja/Nein-Fragen. Wer seine Person zuerst errät, gewinnt.`, path: null,
+      rules: [["✓", "Bei <b>Ja</b> darfst du weiterfragen"], ["✗", "Bei <b>Nein</b> ist der Nächste dran"], ["🎯", "Raten, wenn du dran bist – falsch = der Nächste ist dran"]] };
     if (ph === "jagd" && v.jagd) { const n = v.jagd.rounds;
       return { goal: `${n ? `<em>${n} Runden</em>` : "Bis einer das Revier seines Nachbarn leergejagt hat"} – Punkte gibt es für Treffer und erlegtes Wild. Die größte Strecke gewinnt.`, path: n ? { type: "rounds", n, fin: false } : null,
         rules: [["🎯", "Treffer <b>+1</b>"], ["🦌", "Tier ganz erlegt <b>+2</b> bis <b>+4</b>"], ["🔭", "Einmal den Hochsitz nutzen"]] }; }
@@ -2590,6 +2621,9 @@
     if (view.game === "watten" && lb.watten) {
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
+    if (view.game === "wer" && lb.wer) {
+      return `<p class="muted small">Ab 2 Spielern · ${esc((WER.THEMES[lb.wer.theme] || WER.THEMES.mix).name)} · ${lb.wer.hint === "bereich" ? "Bereich wird verraten" : "ohne Hinweis"} · ${lb.wer.end === "erster" ? "bis der Erste errät" : "bis alle erraten haben"}</p>`;
+    }
     if (view.game === "frage" && lb.frage) {
       return `<p class="muted small">Zu zweit · bis ${lb.frage.target} Punkte · ${lb.frage.choices === "1" ? "1 Antwort vorgegeben" : "3 Antworten zur Auswahl"} · ${esc((FQ.WRITE[lb.frage.write] || FQ.WRITE["0"]).name)} zum Ausdenken · ${esc((FQ.ANSWER[lb.frage.answer] || FQ.ANSWER["0"]).name)} zum Antworten</p>`;
     }
@@ -2661,6 +2695,10 @@
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const sgSw = app.querySelector("#seil-swap");
     if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
+    [["#wer-theme", "theme"], ["#wer-hint", "hint"], ["#wer-endopt", "end"]].forEach(([id, k]) => {
+      const el = app.querySelector(id);
+      if (el) el.onchange = () => { werOpts[k] = el.value; store.set("s10-wer", werOpts); publish(); };
+    });
     const jgL = app.querySelector("#jagd-length");
     if (jgL) jgL.onchange = () => { jagdOpts.length = jgL.value; store.set("s10-jagd", jagdOpts); publish(); };
     const jgM = app.querySelector("#jagd-map");
@@ -3097,6 +3135,29 @@
       <p class="muted small">Fortschritt dieser Stube: ${done ? `${done} von ${SEIL.LEVELS.length} Etappen geschafft · ⭐ ${stars}` : "noch keine Etappe geschafft"} – auf der Tourenkarte geht es weiter.</p>
       <button id="start" class="btn primary big" ${ps.length < 1 ? "disabled" : ""}>Seilschaft starten</button>`;
   }
+  function werSettingsHtml() {
+    const n = playing().length, sel = (id, obj, val, desc) => `<select id="${id}">${Object.entries(obj).map(([k, t]) => `<option value="${k}" ${String(val) === k ? "selected" : ""}>${esc(t.name)}${desc && t.desc ? " – " + esc(t.desc) : ""}</option>`).join("")}</select>`;
+    const theme = WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", pool = WER.pool(theme), seen = store.get("s10-wer-seen") || [];
+    const fresh = pool.filter((i) => !seen.includes(window.SCHLAU10_WER[i].n)).length;
+    return `<label class="field"><span>Personen</span>${sel("wer-theme", WER.THEMES, theme, true)}</label>
+      <label class="field"><span>Hinweis für dich</span>${sel("wer-hint", WER.HINTS, werOpts.hint)}</label>
+      <label class="field"><span>Spielende</span>${sel("wer-endopt", WER.ENDS, werOpts.end)}</label>
+      ${freshHtml(fresh, pool.length, "Personen", "wer")}
+      <button id="start" class="btn primary big" ${n < 2 || n > pool.length ? "disabled" : ""}>Spiel starten</button>
+      ${playerNoteHtml(n, false)}`;
+  }
+  const werRulesHtml = `
+    <details class="rules"><summary>Regeln: Wer bin ich?</summary>
+      <ul>
+        <li>Jeder bekommt geheim eine <b>Person</b> – echte Menschen oder erfundene Figuren. Alle anderen sehen sie, nur du nicht (wie ein Zettel auf der Stirn).</li>
+        <li>Zu jeder Person gibt es einen <b>Steckbrief</b> (Bereich, Mann oder Frau, lebt noch oder wann gestorben, Alter, Herkunft, Beruf, wofür sie bekannt ist). So können alle deine Fragen sicher beantworten, auch wenn sie die Person nicht so gut kennen.</li>
+        <li>Reihum stellst du <b>Ja/Nein-Fragen</b> über dich, z. B. „Bin ich eine Frau?“. Die anderen tippen <b>Ja</b>, <b>Nein</b> oder <b>Weiß nicht</b> – es zählt die Mehrheit.</li>
+        <li>Bei <b>Ja</b> (oder unklar) darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran. Dein <b>Notizzettel</b> merkt sich alle Antworten.</li>
+        <li>Wenn du dran bist, kannst du statt einer Frage <b>raten</b>. Erkennt das Spiel den Namen nicht sicher, entscheiden die anderen. Falsch geraten: der Nächste ist dran.</li>
+        <li>Wer seine Person <b>zuerst</b> errät, gewinnt; die anderen spielen um die Plätze weiter (einstellbar: Schluss schon nach dem Ersten). Aufgeben geht auch – du antwortest dann weiter für die anderen.</li>
+        <li>Einstellbar: nur echte Menschen, nur Südtirol &amp; Alpen, nur erfundene Figuren oder gemischt; auf Wunsch wird dir der Bereich verraten. Personen kommen erst wieder, wenn alle einmal dran waren.</li>
+      </ul>
+    </details>`;
   function jagdSettingsHtml() {
     const len = JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", mapSel = jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall";
     return `<label class="field"><span>Jagdgebiet</span><select id="jagd-map"><option value="zufall" ${mapSel === "zufall" ? "selected" : ""}>🎲 Zufall – eines der Gebiete auslosen</option>

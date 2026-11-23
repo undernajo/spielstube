@@ -194,9 +194,20 @@
     }));
     return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="6" width="54" height="52" rx="6" fill="#221b63" stroke="#ffc83d" stroke-width="1.6"/>${cells.join("")}</svg>`;
   }
+  // Wer bin ich?: Kopf mit Zettel auf der Stirn, darauf ein Fragezeichen
+  function werIcon() {
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 60 C12 47 21 42 32 42 C43 42 52 47 52 60Z" fill="#6f8cff" stroke="#3b4fa8" stroke-width="1.4"/>
+      <circle cx="32" cy="27" r="15" fill="#f2c9a0" stroke="#a5754f" stroke-width="1.4"/>
+      <path d="M17.5 24 C18 13 25 10 32 10 C40 10 46 14 46.5 24 C43 18 38 16 32 16 C26 16 21 18 17.5 24Z" fill="#6a4a37"/>
+      <circle cx="26.5" cy="31" r="1.7" fill="#2a1d10"/><circle cx="37.5" cy="31" r="1.7" fill="#2a1d10"/>
+      <path d="M27.5 36.5 Q32 39.5 36.5 36.5" fill="none" stroke="#a5754f" stroke-width="1.6" stroke-linecap="round"/>
+      <g transform="rotate(-7 32 16)"><rect x="22" y="6" width="20" height="17" rx="1.5" fill="#ffe066" stroke="#c9a400" stroke-width="1.2"/>
+      <text x="32" y="20.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="15" fill="#d6336c">?</text></g></svg>`;
+  }
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon
   };
 })();
