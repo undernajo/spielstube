@@ -112,8 +112,6 @@
       f: ["„Wetten, dass..?“", "blonde Locken, schrille Anzüge", "Gummibärchen-Werbung"] },
     { n: "Heidi Klum", alt: ["Klum"], b: F, g: "w", geb: 1973, land: "Deutschland (Bergisch Gladbach)", beruf: "Model und Moderatorin",
       f: ["„Germany's Next Topmodel“", "„Ich habe heute leider kein Foto für dich“", "aufwendige Halloween-Kostüme"] },
-    { n: "Loriot", alt: ["Vicco von Bülow"], b: F, g: "m", geb: 1923, tot: 2011, land: "Deutschland", beruf: "Humorist, Zeichner, Schauspieler",
-      f: ["Sketche wie „Das Frühstücksei“ und „Die Nudel“", "Weihnachten bei Hoppenstedts", "Knollennasen-Männchen", "Film „Pappa ante portas“"] },
 
     // ---------- Politik & Geschichte ----------
     { n: "Julius Caesar", alt: ["Caesar", "Cäsar", "Julius Cäsar"], b: P, g: "m", geb: -100, tot: -44, land: "Römisches Reich (Rom)", beruf: "Feldherr und Politiker",

@@ -4,6 +4,10 @@
 //  - Mehrheit Ja (oder unklar): man darf weiterfragen. Mehrheit Nein: der Nächste ist dran.
 //  - Wer dran ist, kann statt einer Frage raten. Erkennt das Spiel den Namen nicht, entscheiden die anderen.
 //  - Falsch geraten: der Nächste ist dran. Aufgeben ist möglich (die Person wird aufgedeckt).
+//  - Fragen laut (Videoanruf oder am selben Tisch, Standard): wer dran ist, fragt einfach laut; die erste Antwort per Knopf
+//    öffnet die Frage. Wer fragt, kann sich ein Stichwort für den Notizzettel notieren. Raten geht ebenfalls laut.
+//  - Neue Person: solange jemand noch keine Frage gestellt hat, können die anderen ihm eine neue Person losen
+//    (z. B. wenn sie glauben, er kennt sie nicht). Die alte kommt in dieser Partie nicht wieder.
 //  - Ende: wenn alle ihre Person haben (oder wahlweise schon, wenn der Erste sie hat). Wer zuerst errät, gewinnt.
 (function (root) {
   const THEMES = {
@@ -13,6 +17,7 @@
     figuren: { name: "Erfundene Figuren", desc: "aus Märchen, Büchern, Filmen, Comics", ok: (p) => !!p.fik },
   };
   const HINTS = { aus: { name: "Nichts verraten" }, bereich: { name: "Bereich verraten (z. B. „Sport“)" } };
+  const MODES = { laut: { name: "Laut fragen – im Videoanruf oder am selben Tisch" }, tippen: { name: "Fragen eintippen" } };
   const ENDS = { alle: { name: "Bis alle ihre Person erraten haben" }, erster: { name: "Bis der Erste seine Person errät" } };
   const ANSWERS = ["ja", "nein", "egal"];
   const data = () => root.SCHLAU10_WER || [];
@@ -24,7 +29,7 @@
     opts = opts || {};
     const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (seats.length < 2) return false;
-    const theme = THEMES[opts.theme] ? opts.theme : "mix", hint = HINTS[opts.hint] ? opts.hint : "aus", end = ENDS[opts.end] ? opts.end : "alle";
+    const theme = THEMES[opts.theme] ? opts.theme : "mix", hint = HINTS[opts.hint] ? opts.hint : "aus", end = ENDS[opts.end] ? opts.end : "alle", ask = MODES[opts.ask] ? opts.ask : "laut";
     const avoid = new Set(opts.avoid || []), all = pool(theme);
     if (all.length < seats.length) return false;
     const fresh = shuffle(all.filter((i) => !avoid.has(data()[i].n))), old = shuffle(all.filter((i) => avoid.has(data()[i].n)));
@@ -32,7 +37,7 @@
     seats.forEach((id, k) => { who[id] = picks[k]; });
     s.game = "wer"; s.phase = "wer";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.wer = { opts: { theme, hint, end }, seats, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
+    s.wer = { opts: { theme, hint, end, ask }, seats, note: "", avoid: [...avoid], used: picks.slice(), rr: {}, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
       q: null, guess: null, last: null, solved: {}, solvedN: 0, qn: Object.fromEntries(seats.map((id) => [id, 0])), log: Object.fromEntries(seats.map((id) => [id, []])) };
     s.wer.turn = s.wer.order[0];
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -46,7 +51,7 @@
 
   function nextTurn(s) {
     const st = s.wer;
-    st.q = null; st.guess = null; st.move++;
+    st.q = null; st.guess = null; st.note = ""; st.move++;
     const rest = open(st);
     if (!rest.length || (st.opts.end === "erster" && st.solvedN > 0)) { st.step = "final"; st.turn = null; return; }
     const i = st.order.indexOf(st.turn);
@@ -64,8 +69,9 @@
     Object.values(a).forEach((v) => { tally[v]++; });
     const res = tally.ja > tally.nein ? "ja" : tally.nein > tally.ja ? "nein" : "unklar";
     st.qn[st.turn]++;
-    st.log[st.turn].push({ t: st.q.text, r: res, tally });
-    st.last = { kind: "q", by: st.turn, text: st.q.text, r: res, tally };
+    const text = st.q.text || st.note, loud = !st.q.text; st.note = "";
+    st.log[st.turn].push({ t: text, r: res, tally, loud });
+    st.last = { kind: "q", by: st.turn, text, r: res, tally, loud };
     if (res === "nein") nextTurn(s);
     else { st.q = null; st.step = "ask"; st.move++; }
   }
@@ -85,7 +91,7 @@
   function apply(s, pid, a, isHost) {
     if (!a || typeof a !== "object" || !s.wer) return false;
     const st = s.wer, mine = pid === st.turn;
-    if (a.type !== "wbEnd" && a.move !== st.move) return false; // veralteter Klick
+    if (a.type !== "wbEnd" && a.type !== "wbNote" && a.type !== "wbReroll" && a.move !== st.move) return false; // veralteter Klick
     switch (a.type) {
       case "wbAsk": {
         if (st.step !== "ask" || !mine) return false;
@@ -95,6 +101,8 @@
         return true;
       }
       case "wbAnswer": {
+        // laut gefragt: die erste Antwort öffnet die Frage (ohne neuen Zug, damit die Klicks der anderen gültig bleiben)
+        if (st.step === "ask" && st.opts.ask === "laut" && !mine && st.seats.includes(pid)) { st.q = { text: "", answers: {} }; st.step = "answer"; }
         if (st.step !== "answer" || mine || !st.seats.includes(pid) || !ANSWERS.includes(a.v)) return false;
         st.q.answers[pid] = a.v;
         const need = answerers(s);
@@ -104,8 +112,24 @@
       case "wbResolve": // nicht alle haben geantwortet: wer fragt (oder der Gastgeber) wertet mit den Antworten bisher aus
         if (st.step !== "answer" || (!mine && !isHost) || !Object.keys(st.q.answers).length) return false;
         resolve(s); return true;
+      case "wbReroll": { // neue Person für einen anderen, solange er noch nicht gefragt hat
+        const t = a.target;
+        if (!canReroll(st, pid, t)) return false;
+        const all = pool(st.opts.theme).filter((i) => !st.used.includes(i));
+        if (!all.length) return false;
+        const av = new Set(st.avoid), fresh = all.filter((i) => !av.has(data()[i].n)), list = fresh.length ? fresh : all;
+        const i = list[Math.floor(Math.random() * list.length)];
+        st.who[t] = i; st.used.push(i); st.rr[t] = (st.rr[t] || 0) + 1;
+        st.last = { kind: "reroll", by: pid, for: t };
+        return true;
+      }
+      case "wbNote": // Stichwort zur laut gestellten Frage (für den Notizzettel)
+        if ((st.step !== "ask" && st.step !== "answer") || !mine) return false;
+        st.note = String(a.text || "").trim().slice(0, 120);
+        return true;
       case "wbGuess": {
         if (st.step !== "ask" || !mine) return false;
+        if (a.loud) { st.guess = { text: "", loud: true }; st.step = "judge"; st.move++; st.qn[pid]++; return true; } // laut geraten: die anderen entscheiden
         const t = String(a.text || "").trim().slice(0, 80);
         if (!t) return false;
         const p = data()[st.who[pid]];
@@ -118,7 +142,8 @@
         if (st.step !== "judge" || mine || !st.seats.includes(pid)) return false;
         const ok = !!a.ok;
         st.last = { kind: "guess", by: st.turn, text: st.guess.text, ok, judge: pid };
-        st.log[st.turn].push({ t: "Bin ich " + st.guess.text + "?", r: ok ? "ja" : "nein", guess: true });
+        st.log[st.turn].push({ t: st.guess.loud ? "laut geraten" : "Bin ich " + st.guess.text + "?", r: ok ? "ja" : "nein", guess: true });
+        st.last.loud = !!st.guess.loud;
         if (ok) solve(s, st.turn);
         nextTurn(s);
         return true;
@@ -136,6 +161,9 @@
     return false;
   }
 
+  // nur vor der ersten eigenen Frage und nicht mitten in einer laufenden Frage oder einem Tipp
+  const canReroll = (st, pid, t) => st.step !== "final" && st.seats.includes(pid) && st.seats.includes(t) && pid !== t && !st.solved[t] && !st.qn[t] && !(t === st.turn && st.step !== "ask")
+    && pool(st.opts.theme).some((i) => !st.used.includes(i));
   const card = (i) => { const p = data()[i]; return p ? { n: p.n, b: p.b, g: p.g, geb: p.geb, tot: p.tot, ca: !!p.ca, fik: !!p.fik, aus: p.aus || "", land: p.land, beruf: p.beruf, f: p.f.slice() } : null; };
   // Personen der anderen (nie die eigene, solange sie nicht erraten ist) – nur an den jeweiligen Spieler
   function privateState(s, id) {
@@ -159,14 +187,15 @@
     return {
       step: st.step, move: st.move, seats: st.seats.slice(), order: st.order.slice(), turn: st.turn, opts: { ...st.opts },
       themeName: THEMES[st.opts.theme].name,
-      q: st.q ? { text: st.q.text, answers: { ...st.q.answers } } : null, need: st.step === "answer" ? answerers(s) : [],
+      q: st.q ? { text: st.q.text, answers: { ...st.q.answers } } : null, need: st.step === "answer" || (st.step === "ask" && st.opts.ask === "laut") ? answerers(s) : [], note: st.note,
       guess: st.guess ? { ...st.guess } : null, last: st.last ? { ...st.last } : null,
       solved: JSON.parse(JSON.stringify(st.solved)), qn: { ...st.qn }, log: JSON.parse(JSON.stringify(st.log)), revealed,
       hints: st.opts.hint === "bereich" ? Object.fromEntries(st.seats.map((id) => [id, data()[st.who[id]].b])) : null,
-      ranking: fin ? ranking(st) : null,
+      ranking: fin ? ranking(st) : null, rr: { ...st.rr },
+      rerollable: st.seats.filter((t) => !st.solved[t] && !st.qn[t] && !(t === st.turn && st.step !== "ask") && st.step !== "final"),
     };
   }
   const names = (st) => st.seats.map((id) => data()[st.who[id]].n);
 
-  root.S10Wer = { start, apply, tick, publicState, privateState, names, pool, THEMES, HINTS, ENDS };
+  root.S10Wer = { start, apply, tick, publicState, privateState, names, pool, THEMES, HINTS, ENDS, MODES };
 })(typeof window !== "undefined" ? window : globalThis);

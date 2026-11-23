@@ -43,24 +43,24 @@ function serve() {
 
 // Spiele, bei denen ein paar zufällige Klicks nicht weit genug kommen: gezielt eine ganze Runde durchspielen
 const DEEP = {
-  // Wer bin ich?: wer dran ist, fragt; der andere sieht den Steckbrief und antwortet „Nein“ → der andere ist dran und rät falsch → prüfen
+  // Wer bin ich? (laut fragen, Standard): wer dran ist, merkt sich ein Stichwort; der andere sieht den Steckbrief und antwortet
+  // gleich „Nein“ → der andere ist dran und rät laut → der Erste entscheidet „Falsch“ → der Erste ist wieder dran
   async wer(host, guest, errs) {
     const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
-    const asker = (await host.evaluate(() => !!document.querySelector("#wer-q"))) ? host : guest, other = asker === host ? guest : host;
-    if (!(await until(asker, "#wer-q"))) return errs.push("Wer bin ich?: kein Eingabefeld für die Frage");
+    if (!(await until(host, "#wer-loudguess, [data-wera]"))) return errs.push("Wer bin ich?: weder Fragen noch Antworten möglich");
+    const asker = (await host.evaluate(() => !!document.querySelector("#wer-loudguess"))) ? host : guest, other = asker === host ? guest : host;
     if (!(await until(other, ".wer-stb:not(.empty)"))) errs.push("Wer bin ich?: der andere sieht keinen Steckbrief");
-    await asker.type("#wer-q", "Bin ich ein Mann?");
-    await asker.evaluate(() => document.querySelector(".wer-qform").requestSubmit());
+    await asker.type("#wer-n", "Mann?");
+    await asker.evaluate(() => document.querySelector(".wer-nform").requestSubmit());
     if (!(await until(other, '[data-wera="nein"]'))) return errs.push("Wer bin ich?: Antwortknöpfe erscheinen nicht");
+    await sleep(800);
     await other.evaluate(() => document.querySelector('[data-wera="nein"]').click());
-    if (!(await until(other, "#wer-guess"))) return errs.push("Wer bin ich?: nach „Nein“ ist nicht der andere dran");
-    await other.evaluate(() => document.querySelector("#wer-guess").click());
-    await sleep(300);
-    await other.type("#wer-g", "Niemand Bestimmtes");
-    await other.evaluate(() => document.querySelector(".wer-gform").requestSubmit());
+    if (!(await until(other, "#wer-loudguess"))) return errs.push("Wer bin ich?: nach „Nein“ ist nicht der andere dran");
+    if (!(await other.evaluate(() => document.body.innerText.includes("Mann?")))) errs.push("Wer bin ich?: Stichwort fehlt im Notizzettel");
+    await other.evaluate(() => document.querySelector("#wer-loudguess").click());
     if (!(await until(asker, "[data-werjudge]"))) return errs.push("Wer bin ich?: Knöpfe „Richtig / Falsch“ erscheinen nicht");
     await asker.evaluate(() => document.querySelector('[data-werjudge="0"]').click());
-    if (!(await until(asker, "#wer-q"))) errs.push("Wer bin ich?: nach falschem Tipp ist nicht wieder der Erste dran");
+    if (!(await until(asker, "#wer-loudguess"))) errs.push("Wer bin ich?: nach falschem Tipp ist nicht wieder der Erste dran");
   },
   // Antwort sucht Frage: Frage stellen, nicht wortgleich antworten, Einspruch, Fragesteller entscheidet „Zählt“ → Auflösung muss erscheinen
   async frage(host, guest, errs) {

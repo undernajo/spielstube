@@ -4115,4 +4115,7 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .wer-reveal small { color: var(--muted); }
 .wer-reveal b { font-family: Fredoka, sans-serif; }
 .wer-endbtn { margin-left: auto; }
+.wer-reroll { justify-self: start; margin-top: -4px; }
+.wer-loud { margin: -4px 0 0; color: var(--muted); }
+.wer-note { display: block; margin-top: 4px; font: 600 1rem Nunito, sans-serif; color: var(--muted); }
 @media (max-width: 640px) { .wer-table { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wer-endbtn { display: none; } .wer-a { font-size: 1.05rem; padding: 14px 6px; } }
