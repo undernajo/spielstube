@@ -12,6 +12,7 @@
   const RANKS = ["7", "8", "9", "10", "U", "O", "K", "A"];
   const VALUE = { 7: 7, 8: 8, 9: 9, 10: 10, U: 2, O: 3, K: 4, A: 11 }; // Siebzehn und Vier
   const ROUND_CHOICES = [3, 5, 8];
+  const WIN_CHOICES = [3, 5, 7]; // Siebzehn und Vier: wer zuerst so viele Runden gewinnt
   const PLACE_PTS = [3, 2, 1];
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const deck = (n) => { const d = []; for (let k = 0; k < n; k++) SUITS.forEach((s) => RANKS.forEach((r) => d.push(s + "-" + r))); return shuffle(d); };
@@ -30,14 +31,19 @@
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.karten = { gid: Math.random().toString(36).slice(2, 9), opts: { mode, rounds }, mode, seats, total: Object.fromEntries(seats.map((id) => [id, 0])), round: 0, history: [] };
     s.players.forEach((p) => { p.waiting = !seats.includes(p.id); p.status = "active"; });
-    if (mode === "siebzehn") { s.karten.rounds = rounds; if (seats.length === 1) { s.karten.bank = true; s.karten.bankTotal = 0; } nextSiebzehn(s.karten); }
+    if (mode === "siebzehn") {
+      // Spielziel „Wer zuerst N Runden gewinnt“ (Lobby: 3, 5 oder 7 Siege; Meisterschaft: 3)
+      const wn = Number(opts.wins); if (WIN_CHOICES.includes(wn)) { s.karten.wins = wn; s.karten.opts.wins = wn; }
+      s.karten.rounds = s.karten.wins ? 99 : rounds; if (seats.length === 1) { s.karten.bank = true; s.karten.bankTotal = 0; } nextSiebzehn(s.karten); }
     else if (mode === "bus") startBus(s.karten, now, opts);
     else startStich(s.karten, now, opts);
     return true;
   }
 
   // ---------- Siebzehn und Vier ----------
+  const decided = (st) => !!st.wins && (Object.values(st.total).some((x) => x >= st.wins) || (st.bank && st.bankTotal >= st.wins));
   function nextSiebzehn(st) {
+    if (decided(st)) { st.step = "final"; return; }
     st.round++;
     if (st.round > st.rounds) { st.round = st.rounds; st.step = "final"; return; }
     st.deck = deck(Math.max(1, Math.ceil(st.seats.length / 4))); // ab fünf Spielern zwei Blätter
@@ -70,10 +76,12 @@
     const val = (id) => (isFeuer(st.hands[id]) ? 100 : sum(st.hands[id]) > 21 ? -1 : sum(st.hands[id]));
     const alive = st.seats.filter((id) => val(id) >= 0).sort((a, b) => val(b) - val(a));
     const res = {};
+    // Siegmodus: nur wer allein am nächsten an 21 liegt, gewinnt die Runde (Gleichstand oben = Runde zählt für keinen)
+    const top = alive.length ? val(alive[0]) : null, solo = alive.filter((x) => val(x) === top).length === 1;
     st.seats.forEach((id) => {
       const v = val(id), feuer = v === 100, bust = v < 0;
       const place = bust ? null : alive.findIndex((x) => val(x) === v) + 1;
-      const pts = bust ? 0 : (PLACE_PTS[place - 1] || 0) + (feuer || v === 21 ? 1 : 0);
+      const pts = st.wins ? (!bust && v === top && solo ? 1 : 0) : bust ? 0 : (PLACE_PTS[place - 1] || 0) + (feuer || v === 21 ? 1 : 0);
       res[id] = { hand: st.hands[id].slice(), sum: sum(st.hands[id]), feuer, bust, place, points: pts };
       st.total[id] += pts;
     });
@@ -315,6 +323,7 @@
     const st = s.karten;
     if (!st) return null;
     const out = { gid: st.gid, mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, roundNo: st.round, seats: st.seats.slice(),
+      wins: st.wins || null, decided: decided(st), tie: st.wins && st.result && !st.bank ? !Object.values(st.result).some((r) => r.points > 0) : false,
       total: { ...st.total }, ready: { ...(st.ready || {}) } };
     if (st.mode === "siebzehn") {
       out.count = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).length]));
@@ -343,5 +352,5 @@
     return out;
   }
 
-  root.S10Karten = { MODES, ROUND_CHOICES, VALUE, BUS_Q, BUS_ROUNDS, STICH_ROUNDS, isHL, start, apply, tick, publicState, privateState, sum, isFeuer, deck, stichPts };
+  root.S10Karten = { MODES, ROUND_CHOICES, WIN_CHOICES, VALUE, BUS_Q, BUS_ROUNDS, STICH_ROUNDS, isHL, start, apply, tick, publicState, privateState, sum, isFeuer, deck, stichPts };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -68,7 +68,7 @@
   let geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
   const QZ = window.S10Quiz;
   const KG = window.S10Karten;
-  let kgOpts = Object.assign({ rounds: 5, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
+  let kgOpts = Object.assign({ rounds: 5, wins: 3, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
   let qbOpts = Object.assign({ length: 5, off: [], joker: true }, store.get("s10-qb") || {});
@@ -574,7 +574,7 @@
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
-      kg: { rounds: Number(kgOpts.rounds), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
+      kg: { rounds: Number(kgOpts.rounds), wins: Number(kgOpts.wins), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
       duell: { target: Number(duOpts.target), timer: duOpts.timer },
@@ -1343,6 +1343,8 @@
     document.documentElement.classList.toggle("s10-paused", iPause() && !isHost); // pausierte Gäste: Spiel nur ansehen
     if (!view) return renderStart();
     if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
+    // Spielstart aus der Lobby: „So gewinnst du“-Karte (bei „Nochmal spielen“ und den Etappen der Meisterschaft nicht)
+    if (lastPhase === "lobby" && view.phase !== "lobby" && !(view.qb && view.phase !== "querbeet")) winCardShow();
     lastPhase = view.phase;
     if (!isHost && view.phase === "lobby") {
       if (lastLobbyGame && view.game !== lastLobbyGame) {
@@ -2298,6 +2300,89 @@
       ${ring ? `<div class="gh-ring">${ring}</div>` : ""}${btn ? `<div class="gh-btn">${btn}</div>` : ""}</div>`;
   }
 
+  // ---------- „So gewinnst du“: Startkarte mit Ziel, Weg zum Sieg und was eine Runde fürs Ganze bringt ----------
+  const winCardEl = document.createElement("div"); winCardEl.id = "wincard"; document.body.appendChild(winCardEl);
+  let winCardT = null;
+  const N = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  function winSpec(v) {
+    const g = v.game, ph = v.phase;
+    // Ziel immer so formulieren, dass man nicht nachschlagen muss: was zählt und wann man gewonnen hat
+    const rounds = (n, unit, fin, how, rules, unitShort) => ({ goal: `<em>${N(n, unit[0], unit[1])}</em> – ${how}. Wer am Ende die meisten Punkte hat, gewinnt.`, path: { type: "rounds", n, fin, unit: unitShort || "R" }, rules });
+    const wins = (n, rules) => ({ goal: `Wer zuerst <em>${N(n, "Runde", "Runden")}</em> gewinnt, gewinnt das Spiel.`, path: { type: "first", n, label: ["Sieg", "Siege"] }, rules });
+    if (ph === "querbeet" && v.qb) { const n = v.qb.n;
+      return { goal: `<em>${n} Etappen</em> – je Etappe gibt es Partypunkte nach deinem Platz. Wer am Ende die meisten hat, ist Stubenmeister.`, path: { type: "stages", n },
+        rules: [["🥇", `Platz 1 <b>+${QB.POINTS[0]}</b>, 2 <b>+${QB.POINTS[1]}</b>, 3 <b>+${QB.POINTS[2]}</b>, sonst <b>+1</b>`], ["🔥", "Das <b>Finale</b> zählt doppelt"], ...(v.qb.jokerOn ? [["🃏", "Dein <b>Joker</b>: eine Etappe doppelt"]] : [])] }; }
+    if (ph === "playing" || g === "zehn") { const t = v.target || 30;
+      return { goal: `Wer zuerst <em>${t} Punkte</em> hat, gewinnt – jede richtige Antwort, die du sicherst, ist 1 Punkt.`, path: { type: "collect", n: t },
+        rules: [["✓", "Richtig = <b>+1</b>, vorerst offen"], ["✋", "<b>Passen</b> sichert deine offenen Punkte"], ["✗", "Falsch = offene Punkte der Runde weg"]] }; }
+    if (ph === "quiz" && v.quiz) { const q = v.quiz, n = q.rounds, fin = n > 1;
+      if (q.mode === "schaetzen") return rounds(n, ["Frage", "Fragen"], fin, "wer am nächsten dran ist, bekommt die meisten Punkte", [["🥇", "Am nächsten <b>+3</b>, dann <b>+2</b>, <b>+1</b>"], ["🎯", "Genau getroffen <b>+1</b>"], ...(fin ? [["🔥", "Letzte Frage zählt <b>doppelt</b>"]] : [])]);
+      if (q.mode === "hinweis") return rounds(n, ["Begriff", "Begriffe"], fin, "je früher du richtig rätst, desto mehr Punkte", [["⏱", "Beim 1. Hinweis <b>5</b>, beim 5. noch <b>1</b> Punkt"], ["☝", "Nur <b>ein Versuch</b> pro Begriff"], ...(fin ? [["🔥", "Letzter Begriff zählt <b>doppelt</b>"]] : [])]);
+      return rounds(n, ["Umriss", "Umrisse"], fin, "jeder richtig erkannte bringt Punkte", [["✓", "Richtig <b>+2</b>"], ["⚡", "Schnellster Richtiger <b>+1</b>"], ...(fin ? [["🔥", "Letzter Umriss zählt <b>doppelt</b>"]] : [])]); }
+    if (ph === "geo" && v.geo) { const n = v.geo.rounds, oben = v.geo.mode === "oben", fin = n > 1;
+      return rounds(n, oben ? ["Bild", "Bilder"] : ["Ort", "Orte"], fin, "je näher dein Tipp, desto mehr Punkte (bis 1000)", [["📍", "Genau getroffen = <b>1000</b>, weit weg = wenig"], ...(oben ? [["⏱", "Früh tippen = voller Wert, später weniger"]] : []), ...(fin ? [["🔥", `${oben ? "Letztes Bild" : "Letzter Ort"} zählt <b>doppelt</b>`]] : [])]); }
+    if (ph === "land" && v.land) { const n = v.land.rounds, fin = n > 1;
+      return rounds(n, ["Gebiet", "Gebiete"], fin, "jedes richtig angetippte Gebiet bringt Punkte", [["✓", "Richtig <b>+100</b>"], ["⚡", "Die Schnellsten <b>+30</b> / <b>+20</b> / <b>+10</b>"], ...(fin ? [["🔥", "Letztes Gebiet zählt <b>doppelt</b>"]] : [])]); }
+    if (ph === "hl" && v.hl) { const n = v.hl.catCount;
+      return { goal: `<em>${N(n, "Kategorie", "Kategorien")}</em> mit je ${v.hl.steps || 6} Vergleichen – jeder richtige Tipp ist 1 Punkt. Wer am Ende die meisten hat, gewinnt.`, path: { type: "rounds", n, fin: n > 1, unit: "K" },
+        rules: [["✓", "Richtig getippt <b>+1</b>"], ...(n > 1 ? [["🔥", "In der letzten Kategorie <b>+2</b>"]] : [])] }; }
+    if (ph === "slf" && v.slf) return rounds(v.slf.rounds, ["Runde", "Runden"], false, "jede gültige Antwort bringt Punkte", [["✍️", "Eigene Antwort <b>+10</b>"], ["👥", "Gleiche Antwort wie jemand <b>+5</b>"], ["⭐", "Als Einziger in der Kategorie <b>+20</b>"]]);
+    if (ph === "duell" && v.duell) return wins(v.duell.target, [["✗", "Eine Runde verliert, wer etwas Falsches nennt, etwas doppelt nennt oder keine Antwort mehr weiß"], ["🔁", "Jede Runde eine neue Liste"]]);
+    if (ph === "frage" && v.frage) return wins(v.frage.target, [["💡", "Richtig beantwortet: <b>der Antwortende</b> gewinnt die Runde"], ["✍️", "Nicht gewusst: <b>der Fragesteller</b> gewinnt die Runde"], ["🔁", "Die Rollen wechseln jede Runde"]]);
+    if (ph === "wand" && v.wand) return { goal: "Alle Felder der Wand – eine richtige Antwort bringt die Punkte des Feldes. Wer am Ende die meisten Punkte hat, gewinnt.", path: { type: "wand", pts: v.wand.pts || [10, 20, 30, 50] },
+      rules: [["🎯", "Richtig = <b>Punkte des Feldes</b>"], ["🙂", "Falsch kostet nichts"], ["🔁", "Reihum wählt jeder ein Feld"]] };
+    if (ph === "karten" && v.karten) { const k = v.karten, n = k.rounds;
+      if (k.mode === "siebzehn" && k.wins) return { goal: `Wer zuerst <em>${N(k.wins, "Runde", "Runden")}</em> gewinnt${k.bank ? " – du oder die Bank" : ""}, gewinnt das Spiel.`, path: { type: "first", n: k.wins, label: ["Sieg", "Siege"] },
+        rules: k.bank ? [["🏦", "Näher an 21 als die Bank = Runde gewonnen"], ["💥", "Über 21 = Runde verloren"], ["🤝", "Gleichstand zählt für keinen"]]
+          : [["🎯", "Am nächsten an 21 = Runde gewonnen"], ["💥", "Über 21 = raus aus der Runde"], ["🤝", "Gleichstand vorne zählt für keinen"]] };
+      if (k.mode === "siebzehn" && k.bank) return { goal: `<em>${N(n, "Runde", "Runden")}</em> gegen die Bank – wer mehr Runden gewinnt, gewinnt das Spiel.`, path: { type: "rounds", n, fin: false },
+        rules: [["🏦", "Näher an 21 als die Bank = Runde gewonnen"], ["💥", "Über 21 = Runde verloren"], ["🤝", "Gleichstand zählt für keinen"]] };
+      if (k.mode === "siebzehn") return rounds(n, ["Runde", "Runden"], false, "jede Runde gibt es Punkte nach deinem Platz", [["🥇", "Am nächsten an 21 <b>+3</b>, dann <b>+2</b>, <b>+1</b>"], ["🎯", "Genau 21 <b>+1</b> extra"], ["💥", "Über 21 = 0 Punkte"]]);
+      if (k.mode === "bus") return rounds(n, ["Runde", "Runden"], false, "Punkte bekommst du für jede Station, die du sicherst", [["🚌", "Richtig getippt: Punkte in den <b>Topf</b>"], ["🚏", "<b>Aussteigen</b> sichert den Topf"], ["✗", "Falsch = Topf weg"]]);
+      return rounds(n, ["Runde", "Runden"], false, "Punkte gibt es, wenn du genau so viele Stiche holst, wie du angesagt hast", [["🎯", "Genau getroffen: <b>10 + 2 pro Stich</b>"], ["✗", "Daneben: <b>−2</b> pro Stich Abweichung"], ["🃏", "Jede Runde eine Karte mehr"]]); }
+    if (ph === "watten" && v.watten) return { goal: `Wer zuerst <em>${v.watten.target} Punkte</em> hat, gewinnt – eine gewonnene Runde bringt 2 Punkte, nach Bieten mehr.`, path: { type: "collect", n: v.watten.target },
+      rules: [["🏆", "Runde gewonnen (3 Stiche) <b>+2</b>"], ["🔔", "Bieten erhöht den Wert der Runde"], ["🧱", "Ab " + (v.watten.target - 2) + " Punkten ist man „gestrichen“"]] };
+    if (ph === "schnapsen" && v.schnapsen) return { goal: "Wer zuerst <em>7 Punkte</em> hat, gewinnt – eine gewonnene Runde bringt 1 bis 3 Punkte. Der andere bekommt ein <em>Bummerl</em>.", path: { type: "collect", n: 7 },
+      rules: [["3️⃣", "Gegner ohne Stich: <b>+3</b>"], ["2️⃣", "Gegner unter 33 Augen: <b>+2</b>"], ["1️⃣", "Sonst <b>+1</b>"]] };
+    if (ph === "alm" && v.alm) return { goal: `<em>${N(v.alm.weeks, "Woche", "Wochen")}</em>${v.alm.stormLimit ? ` (oder bis zum ${v.alm.stormLimit}. Gewitter)` : ""} – Punkte gibt es für jede ganz ausgefüllte Fläche. Wer am Ende die meisten hat, gewinnt.`, path: { type: "rounds", n: v.alm.weeks, fin: false, unit: "W" },
+      rules: [["⛰️", "Volle Fläche = <b>Punkte im Eck</b>"], ["🥇", "Wer eine Fläche zuerst füllt, bekommt mehr"], ["🎲", "Gleiche Würfel für alle"]] };
+    if (ph === "jagd" && v.jagd) { const n = v.jagd.rounds;
+      return { goal: `${n ? `<em>${n} Runden</em>` : "Bis einer das Revier seines Nachbarn leergejagt hat"} – Punkte gibt es für Treffer und erlegtes Wild. Die größte Strecke gewinnt.`, path: n ? { type: "rounds", n, fin: false } : null,
+        rules: [["🎯", "Treffer <b>+1</b>"], ["🦌", "Tier ganz erlegt <b>+2</b> bis <b>+4</b>"], ["🔭", "Einmal den Hochsitz nutzen"]] }; }
+    return null;
+  }
+  function winPath(p) {
+    if (!p) return "";
+    const out = []; let d = 0; const step = (h, cls = "") => out.push(`<span class="wz-step ${cls}" style="--d:${(d++) * 0.08 + 0.25}s">${h}</span>`), arr = () => out.push(`<span class="wz-arrow">→</span>`);
+    if (p.type === "first") { const show = p.n <= 4 ? [...Array(p.n)].map((_, i) => i + 1) : [1, 2, "…", p.n];
+      const lb = p.label || ["Punkt", "Punkte"];
+      show.forEach((i) => { step(i === "…" ? "…" : `${i}<small>${i === 1 ? lb[0] : lb[1]}</small>`); arr(); }); step("🏆", "goal"); }
+    else if (p.type === "collect") { const k = 5, st = p.n / k; for (let i = 1; i < k; i++) { step(String(Math.round(st * i))); arr(); } step(`${p.n}<small>Ziel</small>`, "goal"); }
+    else if (p.type === "wand") { p.pts.forEach((x) => step(`${x}<small>Punkte</small>`)); arr(); step("🏆", "goal"); }
+    else { const n = p.n, u = p.unit || (p.type === "stages" ? "" : "R");
+      // lange Wege kürzen: 1, 2, 3 … letzte (damit es auch am Handy in eine Zeile passt)
+      const idx = n <= 6 ? [...Array(n)].map((_, i) => i + 1) : [1, 2, 3, "…", n];
+      idx.forEach((i, k) => { if (i === "…") { step("…"); arr(); return; } const fin = (p.fin || p.type === "stages") && i === n;
+        step(p.type === "stages" ? `${i}<small>${fin ? "Finale ×2" : "Etappe"}</small>` : `${u}${i}${fin ? "<small>×2</small>" : ""}`, fin ? "fin" : ""); if (k < idx.length - 1) arr(); });
+      if (p.more) { arr(); step("…"); }
+      arr(); step(p.type === "stages" ? "👑" : "🏆", "goal"); }
+    return `<div class="wz-path">${out.join("")}</div>`;
+  }
+  function winCardHide() { clearTimeout(winCardT); winCardEl.classList.remove("show"); }
+  function winCardShow() {
+    const spec = view && winSpec(view); if (!spec) return;
+    const key = view.phase === "querbeet" ? "querbeet" : view.game, gm = gameByKey(key) || gameByKey(view.game) || {};
+    winCardEl.innerHTML = `<div class="wz" role="dialog" aria-label="So gewinnst du"><div class="wz-top"><span class="wz-ico gt-icon" style="--gc:${gm.color || "#8b7cff"}">${gm.icon || "🏆"}</span><div><small>So gewinnst du</small><b>${esc(gm.name || "")}</b></div></div>
+      <div class="wz-goal"><span class="fl">🏁</span><b>${spec.goal}</b></div>${winPath(spec.path)}
+      <div class="wz-rules">${spec.rules.map(([i, t]) => `<div class="wz-rule"><i>${i}</i><span>${t}</span></div>`).join("")}</div>
+      <div class="wz-go"><button type="button" class="btn primary" data-wzgo>Los geht's!</button><span class="wz-bar"><i></i></span></div></div>`;
+    winCardEl.classList.add("show");
+    winCardEl.querySelector("[data-wzgo]").onclick = winCardHide;
+    clearTimeout(winCardT); winCardT = setTimeout(winCardHide, 15000);
+  }
+  winCardEl.addEventListener("click", (e) => { if (e.target === winCardEl) winCardHide(); });
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && winCardEl.classList.contains("show")) winCardHide(); });
+
   // ---------- Gemeinsame Siegerehrung: Treppchen (Platz 1 Mitte, 2 links, 3 rechts), ab Platz 4 Liste ----------
   // items: [{ id, name, pts (Zahl zum Sortieren), txt (Anzeige, z. B. „31 Punkte“), sub }]; winners: Sieger-IDs (Gleichstand möglich)
   // Die Animation läuft nur beim ersten Zeigen dieses Endstands (nicht nach Neuladen/Neuzeichnen).
@@ -2404,7 +2489,7 @@
         <p class="muted small">${esc((GEO.LEVELS[lb.geo.level] || GEO.LEVELS.gemischt).name)} · ${lb.geo.rounds} Runden · ${esc((GEO.TIMERS[lb.geo.timer] || GEO.TIMERS.t30).name)} pro Runde</p>`;
     }
     if (KG.MODES[view.game] && lb.kg) {
-      return `<p class="muted small">${view.game === "siebzehn" ? `${lb.kg.rounds} Runden · alle gegeneinander, wer am nächsten an 21 liegt, gewinnt (allein: gegen die Bank)` : view.game === "bus" ? `${lb.kg.busRounds} ${lb.kg.busRounds === 1 ? "Runde" : "Runden"} · 5 Stationen, nach jeder: weiterfahren oder aussteigen` : `${lb.kg.stichRounds || 6} Runden · Stiche ansagen und genau so viele holen`}</p>`;
+      return `<p class="muted small">${view.game === "siebzehn" ? `Wer zuerst ${lb.kg.wins || 3} Runden gewinnt · am nächsten an 21 gewinnt die Runde (allein: gegen die Bank)` : view.game === "bus" ? `${lb.kg.busRounds} ${lb.kg.busRounds === 1 ? "Runde" : "Runden"} · 5 Stationen, nach jeder: weiterfahren oder aussteigen` : `${lb.kg.stichRounds || 6} Runden · Stiche ansagen und genau so viele holen`}</p>`;
     }
     if (QZ.MODES[view.game] && lb.quiz) {
       const det = view.game === "umriss" ? esc(LAND.REGION_NAMES[lb.quiz.region] || "Europa") + " · " + esc((QZ.LEVELS[lb.quiz.level] || QZ.LEVELS.gemischt).name)
@@ -2515,6 +2600,7 @@
     if (qbLv) qbLv.onchange = () => { qbOpts.level = qbLv.value; store.set("s10-qb", qbOpts); publish(); };
     const kgR = app.querySelector("#kg-rounds");
     if (kgR) kgR.onchange = () => { kgOpts.rounds = Number(kgR.value); store.set("s10-kg", kgOpts); publish(); };
+    const kgW = app.querySelector("#kg-wins"); if (kgW) kgW.onchange = () => { kgOpts.wins = Number(kgW.value); store.set("s10-kg", kgOpts); publish(); };
     const kgB = app.querySelector("#kg-busrounds");
     if (kgB) kgB.onchange = () => { kgOpts.busRounds = Number(kgB.value); store.set("s10-kg", kgOpts); publish(); };
     const kgS = app.querySelector("#kg-stichrounds");
@@ -2619,8 +2705,8 @@
       `;
   }
   function kgSettingsHtml(mode) {
-    return `${mode === "siebzehn" ? `<label class="field"><span>Runden</span><select id="kg-rounds">${KG.ROUND_CHOICES.map((n) =>
-        `<option value="${n}" ${Number(kgOpts.rounds) === n ? "selected" : ""}>${n} Runden</option>`).join("")}</select></label>`
+    return `${mode === "siebzehn" ? `<label class="field"><span>Spielziel</span><select id="kg-wins">${KG.WIN_CHOICES.map((n) =>
+        `<option value="${n}" ${Number(kgOpts.wins) === n ? "selected" : ""}>Wer zuerst ${n} Runden gewinnt</option>`).join("")}</select></label>`
         : mode === "bus" ? `<label class="field"><span>Runden</span><select id="kg-busrounds">${KG.BUS_ROUNDS.map((n) =>
             `<option value="${n}" ${Number(kgOpts.busRounds) === n ? "selected" : ""}>${n} ${n === 1 ? "Runde" : "Runden"}</option>`).join("")}</select></label>`
         : `<label class="field"><span>Runden</span><select id="kg-stichrounds">${KG.STICH_ROUNDS.map((n) =>
@@ -2809,9 +2895,10 @@
       <ul>
         <li>Jeder bekommt zwei Karten, die nur er selbst sieht. Kartenwerte: Sieben bis Zehn zählen ihre Zahl, Unter 2, Ober 3, König 4, Ass 11.</li>
         <li>Alle entscheiden gleichzeitig: <b>„Weitere Karte“</b> zieht noch eine, <b>„Genug“</b> hört auf. Wer über 21 kommt, ist für die Runde raus.</li>
-        <li>Wenn alle fertig sind, wird aufgedeckt: Wer am nächsten an 21 liegt, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Genau 21 gibt einen Bonuspunkt.</li>
+        <li>Wenn alle fertig sind, wird aufgedeckt: Wer allein am nächsten an 21 liegt, gewinnt die Runde. Liegen vorne zwei gleichauf, zählt die Runde für keinen.</li>
+        <li><b>Spielziel:</b> Wer zuerst 3 (oder 5 bzw. 7, in der Lobby einstellbar) Runden gewinnt, gewinnt das Spiel – in der Stubenmeisterschaft 3.</li>
         <li><b>Feuer:</b> Zwei Asse auf der Hand schlagen alles (und zählen wie 21).</li>
-        <li><b>Allein gegen die Bank:</b> Spielst du allein, zeigt die Bank eine Karte offen. Bist du fertig, deckt sie auf und zieht, bis sie mindestens 17 hat. Wer näher an 21 liegt, holt die Runde; über 21 verliert sofort, Gleichstand zählt für keinen. Wer mehr Runden holt, gewinnt.</li>
+        <li><b>Allein gegen die Bank:</b> Spielst du allein, zeigt die Bank eine Karte offen. Bist du fertig, deckt sie auf und zieht, bis sie mindestens 17 hat. Wer näher an 21 liegt, holt die Runde; über 21 verliert sofort, Gleichstand zählt für keinen. Wer zuerst die nötigen Runden hat, gewinnt.</li>
         <li>Von den anderen sieht man nur, wie viele Karten sie haben und ob sie schon fertig sind.</li>
       </ul>
     </details>`;

@@ -3875,3 +3875,35 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .rk-mv.up { color: #2fbf71; background: rgba(47, 191, 113, .15); } .rk-mv.dn { color: #ff7d8a; background: rgba(239, 75, 90, .15); }
 .qz-head .gh-final, .gh-t .gh-final { display: table; }
 #camdock.in-pult .camsize { display: none; }
+
+/* ---------- „So gewinnst du“: Startkarte beim Spielstart ---------- */
+#wincard { position: fixed; inset: 0; z-index: 4500; display: none; place-items: center; padding: 16px; background: rgba(10, 8, 30, .62); backdrop-filter: blur(2px); }
+#wincard.show { display: grid; animation: fade .2s; }
+#wincard .wz { width: min(100%, 620px); max-height: calc(100dvh - 32px); overflow: auto; border-radius: 26px; padding: 22px 24px 18px; background: #d9cfb6; color: #231d4d; display: grid; gap: 16px;
+  box-shadow: 0 8px 0 #a89c7d, 0 24px 50px rgba(0, 0, 0, .5); animation: wz-in .5s cubic-bezier(.3, 1.3, .5, 1) both; }
+@keyframes wz-in { from { transform: translateY(30px) scale(.94); opacity: 0; } }
+#wincard .wz-top { display: flex; align-items: center; gap: 14px; }
+#wincard .wz-ico { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: color-mix(in srgb, var(--gc) 35%, #231d4d); box-shadow: 0 4px 0 #120e33; flex: none; }
+#wincard .wz-ico svg { width: 40px; height: 40px; }
+#wincard .wz-top small { display: block; font: 800 .72rem Nunito, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: #6e6491; }
+#wincard .wz-top b { font: 700 1.6rem Fredoka, sans-serif; }
+#wincard .wz-goal { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 18px; background: #231d4d; color: #fff; }
+#wincard .wz-goal .fl { font-size: 1.8rem; }
+#wincard .wz-goal b { font: 700 clamp(1.1rem, 2.6vw, 1.4rem)/1.25 Fredoka, sans-serif; } #wincard .wz-goal b em { font-style: normal; color: var(--accent); }
+#wincard .wz-path { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+#wincard .wz-step { min-width: 46px; height: 46px; padding: 0 8px; border-radius: 14px; display: grid; place-items: center; align-content: center; text-align: center; background: #fff8e6; box-shadow: 0 3px 0 #c9bd9e;
+  font: 700 .95rem/1 Fredoka, sans-serif; color: #4b33b5; animation: wz-pop .35s cubic-bezier(.3, 1.6, .5, 1) both; animation-delay: var(--d); }
+#wincard .wz-step small { display: block; font: 800 .6rem Nunito, sans-serif; color: #8a7fb8; margin-top: 2px; }
+#wincard .wz-step.fin { background: linear-gradient(180deg, #ffd166, #ff9a3d); color: #2a1300; box-shadow: 0 3px 0 #b5641c; } #wincard .wz-step.fin small { color: #6b3a00; }
+#wincard .wz-step.goal { background: #2fbf71; color: #fff; box-shadow: 0 3px 0 #1f7a49; font-size: 1.3rem; } #wincard .wz-step.goal small { color: #eafff3; }
+#wincard .wz-arrow { color: #8a7fb8; font-weight: 800; }
+@keyframes wz-pop { from { transform: scale(.3); opacity: 0; } }
+#wincard .wz-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+#wincard .wz-rule { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: rgba(35, 29, 77, .08); font-weight: 700; font-size: .92rem; line-height: 1.25; }
+#wincard .wz-rule i { font-style: normal; font-size: 1.3rem; } #wincard .wz-rule b { color: #4b33b5; }
+#wincard .wz-go { display: grid; gap: 6px; } #wincard .wz-go .btn { width: 100%; padding: 14px; font-size: 1.05rem; }
+#wincard .wz-bar { height: 4px; border-radius: 4px; background: rgba(35, 29, 77, .15); overflow: hidden; }
+#wincard .wz-bar i { display: block; height: 100%; background: #4b33b5; animation: wz-bar 15s linear forwards; } @keyframes wz-bar { from { width: 100%; } to { width: 0; } }
+@media (max-width: 560px) { #wincard .wz { padding: 16px 14px 14px; } #wincard .wz-top b { font-size: 1.3rem; } #wincard .wz-step { min-width: 38px; height: 40px; } }
+@media (prefers-reduced-motion: reduce) { #wincard .wz, #wincard .wz-step { animation: none; } }
+@media (max-width: 560px) { #wincard .wz-rules { grid-template-columns: 1fr; gap: 6px; } #wincard .wz-rule { padding: 7px 10px; font-size: .88rem; } #wincard .wz { gap: 12px; } }

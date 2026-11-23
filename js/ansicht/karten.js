@@ -48,13 +48,13 @@
       + (st.mode === "bus" ? ":" + st.q + ":" + st.revealed + ":" + JSON.stringify(st.pick || {}) + ":" + JSON.stringify(st.guessed || {}) + ":" + JSON.stringify(st.status || {}) : "");
     if (kgRendered === key && app.querySelector(".kg-main")) {
       const sc = app.querySelector(".geo-scores"); if (sc) sc.innerHTML = kgChips(v, st);
-      if (st.step === "reveal" || st.step === "roundEnd") G.nextBtnSwap("#kg-ready", { attr: 'id="kg-ready"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) }, () => send({ type: "kgReady" }));
+      if (st.step === "reveal" || st.step === "roundEnd") G.nextBtnSwap("#kg-ready", { attr: 'id="kg-ready"', label: st.round >= st.rounds || st.decided ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) }, () => send({ type: "kgReady" }));
       return;
     }
     kgRendered = key;
     const colorOf = (id) => PLAYER_COLORS[Math.max(0, v.players.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
-    const readyBtn = `<div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="kg-ready"', hostAttr: 'id="kg-next"', label: st.round >= st.rounds ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) })}</div>`;
+    const readyBtn = `<div class="geo-actions">${G.nextBtnsHtml({ attr: 'id="kg-ready"', hostAttr: 'id="kg-next"', label: st.round >= st.rounds || st.decided ? "Zum Endstand" : "Nächste Runde", ready: !!st.ready[G.myId], waiting: G.waitingNames(v, st.ready, st.seats) })}</div>`;
     let main = "";
     if (st.step === "final" && st.bank) {
       const me = st.seats[0], mt = st.total[me] || 0, bt = st.bank.total;
@@ -64,10 +64,10 @@
         <div class="panel slf-final"><div class="slf-rank" style="--pc:${colorOf(me)}"><span class="slf-medal">${mt >= bt ? "🥇" : "🥈"}</span><span class="pdot"></span>
           <span class="slf-name">${esc(nameOf(me))}${me === G.myId ? " <em>(du)</em>" : ""}</span><b>${mt} ${mt === 1 ? "Runde" : "Runden"}</b></div>
           <div class="slf-rank" style="--pc:${BANK_C}"><span class="slf-medal">${bt >= mt ? "🥇" : "🥈"}</span><span class="pdot"></span><span class="slf-name">🏦 Bank</span><b>${bt} ${bt === 1 ? "Runde" : "Runden"}</b></div>
-          <p class="muted small">${esc(st.modeName)} gegen die Bank · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}</p></div>`;
+          <p class="muted small">${esc(st.modeName)} gegen die Bank · ${st.wins ? `wer zuerst ${st.wins} Runden gewinnt` : `${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}`}</p></div>`;
     } else if (st.step === "final") {
       const ranking = st.seats.slice().sort((a, b) => (st.total[b] || 0) - (st.total[a] || 0)), medal = ["🥇", "🥈", "🥉"];
-      main = G.podiumHtml({ items: ranking.map((id) => ({ id, name: nameOf(id), pts: st.total[id] || 0, txt: `${st.total[id] || 0} Punkte` })), winners: st.winners || [], restartId: "kg-restart", info: `${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}` });
+      main = G.podiumHtml({ items: ranking.map((id) => ({ id, name: nameOf(id), pts: st.total[id] || 0, txt: st.wins ? `${st.total[id] || 0} ${st.total[id] === 1 ? "Rundensieg" : "Rundensiege"}` : `${st.total[id] || 0} Punkte` })), winners: st.winners || [], restartId: "kg-restart", info: st.wins ? `${esc(st.modeName)} · wer zuerst ${st.wins} Runden gewinnt · ${st.round} Runden gespielt` : `${esc(st.modeName)} · ${st.rounds} ${st.rounds === 1 ? "Runde" : "Runden"}` });
     } else if (st.mode === "bus") {
       main = busMainHtml(v, st, colorOf, nameOf, readyBtn);
     } else if (st.mode === "siebzehn") {
@@ -135,7 +135,7 @@
                 <circle cx="66" cy="66" r="56" class="sv-ring" style="stroke-dasharray:${C * Math.min(1, v / 21)} ${C}"/></svg>
                 <div><b>${priv.feuer ? "🔥" : v}</b><small>von 21</small></div></div>
             <div class="sv-foot ${late}"><span class="tt-head ${over ? "bad" : fin && !top ? "calm" : ""}">${headTxt}</span><p class="tt-text">${subTxt}</p>
-              ${fin ? `<span class="tt-chip">Deine Punkte: ${st.total[G.myId] || 0}</span>` : ""}</div>
+              ${fin ? `<span class="tt-chip">${st.wins ? `Deine Siege: ${st.total[G.myId] || 0} / ${st.wins}` : `Deine Punkte: ${st.total[G.myId] || 0}`}</span>` : ""}</div>
             ${fin ? "" : `<div class="sv-acts"><button id="kg-hit" class="sv-hit">🂠 Karte!</button><button id="kg-stand" class="sv-stand">✋ Genug</button></div>`}</div>`;
         } else me = `<div class="sv-solo"><span class="tt-head calm">${seated ? "Karten werden ausgeteilt …" : "Du schaust in dieser Runde zu."}</span></div>`;
         kgSound(sounds, 380, 0);
@@ -144,7 +144,7 @@
         // Spielstand am Tisch (oben links): Runde und Punkte aller – nach Punkten, du hervorgehoben
         const standRows = st.seats.map((id) => ({ id, n: id === G.myId ? "Du" : nameOf(id), p: st.total[id] || 0, c: colorOf(id), me: id === G.myId }))
           .concat(st.bank ? [{ id: "_bank", n: "🏦 Bank", p: st.bank.total, c: BANK_C }] : []).sort((x, y) => y.p - x.p);
-        const stand = `<div class="sv-stand"><b>Runde ${st.round} / ${st.rounds}</b>${standRows.map((r, i) => `<span class="${r.me ? "me" : ""}" style="--pc:${r.c}"><i>${1 + standRows.filter((x) => x.p > r.p).length}.</i><span class="pdot"></span>${esc(r.n)}<em>${r.p}</em></span>`).join("")}</div>`;
+        const stand = `<div class="sv-stand"><b>${st.wins ? `Runde ${st.round} · bis ${st.wins} Siege` : `Runde ${st.round} / ${st.rounds}`}</b>${standRows.map((r, i) => `<span class="${r.me ? "me" : ""}" style="--pc:${r.c}"><i>${1 + standRows.filter((x) => x.p > r.p).length}.</i><span class="pdot"></span>${esc(r.n)}<em>${r.p}</em></span>`).join("")}</div>`;
         main = `<div class="sv-rim"><div class="sv-felt">${stand}${seatsHtml ? `<div class="sv-seats">${seatsHtml}</div>` : ""}${me}${legend}</div></div>`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
@@ -157,24 +157,25 @@
           if (animate && !mine) { t += r.hand.length * 160; flips += r.hand.length; }
           const after = animate ? `kg-late" style="--d:${t + 150 + off}ms` : "";
           if (animate) t += 550;
-          const win = st.bank ? r.points > 0 : r.place === 1;
+          const win = st.bank || st.wins ? r.points > 0 : r.place === 1;
           return `<div class="kg-res ${r.bust ? "bust" : win ? "win" : ""} ${animate ? "anim-row" : ""}" style="--pc:${bank ? BANK_C : colorOf(id)};--d:${t + 150 + off}ms"><span class="kg-rname"><span class="pdot"></span>${bank ? "🏦 Bank" : esc(nameOf(id))}${mine ? " <em>(du)</em>" : ""}</span>
             <span class="kg-hand small">${cards}</span>
-            <span class="kg-rsum ${after}">${r.feuer ? "🔥 Feuer" : r.bust ? `${r.sum} – über 21` : r.sum === 21 ? "21 – Siebzehn und Vier!" : r.sum}</span><b class="qb-plus ${after}">+${r.points}</b></div>`; }).join("");
+            <span class="kg-rsum ${after}">${r.feuer ? "🔥 Feuer" : r.bust ? `${r.sum} – über 21` : r.sum === 21 ? "21 – Siebzehn und Vier!" : r.sum}</span>${st.wins ? (r.points > 0 ? `<b class="qb-plus ${after}">🏆 Sieg</b>` : "") : `<b class="qb-plus ${after}">+${r.points}</b>`}</div>`; }).join("");
+        const tieMsg = st.wins && !st.bank && st.tie ? `<div class="sv-verdict"><span class="tt-head calm">Gleichstand vorne – die Runde zählt für keinen.</span></div>` : "";
         if (ra && ra.first) { kgSound(flips, 160, 300); if (!kgOutcomeDelay) kgOutcomeDelay = t; }
         const oc = st.bank && st.result[st.seats[0]].outcome;
         const verdict = oc ? `<div class="sv-verdict ${animate ? `kg-late" style="--d:${t + off}ms` : ""}"><span class="tt-head ${oc === "lose" ? "bad" : oc === "tie" ? "calm" : ""}">${oc === "win" ? "Gewonnen – die Runde geht an dich!" : oc === "tie" ? "Gleichstand – die Runde zählt für keinen." : st.result[st.seats[0]].bust ? "Über 21 – die Bank gewinnt." : st.bank.res.feuer ? "🔥 Feuer – die Bank gewinnt." : "Die Bank gewinnt diese Runde."}</span>
           <span class="tt-chip">Du ${st.total[st.seats[0]] || 0} : ${st.bank.total} Bank</span></div>` : "";
-        main = `<div class="sv-rim"><div class="sv-felt sv-reveal">${verdict}<div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div></div>`;
+        main = `<div class="sv-rim"><div class="sv-felt sv-reveal">${verdict}${tieMsg}<div class="kg-results">${rows}</div><div class="${animate ? `kg-late" style="--d:${t + off}ms` : ""}">${readyBtn}</div></div></div>`;
       }
     } else {
       main = stichMainHtml(v, st, colorOf, nameOf, readyBtn);
     }
     app.innerHTML = `
       <main class="screen game slf geo kg-main kg-${st.mode}">
-        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}${(st.mode === "bus" || st.mode === "siebzehn") && st.step !== "final" ? `<span class="kg-meta-round"><span>Runde</span> <b>${st.round}/${st.rounds}</b></span>` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
+        <header class="top topbar">${headBrandHtml(st.mode)}<div class="meta">${esc(st.modeName)}${(st.mode === "bus" || st.mode === "siebzehn") && st.step !== "final" ? `<span class="kg-meta-round"><span>Runde</span> <b>${st.wins ? `${st.round} · bis ${st.wins}` : `${st.round}/${st.rounds}`}</b></span>` : ""}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         ${statusBarHtml()}
-        <section class="slf-main">${st.step !== "final" && st.mode !== "stich" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.round}/${st.rounds}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
+        <section class="slf-main">${st.step !== "final" && st.mode !== "stich" ? `<div class="geo-bar"><span class="game-label">${st.mode === "bus" ? `Runde ${st.round}/${st.rounds} · ${st.step === "roundEnd" ? "Endstation" : `Station ${Math.min(st.q, 4) + 1} von 5`}` : `${st.step === "reveal" ? "Auflösung · " : ""}Runde ${st.wins ? `${st.round} · wer zuerst ${st.wins} gewinnt` : `${st.round}/${st.rounds}`}${st.mode === "stich" ? ` · ${st.n} ${st.n === 1 ? "Karte" : "Karten"}` : ""}`}</span><div class="geo-scores">${kgChips(v, st)}</div></div>` : ""}${main}</section>
       </main>`;
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
