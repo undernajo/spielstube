@@ -18,7 +18,7 @@
     frage: { kind: "wort", two: true, name: "Antwort sucht Frage", short: "bis 3 Punkte", rule: "Zur vorgegebenen Antwort eine Frage erfinden – der andere muss sie beantworten." },
     schaetzen: { kind: "wissen", name: "Schätzen", short: "5 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
     hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "4 Begriffe", rule: "Alle 10 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
-    siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "bis 3 Siege", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt die Runde. Wer zuerst 3 Runden gewinnt, gewinnt die Etappe." },
+    siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "bis 3 Siege", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt die Runde. Wer zuerst 3 Runden gewinnt, gewinnt die Etappe – spätestens nach 8 Runden ist Schluss." },
     bus: { kind: "karten", name: "Busfahrt", short: "3 Runden à 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
     stich: { kind: "karten", name: "Stichhaltig", short: "4 Runden (1 bis 4 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
     alm: { kind: "wuerfel", name: "Almsommer", short: "8 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
@@ -39,7 +39,7 @@
     slf: { steps: ["Ein *Buchstabe*, sechs Kategorien.", "Zu jeder Kategorie *ein Wort* mit diesem Anfangsbuchstaben.", "Wer fertig ist, ruft *Stopp* – dann bleiben noch 10 Sekunden."], win: "Die meisten Punkte (eigene Antworten zählen mehr)." },
     duell: { steps: ["Ein Thema mit fester Liste, z. B. „die 10 größten Städte …“.", "*Abwechselnd* je eine Antwort nennen.", "*Falsch, doppelt oder zu spät* = Runde verloren."], win: "Wer die meisten Runden gewinnt." },
     frage: { steps: ["Einer bekommt eine *Antwort* und eine Kategorie.", "Er *erfindet eine Frage* dazu – der andere muss sie beantworten.", "*Richtig beantwortet* = Punkt für den Antwortenden, sonst für den Fragesteller."], win: "Wer die meisten Runden gewinnt." },
-    siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus, Gleichstand vorne zählt für keinen."], win: "Wer zuerst *3 Runden* gewinnt." },
+    siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus, Gleichstand vorne zählt für keinen."], win: "Wer zuerst *3 Runden* gewinnt – nach spätestens *8 Runden* zählen die meisten Rundensiege." },
     bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
     stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
     alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 8 Wochen." },
@@ -113,7 +113,7 @@
         return { mode: "umriss", region, level: lv(region), rounds: 6 }; }
       case "schaetzen": return { mode: "schaetzen", rounds: 5, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "hinweis": return { mode: "hinweis", rounds: 4, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
-      case "siebzehn": return { mode: "siebzehn", wins: 3 };
+      case "siebzehn": return { mode: "siebzehn", wins: 3, maxRounds: 8 };
       case "stich": return { mode: "stich", rounds: 4 };
       case "bus": return { mode: "bus", rounds: 3 };
       // Südtirol-Paket nur beim Thema Südtirol, sonst jedes Mal neu: 2 Klassiker + 4 zufällige Kategorien

@@ -34,6 +34,7 @@
     if (mode === "siebzehn") {
       // Spielziel „Wer zuerst N Runden gewinnt“ (Lobby: 3, 5 oder 7 Siege; Meisterschaft: 3)
       const wn = Number(opts.wins); if (WIN_CHOICES.includes(wn)) { s.karten.wins = wn; s.karten.opts.wins = wn; }
+      const mx = Number(opts.maxRounds); if (s.karten.wins && Number.isInteger(mx) && mx > 0) { s.karten.maxRounds = mx; s.karten.opts.maxRounds = mx; } // Meisterschaft: spätestens nach 8 Runden Schluss
       s.karten.rounds = s.karten.wins ? 99 : rounds; if (seats.length === 1) { s.karten.bank = true; s.karten.bankTotal = 0; } nextSiebzehn(s.karten); }
     else if (mode === "bus") startBus(s.karten, now, opts);
     else startStich(s.karten, now, opts);
@@ -41,7 +42,7 @@
   }
 
   // ---------- Siebzehn und Vier ----------
-  const decided = (st) => !!st.wins && (Object.values(st.total).some((x) => x >= st.wins) || (st.bank && st.bankTotal >= st.wins));
+  const decided = (st) => !!st.wins && (Object.values(st.total).some((x) => x >= st.wins) || (st.bank && st.bankTotal >= st.wins) || (!!st.maxRounds && st.round >= st.maxRounds));
   function nextSiebzehn(st) {
     if (decided(st)) { st.step = "final"; return; }
     st.round++;
@@ -323,7 +324,7 @@
     const st = s.karten;
     if (!st) return null;
     const out = { gid: st.gid, mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, roundNo: st.round, seats: st.seats.slice(),
-      wins: st.wins || null, decided: decided(st), tie: st.wins && st.result && !st.bank ? !Object.values(st.result).some((r) => r.points > 0) : false,
+      wins: st.wins || null, maxRounds: st.maxRounds || null, decided: decided(st), tie: st.wins && st.result && !st.bank ? !Object.values(st.result).some((r) => r.points > 0) : false,
       total: { ...st.total }, ready: { ...(st.ready || {}) } };
     if (st.mode === "siebzehn") {
       out.count = Object.fromEntries(st.seats.map((id) => [id, (st.hands[id] || []).length]));

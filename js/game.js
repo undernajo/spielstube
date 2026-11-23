@@ -2332,7 +2332,7 @@
     if (ph === "wand" && v.wand) return { goal: "Alle Felder der Wand – eine richtige Antwort bringt die Punkte des Feldes. Wer am Ende die meisten Punkte hat, gewinnt.", path: { type: "wand", pts: v.wand.pts || [10, 20, 30, 50] },
       rules: [["🎯", "Richtig = <b>Punkte des Feldes</b>"], ["🙂", "Falsch kostet nichts"], ["🔁", "Reihum wählt jeder ein Feld"]] };
     if (ph === "karten" && v.karten) { const k = v.karten, n = k.rounds;
-      if (k.mode === "siebzehn" && k.wins) return { goal: `Wer zuerst <em>${N(k.wins, "Runde", "Runden")}</em> gewinnt${k.bank ? " – du oder die Bank" : ""}, gewinnt das Spiel.`, path: { type: "first", n: k.wins, label: ["Sieg", "Siege"] },
+      if (k.mode === "siebzehn" && k.wins) return { goal: `Wer zuerst <em>${N(k.wins, "Runde", "Runden")}</em> gewinnt${k.bank ? " – du oder die Bank" : ""}, gewinnt das Spiel.${k.maxRounds ? ` Spätestens nach <em>${k.maxRounds} Runden</em> ist Schluss – dann zählen die meisten Rundensiege.` : ""}`, path: { type: "first", n: k.wins, label: ["Sieg", "Siege"] },
         rules: k.bank ? [["🏦", "Näher an 21 als die Bank = Runde gewonnen"], ["💥", "Über 21 = Runde verloren"], ["🤝", "Gleichstand zählt für keinen"]]
           : [["🎯", "Am nächsten an 21 = Runde gewonnen"], ["💥", "Über 21 = raus aus der Runde"], ["🤝", "Gleichstand vorne zählt für keinen"]] };
       if (k.mode === "siebzehn" && k.bank) return { goal: `<em>${N(n, "Runde", "Runden")}</em> gegen die Bank – wer mehr Runden gewinnt, gewinnt das Spiel.`, path: { type: "rounds", n, fin: false },
@@ -2896,7 +2896,7 @@
         <li>Jeder bekommt zwei Karten, die nur er selbst sieht. Kartenwerte: Sieben bis Zehn zählen ihre Zahl, Unter 2, Ober 3, König 4, Ass 11.</li>
         <li>Alle entscheiden gleichzeitig: <b>„Weitere Karte“</b> zieht noch eine, <b>„Genug“</b> hört auf. Wer über 21 kommt, ist für die Runde raus.</li>
         <li>Wenn alle fertig sind, wird aufgedeckt: Wer allein am nächsten an 21 liegt, gewinnt die Runde. Liegen vorne zwei gleichauf, zählt die Runde für keinen.</li>
-        <li><b>Spielziel:</b> Wer zuerst 3 (oder 5 bzw. 7, in der Lobby einstellbar) Runden gewinnt, gewinnt das Spiel – in der Stubenmeisterschaft 3.</li>
+        <li><b>Spielziel:</b> Wer zuerst 3 (oder 5 bzw. 7, in der Lobby einstellbar) Runden gewinnt, gewinnt das Spiel – in der Stubenmeisterschaft 3, dort ist spätestens nach 8 Runden Schluss (dann zählen die meisten Rundensiege).</li>
         <li><b>Feuer:</b> Zwei Asse auf der Hand schlagen alles (und zählen wie 21).</li>
         <li><b>Allein gegen die Bank:</b> Spielst du allein, zeigt die Bank eine Karte offen. Bist du fertig, deckt sie auf und zieht, bis sie mindestens 17 hat. Wer näher an 21 liegt, holt die Runde; über 21 verliert sofort, Gleichstand zählt für keinen. Wer zuerst die nötigen Runden hat, gewinnt.</li>
         <li>Von den anderen sieht man nur, wie viele Karten sie haben und ob sie schon fertig sind.</li>
