@@ -108,7 +108,8 @@
       case "land": { // 8 Gebiete: Österreich (9, auf „Leicht“ 5) und Deutschland auf „Leicht“/„Profi“ (9/7) haben zu wenige
         const region = pick(st ? ["it", "it", "europa"] : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", ...(level === "gemischt" ? ["de"] : []), "it"]);
         return { region, level: lv(region), rounds: 8, timer: "t30", free: true }; }
-      case "umriss": { const region = pick(st ? ["it", "at"] : w ? ["welt", "europa"] : ["europa", "welt", "de", "at", "it"]);
+      // Umrisse von Bundesländern/Regionen sind kaum zu erkennen – nur bei „Profi“ (Österreich hat dort zu wenige Gebiete)
+      case "umriss": { const region = pick(st ? (pro ? ["europa", "it"] : ["europa"]) : w ? ["welt", "europa"] : ["europa", "welt", ...(pro ? ["de", "it"] : [])]);
         return { mode: "umriss", region, level: lv(region), rounds: 6 }; }
       case "schaetzen": return { mode: "schaetzen", rounds: 5, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
       case "hinweis": return { mode: "hinweis", rounds: 4, theme: st ? "suedtirol" : w ? "allgemein" : "mix" };
