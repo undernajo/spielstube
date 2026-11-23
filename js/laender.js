@@ -4,7 +4,7 @@
 (function (root) {
   const ROUND_CHOICES = [5, 10, 15, 20];
   const LEVELS = { leicht: { name: "Leicht" }, gemischt: { name: "Gemischt" }, profi: { name: "Profi" } };
-  const TIMERS = { t15: { name: "15 Sekunden", ms: 15000 }, t30: { name: "30 Sekunden", ms: 30000 }, none: { name: "ohne Zeitlimit", ms: 0 } };
+  const TIMERS = { t15: { name: "15 Sekunden", ms: 15000 }, t30: { name: "30 Sekunden", ms: 30000 }, t45: { name: "45 Sekunden", ms: 45000 }, none: { name: "ohne Zeitlimit", ms: 0 } };
   const BASE = 100, BONUS = [30, 20, 10];
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const REGION_KEYS = ["europa", "afrika", "asien", "amerika", "welt", "de", "at", "it", "ch"];
@@ -38,7 +38,7 @@
     const reg = data().regions[opts.region] ? opts.region : "europa";
     const level = LEVELS[opts.level] ? opts.level : "gemischt";
     const rn = Number(opts.rounds), rounds = ROUND_CHOICES.includes(rn) || (opts.free && Number.isInteger(rn) && rn > 0 && rn <= 20) ? rn : 10; // free: Querbeet
-    const timer = TIMERS[opts.timer] ? opts.timer : "t30";
+    const timer = TIMERS[opts.timer] ? opts.timer : "t45";
     const pool = poolFor(reg, level);
     // Ungespielte zuerst. Reichen sie nicht mehr für eine Partie, beginnt diese Auswahl von vorn.
     if (!s.landSeen || typeof s.landSeen !== "object") s.landSeen = {};

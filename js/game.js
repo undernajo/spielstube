@@ -88,7 +88,7 @@
     }
     return false;
   }
-  let landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-land") || {});
+  let landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t45" }, store.get("s10-land") || {});
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
   let hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt" }, store.get("s10-hl") || {});
@@ -2828,7 +2828,7 @@
   const hinweisRulesHtml = `
     <details class="rules"><summary>Regeln: Hinweis für Hinweis</summary>
       <ul>
-        <li>Gesucht ist ein Begriff, eine Person oder ein Ort. Alle 8 Sekunden kommt ein neuer, leichterer Hinweis – fünf insgesamt.</li>
+        <li>Gesucht ist ein Begriff, eine Person oder ein Ort. Alle 10 Sekunden kommt ein neuer, leichterer Hinweis – fünf insgesamt.</li>
         <li>Jeder hat <b>nur einen Versuch</b>. Wer beim 1. Hinweis richtig liegt, bekommt 5 Punkte, beim 2. Hinweis 4 … beim 5. Hinweis 1 Punkt.</li>
         <li>Kleine Tippfehler werden verziehen.</li>
       </ul>
@@ -2837,7 +2837,7 @@
     <details class="rules"><summary>Regeln: Umriss-Rätsel</summary>
       <ul>
         <li>Man sieht nur den Umriss eines Landes – oder eines Bundeslandes, einer Region oder eines Kantons. Welches Gebiet ist das?</li>
-        <li>Jeder hat einen Versuch (30 Sekunden). Richtig = 2 Punkte, wer als Erster richtig liegt, bekommt +1.</li>
+        <li>Jeder hat einen Versuch (45 Sekunden). Richtig = 2 Punkte, wer als Erster richtig liegt, bekommt +1.</li>
         <li>Karten: Europa, Welt, deutsche und österreichische Bundesländer, italienische Regionen, Schweizer Kantone.</li>
         <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Gebiete, „Profi“ nur die schwereren, „Gemischt“ alle. Sehr kleine Gebiete kommen nicht vor.</li>
       </ul>

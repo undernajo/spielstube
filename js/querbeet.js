@@ -17,7 +17,7 @@
     duell: { kind: "wort", two: true, name: "Listen-Duell", short: "bis 3 Punkte", rule: "Abwechselnd Antworten aus der Liste nennen – wer patzt, verliert die Runde." },
     frage: { kind: "wort", two: true, name: "Antwort sucht Frage", short: "bis 3 Punkte", rule: "Zur vorgegebenen Antwort eine Frage erfinden – der andere muss sie beantworten." },
     schaetzen: { kind: "wissen", name: "Schätzen", short: "5 Schätzfragen", rule: "Eine Zahl schätzen – wer am nächsten dran ist, gewinnt die Runde." },
-    hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "4 Begriffe", rule: "Alle 8 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
+    hinweis: { kind: "wissen", name: "Hinweis für Hinweis", short: "4 Begriffe", rule: "Alle 10 Sekunden kommt ein leichterer Hinweis. Wer früh richtig rät, bekommt mehr – aber nur ein Versuch!" },
     siebzehn: { kind: "karten", name: "Siebzehn und Vier", short: "5 Runden", rule: "Weitere Karte ziehen oder aufhören – wer am nächsten an 21 liegt, gewinnt. Über 21 ist man raus." },
     bus: { kind: "karten", name: "Busfahrt", short: "3 Runden à 5 Stationen", rule: "Station für Station tippen (Figur/Zahl, höher/tiefer, zwischen/außerhalb, Farbe genau, Wert genau) – nach jeder richtigen Station weiterfahren oder aussteigen. Falsch = Topf weg." },
     stich: { kind: "karten", name: "Stichhaltig", short: "4 Runden (1 bis 4 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
@@ -31,7 +31,7 @@
     wand: { steps: ["Wer dran ist, *wählt ein Feld* – je höher die Zahl, desto schwerer.", "*Nur du antwortest* – eintippen oder auswählen, ohne Zeitdruck.", "*Richtig = Punkte* des Feldes. Falsch kostet nichts."], win: "Wer nach allen Zügen die meisten Punkte hat." },
     hl: { steps: ["Ein Begriff mit Wert, daneben der nächste *ohne* Wert.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = 1 Punkt – der neue Begriff wird die nächste Vergleichszahl."], win: "Die meisten richtigen Tipps." },
     schaetzen: { steps: ["Eine Frage mit einer *Zahl* als Antwort.", "Alle *schätzen gleichzeitig*.", "*Am nächsten dran* = die meisten Punkte, ganz genau = Bonus."], win: "Die meisten Punkte nach allen Fragen." },
-    hinweis: { steps: ["Gesucht ist ein Begriff – alle 8 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "*Früh richtig* = viele Punkte, spät richtig = wenige."], win: "Die meisten Punkte nach allen Begriffen." },
+    hinweis: { steps: ["Gesucht ist ein Begriff – alle 10 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "*Früh richtig* = viele Punkte, spät richtig = wenige."], win: "Die meisten Punkte nach allen Begriffen." },
     geo: { steps: ["Oben steht ein *Ort*.", "*Alle tippen gleichzeitig* auf die Karte, wo er liegt.", "*Je näher* am echten Ort, desto mehr Punkte."], win: "Die meisten Punkte nach allen Orten." },
     land: { steps: ["Oben steht ein *Gebiet* (Land, Bundesland, Region oder Kanton).", "*Tippt es auf der Karte an* – alle gleichzeitig.", "*Richtig* getippt = Punkt."], win: "Die meisten richtigen Gebiete." },
     umriss: { steps: ["Zu sehen ist nur ein *Umriss*.", "*Welches Gebiet ist das?* Eintippen – nur ein Versuch.", "Richtig = Punkte, *wer zuerst richtig liegt*, bekommt mehr."], win: "Die meisten Punkte nach allen Umrissen." },
@@ -107,7 +107,7 @@
       case "oben": return { mode: "oben", rounds: 3 };
       case "land": { // 8 Gebiete: Österreich (9, auf „Leicht“ 5) und Deutschland auf „Leicht“/„Profi“ (9/7) haben zu wenige
         const region = pick(st ? ["it", "it", "europa"] : w ? ["welt", "afrika", "asien", "amerika", "europa"] : ["europa", "europa", "welt", "afrika", "asien", "amerika", ...(level === "gemischt" ? ["de"] : []), "it"]);
-        return { region, level: lv(region), rounds: 8, timer: "t30", free: true }; }
+        return { region, level: lv(region), rounds: 8, timer: "t45", free: true }; } // 45 s: kleine Länder muss man erst suchen
       // Umrisse von Bundesländern/Regionen sind kaum zu erkennen – nur bei „Profi“ (Österreich hat dort zu wenige Gebiete)
       case "umriss": { const region = pick(st ? (pro ? ["europa", "it"] : ["europa"]) : w ? ["welt", "europa"] : ["europa", "welt", ...(pro ? ["de", "it"] : [])]);
         return { mode: "umriss", region, level: lv(region), rounds: 6 }; }

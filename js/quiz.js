@@ -9,8 +9,8 @@
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Nur Südtirol" }, allgemein: { name: "Ohne Südtirol" } };
   const LEVELS = { leicht: { name: "Leicht" }, gemischt: { name: "Gemischt" }, profi: { name: "Profi" } }; // Umriss-Rätsel: bekannte / alle / nur schwere
   const UMRISS_REGIONS = ["europa", "welt", "de", "at", "it", "ch"];
-  const ASK_MS = { schaetzen: 45000, umriss: 30000 };
-  const HINT_MS = 8000, AFTER_LAST_HINT_MS = 15000;
+  const ASK_MS = { schaetzen: 45000, umriss: 45000 };
+  const HINT_MS = 10000, AFTER_LAST_HINT_MS = 20000;
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const data = () => root.SCHLAU10_QUIZ || { schaetzen: [], hinweis: [] };
   const land = () => root.SCHLAU10_LAND || null;
@@ -74,7 +74,9 @@
     s.game = mode; s.phase = "quiz";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.quiz = { opts: o, mode, rounds: Math.min(rounds, p.length), order: shuffle(fresh).concat(shuffle(p.filter((k) => !fresh.includes(k)))),
-      round: 0, total: {}, history: [] };
+      round: 0, total: {}, history: [],
+      // Querbeet kann die Zeiten verlängern (free): Hinweis-Abstand, Zeit nach dem letzten Hinweis, Antwortzeit
+      hintMs: opts.free && Number(opts.hintMs) >= 5000 && Number(opts.hintMs) <= 120000 ? Number(opts.hintMs) : HINT_MS, afterMs: opts.free && Number(opts.afterMs) >= 5000 && Number(opts.afterMs) <= 120000 ? Number(opts.afterMs) : AFTER_LAST_HINT_MS, askMs: opts.free && Number(opts.askMs) >= 5000 && Number(opts.askMs) <= 120000 ? Number(opts.askMs) : ASK_MS[mode] };
     s.players.forEach((pl) => { s.quiz.total[pl.id] = 0; pl.waiting = false; pl.status = "active"; });
     nextRound(s, now);
     return true;
@@ -88,7 +90,7 @@
     const seen = s.quizSeen[st.mode] || (s.quizSeen[st.mode] = []);
     if (!seen.includes(st.key)) seen.push(st.key);
     st.step = "ask"; st.answers = {}; st.ready = {}; st.result = null; st.startedAt = now; st.hints = 1;
-    st.deadline = st.mode === "hinweis" ? now + 4 * HINT_MS + AFTER_LAST_HINT_MS : now + ASK_MS[st.mode];
+    st.deadline = st.mode === "hinweis" ? now + 4 * (st.hintMs || HINT_MS) + (st.afterMs || AFTER_LAST_HINT_MS) : now + (st.askMs || ASK_MS[st.mode]);
   }
 
   const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
@@ -139,7 +141,7 @@
     const st = s.quiz, ids = activeIds(s);
     if ((ids.length && ids.every((id) => st.answers[id])) || now >= st.deadline + 800) { reveal(s); return true; }
     if (st.mode === "hinweis") {
-      const h = Math.min(5, 1 + Math.floor((now - st.startedAt) / HINT_MS));
+      const h = Math.min(5, 1 + Math.floor((now - st.startedAt) / (st.hintMs || HINT_MS)));
       if (h !== st.hints) { st.hints = h; return true; }
     }
     return false;
@@ -187,11 +189,12 @@
     const item = st.key ? keyItem(st.key) : null, open = st.step === "reveal" || st.step === "final";
     const out = {
       mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, theme: st.opts.theme, region: st.opts.region, level: st.opts.level,
-      endsIn: st.step === "ask" ? Math.max(0, st.deadline - now) : null, submitted: Object.keys(st.answers || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
+      endsIn: st.step === "ask" ? Math.max(0, st.deadline - now) : null,
+      timerMs: st.mode === "hinweis" ? 4 * (st.hintMs || HINT_MS) + (st.afterMs || AFTER_LAST_HINT_MS) : st.askMs || ASK_MS[st.mode], submitted: Object.keys(st.answers || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };
     if (item) {
       if (st.mode === "schaetzen") out.item = { q: item.q, unit: item.unit, v: open ? item.v : null };
-      else if (st.mode === "hinweis") out.item = { hints: item.h.slice(0, open ? 5 : st.hints), a: open ? item.a : null, hintMs: HINT_MS, nextIn: st.step === "ask" && st.hints < 5 ? Math.max(0, st.startedAt + st.hints * HINT_MS - now) : null };
+      else if (st.mode === "hinweis") out.item = { hints: item.h.slice(0, open ? 5 : st.hints), a: open ? item.a : null, hintMs: st.hintMs || HINT_MS, nextIn: st.step === "ask" && st.hints < 5 ? Math.max(0, st.startedAt + st.hints * (st.hintMs || HINT_MS) - now) : null };
       else out.item = { c: item.c, a: open ? item.a : null };
     }
     if (open) out.result = st.result;

@@ -23,7 +23,7 @@
   }
   // Zeitring rechts oben in der Quizkarte (grün → gelb → rot)
   const QZ_RING = 2 * Math.PI * 31;
-  const quizTotalMs = (st) => (st.mode === "hinweis" ? 4 * QZ.HINT_MS + (QZ.AFTER_LAST_HINT_MS || 15000) : (QZ.ASK_MS || {})[st.mode] || 30000);
+  const quizTotalMs = (st) => st.timerMs || (st.mode === "hinweis" ? 4 * QZ.HINT_MS + (QZ.AFTER_LAST_HINT_MS || 15000) : (QZ.ASK_MS || {})[st.mode] || 30000);
   function quizRingSet(el, ms, total) {
     const p = Math.max(0, Math.min(1, ms / total)), r1 = el.querySelector(".r1");
     el.style.setProperty("--rc", p > .5 ? "#7ee2b1" : p > .2 ? "#ffc83d" : "#ff7d8a");
