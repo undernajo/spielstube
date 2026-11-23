@@ -54,6 +54,8 @@
     gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd"] },
     karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
     kurz: { icon: "⚡", name: "Kurz & schnell", games: ["hl", "schaetzen", "bus", "siebzehn", "oben", "geo"] },
+    // allein spielbar und ohne Fragenvorrat (nur Karten, Würfel, Buchstaben)
+    solo: { icon: "🙋", name: "Allein & ohne Verbrauch", games: ["siebzehn", "bus", "alm", "slf"] },
   };
   const mixOff = (key) => { const m = MIXES[key]; return m && m.games ? ORDER.filter((k) => !m.games.includes(k)) : []; };
   const mixOf = (off) => Object.keys(MIXES).find((k) => { const o = mixOff(k); return o.length === off.length && o.every((x) => off.includes(x)); }) || null;
