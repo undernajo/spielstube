@@ -46,8 +46,8 @@
     const canSee = (id) => id && !!person(id) && (id !== me || !!st.revealed[id]);
     if (!canSee(werFocus) || (werFocus === me && st.step !== "final")) werFocus = null;
     const focus = werFocus || (st.turn && st.turn !== me && canSee(st.turn) ? st.turn : st.seats.find((id) => id !== me && canSee(id) && !st.solved[id]) || st.seats.find((id) => id !== me && canSee(id)));
-    if (werDraft.key !== v.code + ":" + st.turn) { werDraft = { q: "", g: "", key: v.code + ":" + st.turn }; werGuess = false; }
-    const key = [v.code, st.move, st.step, JSON.stringify(st.q && st.q.answers), focus, werGuess, Object.keys(priv).length, st.need.join(), st.note, JSON.stringify(st.rr)].join("|");
+    if (werDraft.key !== v.code + ":" + st.turn) { werDraft = { q: "", g: "", n: werDraft.n || "", key: v.code + ":" + st.turn }; werGuess = false; }
+    const key = [v.code, st.move, st.step, JSON.stringify(st.q && st.q.answers), focus, werGuess, Object.keys(priv).length, st.need.join(), JSON.stringify(st.log), JSON.stringify(st.rr)].join("|");
     if (werRendered === key && app.querySelector(".wer-main")) return;
     werRendered = key;
 
@@ -76,18 +76,24 @@
       else if (L.kind === "skip") last = `<div class="wer-last"><span class="wer-lq">${by} ist nicht mehr da</span><small>${next}</small></div>`;
     }
     const bubble = st.q ? `<div class="fq-bubble2 wer-bubble" style="--pc:${colorOf(st.turn)}"><div class="who"><i>${esc(nameOf(st.turn).charAt(0).toUpperCase())}</i>${myTurn ? "Deine Frage" : esc(nameOf(st.turn)) + " fragt"}</div>
-        <div class="q">${st.q.text ? esc(st.q.text) : `🗣️ ${myTurn ? "Du fragst" : "fragt"} laut${st.note ? ` <small class="wer-note">„${esc(st.note)}“</small>` : ""}`}</div></div>` : "";
+        <div class="q">${st.q.text ? esc(st.q.text) : `🗣️ ${myTurn ? "Du fragst" : "fragt"} laut`}</div></div>` : "";
     const tally = () => st.q ? `<ul class="wer-tally">${st.need.concat(Object.keys(st.q.answers).filter((id) => !st.need.includes(id))).map((id) => { const a = st.q.answers[id];
       return `<li style="--pc:${colorOf(id)}" class="${a ? "a-" + a : ""}"><i class="pdot"></i>${esc(nameOf(id))}${id === me ? " (du)" : ""}<b>${a ? resTxt[a] : "…"}</b></li>`; }).join("")}</ul>` : "";
     const waiting = (id, text, icon) => `<div class="fq-wait2" style="--pc:${colorOf(id)}"><span class="ico">${icon}</span><div><b>${esc(nameOf(id))}</b> ${text}<span class="fq-dotsanim"><i></i><i></i><i></i></span></div></div>`;
-    const notes = (id, title) => { const lg = st.log[id] || []; return lg.length ? `<div class="wer-notes"><div class="wer-flbl">${title}</div><ol>${lg.map((x) => `<li class="r-${x.r}"><span>${x.t ? esc(x.t) : "🗣️ laut gefragt"}</span><b>${resTxt[x.r]}</b></li>`).join("")}</ol></div>` : ""; };
+    // Notizzettel: Fragen mit Ergebnis und eigene Notizen, in der Reihenfolge, in der sie entstanden sind. Der eigene ist beschreibbar.
+    const notes = (id, title) => {
+      const lg = st.log[id] || [], own = id === me && seated && st.step !== "final";
+      if (!lg.length && !own) return "";
+      const rows = lg.map((x, i) => x.n
+        ? `<li class="wer-memo"><span>📝 ${esc(x.n)}</span>${own ? `<button type="button" class="wer-del" data-wernotedel="${i}" aria-label="Notiz löschen">✕</button>` : ""}</li>`
+        : `<li class="r-${x.r}"><span>${x.t ? esc(x.t) : x.nr ? `🗣️ ${x.nr}. Frage (laut)` : "🗣️ laut gefragt"}</span><b>${resTxt[x.r]}</b></li>`).join("");
+      return `<div class="wer-notes"><div class="wer-flbl">${title}</div>${rows ? `<ul>${rows}</ul>` : ""}
+        ${own ? `<form class="du-form wer-nform" autocomplete="off"><input id="wer-n" maxlength="120" placeholder="${loud ? "z. B. „Mann – ja“ oder „lebt nicht mehr“" : "Notiz, z. B. „vielleicht Sportler?“"}" enterkeyhint="done"><button class="btn ghost">Notieren</button></form>` : ""}</div>`;
+    };
 
     const loud = st.opts.ask === "laut";
     const answerHtml = (p, mine) => `${p ? `<div class="wer-chips wer-mini"><span>${esc(p.b)}</span><span>${p.g === "w" ? "♀ Frau" : "♂ Mann"}</span>${lifeTxt(p).chip ? `<span>${lifeTxt(p).chip}</span>` : ""}<span>📍 ${esc(p.land)}</span></div>` : ""}
           <div class="wer-ans">${["ja", "nein", "egal"].map((k) => `<button type="button" class="wer-a a-${k} ${mine === k ? "on" : ""}" data-wera="${k}">${{ ja: "✓ Ja", nein: "✗ Nein", egal: "🤷 Weiß nicht" }[k]}</button>`).join("")}</div>`;
-    // laut: Stichwort für den eigenen Notizzettel (freiwillig)
-    const noteForm = `<form class="du-form wer-nform" autocomplete="off"><input id="wer-n" maxlength="120" placeholder="Stichwort für deinen Notizzettel (freiwillig), z. B. „Mann?“" enterkeyhint="done"><button class="btn ghost">Merken</button></form>
-          ${st.note ? `<p class="muted small">📝 Gemerkt: „${esc(st.note)}“</p>` : ""}`;
     let body = "";
     if (st.step === "ask" && myTurn) {
       const hint = st.hints ? `<p class="wer-myhint">Tipp: Du bist aus dem Bereich <b>${esc(st.hints[me])}</b>.</p>` : "";
@@ -97,8 +103,7 @@
           <div class="wer-row"><button type="button" id="wer-back" class="btn ghost sm">← Doch lieber fragen</button></div>
           <p class="muted small">Liegst du falsch, ist der Nächste dran.</p>`
         : loud ? `<div class="wer-me">🗣️ Du bist dran – stell deine Frage laut!</div>${hint}
-          <p class="wer-loud">Frag einfach im Anruf oder am Tisch, z. B. „Bin ich ein Mann?“. Die anderen antworten per Knopf, das Ergebnis siehst du hier.</p>
-          ${noteForm}
+          <p class="wer-loud">Frag einfach im Anruf oder am Tisch, z. B. „Bin ich ein Mann?“. Die anderen antworten per Knopf, das Ergebnis siehst du hier. Was du dir merken willst, schreib unten auf deinen Notizzettel.</p>
           <div class="wer-row"><button type="button" id="wer-loudguess" class="btn primary">🎯 Ich rate jetzt laut</button><button type="button" id="wer-guess" class="btn ghost sm">⌨️ Namen eintippen</button><button type="button" id="wer-giveup" class="btn ghost sm">Aufgeben</button></div>
           <p class="muted small">Bei <b>Ja</b> darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran.</p>`
         : `<div class="wer-me">❓ Du bist dran – wer bist du?</div>${hint}
@@ -120,8 +125,9 @@
         ? `<div class="wer-ask">Stimmt das für <b>${p ? esc(p.n) : "…"}</b>?</div>
           ${answerHtml(p, mine)}
           ${mine ? `<p class="muted small">Du kannst deine Antwort noch ändern, bis alle geantwortet haben.</p>` : ""}`
-        : myTurn ? `<p class="muted small">Die anderen antworten …</p>${loud && !st.q.text ? noteForm : ""}` : "") + tally()
-        + ((myTurn || G.isHost) && Object.keys(st.q.answers).length && st.need.some((id) => !st.q.answers[id]) ? `<div class="wer-row"><button type="button" id="wer-resolve" class="btn ghost sm">Nicht warten – jetzt auswerten</button></div>` : "");
+        : myTurn ? `<p class="muted small">Die anderen antworten …</p>` : "") + tally()
+        + ((myTurn || G.isHost) && Object.keys(st.q.answers).length && st.need.some((id) => !st.q.answers[id]) ? `<div class="wer-row"><button type="button" id="wer-resolve" class="btn ghost sm">Nicht warten – jetzt auswerten</button></div>` : "")
+        + (seated && !st.solved[me] ? notes(me, "Dein Notizzettel") : "");
     } else if (st.step === "judge") {
       const p = person(st.turn);
       body = st.guess.loud ? (myTurn ? `<div class="wer-me">🗣️ Sag laut, wer du bist!</div><p class="muted small">⚖️ Die anderen tippen an, ob du richtig liegst …</p>`
@@ -150,6 +156,8 @@
       : `<div class="wer-stb empty"><p class="muted small">Tippe oben auf einen Mitspieler, um den Steckbrief seiner Person zu sehen.</p></div>`;
     const head = `<div class="qz-head"><span class="qz-ico">${st.step === "final" ? "🏆" : st.step === "answer" ? "💬" : st.step === "judge" ? "⚖️" : "❓"}</span><div><small>Wer bin ich? · ${esc(st.themeName)}</small>
         <b>${st.step === "final" ? "Endstand" : st.turn === me ? "Du bist dran" : esc(nameOf(st.turn)) + " ist dran"}</b></div></div>`;
+    // beim Neuzeichnen nicht aus dem Notizfeld werfen (die anderen antworten ja gerade weiter)
+    if (document.activeElement && document.activeElement.id === "wer-n") werDraft.nFocus = true;
     app.innerHTML = `
       <main class="screen game wer">
         <header class="top topbar">
@@ -189,7 +197,7 @@
     const form = (sel, inpSel, field, type) => {
       const f = app.querySelector(sel); if (!f) return;
       const inp = f.querySelector(inpSel); inp.value = werDraft[field]; inp.oninput = () => { werDraft[field] = inp.value; };
-      setTimeout(() => inp.focus(), 30);
+      setTimeout(() => { if (!document.activeElement || document.activeElement.id !== "wer-n") inp.focus(); }, 30);
       f.onsubmit = (e) => { e.preventDefault(); const t = inp.value.trim(); if (!t) return;
         inp.disabled = true; werDraft[field] = ""; send({ type, text: t, move: st.move });
         setTimeout(() => { if (inp.isConnected) { inp.disabled = false; inp.value = t; } }, 4000); }; // kam nicht an: wieder freigeben
@@ -198,8 +206,10 @@
     form(".wer-gform", "#wer-g", "g", "wbGuess");
     const nf = app.querySelector(".wer-nform");
     if (nf) { const inp = nf.querySelector("#wer-n"); inp.value = werDraft.n || ""; inp.oninput = () => { werDraft.n = inp.value; };
-      nf.onsubmit = (e) => { e.preventDefault(); send({ type: "wbNote", text: inp.value.trim() }); werDraft.n = ""; inp.value = ""; }; }
-    app.querySelectorAll("[data-weridea]").forEach((b) => b.onclick = () => { const i = app.querySelector("#wer-q"); if (i) { i.value = b.dataset.weridea; werDraft.q = i.value; i.focus(); } });
+      if (werDraft.nFocus) { werDraft.nFocus = false; inp.focus(); }
+      nf.onsubmit = (e) => { e.preventDefault(); const t = inp.value.trim(); if (!t) return; // erst leeren, dann senden: beim Gastgeber wird sofort neu gezeichnet
+        werDraft.n = ""; werDraft.nFocus = true; inp.value = ""; send({ type: "wbNote", text: t }); }; }
+    app.querySelectorAll("[data-wernotedel]").forEach((b) => b.onclick = () => send({ type: "wbNoteDel", i: Number(b.dataset.wernotedel) }));
   }
 
   return {

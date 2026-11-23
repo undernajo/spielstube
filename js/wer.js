@@ -5,7 +5,7 @@
 //  - Wer dran ist, kann statt einer Frage raten. Erkennt das Spiel den Namen nicht, entscheiden die anderen.
 //  - Falsch geraten: der Nächste ist dran. Aufgeben ist möglich (die Person wird aufgedeckt).
 //  - Fragen laut (Videoanruf oder am selben Tisch, Standard): wer dran ist, fragt einfach laut; die erste Antwort per Knopf
-//    öffnet die Frage. Wer fragt, kann sich ein Stichwort für den Notizzettel notieren. Raten geht ebenfalls laut.
+//    öffnet die Frage. Auf dem Notizzettel kann jeder beliebig viele eigene Notizen festhalten. Raten geht ebenfalls laut.
 //  - Neue Person: solange jemand noch keine Frage gestellt hat, können die anderen ihm eine neue Person losen
 //    (z. B. wenn sie glauben, er kennt sie nicht). Die alte kommt in dieser Partie nicht wieder.
 //  - Ende: wenn alle ihre Person haben (oder wahlweise schon, wenn der Erste sie hat). Wer zuerst errät, gewinnt.
@@ -37,7 +37,7 @@
     seats.forEach((id, k) => { who[id] = picks[k]; });
     s.game = "wer"; s.phase = "wer";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.wer = { opts: { theme, hint, end, ask }, seats, note: "", avoid: [...avoid], used: picks.slice(), rr: {}, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
+    s.wer = { opts: { theme, hint, end, ask }, seats, avoid: [...avoid], used: picks.slice(), rr: {}, order: shuffle(seats.slice()), who, turn: null, step: "ask", move: 0,
       q: null, guess: null, last: null, solved: {}, solvedN: 0, qn: Object.fromEntries(seats.map((id) => [id, 0])), log: Object.fromEntries(seats.map((id) => [id, []])) };
     s.wer.turn = s.wer.order[0];
     s.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -51,7 +51,7 @@
 
   function nextTurn(s) {
     const st = s.wer;
-    st.q = null; st.guess = null; st.note = ""; st.move++;
+    st.q = null; st.guess = null; st.move++;
     const rest = open(st);
     if (!rest.length || (st.opts.end === "erster" && st.solvedN > 0)) { st.step = "final"; st.turn = null; return; }
     const i = st.order.indexOf(st.turn);
@@ -69,8 +69,8 @@
     Object.values(a).forEach((v) => { tally[v]++; });
     const res = tally.ja > tally.nein ? "ja" : tally.nein > tally.ja ? "nein" : "unklar";
     st.qn[st.turn]++;
-    const text = st.q.text || st.note, loud = !st.q.text; st.note = "";
-    st.log[st.turn].push({ t: text, r: res, tally, loud });
+    const text = st.q.text, loud = !text;
+    st.log[st.turn].push({ t: text, r: res, tally, loud, nr: st.log[st.turn].filter((x) => !x.n).length + 1 });
     st.last = { kind: "q", by: st.turn, text, r: res, tally, loud };
     if (res === "nein") nextTurn(s);
     else { st.q = null; st.step = "ask"; st.move++; }
@@ -91,7 +91,7 @@
   function apply(s, pid, a, isHost) {
     if (!a || typeof a !== "object" || !s.wer) return false;
     const st = s.wer, mine = pid === st.turn;
-    if (a.type !== "wbEnd" && a.type !== "wbNote" && a.type !== "wbReroll" && a.move !== st.move) return false; // veralteter Klick
+    if (a.type !== "wbEnd" && a.type !== "wbNote" && a.type !== "wbNoteDel" && a.type !== "wbReroll" && a.move !== st.move) return false; // veralteter Klick
     switch (a.type) {
       case "wbAsk": {
         if (st.step !== "ask" || !mine) return false;
@@ -123,10 +123,16 @@
         st.last = { kind: "reroll", by: pid, for: t };
         return true;
       }
-      case "wbNote": // Stichwort zur laut gestellten Frage (für den Notizzettel)
-        if ((st.step !== "ask" && st.step !== "answer") || !mine) return false;
-        st.note = String(a.text || "").trim().slice(0, 120);
-        return true;
+      case "wbNote": { // eigene Notiz auf den Notizzettel (jederzeit, jede Notiz eine eigene Zeile)
+        const t = String(a.text || "").trim().slice(0, 120);
+        if (!t || st.step === "final" || !st.seats.includes(pid) || st.log[pid].length >= 200) return false;
+        st.log[pid].push({ n: t }); return true;
+      }
+      case "wbNoteDel": { // eigene Notiz wieder löschen
+        const lg = st.log[pid], i = Number(a.i);
+        if (!lg || !Number.isInteger(i) || !lg[i] || !lg[i].n) return false;
+        lg.splice(i, 1); return true;
+      }
       case "wbGuess": {
         if (st.step !== "ask" || !mine) return false;
         if (a.loud) { st.guess = { text: "", loud: true }; st.step = "judge"; st.move++; st.qn[pid]++; return true; } // laut geraten: die anderen entscheiden
@@ -188,7 +194,7 @@
     return {
       step: st.step, move: st.move, seats: st.seats.slice(), order: st.order.slice(), turn: st.turn, opts: { ...st.opts },
       themeName: THEMES[st.opts.theme].name,
-      q: st.q ? { text: st.q.text, answers: { ...st.q.answers } } : null, need: st.step === "answer" || (st.step === "ask" && st.opts.ask === "laut") ? answerers(s) : [], note: st.note,
+      q: st.q ? { text: st.q.text, answers: { ...st.q.answers } } : null, need: st.step === "answer" || (st.step === "ask" && st.opts.ask === "laut") ? answerers(s) : [],
       guess: st.guess ? { ...st.guess } : null, last: st.last ? { ...st.last } : null,
       solved: JSON.parse(JSON.stringify(st.solved)), qn: { ...st.qn }, log: JSON.parse(JSON.stringify(st.log)), revealed,
       hints: st.opts.hint === "bereich" ? Object.fromEntries(st.seats.map((id) => [id, data()[st.who[id]].b])) : null,

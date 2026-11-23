@@ -4109,7 +4109,11 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .wer-wiki:hover { text-decoration: underline; }
 .wer-facts { margin: -4px 0 0; padding-left: 18px; display: grid; gap: 3px; font-size: .95rem; }
 .wer-notes { padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px dashed var(--line); }
-.wer-notes ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: .92rem; }
+.wer-notes ul { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
+.wer-notes .wer-memo { display: flex; align-items: baseline; gap: 6px; }
+.wer-notes .wer-memo span { flex: 1; color: var(--ink); }
+.wer-del { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .8rem; padding: 0 4px; }
+.wer-del:hover { color: var(--bad); }
 .wer-notes li span { overflow-wrap: anywhere; }
 .wer-notes li b { margin-left: 8px; font-weight: 700; white-space: nowrap; }
 .wer-notes li.r-ja b { color: var(--ok); }

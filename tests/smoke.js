@@ -50,13 +50,14 @@ const DEEP = {
     if (!(await until(host, "#wer-loudguess, [data-wera]"))) return errs.push("Wer bin ich?: weder Fragen noch Antworten möglich");
     const asker = (await host.evaluate(() => !!document.querySelector("#wer-loudguess"))) ? host : guest, other = asker === host ? guest : host;
     if (!(await until(other, ".wer-stb:not(.empty)"))) errs.push("Wer bin ich?: der andere sieht keinen Steckbrief");
-    await asker.type("#wer-n", "Mann?");
-    await asker.evaluate(() => document.querySelector(".wer-nform").requestSubmit());
+    // zwei Notizen hintereinander – beide müssen auf dem Notizzettel stehen bleiben
+    for (const t of ["Mann?", "lebt noch?"]) { await asker.type("#wer-n", t); await asker.evaluate(() => document.querySelector(".wer-nform").requestSubmit()); await sleep(1500);
+      if (await asker.evaluate(() => document.querySelector("#wer-n").value)) errs.push("Wer bin ich?: Notizfeld bleibt nach dem Notieren gefüllt"); }
     if (!(await until(other, '[data-wera="nein"]'))) return errs.push("Wer bin ich?: Antwortknöpfe erscheinen nicht");
     await sleep(800);
     await other.evaluate(() => document.querySelector('[data-wera="nein"]').click());
     if (!(await until(other, "#wer-loudguess"))) return errs.push("Wer bin ich?: nach „Nein“ ist nicht der andere dran");
-    if (!(await other.evaluate(() => document.body.innerText.includes("Mann?")))) errs.push("Wer bin ich?: Stichwort fehlt im Notizzettel");
+    for (const p of [asker, other]) if (!(await p.evaluate(() => document.body.innerText.includes("Mann?") && document.body.innerText.includes("lebt noch?")))) errs.push("Wer bin ich?: nicht beide Notizen auf dem Notizzettel");
     await other.evaluate(() => document.querySelector("#wer-loudguess").click());
     if (!(await until(asker, "[data-werjudge]"))) return errs.push("Wer bin ich?: Knöpfe „Richtig / Falsch“ erscheinen nicht");
     await asker.evaluate(() => document.querySelector('[data-werjudge="0"]').click());
