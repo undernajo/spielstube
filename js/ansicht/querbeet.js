@@ -224,11 +224,12 @@
 
   let qbDemo = { key: null, t0: 0 }, qbModal = { key: null, hidden: false };
   // Fenster ein-/ausblenden ohne alles neu zu zeichnen (die Vorführung läuft weiter)
+  // (ohne Animation: sofort sichtbar bzw. weg – zuverlässig in jedem Browser)
   function qbModalShow(show) {
-    qbModal.hidden = !show;
+    qbModal.hidden = !show; qbModal.showAt = 0;
     const m = app.querySelector(".qbm"), o = app.querySelector(".qbm-open");
-    if (m) { m.classList.toggle("off", !show); m.style.setProperty("--d", "0ms"); }
-    if (o) { o.classList.toggle("off", show); o.style.setProperty("--d", "0ms"); }
+    if (m) { m.classList.remove("anim"); m.classList.toggle("off", !show); }
+    if (o) o.classList.toggle("off", show);
   }
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && G.view && G.view.phase === "querbeet" && app.querySelector(".qbm:not(.off)")) qbModalShow(false); });
   function renderQuerbeet() {
@@ -275,13 +276,15 @@
     // Die nächste Etappe kommt als Fenster über dem Spielbrett – nach einer Etappe erst, wenn die Figuren gezogen haben.
     // Schließen (✕, „Spielbrett ansehen“, Esc) zeigt das Brett; „Nächste Etappe“ holt das Fenster zurück.
     const mk = v.code + ":" + q.idx;
-    if (qbModal.key !== mk) qbModal = { key: mk, hidden: false };
+    if (qbModal.key !== mk) qbModal = { key: mk, hidden: false, showAt: Date.now() + animLeft };
+    // Einblenden nur beim ersten Erscheinen (nach dem Ziehen der Figuren); danach steht das Fenster einfach da
+    const wait = qbModal.showAt - Date.now(), anim = wait > -400 ? "anim" : "";
     const modal = (n) => { const g = qbGame(n.game);
-      return `<div class="qbm ${qbModal.hidden ? "off" : ""}" style="--d:${animLeft}ms" role="dialog" aria-modal="true" aria-label="Nächste Etappe: ${esc(n.name)}">
+      return `<div class="qbm ${anim} ${qbModal.hidden ? "off" : ""}" style="--d:${Math.max(0, wait)}ms" role="dialog" aria-modal="true" aria-label="Nächste Etappe: ${esc(n.name)}">
           <div class="qbm-back" data-qbmclose></div>
           <div class="qbm-win">${nextCard(n)}<button type="button" class="qbm-x" data-qbmclose aria-label="Fenster schließen und Spielbrett ansehen">✕</button>
             <button type="button" class="btn ghost sm qbm-peek" data-qbmclose>Spielbrett ansehen</button></div></div>
-        <button type="button" class="btn primary qbm-open ${qbModal.hidden ? "" : "off"}" data-qbmopen style="--d:${animLeft}ms;--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span> Nächste Etappe: ${esc(n.name)}</button>`; };
+        <button type="button" class="btn primary qbm-open ${qbModal.hidden ? "" : "off"}" data-qbmopen style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span> Nächste Etappe: ${esc(n.name)}</button>`; };
     if (q.step === "intro") {
       main = `${planHtml(q, nameOf, colorOf)}${boardHtml}${modal(q.next)}`;
     } else if (q.step === "break") {
