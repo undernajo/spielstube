@@ -3839,3 +3839,12 @@ body.qb-play .fw-main { --fw-top: 370px; }
 #camdock.stage .camjoin { display: none; } /* im großen Fenster stehen Kamera und Mikro ohnehin unten */
 /* Meisterschaft: Zehnkampf-Etappe mit mehreren Karten – „Nächste Runde“ bis zur letzten Karte zeigen */
 body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now { display: inline-flex !important; }
+/* Siebzehn und Vier: Spielstand am Tisch oben links */
+.sv-felt > .sv-stand { position: absolute; left: 18px; top: 16px; display: grid; gap: 3px; padding: 10px 12px; border-radius: 14px; background: rgba(0, 0, 0, .25); border: 1px solid rgba(255, 255, 255, .1); min-width: 150px; z-index: 2; }
+.sv-stand b { font: 700 .95rem Fredoka, sans-serif; color: var(--accent); margin-bottom: 2px; }
+.sv-stand > span { display: grid; grid-template-columns: 20px auto 1fr auto; align-items: center; gap: 6px; font-weight: 700; font-size: .86rem; color: #e8f6ee; }
+.sv-stand > span i { font-style: normal; color: #cfe9da; font-size: .78rem; }
+.sv-stand > span .pdot { background: var(--pc); width: 9px; height: 9px; }
+.sv-stand > span em { font: 700 1rem Fredoka, sans-serif; font-style: normal; color: #fff; text-align: right; }
+.sv-stand > span.me { color: #fff; } .sv-stand > span.me em { color: var(--accent); }
+@media (max-width: 899px) { .sv-felt > .sv-stand { display: none; } } /* am Handy steht der Stand in der Leiste oben */

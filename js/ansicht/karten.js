@@ -141,7 +141,11 @@
         kgSound(sounds, 380, 0);
         const legend = `<div class="sv-legend" aria-label="Kartenwerte">${[["Ass", 11], ["Zehner", 10], ["Neun", 9], ["Acht", 8], ["Sieben", 7], ["König", 4], ["Ober", 3], ["Unter", 2]]
           .map(([nm, v]) => `<span>${nm} <b>${v}</b></span>`).join("")}<span>2 Asse = 🔥</span></div>`;
-        main = `<div class="sv-rim"><div class="sv-felt">${seatsHtml ? `<div class="sv-seats">${seatsHtml}</div>` : ""}${me}${legend}</div></div>`;
+        // Spielstand am Tisch (oben links): Runde und Punkte aller – nach Punkten, du hervorgehoben
+        const standRows = st.seats.map((id) => ({ id, n: id === G.myId ? "Du" : nameOf(id), p: st.total[id] || 0, c: colorOf(id), me: id === G.myId }))
+          .concat(st.bank ? [{ id: "_bank", n: "🏦 Bank", p: st.bank.total, c: BANK_C }] : []).sort((x, y) => y.p - x.p);
+        const stand = `<div class="sv-stand"><b>Runde ${st.round} / ${st.rounds}</b>${standRows.map((r, i) => `<span class="${r.me ? "me" : ""}" style="--pc:${r.c}"><i>${1 + standRows.filter((x) => x.p > r.p).length}.</i><span class="pdot"></span>${esc(r.n)}<em>${r.p}</em></span>`).join("")}</div>`;
+        main = `<div class="sv-rim"><div class="sv-felt">${stand}${seatsHtml ? `<div class="sv-seats">${seatsHtml}</div>` : ""}${me}${legend}</div></div>`;
       } else {
         // Auflösung: Spieler für Spieler werden die Karten der anderen aufgedeckt, dann erscheinen Summe und Punkte
         const order = st.bank ? st.seats.concat("_bank") : st.seats.slice().sort((a, b) => st.result[b].points - st.result[a].points || st.result[b].sum - st.result[a].sum);
