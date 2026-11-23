@@ -11,7 +11,7 @@
   const PRESETS = {
     klassisch: { name: "Klassisch", cats: ["Stadt", "Land", "Fluss", "Name", "Tier", "Beruf"] },
     gemischt: { name: "Gemischt", cats: ["Stadt", "Land", "Tier", "Etwas Rundes", "Name für ein Haustier", "Etwas, das man im Supermarkt kauft"] },
-    spass: { name: "Spaß", cats: ["Etwas im Kühlschrank", "Ausrede fürs Zuspätkommen", "Schlechtes Geschenk", "Grund für einen Streit", "Etwas im Rucksack", "Etwas, das stinkt"] },
+    spass: { name: "Spaß", cats: ["Etwas im Kühlschrank", "Ausrede fürs Zuspätkommen", "Schlechtes Geschenk", "Grund für einen Streit", "Etwas im Rucksack", "Etwas, das stinkt", "Mordwaffe", "Todesursache"] },
     suedtirol: { name: "Südtirol", cats: ["Südtiroler Ort", "Berg oder Gipfel", "Essen & Trinken", "Dialektwort", "Etwas auf der Alm", "Vorname"] },
     zufall: { name: "Jede Runde neu", cats: [], random: 6 },
   };
@@ -26,6 +26,7 @@
     "Superkraft", "Urlaubsziel", "Schulfach", "Gefühl", "Eigenschaft eines Menschen", "Tätigkeit (Verb)", "Pizzabelag",
     "Süßigkeit", "Möbelstück", "Spielzeug", "Name für ein Haustier", "Erfindung", "Guter Vorsatz", "Name für ein Restaurant",
     "Erfundener Bandname", "Etwas, das man im Supermarkt kauft", "Wort mit mehr als 10 Buchstaben", "Etwas, das man sammeln kann",
+    "Mordwaffe", "Todesursache",
   ];
   const TIMERS = {
     stopp: { name: "„Stopp!“ + 10 s", limit: 180000, grace: 10000 },
