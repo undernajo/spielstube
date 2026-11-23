@@ -1,7 +1,6 @@
 // „Wie tickst du?“ – Skalen zwischen zwei Gegensätzen (links = 1, rechts = 10)
 (function (root) {
   root.SCHLAU10_TICK = [
-    // Alltag & Meinung
     ["Harmlos", "Lebensgefährlich"],
     ["Völlig überbewertet", "Komplett unterschätzt"],
     ["Langweilig", "Chaotisch"],
@@ -70,16 +69,7 @@
     ["Fühlt sich nach Montag an", "Fühlt sich nach Freitag an"],
     ["Schlechter Name für ein Kind", "Toller Name für ein Kind"],
     ["Schlechter Name für einen Hund", "Toller Name für einen Hund"],
-    // Südtirol & Alpen
-    ["Typisch italienisch", "Typisch deutsch"],
-    ["Gar nicht südtirolerisch", "Typisch Südtirol"],
-    ["Schlechte Wanderung", "Traumwanderung"],
-    ["Schlechte Hüttenjause", "Perfekte Hüttenjause"],
-    ["Für Touristen", "Nur Einheimische wissen das"],
-    ["Sommer", "Winter"],
-    ["Tal", "Gipfel"],
-    ["Schlechtes Törggelen", "Bestes Törggelen"],
-    ["Stadtmensch", "Bergmensch"],
     ["Halb so schlimm", "Weltuntergang"],
+    ["Völlig sinnlose Erfindung", "Rettet die Menschheit"],
   ];
 })(typeof window !== "undefined" ? window : globalThis);
