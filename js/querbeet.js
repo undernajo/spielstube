@@ -1,10 +1,16 @@
 // „Querbeet“ – quer durch die Spiele (Ablauf beim Gastgeber, testbar in Node). Zustand in s.qb.
-// Jede Etappe ist eine Kurzfassung eines Spiels. Gezählt wird nur die Platzierung pro Etappe (Partypunkte),
-// damit Spiele mit 1000 Punkten und Spiele mit 1 Punkt gleich viel zählen. Die letzte Etappe zählt doppelt.
+// Jede Etappe ist eine Kurzfassung eines Spiels. Gezählt wird nur die Platzierung pro Etappe – als Felder auf dem
+// Spielbrett: der Letzte rückt 0 Felder vor, jeder Platz davor eins mehr (der Sieger so viele, wie hinter ihm liegen).
+// Wettlauf ohne Etappenlimit: wer zuerst das Zielfeld erreicht, ist Stubenmeister.
+// Ziel = Länge × Felder für einen Etappensieg → eine Meisterschaft dauert mit jeder Spielerzahl etwa gleich lang
+// (Simulation: kurz ≈ 3–4, mittel ≈ 5, lang ≈ 8 Etappen).
 (function (root) {
-  // Jede Etappe ist ein kleines Spiel (ca. 5–8 Min.) – die Dauer regelt die Zahl der Etappen
-  const LENGTHS = { 3: { name: "Kurz – 3 Etappen (ca. 20 Min.)" }, 5: { name: "Mittel – 5 Etappen (ca. 35 Min.)" }, 8: { name: "Lang – 8 Etappen (ca. 55 Min.)" } };
-  const POINTS = [5, 3, 2]; // Platz 1, 2, 3 – alle weiteren bekommen 1 Partypunkt
+  // Länge = wie viele Etappensiege bis ins Ziel reichen würden
+  const LENGTHS = { 3: { name: "Kurz – Ziel nach 3 Siegen (ca. 20 Min.)", short: "Kurz" }, 4: { name: "Mittel – 4 Siege (ca. 30 Min.)", short: "Mittel" }, 6: { name: "Lang – 6 Siege (ca. 55 Min.)", short: "Lang" } };
+  // Felder für einen Platz: der Letzte 0, jeder Platz davor eins mehr; allein gibt es pro Etappe 1 Feld
+  const fieldsFor = (place, n) => n <= 1 ? 1 : n - place;
+  const unitFor = (n) => Math.max(1, n - 1); // Felder für einen Etappensieg
+  const targetFor = (length, n) => length * unitFor(n);
   // Spiele mit Kurzfassung; kind sorgt für Abwechslung (nicht zweimal dieselbe Art hintereinander)
   const STAGES = {
     zehn: { kind: "wissen", name: "Zehnkampf", short: "3 Karten", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
@@ -75,10 +81,10 @@
   }
 
   // Reihenfolge: jedes Spiel etwa gleich oft (aus einem „Beutel“ ziehen), nie dasselbe Spiel und möglichst
-  // nicht dieselbe Art zweimal hintereinander
-  function buildPlan(games, n, theme, level) {
-    const out = [];
-    let bag = [];
+  // nicht dieselbe Art zweimal hintereinander. prev: bisheriger Plan (wird fortgesetzt), bag: Rest des Beutels.
+  function buildPlan(games, n, theme, level, prevPlan, bagIn) {
+    const out = (prevPlan || []).map((x) => x.game), start = out.length;
+    let bag = (bagIn || []).filter((g) => games.includes(g));
     for (let i = 0; i < n; i++) {
       if (!bag.length) bag = shuffle(games.slice());
       const prev = out[out.length - 1];
@@ -91,7 +97,16 @@
       }
       out.push(bag.splice(k, 1)[0]);
     }
-    return out.map((game) => ({ game, opts: stageOpts(game, theme, level) }));
+    const plan = out.slice(start).map((game) => ({ game, opts: stageOpts(game, theme, level) }));
+    plan.bag = bag;
+    return plan;
+  }
+  // Etappen nachziehen: es sind immer mindestens drei Etappen über die aktuelle hinaus geplant (das Ende ist offen)
+  function extendPlan(q, players) {
+    const need = q.idx + 4 - q.plan.length;
+    if (need <= 0) return;
+    const games = eligible(q.opts.off, players || q.players || 2), add = buildPlan(games.length ? games : [q.plan[q.plan.length - 1].game], need, q.opts.theme, q.opts.level, q.plan, q.bag);
+    q.bag = add.bag; q.plan.push(...add);
   }
 
   // Kurzfassung je Spiel – großzügige Zeiten, damit es nicht hektisch wird; theme: mix | suedtirol | welt
@@ -129,36 +144,43 @@
   }
 
   function create(opts, players) {
-    const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 5;
+    const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 4;
     const theme = THEMES[opts && opts.theme] ? opts.theme : "mix";
     const level = LEVELS[opts && opts.level] ? opts.level : "gemischt";
     const games = eligible(opts && opts.off, players);
     if (!games.length) return null;
-    const joker = !(opts && opts.joker === false);
-    return { opts: { length, off: (opts && opts.off) || [], theme, level, joker }, plan: buildPlan(games, length, theme, level), idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false,
-      joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Meisterschaft, nicht im Finale)
+    const joker = !(opts && opts.joker === false), n = Math.max(1, players || 1);
+    const plan = buildPlan(games, 4, theme, level);
+    return { opts: { length, off: (opts && opts.off) || [], theme, level, joker }, plan, bag: plan.bag, players: n, target: targetFor(length, n),
+      idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false, winners: null,
+      joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Meisterschaft)
   }
 
-  // Platzierungen einer Etappe in Partypunkte umrechnen (Gleichstand = gleiche, höhere Punkte)
-  function placePoints(scores, ids, double, jokers) {
-    const sorted = ids.slice().sort((a, b) => (scores[b] || 0) - (scores[a] || 0));
+  // Platzierungen einer Etappe in Felder umrechnen (Gleichstand = gleicher Platz, die höheren Felder)
+  function placePoints(scores, ids, jokers) {
+    const sorted = ids.slice().sort((a, b) => (scores[b] || 0) - (scores[a] || 0)), n = ids.length;
     const out = {};
-    sorted.forEach((id, i) => {
+    sorted.forEach((id) => {
       const place = sorted.findIndex((x) => (scores[x] || 0) === (scores[id] || 0)); // erster mit gleicher Punktzahl
-      const p = place < POINTS.length ? POINTS[place] : 1, joker = !!(jokers && jokers.includes(id));
-      out[id] = { place: place + 1, base: p, pts: p * (double ? 2 : 1) * (joker ? 2 : 1), score: scores[id] || 0, joker };
+      const p = fieldsFor(place + 1, n), joker = !!(jokers && jokers.includes(id));
+      out[id] = { place: place + 1, base: p, pts: p * (joker ? 2 : 1), score: scores[id] || 0, joker };
     });
     return out;
   }
 
-  // Etappe abschließen: Partypunkte gutschreiben, Ergebnis merken
+  // Etappe abschließen: Felder gutschreiben, Ergebnis merken. Wer das Ziel erreicht, ist Stubenmeister –
+  // schaffen es mehrere in derselben Etappe, gewinnt, wer weiter darüber hinaus käme (sonst gemeinsam).
   function finishStage(q, scores, ids) {
-    const last = q.idx === q.plan.length - 1;
     const jokers = Object.keys(q.joker || {}).filter((id) => q.joker[id] === q.idx);
-    const res = placePoints(scores, ids, last, jokers);
+    // spielen mehr mit als beim Start (z. B. jemand kam später dazu), wächst das Ziel mit – kürzer wird es nie
+    q.target = Math.max(q.target, targetFor(q.opts.length, ids.length)); q.players = Math.max(q.players || 1, ids.length);
+    const res = placePoints(scores, ids, jokers);
     Object.entries(res).forEach(([id, r]) => { q.pts[id] = (q.pts[id] || 0) + r.pts; });
     q.stages.push({ game: q.plan[q.idx].game, res });
-    q.step = last ? "final" : "break"; q.ready = {}; q.done = false;
+    const top = Object.keys(q.pts).filter((id) => q.pts[id] >= q.target);
+    if (top.length) { const best = Math.max(...top.map((id) => q.pts[id])); q.winners = top.filter((id) => q.pts[id] === best); q.step = "final"; }
+    else { q.step = "break"; extendPlan(q); }
+    q.ready = {}; q.done = false;
     return res;
   }
 
@@ -188,7 +210,7 @@
 
   function setJoker(q, pid, on) {
     const next = q.idx + 1;
-    if (q.opts.joker === false || !(q.step === "intro" || q.step === "break") || next >= q.plan.length - 1) return false;
+    if (q.opts.joker === false || !(q.step === "intro" || q.step === "break") || next >= q.plan.length) return false;
     q.joker = q.joker || {};
     if (on) { if (q.joker[pid] != null && q.joker[pid] !== next) return false; q.joker[pid] = next; }
     else { if (q.joker[pid] !== next) return false; delete q.joker[pid]; }
@@ -225,9 +247,10 @@
   }
 
   function winners(q) {
+    if (q.winners) return q.winners.slice();
     const max = Math.max(0, ...Object.values(q.pts));
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { skipStage, LENGTHS, POINTS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

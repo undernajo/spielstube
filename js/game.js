@@ -75,8 +75,8 @@
   let kgOpts = Object.assign({ rounds: 5, wins: 3, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
-  let qbOpts = Object.assign({ length: 5, off: [], joker: true }, store.get("s10-qb") || {});
-  if (!QB.LENGTHS[qbOpts.length]) qbOpts.length = 5; // alte Auswahl (12 Etappen) gibt es nicht mehr
+  let qbOpts = Object.assign({ length: 4, off: [], joker: true }, store.get("s10-qb") || {});
+  if (!QB.LENGTHS[qbOpts.length]) qbOpts.length = 4; // alte Auswahl (feste Etappenzahl) gibt es nicht mehr
   const LAND = window.S10Land;
   // Länderkarte (gut 400 KB) erst laden, wenn „Länder finden“ gebraucht wird – gleiche Versionsnummer wie game.js
   const ASSET_V = ((document.currentScript && /[?&]v=([\w.]+)/.exec(document.currentScript.src)) || [])[1] || "1";
@@ -382,7 +382,7 @@
     if (type === "start" && host && S.phase === "lobby") S.wishes = {}; // Wünsche gelten bis zum Spielstart
     if (type === "start" && action.game === "querbeet") {
       if (!host || S.phase !== "lobby") return false;
-      const q = QB.create(action.opts, S.players.filter((p) => p.connected && !p.paused).length);
+      const q = QB.create(action.opts, S.players.filter((p) => !p.paused).length); // alle, die mitspielen (auch wenn die Verbindung gerade kurz hakt)
       if (!q) return false;
       S.qb = q; S.game = "querbeet"; S.phase = "querbeet";
       S.players.forEach((p) => { p.waiting = false; p.status = "active"; });
@@ -578,6 +578,7 @@
     if (q.step === "final") return false;
     if (q.plan[q.idx + 1] && ["land", "umriss"].includes(q.plan[q.idx + 1].game) && !needLandData()) { toast("Die Länderkarte wird noch geladen – einen Moment.", "info"); return false; }
     q.idx++; q.step = "play";
+    QB.extendPlan(q, S.players.filter((p) => p.connected && !p.paused).length);
     return qbStartStage(now);
   }
   function qbAction(pid, a, host, now) {
@@ -596,7 +597,7 @@
     if (a.type === "qbSkip") return host && S.phase === "querbeet" && QB.skipStage(q, S.players.filter((p) => p.connected && !p.paused).length);
     if (a.type === "qbRestart") {
       if (!host || q.step !== "final") return false;
-      const nq = QB.create(q.opts, S.players.filter((p) => p.connected && !p.paused).length);
+      const nq = QB.create(q.opts, S.players.filter((p) => !p.paused).length);
       if (!nq) return false;
       S.qb = nq; return true;
     }
@@ -625,8 +626,8 @@
     const q = S.qb, info = (st) => st ? { game: st.game, cards: (st.opts && st.opts.cards) || null, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] || null } : null;
     const nextSt = q.step === "intro" || q.step === "break" ? q.plan[q.idx + 1] : null;
     return {
-      step: q.step, idx: q.idx, n: q.plan.length, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready },
-      done: qbStageDone(), cur: info(qbStage()), next: info(nextSt), lastDouble: q.idx + 1 === q.plan.length - 1,
+      step: q.step, idx: q.idx, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready }, target: q.target, length: q.opts.length,
+      done: qbStageDone(), cur: info(qbStage()), next: info(nextSt),
       stages: q.stages.map((x) => ({ game: x.game, res: x.res })), winners: q.step === "final" ? QB.winners(q) : null,
       skipped: q.skipped && q.skipped.at === q.idx + 1 && (q.step === "intro" || q.step === "break") ? QB.STAGES[q.skipped.from].name : null,
       joker: { ...(q.joker || {}) }, jokerOn: q.opts.joker !== false, theme: q.opts.theme || "mix", titles: q.step === "final" ? QB.titles(q, S.players.map((p) => p.id)) : null,
@@ -1640,7 +1641,7 @@
       }
       if (now.qbKey && now.qbKey !== prev.qbKey) {
         if (v.qb.done || v.qb.step === "break") sfx.turn();
-        if (v.qb.step === "final") { sfx.fanfare(); confettiGrand(); } // Siegerehrung: für alle ordentlich feiern
+        if (v.qb.step === "final") setTimeout(() => { sfx.fanfare(); confettiGrand(); }, G.qbAnimLeft ? G.qbAnimLeft() : 0); // Siegerehrung: feiern, sobald die Figur im Ziel ist
       }
       if (now.kgKey && now.kgKey !== prev.kgKey) {
         if (v.karten.step === "play" && v.karten.mode !== "stich") sfx.turn();
@@ -2476,9 +2477,9 @@
     // Ziel immer so formulieren, dass man nicht nachschlagen muss: was zählt und wann man gewonnen hat
     const rounds = (n, unit, fin, how, rules, unitShort) => ({ goal: `<em>${N(n, unit[0], unit[1])}</em> – ${how}. Wer am Ende die meisten Punkte hat, gewinnt.`, path: { type: "rounds", n, fin, unit: unitShort || "R" }, rules });
     const wins = (n, rules) => ({ goal: `Wer zuerst <em>${N(n, "Runde", "Runden")}</em> gewinnt, gewinnt das Spiel.`, path: { type: "first", n, label: ["Sieg", "Siege"] }, rules });
-    if (ph === "querbeet" && v.qb) { const n = v.qb.n;
-      return { goal: `<em>${n} Etappen</em> – je Etappe gibt es Partypunkte nach deinem Platz. Wer am Ende die meisten hat, ist Stubenmeister.`, path: { type: "stages", n },
-        rules: [["🥇", `Platz 1 <b>+${QB.POINTS[0]}</b>, 2 <b>+${QB.POINTS[1]}</b>, 3 <b>+${QB.POINTS[2]}</b>, sonst <b>+1</b>`], ["🔥", "Das <b>Finale</b> zählt doppelt"], ...(v.qb.jokerOn ? [["🃏", "Dein <b>Joker</b>: eine Etappe doppelt"]] : [])] }; }
+    if (ph === "querbeet" && v.qb) { const n = v.players.filter((p) => !p.paused).length;
+      return { goal: `Ein Wettlauf über das Spielbrett: Wer zuerst <em>Feld ${v.qb.target}</em> erreicht, ist Stubenmeister – so viele Etappen, wie es braucht.`, path: null,
+        rules: [["🥇", n > 1 ? `Etappensieg <b>+${n - 1}</b> Felder, jeder Platz dahinter eins weniger, Letzter <b>±0</b>` : "Jede Etappe <b>+1</b> Feld"], ["🎲", "Die Figuren ziehen nacheinander – vom Letzten bis zum Sieger"], ...(v.qb.jokerOn ? [["🃏", "Dein <b>Joker</b>: eine Etappe zählt doppelt"]] : [])] }; }
     if (ph === "playing" || g === "zehn") { const t = v.target || 30;
       return { goal: `Wer zuerst <em>${t} Punkte</em> hat, gewinnt – jede richtige Antwort, die du sicherst, ist 1 Punkt.`, path: { type: "collect", n: t },
         rules: [["✓", "Richtig = <b>+1</b>, vorerst offen"], ["✋", "<b>Passen</b> sichert deine offenen Punkte"], ["✗", "Falsch = offene Punkte der Runde weg"]] }; }
@@ -2630,7 +2631,7 @@
     const g = GAMES.find((x) => x.key === key) || GAMES[0];
     // In Querbeet steht die Etappe als kleines Abzeichen neben dem Spielnamen (statt einer Leiste, die etwas überdecken könnte)
     const q = view && view.qb, inStage = q && q.cur && !q.done && view.phase !== "querbeet" && view.phase !== "lobby";
-    const qbTag = inStage ? `<span class="qb-tag" title="Stubenmeisterschaft · Etappe ${q.idx + 1} von ${q.n}${q.idx === q.n - 1 ? " · Finale, zählt doppelt" : ""}">🧩 Etappe ${q.idx + 1}/${q.n}${q.idx === q.n - 1 ? " · Finale ×2" : ""}</span>` : "";
+    const qbTag = inStage ? `<span class="qb-tag" title="Stubenmeisterschaft · Etappe ${q.idx + 1} · Ziel bei Feld ${q.target}">🎲 Etappe ${q.idx + 1}</span>` : "";
     return `<div class="brand" title="Spielstube">${LOGO}</div>
       <div class="gtitle" style="--gc:${g.color}"><span class="gt-icon" aria-hidden="true">${g.icon}</span><b>${g.short ? `<span class="nm-long">${esc(g.name)}</span><span class="nm-short">${esc(g.short)}</span>` : esc(g.name)}</b>${qbTag}</div>`;
   }
@@ -2674,7 +2675,7 @@
     }
     if (view.game === "querbeet" && lb.qb) {
       return `${qbGamesHtml(lb.qb.off, true)}
-        <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · Schwierigkeit: ${esc((QB.LEVELS[lb.qb.level] || QB.LEVELS.gemischt).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[8]).name)} · Platz 1 = ${QB.POINTS[0]} Partypunkte, Platz 2 = ${QB.POINTS[1]}, Platz 3 = ${QB.POINTS[2]}, sonst 1 · Finale zählt doppelt</p>`;
+        <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · Schwierigkeit: ${esc((QB.LEVELS[lb.qb.level] || QB.LEVELS.gemischt).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[4]).name)} · Wettlauf übers Spielbrett: Letzter ±0, jeder Platz davor ein Feld mehr</p>`;
     }
     if (view.game === "land" && lb.land) {
       const maps = LAND.REGION_KEYS.map((k) => row(lb.land.region === k, esc(LAND.REGION_NAMES[k]), "", true));
@@ -2916,7 +2917,7 @@
     const n = playing().length;
     const games = QB.eligible(qbOpts.off, n);
     return `<div class="row2"><label class="field"><span>Länge</span><select id="qb-length">${Object.entries(QB.LENGTHS).map(([k, l]) =>
-        `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${k} Etappen</option>`).join("")}</select></label>
+        `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${esc(l.name)}</option>`).join("")}</select></label>
       <label class="field"><span>Thema</span><select id="qb-theme">${Object.entries(QB.THEMES).map(([k, t]) =>
         `<option value="${k}" ${(qbOpts.theme || "mix") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label></div>
       <label class="field"><span>Schwierigkeit <small class="muted">· Landkarten-Spiele, Höher oder tiefer, Stadt, Land, Fluss</small></span><select id="qb-level">${Object.entries(QB.LEVELS).map(([k, t]) =>
@@ -2926,7 +2927,7 @@
       <div class="field"><span>Mischung je nach Stimmung</span><div class="qb-mixes">${Object.entries(QB.MIXES).map(([k, m]) =>
         `<button type="button" class="qb-mix ${QB.mixOf(qbOpts.off) === k ? "on" : ""}" data-qbmix="${k}">${m.icon} ${esc(m.name)}</button>`).join("")}</div></div>
       ${qbGamesHtml(qbOpts.off, false)}
-      <p class="muted small">Jede Etappe ist eine Kurzfassung. Pro Etappe zählt die Platzierung: ${QB.POINTS[0]} · ${QB.POINTS[1]} · ${QB.POINTS[2]} Partypunkte, alle anderen 1. Das Finale zählt doppelt.</p>
+      <p class="muted small">Jede Etappe ist eine Kurzfassung. Danach ziehen alle auf dem Spielbrett vor – der Letzte ±0, jeder Platz davor ein Feld mehr${n > 1 ? ` (mit ${n} Spielern: Sieg = ${n - 1} Felder, Ziel bei Feld ${QB.targetFor(Number(qbOpts.length) || 4, n)})` : ""}. Wer zuerst im Ziel ist, ist Stubenmeister.</p>
       <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Meisterschaft starten</button>
       ${!games.length ? `<p class="err small">Bitte mindestens ein Spiel auswählen.</p>` : ""}`;
   }
@@ -3155,14 +3156,16 @@
   const qbRulesHtml = `
     <details class="rules"><summary>Regeln: Stubenmeisterschaft</summary>
       <ul>
-        <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 1 Karte Zehnkampf, 3 Orte bei „Wo liegt das?“, 1 Buchstabe Stadt, Land, Fluss).</li>
-        <li>Pro Etappe zählt nur die Platzierung: Platz 1 bekommt ${QB.POINTS[0]} Partypunkte, Platz 2 ${QB.POINTS[1]}, Platz 3 ${QB.POINTS[2]}, alle anderen 1. Bei Gleichstand bekommen alle die höhere Punktzahl.</li>
-        <li>Die letzte Etappe ist das Finale und zählt doppelt.</li>
-        <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Meisterschaft. Vor einer Etappe gesetzt, zählen deine Partypunkte dieser Etappe doppelt (nicht im Finale).</li>
+        <li>Ihr spielt euch quer durch die Spiele – jede Etappe ist eine Kurzfassung (z. B. 3 Karten Zehnkampf, 5 Orte bei „Wo liegt das?“, 2 Buchstaben Stadt, Land, Fluss).</li>
+        <li><b>Wettlauf übers Spielbrett:</b> Nach jeder Etappe ziehen alle ihre Figur vor – der Letzte bleibt stehen (±0), jeder Platz davor ein Feld mehr. Der Etappensieger zieht also so viele Felder, wie Spieler hinter ihm liegen. Bei Gleichstand teilen sich alle den besseren Platz.</li>
+        <li>Gezogen wird nacheinander: zuerst wer in der Etappe hinten lag, zum Schluss der Etappensieger.</li>
+        <li><b>Wer zuerst das Zielfeld erreicht, ist Stubenmeister</b> – es gibt keine feste Zahl von Etappen. Schaffen es mehrere in derselben Etappe, gewinnt, wer weiter darüber hinaus käme.</li>
+        <li><b>Länge:</b> Das Ziel richtet sich nach der Spielerzahl (Länge × Felder für einen Etappensieg), so dauert eine Meisterschaft immer etwa gleich lang: kurz ca. 3–4 Etappen, mittel ca. 5, lang ca. 8.</li>
+        <li><b>Joker</b> (wenn der Gastgeber ihn einschaltet): Jeder hat einen Joker pro Meisterschaft. Vor einer Etappe gesetzt, zählen deine Felder dieser Etappe doppelt – wer dann Letzter wird, hat ihn verschenkt (0 × 2 = 0).</li>
         <li><b>Thema:</b> „Südtirol“ oder „Welt“ wählt passende Inhalte für alle Etappen, „Gemischt“ alles durcheinander.</li>
         <li><b>Schwierigkeit:</b> „Leicht“ = bekannte Orte und Länder, deutliche Unterschiede bei Höher oder tiefer und nur leichte Buchstaben bei Stadt, Land, Fluss; „Profi“ = nur schwere Orte und Länder und möglichst knappe Vergleiche; „Gemischt“ = wie es kommt.</li>
         <li>Bei der Siegerehrung gibt es Auszeichnungen, z. B. Kartenleser, Wandelndes Lexikon oder Aufholjagd.</li>
-        <li>Zwischen den Etappen gibt es eine Pause mit Zwischenstand und einer kurzen Erklärung des nächsten Spiels. Weiter geht es, wenn alle „Bereit“ getippt haben.</li>
+        <li>Zwischen den Etappen gibt es eine Pause mit dem Spielbrett und einer kurzen Erklärung des nächsten Spiels. Weiter geht es, wenn alle „Bereit“ getippt haben.</li>
         <li>Listen-Duell und Antwort sucht Frage sind nur dabei, wenn ihr genau zu zweit seid.</li>
       </ul>
     </details>`;
