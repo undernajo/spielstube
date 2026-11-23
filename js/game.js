@@ -34,7 +34,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -45,6 +45,7 @@
     { key: "hinweis", color: "#7fd1ff", name: "Hinweis für Hinweis", desc: "Früh raten lohnt sich", icon: hinweisIcon() },
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Erfinde die Frage", icon: frageIcon() },
+    { key: "kurios", min2: true, color: "#f472b6", name: "Kaum zu glauben", desc: "Drei Aussagen – eine stimmt", icon: kuriosIcon() },
     { key: "tick", min2: true, color: "#4fd1c5", name: "Wie tickst du?", desc: "Auf der Skala einschätzen", icon: tickIcon() },
     { key: "wer", min2: true, color: "#ff7eb6", name: "Wer bin ich?", desc: "Ja/Nein-Fragen über dich", icon: werIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
@@ -119,6 +120,8 @@
   const JG = window.S10Jagd;
   const WER = window.S10Wer;
   const TK = window.S10Tick;
+  const KU = window.S10Kurios;
+  let kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
   let tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
   let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
   const SEIL = window.S10Seil;
@@ -127,7 +130,7 @@
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage", "wer"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Gemeinsam spielen (Koop)", ["seil", "tick"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "hl", "schaetzen", "duell", "slf", "frage", "wer", "kurios"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Gemeinsam spielen (Koop)", ["seil", "tick"]]];
   // Gleiche Wellenlänge ist ausgeblendet (hidden) – Code bleibt, Zurückholen: hidden entfernen und hier wieder einen Abschnitt eintragen
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
@@ -327,7 +330,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -397,6 +400,13 @@
       if (!host || S.phase !== "lobby") return false;
       return SEIL.start(S, { swap: !!(action.opts && action.opts.swap), prog: store.get(seilKey()) });
     }
+    if (type === "start" && action.game === "kurios") {
+      if (!host || S.phase !== "lobby") return false;
+      return KU.start(S, { ...action.opts, avoid: store.get("s10-kurios-seen") || [] });
+    }
+    if (type === "kuRestart" && S.phase === "kurios" && S.kurios && S.kurios.step === "final")
+      return KU.start(S, { ...S.kurios.opts, avoid: store.get("s10-kurios-seen") || [] });
+    if (type.startsWith("ku")) return S.phase === "kurios" && KU.apply(S, pid, action, host);
     if (type === "start" && action.game === "tick") {
       if (!host || S.phase !== "lobby") return false;
       return TK.start(S, { ...action.opts, avoid: store.get("s10-tick-seen") || [] });
@@ -486,7 +496,7 @@
     if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
     if (type.startsWith("sg")) return S.phase === "seil" && SEIL.apply(S, pid, action, host, now);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -557,7 +567,7 @@
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -638,6 +648,7 @@
       wl: { pack: wlOpts.pack, rounds: Number(wlOpts.rounds) },
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
+      kurios: { size: KU.SIZES[kuOpts.size] ? kuOpts.size : "12" },
       tick: { rounds: TK.ROUNDS[tkOpts.rounds] ? tkOpts.rounds : "2", mode: TK.MODES[tkOpts.mode] ? tkOpts.mode : "laut" },
       wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
@@ -670,6 +681,12 @@
     view.jagd = S.phase === "jagd" ? JG.publicState(S) : null;
     view.wer = S.phase === "wer" ? WER.publicState(S) : null;
     view.tick = S.phase === "tick" ? TK.publicState(S) : null;
+    view.kurios = S.phase === "kurios" ? KU.publicState(S) : null;
+    if (view.kurios) { // gespielte Fragen merken – sie kommen erst wieder, wenn alle einmal dran waren
+      const seen = store.get("s10-kurios-seen") || [], add = KU.usedKeys(S.kurios).filter((k) => !seen.includes(k));
+      if (add.length) { const all = (window.SCHLAU10_KURIOS || []).map((_, i) => KU.key(i)), next = seen.concat(add).filter((x) => all.includes(x));
+        store.set("s10-kurios-seen", all.every((x) => next.includes(x)) ? add : next); }
+    }
     if (view.tick) { // gezogene Skalen merken – sie kommen erst wieder, wenn alle einmal dran waren
       const seen = store.get("s10-tick-seen") || [], add = TK.usedKeys(S.tick).filter((k) => !seen.includes(k));
       if (add.length) { const all = (window.SCHLAU10_TICK || []).map((_, i) => TK.key(i)), next = seen.concat(add).filter((x) => all.includes(x));
@@ -1162,6 +1179,7 @@
       if (v.phase === "duell" && v.duell && v.duell.step === "turn") return v.duell.turn;
       if (v.phase === "wer" && v.wer) return v.wer.turn;
       if (v.phase === "tick" && v.tick) return v.tick.giver;
+      if (v.phase === "kurios" && v.kurios) return v.kurios.cur ? v.kurios.cur.by : v.kurios.chooser;
       if (v.phase === "frage" && v.frage) { const f = v.frage; return f.step === "write" || f.step === "judge" ? f.asker : f.step === "answer" || f.step === "check" ? f.guesser : null; }
       if (v.phase === "karten" && v.karten && v.karten.mode === "stich" && v.karten.step === "play") return v.karten.turn;
       if (v.phase === "watten" && v.watten) return v.watten.turn || null;
@@ -1447,7 +1465,7 @@
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase !== "watten" && view.phase !== "schnapsen") G.dealReset();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "wer") G.renderWer(); else if (view.phase === "tick") G.renderTick(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "wer") G.renderWer(); else if (view.phase === "tick") G.renderTick(); else if (view.phase === "kurios") G.renderKurios(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
     camDockPlace();
     chipFx();
     G.qbBarRender();
@@ -1602,6 +1620,8 @@
         || (v.wer.step === "judge" && v.wer.turn !== myId && v.wer.seats.includes(myId)))),
       // Wie tickst du?: Hinweis geben oder tippen; Auflösung
       tkMine: !!(v.tick && v.tick.step === "guess" && (v.tick.giver === myId || (v.tick.need.includes(myId) && !v.tick.guessed.includes(myId) && (v.tick.opts.mode === "laut" || v.tick.hint)))),
+      kuMine: !!(v.kurios && v.kurios.step === "pick" && v.kurios.chooser === myId),
+      kuKey: v.kurios ? v.kurios.round + ":" + v.kurios.step : null,
       tkKey: v.tick ? v.tick.turnNo + ":" + v.tick.step : null,
       werKey: v.wer ? v.wer.step + ":" + (v.wer.last ? JSON.stringify(v.wer.last) : "") : null,
       fwLast: v.wand && v.wand.last ? v.wand.last.n : 0, fwFin: !!(v.wand && v.wand.step === "final"),
@@ -1658,6 +1678,12 @@
         const st = v[k];
         if (st.seats.includes(myId)) { if (st.score[myId] >= st.target) sfx.win(); else sfx.lose(); }
         confetti();
+      }
+      if (v.kurios) {
+        const fresh = now.kuKey !== prev.kuKey && v.kurios.step === "reveal" && v.kurios.cur;
+        if (fresh) (v.kurios.cur.pick === v.kurios.cur.right ? sfx.right : sfx.wrong)();
+        if (now.kuMine && !prev.kuMine) setTimeout(sfx.turn, 300);
+        if (now.kuKey !== prev.kuKey && v.kurios.step === "final") { if ((v.kurios.winners || []).includes(myId)) sfx.win(); else if (v.kurios.seats.includes(myId)) sfx.lose(); confetti(); }
       }
       if (v.tick) {
         if (now.tkMine && !prev.tkMine) setTimeout(sfx.turn, 300);
@@ -1813,6 +1839,7 @@
     frage: () => store.set("s10-fq-seen", []),
     wer: () => store.set("s10-wer-seen", []),
     tick: () => store.set("s10-tick-seen", []),
+    kurios: () => store.set("s10-kurios-seen", []),
     wand: () => store.set("s10-fw-seen", []),
   };
   // Einheitliche Anmerkung unter „Spiel starten“ bei Spielen ab 2 Spielern – nur wenn sie etwas erklärt
@@ -1872,6 +1899,7 @@
           ${chosenGame === "jagd" ? jagdSettingsHtml() : ""}
           ${chosenGame === "wer" ? werSettingsHtml() : ""}
           ${chosenGame === "tick" ? tkSettingsHtml() : ""}
+          ${chosenGame === "kurios" ? kuSettingsHtml() : ""}
           ${chosenGame === "seil" ? seilSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
@@ -1982,6 +2010,7 @@
       if (chosenGame === "jagd") return send({ type: "start", game: "jagd", opts: jagdOpts });
       if (chosenGame === "wer") return send({ type: "start", game: "wer", opts: werOpts });
       if (chosenGame === "tick") return send({ type: "start", game: "tick", opts: tkOpts });
+      if (chosenGame === "kurios") return send({ type: "start", game: "kurios", opts: kuOpts });
       if (chosenGame === "seil") return send({ type: "start", game: "seil", opts: seilOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
@@ -2220,7 +2249,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ tick: tkRulesHtml, wer: werRulesHtml, seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ kurios: kuRulesHtml, tick: tkRulesHtml, wer: werRulesHtml, seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, wand: fwRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -2486,6 +2515,8 @@
       rules: [["⛰️", "Volle Fläche = <b>Punkte im Eck</b>"], ["🥇", "Wer eine Fläche zuerst füllt, bekommt mehr"], ["🎲", "Gleiche Würfel für alle"]] };
     if (ph === "seil" && v.seil) return { goal: "Bringt <em>beide</em> ans Ziel jeder Etappe – vom Tal bis zum <em>Gipfelkreuz</em>.", path: null,
       rules: [["⭐", "Je Etappe bis <b>3 Sterne</b>: geschafft, alle Edelweiß, unter der Zielzeit"], ["💦", "Fällt einer, startet das Level <b>für beide</b> neu"], ...(v.seil.mode === "solo" ? [["🙋", "Allein: mit <b>Q</b> die Figur wechseln"]] : [["🤝", "Nur gemeinsam: Platten halten, huckepack, Fels schieben"]])] };
+    if (ph === "kurios" && v.kurios) return { goal: `<em>${N(v.kurios.turns, "Zug", "Züge")}</em> – reihum wählt jeder ein Feld der Tafel. Wer die wahre Aussage erkennt, bekommt einen Punkt. Die meisten Punkte gewinnen.`, path: null,
+      rules: [["🃏", "Drei Aussagen – <b>nur eine</b> stimmt"], ["✓", "Richtig <b>+1</b>, falsch kostet nichts"], ["💡", "Danach gibt's die Erklärung"]] };
     if (ph === "tick" && v.tick) return { goal: v.tick.seats.length === 2 ? `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – ihr spielt als Team: Je näher der Tipp an der geheimen Zahl, desto mehr Punkte sammelt ihr gemeinsam.`
         : `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – je näher dein Tipp an der geheimen Zahl, desto mehr Punkte. Wer am Ende die meisten hat, gewinnt.`, path: null,
       rules: [["🎯", "Genau getroffen <b>+3</b>, eins daneben <b>+2</b>, zwei daneben <b>+1</b>"], ["🗣️", "Wer den Hinweis gibt, bekommt den <b>Durchschnitt</b> der Ratenden"], ["🔁", "Reihum gibt jeder Hinweise"]] };
@@ -2656,6 +2687,9 @@
     if (view.game === "watten" && lb.watten) {
       return `<p class="muted small">Zu zweit · bis ${lb.watten.target} Punkte · Weli ist ${lb.watten.weli === "trumpf" ? "der kleinste Trumpf" : "die kleinste Schelle"}</p>`;
     }
+    if (view.game === "kurios" && lb.kurios) {
+      return `<p class="muted small">Ab 2 Spielern · ${esc((KU.SIZES[lb.kurios.size] || KU.SIZES["12"]).name)} · reihum ein Feld wählen</p>`;
+    }
     if (view.game === "tick" && lb.tick) {
       return `<p class="muted small">Ab 2 Spielern · ${esc((TK.ROUNDS[lb.tick.rounds] || TK.ROUNDS["2"]).name)} · ${lb.tick.mode === "tippen" ? "Hinweise eintippen" : "Hinweise laut"}</p>`;
     }
@@ -2733,6 +2767,8 @@
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const sgSw = app.querySelector("#seil-swap");
     if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
+    const kuS = app.querySelector("#ku-size");
+    if (kuS) kuS.onchange = () => { kuOpts.size = kuS.value; store.set("s10-kurios", kuOpts); publish(); };
     [["#tk-rounds", "rounds"], ["#tk-mode", "mode"]].forEach(([id, k]) => {
       const el = app.querySelector(id);
       if (el) el.onchange = () => { tkOpts[k] = el.value; store.set("s10-tick", tkOpts); publish(); };
@@ -3177,6 +3213,23 @@
       <p class="muted small">Fortschritt dieser Stube: ${done ? `${done} von ${SEIL.LEVELS.length} Etappen geschafft · ⭐ ${stars}` : "noch keine Etappe geschafft"} – auf der Tourenkarte geht es weiter.</p>
       <button id="start" class="btn primary big" ${ps.length < 1 ? "disabled" : ""}>Seilschaft starten</button>`;
   }
+  function kuSettingsHtml() {
+    const n = playing().length, D = window.SCHLAU10_KURIOS || [], seen = store.get("s10-kurios-seen") || [], fresh = D.filter((_, i) => !seen.includes(KU.key(i))).length;
+    return `<label class="field"><span>Tafel</span><select id="ku-size">${Object.entries(KU.SIZES).map(([k, t]) => `<option value="${k}" ${(KU.SIZES[kuOpts.size] ? kuOpts.size : "12") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+      ${freshHtml(fresh, D.length, "Fragen", "kurios")}
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      ${playerNoteHtml(n, false)}`;
+  }
+  const kuRulesHtml = `
+    <details class="rules"><summary>Regeln: Kaum zu glauben</summary>
+      <ul>
+        <li>Auf der <b>Tafel</b> liegen verdeckte Felder. Jedes zeigt nur ein Stichwort, z. B. „🐙 Kraken“ oder „🍌 Bananen“.</li>
+        <li><b>Reihum</b> wählt jeder ein Feld. Dann erscheinen <b>drei Aussagen</b> dazu – nur eine davon stimmt, die anderen klingen bloß glaubwürdig.</li>
+        <li>Wer gewählt hat, tippt die Aussage an, die er für wahr hält. <b>Richtig = 1 Punkt</b>, falsch kostet nichts. Mitraten und Mitreden ist erlaubt – entscheiden muss aber der, der dran ist.</li>
+        <li>Danach wird aufgelöst, mit einer kurzen <b>Erklärung</b>, warum es so ist.</li>
+        <li>Alle kommen gleich oft dran. Geht es nicht auf, bleiben übrige Felder offen. Wer am Ende die meisten Punkte hat, gewinnt.</li>
+      </ul>
+    </details>`;
   function tkSettingsHtml() {
     const n = playing().length, sel = (id, obj, val) => `<select id="${id}">${Object.entries(obj).map(([k, t]) => `<option value="${k}" ${String(val) === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>`;
     const D = window.SCHLAU10_TICK || [], seen = store.get("s10-tick-seen") || [], fresh = D.filter((_, i) => !seen.includes(TK.key(i))).length;

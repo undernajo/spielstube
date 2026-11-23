@@ -13,7 +13,7 @@ const path = require("path");
 const puppeteer = require("puppeteer-core");
 
 const ROOT = path.resolve(__dirname, "..");
-const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer", "tick",
+const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer", "tick", "kurios",
   "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "alm", "jagd", "seil", "querbeet"];
 const GAMES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -43,6 +43,20 @@ function serve() {
 
 // Spiele, bei denen ein paar zufällige Klicks nicht weit genug kommen: gezielt eine ganze Runde durchspielen
 const DEEP = {
+  // Kaum zu glauben: wer dran ist, wählt ein Feld und eine Aussage → Auflösung mit Erklärung bei beiden, dann weiter
+  async kurios(host, guest, errs) {
+    const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
+    if (!(await until(host, ".ku-board"))) return errs.push("Kaum zu glauben: keine Tafel zu sehen");
+    const me = (await host.evaluate(() => !!document.querySelector("[data-kupick]"))) ? host : guest, other = me === host ? guest : host;
+    if (!(await until(me, "[data-kupick]"))) return errs.push("Kaum zu glauben: niemand kann ein Feld wählen");
+    await me.evaluate(() => document.querySelector("[data-kupick]").click());
+    if (!(await until(me, "[data-kuans]"))) return errs.push("Kaum zu glauben: keine Aussagen zum Antippen");
+    if (!(await until(other, ".ku-opt"))) errs.push("Kaum zu glauben: der andere sieht die Aussagen nicht");
+    await me.evaluate(() => document.querySelector("[data-kuans]").click());
+    for (const [p, w] of [[me, "Wählenden"], [other, "Zuschauenden"]]) if (!(await until(p, ".ku-expl"))) errs.push(`Kaum zu glauben: keine Erklärung beim ${w}`);
+    await me.evaluate(() => document.querySelector("#ku-next").click());
+    if (!(await until(other, "[data-kupick]"))) errs.push("Kaum zu glauben: danach ist nicht der andere dran");
+  },
   // Wie tickst du? (laut, Standard): Hinweisgeber sieht seine Zahl und schreibt freiwillig einen Hinweis, der andere tippt → Auflösung bei beiden
   async tick(host, guest, errs) {
     const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };

@@ -215,9 +215,17 @@
       <text x="16" y="58" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="#4aa8ff">1</text>
       <text x="48" y="58" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="9" fill="#ef4b5a">10</text></svg>`;
   }
+  // Kaum zu glauben: drei Kärtchen A/B/C, das mittlere grün mit Häkchen, darüber ein Ausrufezeichen
+  function kuriosIcon() {
+    const card = (x, rot, fill, inner) => `<g transform="rotate(${rot} ${x + 9} 40)"><rect x="${x}" y="22" width="18" height="26" rx="3.5" fill="${fill}" stroke="#8a7a5a" stroke-width="1.3"/>${inner}</g>`;
+    const t = (x, c, txt) => `<text x="${x + 9}" y="40" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12" fill="${c}">${txt}</text>`;
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      ${card(5, -12, "#fbf6ea", t(5, "#ef4b5a", "✗"))}${card(41, 12, "#fbf6ea", t(41, "#ef4b5a", "✗"))}${card(23, 0, "#2fbf71", t(23, "#fff", "✓"))}
+      <circle cx="32" cy="11" r="8" fill="#f472b6" stroke="#a8326f" stroke-width="1.3"/><text x="32" y="15.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12" fill="#fff">!</text></svg>`;
+  }
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon
   };
 })();
