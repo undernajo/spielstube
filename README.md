@@ -14,6 +14,8 @@ Es braucht keinen eigenen Server. Die Schriften (Fredoka, Nunito, Noto Color Emo
 Der Gastgeber muss die Seite offen lassen, denn das Spiel läuft in seinem Browser.
 Lädt er die Seite neu, kann er mit **Laufendes Spiel fortsetzen** weitermachen. Der Mitspieler verbindet sich dann automatisch neu.
 
+**Stammstuben:** Jede eröffnete Stube merkt sich das Gerät des Gastgebers (in der Lobby kann er ihr einen Namen geben, z. B. „Familie“). Auf der Startseite steht sie unter **Meine Stuben** → „Öffnen“ startet eine frische Lobby mit demselben Code, der alte Link gilt also wieder. Gäste finden besuchte Stuben unter **Zuletzt dabei** → „Beitreten“ (wer zu früh kommt, wartet, bis die Stube offen ist). Ist die Stube gerade schon offen (anderes Gerät/Tab), wird sie nicht ein zweites Mal geöffnet. Die Listen liegen nur im jeweiligen Browser.
+
 Die Spielzüge sind mit einem Schlüssel aus dem Stuben-Code verschlüsselt (AES-GCM). Auch der Kanalname auf dem Server verrät den Code nicht. Nur wer den Code kennt, kann mitlesen oder mitspielen. Dafür muss die Seite über `https://` (z. B. GitHub Pages) oder `http://localhost` geöffnet werden.
 
 ## Ordner

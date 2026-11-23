@@ -3930,3 +3930,16 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .alm-unwetter b { font: 700 clamp(1.8rem, 6vw, 3rem)/1.1 Fredoka, sans-serif; text-shadow: 0 4px 20px rgba(0, 0, 0, .6); }
 .alm-unwetter .au-box > span { color: #c9c6ee; font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .alm-unwetter .au-rain, .alm-unwetter .au-flash, .alm-unwetter .au-cloud, .alm-unwetter .au-bolt, .alm-unwetter .au-box { animation: none; } .alm-unwetter .au-flash { display: none; } }
+
+/* ---------- Stammstuben: Meine Stuben / Zuletzt dabei ---------- */
+.rooms { display: grid; gap: 6px; margin-top: 4px; }
+.rooms h3 { margin: 6px 0 0; font: 700 .95rem Fredoka, sans-serif; } .rooms h3 small { font: 600 .78rem Nunito, sans-serif; color: var(--muted); }
+.rooms ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rooms li { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.rooms .rm-ico { font-size: 1.2rem; }
+.rooms .rm-t { flex: 1; min-width: 0; display: grid; } .rooms .rm-t b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rooms .rm-t small { color: var(--muted); font-size: .78rem; }
+.rooms .rm-t small:empty { display: none; }
+.rooms .rm-x { padding: 6px 9px; }
+.room-name { margin-top: 4px; } .room-name small { font-weight: 600; color: var(--muted); }
+.room-name-g { margin: 0; text-align: center; font: 700 1rem Fredoka, sans-serif; }
+.gc-room { font: 700 .9rem Fredoka, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

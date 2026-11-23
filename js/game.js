@@ -145,6 +145,15 @@
   const cleanName = (n) => String(n || "").trim().slice(0, 20) || "Spieler";
   const genCode = () => Array.from({ length: 5 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ"[Math.floor(Math.random() * 24)]).join("");
   // Server-Index nur anhängen, wenn der Ersatzserver genutzt wird (Standard 0 = Hauptserver)
+  // ---------- Stammstuben: eröffnete (Gastgeber) und besuchte (Gäste) Stuben merken, um sie wieder zu öffnen ----------
+  const roomsGet = (k) => { const x = store.get(k); return Array.isArray(x) ? x.filter((e) => e && /^[A-Z]{5}$/.test(e.code)) : []; };
+  function roomsPut(k, entry) {
+    const list = roomsGet(k), old = list.find((e) => e.code === entry.code) || {};
+    const next = { ...old, ...entry, name: entry.name != null ? entry.name : old.name || "", ts: Date.now() };
+    store.set(k, [next, ...list.filter((e) => e.code !== entry.code)].slice(0, 8));
+  }
+  const roomsDel = (k, code) => store.set(k, roomsGet(k).filter((e) => e.code !== code));
+  const roomLabel = (e) => e.name ? esc(e.name) : `Stube ${esc(e.code)}`;
   const shareLink = () => location.origin + location.pathname + "?room=" + roomCode + (brokerIdx ? "&b=" + brokerIdx : "");
 
   // ---------- Verbindung über einen öffentlichen MQTT-Vermittlungsserver ----------
@@ -202,10 +211,10 @@
   const lastSeen = new Map();
   let seq = 0;
 
-  function hostCreate(name) {
+  function hostCreate(name, reuse) {
     if (!hasCrypto) { toast(errorMsg, "bad"); return; }
     if (isHost) return;
-    isHost = true; roomCode = genCode();
+    isHost = true; roomCode = reuse ? reuse.code : genCode();
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
     S.geoSeen = store.get("s10-geo-seen") || {};
@@ -213,8 +222,9 @@
     S.landSeen = store.get("s10-land-seen") || {};
     S.hostId = myId;
     S.game = chosenGame;
+    S.roomName = reuse ? reuse.name || "" : "";
     L.addPlayer(S, myId, name);
-    hostOpen(0);
+    hostOpen(reuse ? reuse.broker || 0 : 0, 0, !!reuse);
   }
 
   function hostResume(saved) {
@@ -229,11 +239,12 @@
     hostOpen(saved.broker || 0);
   }
 
-  async function hostOpen(idx, tries = 0) {
+  async function hostOpen(idx, tries = 0, reopen = false) {
     status = "Spielstube wird geöffnet …";
     // Sofort den vollständigen Spielstand zeigen (auch mitten im Spiel), nicht erst nach dem Verbinden.
     // mq ist hier noch nicht (oder nicht mehr) verbunden, publish() zeichnet also nur und sendet nichts.
-    mq = null; publish();
+    // Stammstube wieder öffnen: erst prüfen, ob sie schon offen ist – bis dahin auf der Startseite bleiben
+    if (reopen) { mq = null; status = `Stube ${roomCode} wird wieder geöffnet …`; renderStart(); } else { mq = null; publish(); }
     await ensureCrypto(roomCode);
     const willPayload = await seal("offline");
     const c = mq = connectBroker(idx, { topic: T("host"), payload: willPayload, qos: 1, retain: true });
@@ -241,13 +252,25 @@
     const fail = setTimeout(() => {
       if (opened || mq !== c) return;
       c.end(true);
-      if (tries + 1 < BROKERS.length) hostOpen(idx + 1, tries + 1);
+      if (tries + 1 < BROKERS.length) hostOpen(idx + 1, tries + 1, reopen);
       else { status = "Kein Vermittlungsserver erreichbar. Internetverbindung prüfen und Seite neu laden."; render(); }
     }, 9000);
-    c.on("connect", () => {
+    let ready = false;
+    c.on("connect", async () => {
+      if (ready) { status = ""; c.subscribe([T("up"), T("rtc/" + myId)], { qos: 1 }); sendSealed(T("host"), "online", { qos: 1, retain: true }); publish(); return; } // Wiederverbinden
+      if (opened) return;
       opened = true; clearTimeout(fail); status = "";
+      // Stammstube wieder öffnen: ist sie gerade schon offen (anderes Gerät/Tab), nicht ein zweites Mal öffnen
+      if (reopen && await hostAlready(c)) {
+        try { c.end(false); } catch {} // ordentlich trennen: sonst setzt der Server unser „offline“ (Letzter Wille) über die offene Stube
+        mq = null; isHost = false; S = null; view = null; roomTopic = null;
+        errorMsg = `Die Stube ${roomCode} ist gerade schon offen – auf einem anderen Gerät oder in einem anderen Tab. Dort weiterspielen oder später nochmal versuchen.`;
+        roomCode = null; return renderStart();
+      }
       c.subscribe([T("up"), T("rtc/" + myId)], { qos: 1 });
       sendSealed(T("host"), "online", { qos: 1, retain: true });
+      roomsPut("s10-myrooms", { code: roomCode, broker: idx, name: S.roomName || undefined });
+      ready = true;
       publish();
     });
     c.on("reconnect", () => { if (opened) { status = "Verbindung unterbrochen – verbinde neu …"; render(); } });
@@ -274,6 +297,16 @@
         if (m.type === "action" && applyAny(cid, m.action)) changed = true;
         if (changed) publish();
       }
+    });
+  }
+
+  // Liegt für die Stube ein „online“ eines anderen Gastgebers vor? (gespeicherte Nachricht kommt sofort nach dem Abonnieren)
+  function hostAlready(c) {
+    return new Promise((res) => {
+      let done = false; const fin = (x) => { if (done) return; done = true; c.removeListener("message", onMsg); c.unsubscribe(T("host")); res(x); };
+      const onMsg = async (topic, buf) => { if (topic !== T("host")) return; const m = await unseal(buf); fin(m === "online"); };
+      c.on("message", onMsg); c.subscribe(T("host"), { qos: 1 });
+      setTimeout(() => fin(false), 1500);
     });
   }
 
@@ -563,6 +596,7 @@
     if (S.phase === "lobby") S.players = S.players.filter((p) => p.connected || p.id === myId);
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
+    view.roomName = S.roomName || "";
     view.kicked = (S.kicked || []).slice();
     if (S.phase === "lobby") view.lobby = {
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
@@ -649,6 +683,7 @@
   }
 
   let lastSeq = 0;
+  let guestRoomSaved = null;
   async function guestJoin(code, name, idx, fixed) {
     if (!hasCrypto) { toast(errorMsg, "bad"); return; }
     isHost = false; roomCode = code; myName = name;
@@ -687,6 +722,8 @@
       if (m.seq && m.seq <= lastSeq) return; // veralteten Stand ignorieren
       lastSeq = m.seq || lastSeq;
       view = m;
+      if (!guestRoomSaved || guestRoomSaved !== code + "|" + (m.roomName || "")) { guestRoomSaved = code + "|" + (m.roomName || ""); const hn = (m.players.find((p) => p.id === m.hostId) || {}).name;
+        roomsPut("s10-visited", { code, broker: idx, name: m.roomName || "", host: hn || "" }); }
       if (status.startsWith("Suche Stube")) status = "";
       if ((m.kicked || []).includes(myId)) { // vom Gastgeber entfernt
         store.del("s10-guest"); leaving = true; try { c.end(true); } catch {} mq = null; view = null;
@@ -1604,6 +1641,15 @@
       </ul>
     </details>`;
 
+  // Startseite: „Meine Stuben“ (wieder öffnen – der alte Link gilt dann wieder) und „Zuletzt dabei“ (wieder beitreten)
+  function roomListsHtml(skip) {
+    const mine = roomsGet("s10-myrooms"), seen = roomsGet("s10-visited").filter((e) => !mine.some((m) => m.code === e.code) && e.code !== skip);
+    const row = (e, btn, extra) => `<li><span class="rm-ico">🏠</span><span class="rm-t"><b>${roomLabel(e)}</b><small>${e.name ? `Stube ${esc(e.code)}` : ""}${extra ? `${e.name ? " · " : ""}${extra}` : ""}</small></span>${btn}</li>`;
+    return (mine.length ? `<div class="rooms"><h3>Meine Stuben <small>– wieder öffnen, der alte Link gilt wieder</small></h3><ul>${mine.map((e) => row(e,
+        `${e.code === skip ? `<button class="btn sm primary" data-resume="1" title="Den letzten Spielstand fortsetzen">Fortsetzen</button>` : `<button class="btn sm" data-reopen="${e.code}">Öffnen</button>`}<button class="btn ghost sm rm-x" data-rmren="${e.code}" title="Umbenennen" aria-label="Umbenennen">✎</button><button class="btn ghost sm rm-x" data-rmdel="s10-myrooms:${e.code}" title="Entfernen" aria-label="Entfernen">✕</button>`)).join("")}</ul></div>` : "")
+      + (seen.length ? `<div class="rooms"><h3>Zuletzt dabei</h3><ul>${seen.map((e) => row(e,
+        `<button class="btn sm" data-rejoin="${e.code}">Beitreten</button><button class="btn ghost sm rm-x" data-rmdel="s10-visited:${e.code}" title="Entfernen" aria-label="Entfernen">✕</button>`, e.host ? `bei ${esc(e.host)}` : "")).join("")}</ul></div>` : "");
+  }
   let startActAt = 0; // letzter Klick auf Eröffnen/Beitreten/Fortsetzen
   function renderStart() {
     const saved = store.get("s10-host");
@@ -1628,7 +1674,8 @@
               <input id="code" maxlength="5" placeholder="CODE" autocapitalize="characters" value="${esc(guestSaved ? guestSaved.code : "")}">
               <button id="join" class="btn">Beitreten</button>
             </div>`}
-          ${resumable && !code ? `<button id="resume" class="btn ghost">Spielstube ${esc(saved.code)} fortsetzen</button>` : ""}
+          ${resumable && !code && !roomsGet("s10-myrooms").some((e) => e.code === saved.code) ? `<button id="resume" class="btn ghost">Spielstube ${esc(saved.code)} fortsetzen</button>` : ""}
+          ${code ? "" : roomListsHtml(resumable ? saved.code : null)}
           <p class="err">${esc(errorMsg || status)}</p>
         </div>
         <details class="rules"><summary>Die Spiele</summary>
@@ -1659,6 +1706,13 @@
       const n = getName(); if (n) once(() => guestJoin(c, n, 0, false));
     };
     on("#join", joinCode);
+    app.querySelectorAll("[data-resume]").forEach((b) => { b.onclick = () => { const n = getName(); if (n) once(() => hostResume(saved)); }; });
+    app.querySelectorAll("[data-reopen]").forEach((b) => { b.onclick = () => { const e = roomsGet("s10-myrooms").find((x) => x.code === b.dataset.reopen), n = getName(); if (e && n) once(() => hostCreate(n, e)); }; });
+    app.querySelectorAll("[data-rejoin]").forEach((b) => { b.onclick = () => { const e = roomsGet("s10-visited").find((x) => x.code === b.dataset.rejoin), n = getName(); if (e && n) once(() => guestJoin(e.code, n, e.broker || 0, false)); }; });
+    app.querySelectorAll("[data-rmren]").forEach((b) => { b.onclick = () => { const e = roomsGet("s10-myrooms").find((x) => x.code === b.dataset.rmren); if (!e) return;
+      const nn = prompt(`Name für die Stube ${e.code} (z. B. „Familie“):`, e.name || ""); if (nn === null) return; roomsPut("s10-myrooms", { code: e.code, name: String(nn).trim().slice(0, 20) }); renderStart(); }; });
+    app.querySelectorAll("[data-rmdel]").forEach((b) => { b.onclick = () => { const [k, c] = b.dataset.rmdel.split(":"); const e = roomsGet(k).find((x) => x.code === c);
+      if (e && confirm(`${e.name || "Stube " + c} aus der Liste entfernen?`)) { roomsDel(k, c); renderStart(); } }; });
     const codeIn = app.querySelector("#code");
     if (codeIn) codeIn.onkeydown = (e) => { if (e.key === "Enter") joinCode(); };
   }
@@ -1708,7 +1762,7 @@
     return `
       <main class="screen lobby lobby-guest gc">
         <div class="panel gc-bar">
-          <div class="gc-top"><button type="button" class="gc-code" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>
+          <div class="gc-top"><button type="button" class="gc-code" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>${view.roomName ? `<span class="gc-room">🏠 ${esc(view.roomName)}</span>` : ""}
             <span class="gc-btns">${camOK ? `<button class="btn ghost sm ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}" aria-label="Kamera">📷</button>
               <button class="btn ghost sm ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}" aria-label="Mikrofon">🎤</button>` : ""}
               <input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn ghost sm" title="Mitspieler einladen" aria-label="Mitspieler einladen">🔗</button>
@@ -1777,6 +1831,8 @@
             <button type="button" class="code code-copy" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
+            ${isHost ? `<label class="field room-name"><span>Name der Stube <small>(zum Wiederöffnen)</small></span><input id="roomName" maxlength="20" placeholder="z. B. Familie" value="${esc(view.roomName || "")}"></label>`
+              : view.roomName ? `<p class="room-name-g">🏠 ${esc(view.roomName)}</p>` : ""}
             <h3>Spieler</h3>
             <ul class="plist">${view.players.map((p, i) => `<li class="${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span><span class="pl-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
               <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused && p.id !== myId ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
@@ -1820,6 +1876,9 @@
     });
     const li = app.querySelector("#lobbyInvite");
     if (li) li.onclick = invite;
+    const rn = app.querySelector("#roomName");
+    if (rn && isHost) { const save = () => { const nn = String(rn.value || "").trim().slice(0, 20); if (nn === (S.roomName || "")) return; S.roomName = nn; roomsPut("s10-myrooms", { code: roomCode, name: nn }); publish(); toast(nn ? `Gemerkt als „${nn}“ – auf der Startseite unter „Meine Stuben“.` : "Name entfernt.", "ok"); };
+      rn.onchange = save; rn.onkeydown = (e) => { if (e.key === "Enter") rn.blur(); }; }
     const cc = app.querySelector("#copycode");
     if (cc) cc.onclick = () => (navigator.clipboard ? navigator.clipboard.writeText(view.code) : Promise.reject()).then(
       () => toast("Code kopiert ✓", "ok"), () => toast("Code: " + view.code, "info"));
