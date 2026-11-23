@@ -11,12 +11,13 @@
     kraxler: { w: 0.8, h: 1.5, speed: 6, jump: 13, jumps: 1, name: "Kraxler" },
     gams: { w: 0.7, h: 0.75, speed: 8, jump: 13.5, jumps: 2, name: "Gams" },
   };
-  const GCOL = { A: "#ffc83d", B: "#4fc3f7", C: "#c084fc", E: "#7ee2b1", bridge: "#ff9f5a" };
+  const GCOL = { A: "#ffc83d", B: "#4fc3f7", C: "#c084fc", E: "#7ee2b1", bridge: "#ff9f5a", lift: "#e9a0d8" };
 
   // ---------- lokaler Zustand ----------
   let L = null, GR = null, W = 0;          // Level, Gelände-Raster, Breite
   const S = { open: {} };                  // Gatter (jedes Gerät rechnet gleich)
   let bodies = {}, boulders = [];
+  let trees = [], lifts = [], holdT = {}, simT = 0, prevX = {}; // Welt 2: Bäume, Seilwinde, Zeit-Gatter, Mitnehmen
   let cur = { gid: null, seq: -1 };       // welche Level-Runde gerade geladen ist
   let active = "kraxler";                  // allein: welche Figur gesteuert wird
   let gotLocal = {}, sentWin = false, sentDie = false, t0 = 0, frozen = false;
@@ -33,7 +34,7 @@
   // ---------- Klänge (live über js/klang.js; 🔇 schaltet sie mit ab) ----------
   const notes = (list, type = "triangle", peak = 0.12) => K.play(sfx, (c, t) => list.forEach((f, i) => K.tone(c, t + i * 0.09, 0.28, { type, f0: f, peak, rev: 0.25 })));
   const SND = { edel: () => notes([988, 1319]), key: () => notes([784, 1175, 1568]), win: () => notes([523, 659, 784, 1047]),
-    fail: () => notes([392, 330, 262], "sine", 0.16), gate: () => notes([440, 660], "sine", 0.06), jump: () => K.play(sfx, (c, t) => K.tone(c, t, 0.12, { type: "square", f0: 300, f1: 520, peak: 0.03 })) };
+    fail: () => notes([392, 330, 262], "sine", 0.16), tree: () => K.play(sfx, (c, t) => { K.tone(c, t, 0.5, { type: "sawtooth", f0: 160, f1: 60, peak: 0.05 }); K.noise(c, t + 0.45, 0.35, { type: "lowpass", freq: 400, peak: 0.25, brown: true }); }), gate: () => notes([440, 660], "sine", 0.06), jump: () => K.play(sfx, (c, t) => K.tone(c, t, 0.12, { type: "square", f0: 300, f1: 520, peak: 0.03 })) };
 
   // ---------- Level laden ----------
   function loadLevel(n, seq) {
@@ -41,6 +42,9 @@
     const mk = (who) => ({ who, x: L.start[who], y: 13 - SPEC[who].h, w: SPEC[who].w, h: SPEC[who].h, vx: 0, vy: 0, ground: false, jl: 0, face: 1, coyote: 0 });
     bodies = { kraxler: mk("kraxler"), gams: mk("gams") };
     boulders = L.boulders.map((b) => ({ x: b.x, y: b.y, w: 0.96, h: 1, vy: 0, hx: b.x, hy: b.y }));
+    trees = (L.trees || []).map((t) => ({ x: t.x, h: t.h, state: 0, anim: 1, push: 0 }));
+    lifts = (L.lifts || []).map((l) => ({ x: l.x, w: l.w, top: l.top, bottom: l.bottom, y: l.bottom, dy: 0 }));
+    holdT = {}; simT = 0; prevX = {};
     S.open = { A: false, B: false, C: false, E: false, bridge: false }; for (const g of L.inv || []) S.open[g] = true;
     gotLocal = {}; sentWin = false; sentDie = false; frozen = false; t0 = performance.now(); camX = 0;
     remote.kraxler = []; remote.gams = [];
@@ -57,6 +61,7 @@
       case "A": case "B": case "C": case "E": return !S.open[GR[ty][tx]];
       case "D": return !got().key;
       case "i": return who !== "kraxler" || S.open.bridge;
+      case "k": return S.open.bridge; // Steg über den Bach: nur solange seine Platte gedrückt ist
       default: return false;
     }
   }
@@ -72,6 +77,12 @@
     b.x += dx;
     const hs = tileHits(b, who).concat(boxes.filter((o) => o !== b && ov(b, o)));
     if (!hs.length) return false;
+    // niedrige Kante (Plattform): hinaufsteigen statt anstoßen
+    if (b.ground && hs.every((h) => h.step && b.y + b.h - h.y > 0 && b.y + b.h - h.y <= 0.45)) {
+      const y0 = b.y; b.y = Math.min(...hs.map((h) => h.y)) - b.h;
+      if (!tileHits(b, who).length && !boxes.some((o) => o !== b && !o.step && ov(b, o))) return false;
+      b.y = y0;
+    }
     if (dx > 0) b.x = Math.min(...hs.map((h) => h.x)) - b.w; else b.x = Math.max(...hs.map((h) => h.x + h.w));
     return true;
   }
@@ -81,9 +92,20 @@
     // Felsen nur, wenn man wirklich von oben bzw. unten kommt (sonst würde man aus ihnen „herausgedrückt“)
     let hs = tileHits(b, who).concat(boxes.filter((o) => o !== b && ov(b, o) && (dy > 0 ? bottom0 <= o.y + 0.05 : top0 >= o.y + o.h - 0.05)));
     if (dy > 0) hs = hs.concat(tops.filter((o) => bottom0 <= o.y + 0.02 && ov(b, o)));
-    if (!hs.length) return false;
-    if (dy > 0) b.y = Math.min(...hs.map((h) => h.y)) - b.h; else b.y = Math.max(...hs.map((h) => h.y + h.h));
-    return true;
+    if (!hs.length) return null;
+    // gibt zurück, worauf man gelandet bzw. woran man gestoßen ist (z. B. die andere Figur oder die Plattform)
+    if (dy > 0) { const h = hs.reduce((a, c) => (c.y < a.y ? c : a)); b.y = h.y - b.h; return h; }
+    const h = hs.reduce((a, c) => (c.y + c.h > a.y + a.h ? c : a)); b.y = h.y + h.h; return h;
+  }
+  // Hindernisse aus Welt 2: stehende Bäume, umgefallene Stämme (Brücken), Plattformen der Seilwinde
+  function objBoxes() {
+    const out = [];
+    for (const t of trees) {
+      if (t.state === 0) out.push({ x: t.x + 0.2, y: 13 - t.h, w: 0.6, h: t.h, tree: t });
+      else out.push({ x: t.state > 0 ? t.x + 0.5 : t.x + 0.5 - t.h, y: 13, w: t.h, h: 0.45 }); // sofort begehbar, auch während er noch kippt
+    }
+    for (const l of lifts) out.push({ x: l.x, y: l.y, w: l.w, h: 0.35, step: true, lift: l });
+    return out;
   }
 
   // ---------- Physik ----------
@@ -94,6 +116,11 @@
     if (target) b.face = target;
     b.vx = target * sp.speed;
     b.coyote = b.ground ? 0.08 : Math.max(0, b.coyote - DT);
+    // Bach: die Strömung zieht nach links – die leichte Gams wird mitgerissen (und kann im Wasser nicht springen)
+    const inStream = touchesTile(b, "s"), flow = inStream ? (b.who === "gams" ? -9.5 : -3) : 0;
+    if (inStream && b.who === "gams") input = { ...input, jump: false };
+    // wer auf dem anderen steht, wird mitgenommen
+    if (b.onWho) { const o = others.find((x) => x.who === b.onWho); if (o && prevX[o.who] != null) moveX(b, o.x - prevX[o.who], b.who, boulders.concat(objBoxes())); }
     if (input.jump) {
       if (b.ground || b.coyote > 0) { b.vy = -sp.jump; b.jl = 1; b.coyote = 0; SND.jump(); }
       else if (b.jl < sp.jumps) { b.vy = -sp.jump * 0.9; b.jl++; SND.jump(); }
@@ -101,9 +128,9 @@
     if (!input.jheld && b.vy < -4) b.vy += GRAV * 1.2 * DT; // kurz tippen = kleiner Sprung
     b.vy = Math.min(b.vy + GRAV * DT, 22);
     const isK = b.who === "kraxler";
-    const dx = b.vx * DT * (isK && boulders.some((o) => pushing(b, o)) ? 0.6 : 1);
+    const dx = (b.vx * (isK && boulders.some((o) => pushing(b, o)) ? 0.6 : 1) + flow) * DT;
     if (dx) {
-      moveX(b, dx, b.who, isK ? [] : boulders);
+      moveX(b, dx, b.who, isK ? objBoxes() : boulders.concat(objBoxes()));
       if (isK) for (const o of boulders) {
         if (!ov(b, o)) continue;
         const pen = b.y + b.h - o.y; // wie tief die Füße unter der Felskante sind
@@ -111,23 +138,41 @@
         if (pen < 0.3 && !b.ground) { b.y = o.y - b.h; b.vy = Math.min(b.vy, 0); continue; } // knapp drüber: auf den Fels steigen
         if (ownsBoulders && b.ground) { // schieben nur mit festem Stand, nicht im Sprung
           const want = dx > 0 ? b.x + b.w - o.x : b.x - (o.x + o.w);
-          moveX(o, want, "boulder", boulders.concat(others.filter((x) => x.who === "gams")));
+          moveX(o, want, "boulder", boulders.concat(objBoxes(), others.filter((x) => x.who === "gams")));
         }
         if (ov(b, o)) b.x = dx > 0 ? o.x - b.w : o.x + o.w;
       }
     }
-    const tops = others.filter((o) => o !== b).map((o) => ({ x: o.x, y: o.y, w: o.w, h: 0.25 }));
-    const hit = moveY(b, b.vy * DT, b.who, boulders, tops);
-    b.ground = false;
-    if (hit) { if (b.vy > 0) { b.ground = true; b.jl = 0; } b.vy = 0; }
+    // Kraxler drückt gegen eine stehende Fichte: nach kurzem Schieben kippt sie in diese Richtung um
+    if (isK && ownsBoulders) for (const t of trees) {
+      if (t.state !== 0) continue;
+      const tb = { x: t.x + 0.2, y: 13 - t.h, w: 0.6, h: t.h };
+      const touch = b.ground && target && b.y < tb.y + tb.h && b.y + b.h > tb.y && (target > 0 ? Math.abs(b.x + b.w - tb.x) < 0.06 : Math.abs(b.x - (tb.x + tb.w)) < 0.06);
+      t.push = touch ? t.push + DT : Math.max(0, t.push - DT);
+      if (t.push > 0.35) { t.state = target; t.anim = 0; t.push = 0; SND.tree(); }
+    }
+    const tops = others.filter((o) => o !== b).map((o) => ({ x: o.x, y: o.y, w: o.w, h: 0.25, who: o.who }));
+    const fall = b.vy > 0, hit = moveY(b, b.vy * DT, b.who, boulders.concat(objBoxes()), tops);
+    b.ground = false; b.onWho = null; b.onLift = null;
+    if (hit) { if (fall) { b.ground = true; b.jl = 0; b.onWho = hit.who || null; b.onLift = hit.lift || null; } b.vy = 0; }
     if (touchesTile(b, "w")) die(b.who, "wasser"); else if (b.y > H) die(b.who, "sturz");
   }
   function stepBoulders() {
     for (const o of boulders) {
       o.vy = Math.min(o.vy + GRAV * DT, 22);
-      if (moveY(o, o.vy * DT, "boulder", boulders, [])) o.vy = 0;
+      if (moveY(o, o.vy * DT, "boulder", boulders.concat(objBoxes()), [])) o.vy = 0;
       if (touchesTile(o, "w") || o.y > H) { o.x = o.hx; o.y = o.hy; o.vy = 0; }
     }
+  }
+  function worldStep(list) {
+    simT += DT;
+    const all = list.concat(boulders);
+    const crank = L.plates.some((p) => p.opens.includes("lift") && plateDown(p, all));
+    for (const l of lifts) {
+      const y0 = l.y; l.y = crank ? Math.max(l.top, l.y - 2.2 * DT) : Math.min(l.bottom, l.y + 1.6 * DT); l.dy = l.y - y0;
+      for (const b of list) if (b.local && b.onLift === l && l.dy < 0) b.y = l.y - b.h; // nach oben mitnehmen
+    }
+    for (const t of trees) if (t.anim < 1) t.anim = Math.min(1, t.anim + DT / 0.6);
   }
   function plateDown(p, list) {
     const zone = { x: p.x + 0.1, y: p.y - 0.4, w: 0.8, h: 0.4 };
@@ -139,11 +184,13 @@
       const ps = L.plates.filter((p) => p.opens.includes(g)); if (!ps.length) { S.open[g] = false; continue; }
       const groups = {}; ps.forEach((p, i) => { (groups[p.grp || "s" + i] = groups[p.grp || "s" + i] || []).push(p); });
       const pressed = Object.values(groups).some((gr) => gr.every((p) => plateDown(p, all)));
-      const want = (L.inv || []).includes(g) ? !pressed : pressed;
+      if (pressed) holdT[g] = simT;
+      const held = L.hold && L.hold[g] && holdT[g] != null && simT - holdT[g] < L.hold[g]; // Zeit-Gatter: bleibt kurz offen
+      const want = (L.inv || []).includes(g) ? !pressed : pressed || held;
       S.open[g] = want || (S.open[g] && all.some((b) => touchesTile(b, g))); // nie jemanden einklemmen
     }
     const br = L.plates.some((p) => p.opens.includes("bridge") && plateDown(p, all));
-    S.open.bridge = br || (S.open.bridge && list.some((b) => b.who === "kraxler" && touchesTile({ x: b.x, y: b.y + 0.1, w: b.w, h: b.h }, "i")));
+    S.open.bridge = br || (S.open.bridge && list.some((b) => (b.who === "kraxler" && touchesTile({ x: b.x, y: b.y + 0.1, w: b.w, h: b.h }, "i")) || touchesTile({ x: b.x, y: b.y + 0.1, w: b.w, h: b.h }, "k")));
     if (JSON.stringify(S.open) !== before) SND.gate();
     const s = st(); if (!s) return;
     const g = got();
@@ -167,6 +214,7 @@
     if (myRoles().includes(m.who)) return; // eigene Figur nie von außen
     const arr = remote[m.who]; arr.push({ at: performance.now(), x: m.x, y: m.y, f: m.f, g: m.g, vx: m.vx }); if (arr.length > 30) arr.shift();
     if (m.b && !myRoles().includes("kraxler")) m.b.forEach((p, i) => { if (boulders[i]) { boulders[i].x = p[0]; boulders[i].y = p[1]; } });
+    if (m.tr && !myRoles().includes("kraxler")) m.tr.forEach((v, i) => { const t = trees[i]; if (t && t.state !== v) { t.state = v; t.anim = 0; SND.tree(); } });
   });
   function remoteBody(who) {
     const s = remote[who]; if (!s.length) return null;
@@ -231,6 +279,13 @@
     };
     layer(MTN, 0.15, cv.height * 0.12, "#6c5a9e", true);
     layer(MTN.map((v, i) => (i % 2 ? Math.min(0.9, v + 0.35) : v * 1.3 + 2)), 0.4, cv.height * 0.3, "#4f7a5a", false);
+    if (L && L.n >= 4 && L.n <= 6) { // Bergwald: zwei Reihen Fichten im Hintergrund
+      [[0.55, 9.2, "#2c5a3e", 1.5], [0.75, 10.4, "#21483a", 1.9]].forEach(([par, base, col, sc]) => {
+        const off = -camX * T * par; ctx.fillStyle = col;
+        for (let k = -2; k < W * 1.2 / 1.1 + 4; k++) { const x = off + k * T * 1.1, hh = T * sc * (1 + ((k * 37) % 5) / 8); if (x < -T * 2 || x > cv.width + T * 2) continue;
+          ctx.beginPath(); ctx.moveTo(x, base * T - hh * 1.6); ctx.lineTo(x - T * 0.55 * sc / 1.5, base * T + T * 2); ctx.lineTo(x + T * 0.55 * sc / 1.5, base * T + T * 2); ctx.closePath(); ctx.fill(); }
+      });
+    }
   }
   function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
   function signAt(sx, sy, t, big) {
@@ -240,13 +295,14 @@
   }
   function drawTiles(now) {
     const x0 = Math.max(0, Math.floor(camX)), x1 = Math.min(W - 1, Math.ceil(camX + cv.width / T));
-    if (L.hut) { // Almhütte im Hintergrund
-      const hx = (L.hut.x0 - camX) * T, hw = (L.hut.x1 - L.hut.x0) * T;
-      ctx.fillStyle = "#8a5a33"; ctx.fillRect(hx, 8 * T, hw, 5 * T);
-      ctx.fillStyle = "#6e4426"; for (let k = 0; k < 5; k++) ctx.fillRect(hx, (8 + k) * T + T * 0.92, hw, T * 0.08);
-      ctx.fillStyle = "#cfe8ff"; rr(hx + 0.2 * T, 9 * T, 0.7 * T, 0.7 * T, 3); ctx.fill(); rr(hx + hw - 0.9 * T, 9 * T, 0.7 * T, 0.7 * T, 3); ctx.fill();
-      ctx.fillStyle = "#e06b6b"; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(hx + 0.35 * T + k * 0.2 * T, 9.85 * T, 0.09 * T, 0, 7); ctx.fill(); } // Geranien
-      ctx.fillStyle = "#fff8e6"; ctx.font = `700 ${T * 0.32}px Fredoka`; ctx.textAlign = "center"; ctx.fillText(L.hut.name, hx + hw / 2, 6.75 * T);
+    if (L.hut) { // Hütte im Hintergrund (Almhütte unten im Tal, Holzerhütte auf der Hochfläche)
+      const hx = (L.hut.x0 - camX) * T, hw = (L.hut.x1 - L.hut.x0) * T, y0 = L.hut.y0 || 8, logs = L.hut.logs;
+      ctx.fillStyle = logs ? "#7a4e2a" : "#8a5a33"; ctx.fillRect(hx, y0 * T, hw, 5 * T);
+      if (logs) { for (let k = 0; k < 10; k++) { ctx.fillStyle = k % 2 ? "#6b4224" : "#8a5a33"; ctx.fillRect(hx, (y0 + k * 0.5) * T, hw, T * 0.5); ctx.fillStyle = "#d9a56b"; ctx.beginPath(); ctx.arc(hx, (y0 + k * 0.5 + 0.25) * T, T * 0.2, 0, 7); ctx.arc(hx + hw, (y0 + k * 0.5 + 0.25) * T, T * 0.2, 0, 7); ctx.fill(); } }
+      else { ctx.fillStyle = "#6e4426"; for (let k = 0; k < 5; k++) ctx.fillRect(hx, (y0 + k) * T + T * 0.92, hw, T * 0.08); }
+      ctx.fillStyle = "#cfe8ff"; rr(hx + 0.2 * T, (y0 + 1) * T, 0.7 * T, 0.7 * T, 3); ctx.fill(); rr(hx + hw - 0.9 * T, (y0 + 1) * T, 0.7 * T, 0.7 * T, 3); ctx.fill();
+      if (!logs) { ctx.fillStyle = "#e06b6b"; for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(hx + 0.35 * T + k * 0.2 * T, (y0 + 1.85) * T, 0.09 * T, 0, 7); ctx.fill(); } } // Geranien
+      ctx.fillStyle = "#fff8e6"; ctx.font = `700 ${T * 0.32}px Fredoka`; ctx.textAlign = "center"; ctx.fillText(L.hut.name, hx + hw / 2, (y0 - 1.25) * T);
     }
     for (let y = 0; y < H; y++) for (let x = x0; x <= x1; x++) {
       const c = GR[y][x], px = (x - camX) * T, py = y * T;
@@ -276,6 +332,13 @@
       } else if (c === "w") {
         ctx.fillStyle = "#256aa8"; ctx.fillRect(px, py, T + 0.5, T + 0.5);
         ctx.fillStyle = "rgba(255,255,255,.18)"; ctx.fillRect(px + ((now / 30 + x * 9) % T), py + T * 0.3, T * 0.25, 2);
+      } else if (c === "s") { // Bach: Wellen ziehen nach links
+        ctx.fillStyle = "rgba(74,163,223,.78)"; ctx.fillRect(px, py + T * 0.15, T + 0.5, T * 0.85);
+        ctx.fillStyle = "rgba(255,255,255,.55)"; for (let k = 0; k < 2; k++) { const off = (((x * 0.37 + k * 0.5) * T - now / 6) % T + T) % T; ctx.fillRect(px + off, py + T * (0.35 + k * 0.3), T * 0.3, 2); }
+        ctx.fillStyle = "#cdeeff"; ctx.fillRect(px, py + T * 0.15, T + 0.5, 2);
+      } else if (c === "k") { // Steg: nur sichtbar, solange er unten ist
+        if (S.open.bridge) { ctx.fillStyle = "#a8743a"; ctx.fillRect(px, py, T + 0.5, T * 0.32); ctx.fillStyle = "#7a5228"; ctx.fillRect(px + T * 0.48, py, T * 0.05, T * 0.32); }
+        else { ctx.strokeStyle = "rgba(255,159,90,.5)"; ctx.setLineDash([4, 4]); ctx.strokeRect(px + 1, py + 1, T - 2, T * 0.3); ctx.setLineDash([]); }
       }
     }
     const everyone = allBodies().concat(boulders);
@@ -286,8 +349,37 @@
       if (p.opens.length > 1) { ctx.fillStyle = GCOL[p.opens[1]]; ctx.fillRect(px + T * 0.5, top, T * 0.42, T * 0.24); }
       if (p.heavy && !down) { ctx.fillStyle = "#fff"; ctx.font = `700 ${T * 0.18}px Fredoka`; ctx.textAlign = "center"; ctx.fillText("kg", px + T / 2, top - T * 0.03); }
     }
+    for (const l of lifts) drawLift(l);
+    for (const t of trees) drawTree(t);
     for (const s of L.signs) signAt(s.x, s.y, s.t, false);
     if (L.goal) signAt(L.goal.x, L.goal.y, L.goal.t, true);
+  }
+  function drawTree(t) {
+    const bx = (t.x + 0.5 - camX) * T, by = 13 * T, h = t.h * T;
+    const ang = t.state * (Math.PI / 2) * (t.anim < 1 ? t.anim * t.anim : 1);
+    ctx.save(); ctx.translate(bx, by); ctx.rotate(ang);
+    if (t.state !== 0 && t.anim >= 1) { // liegender Stamm (Brücke)
+      ctx.rotate(-ang); const x0 = t.state > 0 ? 0 : -h;
+      ctx.fillStyle = "#7a4e2a"; rr(x0, 0, h, T * 0.42, T * 0.2); ctx.fill();
+      ctx.fillStyle = "#5e3a1f"; ctx.fillRect(x0 + T * 0.3, T * 0.12, h - T * 0.6, T * 0.05); ctx.fillRect(x0 + T * 0.5, T * 0.26, h - T * 1.2, T * 0.04);
+      ctx.fillStyle = "#d9a56b"; ctx.beginPath(); ctx.arc(t.state > 0 ? x0 + T * 0.1 : x0 + h - T * 0.1, T * 0.21, T * 0.2, 0, 7); ctx.fill();
+    } else { // stehende (oder kippende) Fichte
+      ctx.fillStyle = "#6b4224"; ctx.fillRect(-T * 0.16, -h, T * 0.32, h);
+      const tiers = 4;
+      for (let k = 0; k < tiers; k++) { const ty = -h * (0.32 + k * 0.2), tw = T * (1.05 - k * 0.2);
+        ctx.fillStyle = k % 2 ? "#2f6b40" : "#245a36"; ctx.beginPath(); ctx.moveTo(0, ty - h * 0.3); ctx.lineTo(-tw, ty); ctx.lineTo(tw, ty); ctx.closePath(); ctx.fill(); }
+      if (t.push > 0) { ctx.fillStyle = "rgba(255,200,61,.8)"; ctx.fillRect(-T * 0.4, T * 0.1, T * 0.8 * Math.min(1, t.push / 0.35), T * 0.08); }
+    }
+    ctx.restore();
+  }
+  function drawLift(l) {
+    const px = (l.x - camX) * T, py = l.y * T, w = l.w * T, top = (l.top - 2.2) * T;
+    ctx.strokeStyle = "#5e3a1f"; ctx.lineWidth = Math.max(1.5, T * 0.05);
+    ctx.beginPath(); ctx.moveTo(px + T * 0.2, py); ctx.lineTo(px + w / 2, top); ctx.lineTo(px + w - T * 0.2, py); ctx.stroke();
+    ctx.fillStyle = "#4a3a2e"; ctx.fillRect(px - T * 0.2, top - T * 0.15, w + T * 0.4, T * 0.18); // Querbalken
+    ctx.fillStyle = "#8f8799"; ctx.beginPath(); ctx.arc(px + w / 2, top + T * 0.12, T * 0.28, 0, 7); ctx.fill(); ctx.fillStyle = "#4a3a2e"; ctx.beginPath(); ctx.arc(px + w / 2, top + T * 0.12, T * 0.1, 0, 7); ctx.fill();
+    ctx.fillStyle = "#a8743a"; rr(px, py, w, T * 0.35, 4); ctx.fill(); ctx.fillStyle = "#7a5228"; ctx.fillRect(px + w / 3, py, T * 0.05, T * 0.35); ctx.fillRect(px + 2 * w / 3, py, T * 0.05, T * 0.35);
+    ctx.fillStyle = GCOL.lift; ctx.fillRect(px, py + T * 0.3, w, T * 0.05);
   }
   function drawItems(now) {
     for (const it of L.items) {
@@ -359,18 +451,19 @@
         acc -= DT;
         const input = { l: keys.l, r: keys.r, jump: jumpQueued, jheld: keys.j }; jumpQueued = false;
         const list = allBodies();
+        worldStep(list);
         mine.forEach((w) => stepBody(bodies[w], w === active || mine.length === 1 ? input : { l: false, r: false, jump: false, jheld: false }, list, mine.includes("kraxler")));
         if (mine.includes("kraxler")) stepBoulders();
-        updateWorld(allBodies());
+        const after = allBodies(); after.forEach((b) => { prevX[b.who] = b.x; });
+        updateWorld(after);
         if (frozen) break;
       }
       // eigene Positionen (und als Kraxler die Felsen) ca. 15× pro Sekunde an die anderen
       if (now - lastSend > 66 && mine.length) { lastSend = now;
         mine.forEach((w) => { const b = bodies[w];
           G.liveSend({ t: "pos", gid: s.gid, seq: cur.seq, who: w, x: +b.x.toFixed(3), y: +b.y.toFixed(3), f: b.face, g: b.ground, vx: +b.vx.toFixed(2),
-            b: w === "kraxler" ? boulders.map((o) => [+o.x.toFixed(3), +o.y.toFixed(3)]) : null }); }); }
+            b: w === "kraxler" ? boulders.map((o) => [+o.x.toFixed(3), +o.y.toFixed(3)]) : null, tr: w === "kraxler" && trees.length ? trees.map((t) => t.state) : null }); }); }
     } else acc = 0;
-    if (!mine.length && L && s.step === "play") updateWorld(allBodies()); // Zuschauer: Gatter trotzdem mitrechnen
     draw(now, s);
     requestAnimationFrame(frame);
   }
@@ -608,7 +701,7 @@
     });
   }
   // Testhilfe (nur für die automatischen Tests)
-  window.__seilView = { bodies: () => bodies, boulders: () => boulders, keys, jump: () => { jumpQueued = true; }, setActive: (w) => { active = w; }, open: () => S.open, L: () => L };
+  window.__seilView = { bodies: () => bodies, boulders: () => boulders, trees: () => trees, lifts: () => lifts, keys, jump: () => { jumpQueued = true; }, setActive: (w) => { active = w; }, open: () => S.open, L: () => L };
 
   return { renderSeil };
 });

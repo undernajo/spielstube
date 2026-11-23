@@ -3108,9 +3108,10 @@
   const seilRulesHtml = `
     <details class="rules"><summary>Regeln: Seilschaft</summary>
       <ul>
-        <li>Zu zweit vom Tal bis zum Gipfelkreuz: 5 Welten mit je 3 Etappen, nach jeder Welt eine Hütte. Die Tourenkarte zeigt den ganzen Weg; spielbar ist bisher Welt 1 (Almwiese), die übrigen Etappen sind geplant.</li>
+        <li>Zu zweit vom Tal bis zum Gipfelkreuz: 5 Welten mit je 3 Etappen, nach jeder Welt eine Hütte. Die Tourenkarte zeigt den ganzen Weg; spielbar sind bisher Welt 1 (Almwiese) und Welt 2 (Bergwald & Bach), die übrigen Etappen sind geplant.</li>
         <li><b>Der Kraxler</b> ist schwer und stark: er schiebt Felsen und drückt die roten (schweren) Platten. <b>Die Gams</b> ist leicht und flink: Doppelsprung, passt durch niedrige Spalten und läuft über dünnes Eis.</li>
-        <li>Platten öffnen Gatter in derselben Farbe. ● Gatter gehen auf, solange die Platte gedrückt ist (bei zwei gleichen Platten müssen beide gedrückt sein), ⊘ Gatter gehen dagegen zu. Man kann auf dem Kopf des anderen stehen.</li>
+        <li>Platten öffnen Gatter in derselben Farbe. ● Gatter gehen auf, solange die Platte gedrückt ist (bei zwei gleichen Platten müssen beide gedrückt sein), ⊘ Gatter gehen dagegen zu. Man kann auf dem Kopf des anderen stehen – und wird dabei mitgetragen.</li>
+        <li><b>Welt 2:</b> Der Kraxler drückt Fichten um (sie fallen in Schieberichtung und werden zur Brücke). Im Bach reißt die Strömung die Gams mit – huckepack trägt der Kraxler sie hinüber. Der Steg liegt nur, solange seine Platte gedrückt ist. Auf der Kurbel-Platte fährt die Seilwinde hinauf; Zeit-Gatter bleiben nach dem Loslassen kurz offen.</li>
         <li>Fällt einer ins Wasser oder stürzt ab, beginnt das Level für beide von vorn. <b>R</b> startet neu, <b>Esc</b> geht zur Tourenkarte.</li>
         <li>Pro Etappe bis zu 3 Sterne: geschafft, alle Edelweiß gesammelt, unter der Zielzeit. Der Fortschritt bleibt in der Stube gespeichert.</li>
         <li><b>Spielerzahl wird automatisch erkannt:</b> allein steuerst du beide Figuren (Q oder ⇄ wechselt), zu zweit jeder eine, ab drei schauen die übrigen zu.</li>

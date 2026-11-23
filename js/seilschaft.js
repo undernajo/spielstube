@@ -47,6 +47,46 @@
       items: [{ id: "e1", x: 7, y: 9 }, { id: "e2", x: 22, y: 9 }, { id: "e3", x: 36, y: 9 }, { id: "key", x: 47, y: 7, key: true }],
       signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 23.6, y: 13, t: "Schwer!" }, { x: 29.6, y: 13, t: "Dünnes Eis" }, { x: 45, y: 13, t: "Brücke" }],
       boulders: [{ x: 19, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 51.2, hut: { x0: 48.6, x1: 54.4, name: "Almhütte" } },
+    // ---------- Welt 2: Bergwald & Bach ----------
+    // Neu: Fichten (der Kraxler drückt sie um – sie fallen in Schieberichtung und werden zur Brücke), Bach mit Strömung
+    // (reißt die Gams mit; huckepack trägt der Kraxler sie hinüber), Steg (k), Seilwinde (Plattform fährt, solange eine Kurbel-Platte gedrückt ist), Zeit-Gatter
+    { n: 4, name: "Im Fichtenwald", sub: "Fichten umdrücken – Stämme als Brücken über die Schluchten", W: 52, par: 50,
+      build(f, grid, W) { base(f, W);
+        f(12, 16, 13, 13, "."); f(12, 16, 14, 14, "w");   // Schlucht 1 mit Wildwasser
+        f(22, 22, 0, 8, "#"); f(22, 22, 9, 11, "A");      // Wand mit Gatter, unten Spalte (nur Gams)
+        f(28, 33, 13, 13, "."); f(28, 33, 14, 14, "w");   // Schlucht 2
+        grid[13][41] = ".";                               // Mulde für den Fels
+        f(45, 45, 0, 8, "#"); f(45, 45, 9, 12, "B");
+      },
+      trees: [{ x: 11, h: 6 }, { x: 27, h: 7 }],
+      plates: [{ x: 24, y: 13, opens: ["A"] }, { x: 41, y: 14, heavy: true, opens: ["B"] }],
+      items: [{ id: "e1", x: 14, y: 9 }, { id: "e2", x: 30, y: 8 }, { id: "e3", x: 5, y: 7 }],
+      signs: [{ x: 8.6, y: 13, t: "Kraxler: Baum umdrücken!" }, { x: 19.6, y: 13, t: "Nur die Gams passt durch" }, { x: 38, y: 13, t: "Fels in die Mulde" }],
+      boulders: [{ x: 36.5, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 46.2, goal: { x: 49.6, y: 13, t: "Zum Bach ➜" } },
+    { n: 5, name: "Wilder Bach", sub: "Strömung, huckepack durchs Wasser, Trittsteine und Steg", W: 58, par: 55,
+      build(f, grid, W) { base(f, W);
+        f(10, 26, 12, 12, "s");                           // Bach: Strömung nach links (spült die Gams ans Ufer zurück)
+        f(33, 49, 13, 13, "."); f(33, 49, 14, 14, "w");   // tiefer Fluss …
+        f(38, 38, 13, 14, "#"); f(44, 44, 13, 14, "#");   // … mit zwei Trittsteinen
+        f(33, 37, 13, 13, "k"); f(39, 43, 13, 13, "k"); f(45, 49, 13, 13, "k"); // Steg, wenn die Platte gedrückt ist
+      },
+      plates: [{ x: 51, y: 13, opens: ["bridge"] }],
+      items: [{ id: "e1", x: 18, y: 8 }, { id: "e2", x: 38, y: 10 }, { id: "e3", x: 44, y: 8 }],
+      signs: [{ x: 5.4, y: 13, t: "Gams: huckepack rüber!" }, { x: 30, y: 13, t: "Trittsteine" }],
+      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 52.2, goal: { x: 55, y: 13, t: "Zur Seilwinde ➜" } },
+    { n: 6, name: "Die Seilwinde", sub: "Kurbeln und hochfahren, Zeit-Gatter, Schlüssel huckepack", W: 56, par: 60,
+      build(f, grid, W) { base(f, W);
+        f(18, 54, 8, 12, "#");                            // Hochfläche (5 hoch) – hinauf nur mit der Seilwinde
+        f(36, 36, 0, 3, "#"); f(36, 36, 4, 7, "C");       // Zeit-Gatter oben
+        f(44, 46, 3, 3, "#");                             // Felsband mit Schlüssel – 5 hoch, nur huckepack
+        f(47, 53, 2, 2, "r"); f(49, 49, 3, 7, "D");       // Holzerhütte: Dach und Tür
+      },
+      lifts: [{ x: 15, w: 3, bottom: 12.65, top: 8 }],
+      plates: [{ x: 11, y: 13, opens: ["lift"] }, { x: 22, y: 8, opens: ["lift"] }, { x: 27, y: 8, opens: ["C"] }],
+      hold: { C: 1.1 },
+      items: [{ id: "e1", x: 16, y: 4 }, { id: "e2", x: 31, y: 5 }, { id: "e3", x: 5, y: 7 }, { id: "key", x: 45, y: 2, key: true }],
+      signs: [{ x: 9.4, y: 13, t: "Kurbel" }, { x: 24.4, y: 8, t: "Kurbel" }, { x: 30.6, y: 8, t: "Schnell durch!" }],
+      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 50.2, hut: { x0: 47.6, x1: 53.4, name: "Holzerhütte", y0: 3, logs: true } },
   ];
   // Baut das Gelände eines Levels als Raster (Zeilen × Spalten)
   function grid(L) {
@@ -68,9 +108,9 @@
     { n: 1, w: 1, name: "Auf die Alm", idea: "Spalte, Doppelsprung, Huckepack – der Einstieg." },
     { n: 2, w: 1, name: "Steinschlag", idea: "Zwei-Platten-Gatter, Pflicht-Huckepack und ein Tunnel mit Gegen-Gatter." },
     { n: 3, w: 1, name: "Zur Almhütte", idea: "Brücke übers Eis, Schlüssel huckepack, Hüttentür." },
-    { n: 4, w: 2, name: "Im Fichtenwald", idea: "Der Kraxler fällt morsche Bäume als Brücken – aber in die richtige Richtung." },
-    { n: 5, w: 2, name: "Wilder Bach", idea: "Die Strömung reißt die leichte Gams mit; der Kraxler stemmt sich dagegen und trägt sie." },
-    { n: 6, w: 2, name: "Die Seilwinde", idea: "Einer kurbelt, der andere fährt mit der Plattform – Zeit-Gatter, die nur kurz offen bleiben." },
+    { n: 4, w: 2, name: "Im Fichtenwald", idea: "Der Kraxler drückt Fichten um – sie fallen in Schieberichtung und werden zu Brücken über die Schluchten." },
+    { n: 5, w: 2, name: "Wilder Bach", idea: "Die Strömung reißt die leichte Gams mit – der Kraxler trägt sie huckepack hinüber. Danach hüpft die Gams über Trittsteine voraus und holt den Steg." },
+    { n: 6, w: 2, name: "Die Seilwinde", idea: "Einer kurbelt, der andere fährt mit der Plattform hinauf – oben wartet ein Zeit-Gatter, das nur kurz offen bleibt." },
     { n: 7, w: 3, name: "Erste Sicherung", idea: "Das Seil kommt dazu: wer fällt, wird vom anderen gehalten." },
     { n: 8, w: 3, name: "Die Leiterwand", idea: "Leitern, Eisenstifte und Überhänge – einer sichert, einer klettert." },
     { n: 9, w: 3, name: "Hängebrücke", idea: "Die Brücke trägt nur einen – und schwankt, wenn der Kraxler drauf ist." },
