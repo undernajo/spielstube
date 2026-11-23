@@ -119,7 +119,7 @@
       case "slf": return { ...(st ? { preset: "suedtirol", rounds: 2, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 2, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
       case "alm": return { weeks: 8, storms: 0, map: "zufall" }; // Kurzsommer: 8 Wochen ohne Gewitter, Tal ausgelost
       case "jagd": return { rounds: 12, map: "zufall" }; // 12 Runden, Jagdgebiet ausgelost
-      case "duell": return { target: 3, timer: "45" };
+      case "duell": return { target: 3, timer: "0" }; // ohne Zeitlimit
       case "frage": return { target: 3, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben
     }
     return {};
