@@ -58,7 +58,7 @@
         .map(([id, g]) => `<li style="--pc:${colorOf(id)}"><i class="pdot"></i><span class="nm">${esc(nameOf(id))}${id === me ? " (du)" : ""}</span><b>${g}</b><span>${g === st.target ? "🎯 Volltreffer" : Math.abs(g - st.target) + " daneben"}</span><em>+${r[id]}</em></li>`).join("");
       body = `${bubble}<div class="tk-res"><span>Gesucht war</span><b style="--h:${hue(st.target)}">${st.target}</b></div>
         <ul class="tk-rows">${rows}<li class="giver" style="--pc:${colorOf(st.giver)}"><i class="pdot"></i><span class="nm">${esc(nameOf(st.giver))}${iGive ? " (du)" : ""} als Hinweisgeber</span><b></b><span>Durchschnitt der Ratenden</span><em>+${r[st.giver]}</em></li></ul>
-        ${seated || G.isHost ? `<div class="wer-row"><button type="button" id="tk-next" class="btn primary next-btn">${st.turnNo >= st.total ? "Zum Ergebnis" : "Nächster Hinweis"}</button></div>` : ""}`;
+        ${seated || G.isHost ? `<div class="wer-row pult-move"><button type="button" id="tk-next" class="btn primary next-btn">${st.turnNo >= st.total ? "Zum Ergebnis" : "Nächster Hinweis"}</button></div>` : ""}`;
     } else {
       const ids = st.seats, team = ids.length === 2, sum = st.score[ids[0]] || 0, max = st.total * 3;
       if (team) {
@@ -73,6 +73,10 @@
       body += st.history.length ? `<details class="tk-hist"><summary>Alle Hinweise ansehen</summary><ul>${st.history.map((h) => `<li><b>${esc(nameOf(h.giver))}</b>: ${h.hint ? `„${esc(h.hint)}“` : "🗣️ laut"} · ${esc(h.scale[0])} ↔ ${esc(h.scale[1])} · gesucht <b>${h.target}</b></li>`).join("")}</ul></details>` : "";
     }
 
+    // Spielpult (ab 1200 px): wer den Hinweis gibt, wer schon getippt hat, Kamera fest eingebaut, „Weiter“ unten
+    const pult = st.order.map((id) => { const giver = st.giver === id, tipped = st.guessed.includes(id), r = st.result ? st.result.pts[id] : null;
+      return { id, name: nameOf(id), pts: st.score[id] || 0, turn: giver, done: st.step === "guess" && tipped,
+        txt: st.step === "reveal" ? (giver ? `Hinweisgeber · +${r || 0}` : st.guesses[id] != null ? `Tipp ${st.guesses[id]} · +${r || 0}` : "kein Tipp") : giver ? "gibt den Hinweis" : tipped ? "✓ getippt" : "überlegt …" }; });
     const board = st.order.map((id) => `<li style="--pc:${colorOf(id)}" class="${st.giver === id ? "on" : ""}"><i class="pdot"></i><span>${esc(nameOf(id))}${id === me ? " (du)" : ""}${st.giver === id ? " · gibt den Hinweis" : ""}</span><b>${st.score[id] || 0}</b></li>`).join("");
     const head = `<div class="qz-head"><span class="qz-ico">${st.step === "final" ? "🏆" : st.step === "reveal" ? "🎯" : iGive ? "🤫" : "🤔"}</span><div><small>Wie tickst du? · ${st.step === "final" ? "Ende" : `Hinweis ${st.turnNo} von ${st.total}`}</small>
         <b>${st.step === "final" ? "Endstand" : iGive ? "Du gibst den Hinweis" : esc(nameOf(st.giver)) + " gibt den Hinweis"}</b></div></div>`;
@@ -85,7 +89,7 @@
         </header>
         ${statusBarHtml()}
         <section class="tk-main">
-          <div class="panel quiz-card qz-card tk-card">${head}${st.step !== "final" ? scale : ""}${body}</div>
+          ${st.step !== "final" ? G.pultWrap(`<div class="panel quiz-card qz-card tk-card">${head}${scale}${body}</div>`, pult) : `<div class="panel quiz-card qz-card tk-card">${head}${body}</div>`}
           <aside class="tk-side"><div class="wer-flbl">${st.seats.length === 2 ? "Punkte (ihr spielt als Team)" : "Punkte"}</div><ul class="tk-board">${board}</ul></aside>
           ${!seated ? `<p class="muted small du-watch">Du schaust zu.</p>` : ""}
         </section>

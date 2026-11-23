@@ -41,13 +41,19 @@
         <p class="ku-ask">${open ? (ok ? `✓ ${mine ? "Richtig – du bekommst" : esc(nameOf(c.by)) + " liegt richtig und bekommt"} 1 Punkt!` : `✗ ${mine ? "Leider daneben." : esc(nameOf(c.by)) + " liegt daneben."}`) : `Nur eine Aussage stimmt – ${mine ? "welche?" : "welche nimmt " + esc(nameOf(c.by)) + "?"}`}</p>
         <div class="ku-opts">${opts}</div>
         ${open ? `<div class="ku-expl"><span>💡 Kaum zu glauben, aber wahr</span><p>${esc(c.e)}</p></div>
-          ${seated || G.isHost ? `<div class="wer-row"><button type="button" id="ku-next" class="btn primary next-btn">${st.round >= st.turns ? "Zum Ergebnis" : "Weiter"}</button></div>` : ""}` : ""}`;
+          ${seated || G.isHost ? `<div class="wer-row pult-move"><button type="button" id="ku-next" class="btn primary next-btn">${st.round >= st.turns ? "Zum Ergebnis" : "Weiter"}</button></div>` : ""}` : ""}`;
     }
     if (st.step === "final") {
       const items = st.seats.map((id) => ({ id, name: nameOf(id), pts: st.score[id] || 0, txt: `${st.score[id] || 0} ${st.score[id] === 1 ? "Punkt" : "Punkte"}` }));
       panel = G.podiumHtml({ items, winners: st.winners || [], restartId: "ku-restart" });
     }
 
+    // Spielpult (ab 1200 px): Platzierung, wer dran ist, Kamera fest eingebaut, „Weiter“ unten
+    const played = (id) => st.board.filter((t) => t.done && t.done.by === id).length;
+    const pult = st.seats.map((id) => { const turn = st.step !== "final" && (c ? c.by === id : st.chooser === id), n = played(id);
+      return { id, name: nameOf(id), pts: st.score[id] || 0, turn, done: !turn && st.step === "reveal" && c && c.by === id,
+        txt: turn ? (st.step === "pick" ? "wählt ein Feld" : st.step === "answer" ? "überlegt …" : "ist dran") : n ? `${st.score[id] || 0} von ${n} richtig` : "noch nicht dran" }; });
+    const stack = `<div class="ku-stack">${st.step !== "final" && !c ? `<div class="ku-board" style="--cols:${st.cols}">${tiles}</div>` : ""}<div class="panel quiz-card qz-card ku-card">${panel}</div></div>`;
     const board = st.seats.map((id) => `<li style="--pc:${colorOf(id)}" class="${st.chooser === id ? "on" : ""}"><i class="pdot"></i><span>${esc(nameOf(id))}${id === me ? " (du)" : ""}${st.chooser === id ? " · ist dran" : ""}</span><b>${st.score[id] || 0}</b></li>`).join("");
     app.innerHTML = `
       <main class="screen game ku">
@@ -57,9 +63,8 @@
           ${topActionsHtml()}
         </header>
         ${statusBarHtml()}
-        <section class="ku-main ${c && st.step !== "final" ? "has-q" : ""}">
-          ${st.step !== "final" ? `<div class="ku-board" style="--cols:${st.cols}">${tiles}</div>` : ""}
-          <div class="panel quiz-card qz-card ku-card">${panel}</div>
+        <section class="ku-main">
+          ${st.step !== "final" ? G.pultWrap(stack, pult) : stack}
           <aside class="tk-side"><div class="wer-flbl">Punkte</div><ul class="tk-board">${board}</ul></aside>
           ${!seated ? `<p class="muted small du-watch">Du schaust zu.</p>` : ""}
         </section>

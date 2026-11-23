@@ -2449,7 +2449,7 @@
   function pultUpdate(players) { const el = app.querySelector(".pult-list"); if (el) el.innerHTML = pultInner(players); }
   // Knöpfe (Festlegen, Weiter/Bereit, Gastgeber-weiter) auf breiten Bildschirmen unten ins Pult verschieben – als echte Elemente,
   // damit ihre Klick-Funktionen erhalten bleiben; schmaler werdend kommen sie an ihren Platz zurück
-  const PULT_ACTS = ".pult-main .gh-btn, .pult-main .geo-actions, .pult-main .slf-actions";
+  const PULT_ACTS = ".pult-main .gh-btn, .pult-main .geo-actions, .pult-main .slf-actions, .pult-main .pult-move";
   const pultWide = window.matchMedia ? matchMedia("(min-width: 1200px)") : { matches: false };
   function pultPlace() {
     const slot = app.querySelector(".pult-acts"); if (!slot) return;
