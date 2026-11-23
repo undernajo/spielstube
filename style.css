@@ -3848,3 +3848,8 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .sv-stand > span em { font: 700 1rem Fredoka, sans-serif; font-style: normal; color: #fff; text-align: right; }
 .sv-stand > span.me { color: #fff; } .sv-stand > span.me em { color: var(--accent); }
 @media (max-width: 899px) { .sv-felt > .sv-stand { display: none; } } /* am Handy steht der Stand in der Leiste oben */
+/* Antwort sucht Frage: Kategorie gut sichtbar unter der Kopfzeile */
+.fq-catbig { display: flex; align-items: center; gap: 12px; align-self: flex-start; padding: 0; border-radius: 0; background: none; border: 0; }
+.fq-catbig span { padding: 4px 10px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font: 800 .7rem Nunito, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; }
+.fq-catbig b { font: 700 clamp(1.2rem, 2.4vw, 1.55rem) Fredoka, sans-serif; color: var(--accent); }
+@media (max-width: 560px) { .fq-catbig { align-self: stretch; } .fq-catbig b { font-size: 1.15rem; } }

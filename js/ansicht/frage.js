@@ -51,8 +51,9 @@
     const phase = st.step === "judge" ? "Einspruch – zählt die Antwort?" : st.step === "check" ? "Nicht erkannt" : ["Frage ausdenken", "Antworten", st.step === "final" ? "Endstand" : "Auflösung"][stepNo];
     const ms0 = st.timerMs && st.deadlineIn ? st.deadlineIn : 0, p0 = ms0 ? Math.max(0, Math.min(1, ms0 / st.timerMs)) : 0;
     const ringHtml = ms0 && stepNo < 2 ? `<div id="fq-ring" class="qz-ring" style="--rc:${p0 > .5 ? "#7ee2b1" : p0 > .2 ? "#ffc83d" : "#ff7d8a"}"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="r0"/><circle cx="37" cy="37" r="31" class="r1" style="stroke-dasharray:${FQ_RING * p0} ${FQ_RING}"/></svg><b class="${ms0 >= 60000 ? "long" : ""}">${fqLeftTxt(ms0)}</b></div>` : "";
-    const head = `<div class="qz-head"><span class="qz-ico">${["✍️", "💡", "🎯"][stepNo]}</span><div><small>${esc(st.cat || "")} · Runde ${st.round}</small>
+    const head = `<div class="qz-head"><span class="qz-ico">${["✍️", "💡", "🎯"][stepNo]}</span><div><small>Antwort sucht Frage · Runde ${st.round}</small>
         <b>${phase}${activeId && stepNo < 2 ? ` · <em class="fq-who">${activeId === G.myId ? "du bist dran" : esc(nameOf(activeId)) + " ist dran"}</em>` : ""}</b></div>${ringHtml}</div>
+      ${st.cat ? `<div class="fq-catbig"><span>Kategorie</span><b>${esc(st.cat)}</b></div>` : ""}
       <div class="fq-steps2">${[0, 1, 2].map((k) => `<i class="${k < stepNo ? "done" : k === stepNo ? "on" : ""}"></i>`).join("")}</div>`;
     const secret = (a) => `<div class="fq-secret"><span>Gesuchte Antwort</span><b>${esc(a)}</b>${iAsk && stepNo < 2 ? `<small>🤫 nur du</small>` : ""}</div>`;
     const bubble = st.question ? `<div class="fq-bubble2" style="--pc:${colorOf(st.asker)}"><div class="who"><i>${esc(nameOf(st.asker).charAt(0).toUpperCase())}</i>${iAsk ? "Deine Frage" : esc(nameOf(st.asker)) + " fragt"}</div>
