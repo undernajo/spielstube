@@ -3853,3 +3853,17 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .fq-catbig span { padding: 4px 10px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font: 800 .7rem Nunito, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; }
 .fq-catbig b { font: 700 clamp(1.2rem, 2.4vw, 1.55rem) Fredoka, sans-serif; color: var(--accent); }
 @media (max-width: 560px) { .fq-catbig { align-self: stretch; } .fq-catbig b { font-size: 1.15rem; } }
+/* Kamera im Spieler-Pult: zwischen Spielerliste und Knöpfen, nimmt nur so viel Höhe wie nötig */
+.pult-cam { flex: none; }
+.pult-cam #camdock.docked { padding: 8px; }
+.pult-cam #camdock.docked .camtile { aspect-ratio: 4 / 3; }
+.pult-cam #camdock.docked.pip .camtile:not(.self) { aspect-ratio: 4 / 3; }
+/* Kamera im Pult: alle Bilder gleich groß nebeneinander (2 → 2 Spalten, 3 → 3, 4 → 2×2, ab 5 → 3 Spalten), das eigene zuletzt */
+#camdock.docked:not(.pip) .camtiles { grid-template-columns: repeat(2, 1fr); }
+#camdock.docked:not(.pip)[style*="--ncam: 1;"] .camtiles { grid-template-columns: 1fr; }
+/* 3 Bilder wie bei 4 (2 × 2, ein Platz frei); erst ab 5 drei pro Reihe */
+#camdock.docked:not(.pip)[style*="--ncam: 5"] .camtiles, #camdock.docked:not(.pip)[style*="--ncam: 6"] .camtiles { grid-template-columns: repeat(3, 1fr); }
+#camdock.docked:not(.pip) .camtile.self { order: 99; }
+#camdock.docked:not(.pip):not([style*="--ncam: 1;"]) .camname { font-size: .62rem; padding: 0 5px; left: 3px; bottom: 3px; }
+#camdock.docked:not(.pip):not([style*="--ncam: 1;"]) .cammute { width: 18px; height: 18px; right: 3px; top: 3px; }
+#camdock.docked:not(.pip):not([style*="--ncam: 1;"]) .cammute svg { width: 10px; height: 10px; }

@@ -1088,7 +1088,9 @@
     // Bild-im-Bild: Mitspieler groß, das eigene Bild klein in der Ecke (wie bei einem Videoanruf)
     // im großen Anruf-Fenster schwebt das eigene Bild nur bei genau einem Gegenüber, sonst ist es eine normale Kachel
     // Bild-im-Bild nur bei genau einem Gegenüber (in der Lobby-Spalte wie bisher); bei mehreren ist das eigene Bild eine normale Kachel
-    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size > 0 && !(remoteCams.size > 1 && !camDock.classList.contains("docked")));
+    // Bild-im-Bild nur bei genau einem Gegenüber – ab drei Leuten ist das eigene Bild eine normale Kachel neben den anderen
+    camDock.classList.toggle("pip", !!camStream && camOn && remoteCams.size === 1);
+    camDock.style.setProperty("--ncam", String(items.length));
     camDock.classList.toggle("closed", !camOpen);
     if (!camDock.querySelector(".camhead")) {
       camDock.innerHTML = `<div class="camhead"><span class="camgrip" title="Zum Verschieben ziehen"><i class="camdots">⠿</i> Kamera</span>
@@ -1203,7 +1205,8 @@
   // In der Lobby (am Computer) sitzt das Kamerafenster fest in der linken Spalte statt über den Einstellungen zu schweben
   function camDockPlace() {
     if (camStage && !inLobby()) camStage = false; // beim Spielstart schließt das große Fenster
-    const slot = app.querySelector("#camslot"), dock = !camStage && !!slot && innerWidth >= 1100;
+    // nur andocken, wenn der Platz auch sichtbar ist (das Pult gibt es erst ab 1200 px)
+    const slot = app.querySelector("#camslot"), dock = !camStage && !!slot && innerWidth >= 1100 && (slot.parentElement || slot).offsetParent !== null;
     const target = dock ? slot : document.body;
     if (camDock.parentNode !== target) {
       // Beim Wechsel aus der Lobby ins Spiel: Kamera wieder unten rechts (danach weiter frei verschiebbar)
@@ -2252,7 +2255,8 @@
       return `<div class="qz-pod pult-pod ${x.done ? "done" : ""} ${x.turn ? "turn" : ""}" style="--pc:${col(x.id)}"><span class="pult-rk">${place}</span><span class="qz-lamp"></span>
         <div><b>${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</b><small>${esc(x.txt || "")}</small></div><span class="qz-sc">${x.ptsTxt != null ? x.ptsTxt : x.pts}</span></div>`; }).join("");
   }
-  const pultWrap = (html, players) => `<div class="pult-lay"><div class="pult-main">${html}</div><aside class="qz-side pult"><div class="pult-list">${pultInner(players)}</div><div class="pult-acts"></div></aside></div>`;
+  // Pult: Spieler oben, darunter das Kamera-Fenster (fest eingebaut), ganz unten die Knöpfe
+  const pultWrap = (html, players) => `<div class="pult-lay"><div class="pult-main">${html}</div><aside class="qz-side pult"><div class="pult-list">${pultInner(players)}</div><div id="camslot" class="pult-cam"></div><div class="pult-acts"></div></aside></div>`;
   function pultUpdate(players) { const el = app.querySelector(".pult-list"); if (el) el.innerHTML = pultInner(players); }
   // Knöpfe (Festlegen, Weiter/Bereit, Gastgeber-weiter) auf breiten Bildschirmen unten ins Pult verschieben – als echte Elemente,
   // damit ihre Klick-Funktionen erhalten bleiben; schmaler werdend kommen sie an ihren Platz zurück
