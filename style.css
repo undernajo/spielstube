@@ -3874,3 +3874,4 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .rk-mv { margin-left: 6px; font: 800 .72rem Nunito, sans-serif; padding: 0 5px; border-radius: 99px; vertical-align: middle; }
 .rk-mv.up { color: #2fbf71; background: rgba(47, 191, 113, .15); } .rk-mv.dn { color: #ff7d8a; background: rgba(239, 75, 90, .15); }
 .qz-head .gh-final, .gh-t .gh-final { display: table; }
+#camdock.in-pult .camsize { display: none; }

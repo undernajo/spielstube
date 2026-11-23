@@ -1215,6 +1215,7 @@
       camDock.querySelectorAll("video").forEach((v) => { if (v.srcObject) v.play().catch(() => {}); });
     }
     camDock.classList.toggle("docked", dock);
+    camDock.classList.toggle("in-pult", dock && !inLobby()); // im Spieler-Pult: feste Breite, „Größer/kleiner“ ohne Wirkung
     // immer neu zeichnen – auch beim Zurückwechseln in die Lobby-Spalte, sonst bleibt die Anordnung des großen Fensters hängen
     renderCamDock();
     if (dock) {
