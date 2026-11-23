@@ -253,10 +253,6 @@
       f: ["„Das Leben ist schön“", "kletterte bei der Oscar-Verleihung vor Freude über die Stuhllehnen", "wilde, zappelige Auftritte"], k: "Europa", sp: "Italienisch", a: ["zerzauste Haare", "schmal"], fam: "verheiratet mit der Schauspielerin Nicoletta Braschi" },
     { n: "Alberto Tomba", alt: ["Tomba", "La Bomba"], b: S, g: "m", geb: 1966, land: "Italien (Bologna)", beruf: "Skirennläufer",
       f: ["Spitzname „La Bomba“", "3-mal Olympiasieger (Slalom, Riesenslalom)", "Gesamtweltcup 1995", "Partylöwe"], k: "Europa", sp: "Italienisch", a: ["kräftig", "dunkle Haare"] },
-    { n: "Deborah Compagnoni", alt: ["Compagnoni"], b: S, g: "w", geb: 1970, land: "Italien (Bormio, Lombardei)", beruf: "Skirennläuferin", sch: true,
-      f: ["Olympiasiegerin bei drei Spielen hintereinander", "stark im Riesenslalom", "eine der besten Skifahrerinnen Italiens"], k: "Europa", sp: "Italienisch" },
-    { n: "Federica Pellegrini", alt: ["Pellegrini"], b: S, g: "w", geb: 1988, land: "Italien (Venetien)", beruf: "Schwimmerin", sch: true,
-      f: ["Olympiasiegerin 2008 über 200 m Freistil", "mehrere Weltrekorde", "„Göttliche“ des italienischen Schwimmens"], k: "Europa", sp: "Italienisch", a: ["groß", "sportlich"] },
     { n: "Francesco Totti", alt: ["Totti"], b: S, g: "m", geb: 1976, land: "Italien (Rom)", beruf: "Fußballspieler",
       f: ["spielte seine ganze Karriere beim AS Rom", "Weltmeister 2006", "Rückennummer 10"], k: "Europa", sp: "Italienisch", a: ["blond", "kurze Haare"], fam: "geschieden, 3 Kinder" },
     { n: "Enzo Ferrari", alt: ["Ferrari"], b: W, g: "m", geb: 1898, tot: 1988, land: "Italien (Modena)", beruf: "Rennfahrer und Autobauer",
@@ -287,8 +283,6 @@
     // ---------- Südtirol ----------
     { n: "Isolde Kostner", alt: [], b: S, g: "w", geb: 1975, land: "Italien (Gröden, Südtirol)", beruf: "Skirennläuferin", st: true, sch: true,
       f: ["zweimal Super-G-Weltmeisterin", "Olympia-Silber in der Abfahrt 2002", "Speed-Spezialistin aus Gröden"], k: "Europa", sp: "Ladinisch, Deutsch, Italienisch" },
-    { n: "Tamara Lunger", alt: ["Lunger"], b: S, g: "w", geb: 1986, land: "Italien (Südtirol)", beruf: "Höhenbergsteigerin", st: true, sch: true,
-      f: ["bestieg den K2 ohne Flaschensauerstoff", "jüngste Frau auf dem Lhotse", "Wintertouren im Himalaya"], k: "Europa", sp: "Deutsch" },
     { n: "Norbert Rier", alt: ["Rier"], b: M, g: "m", geb: 1960, land: "Italien (Kastelruth, Südtirol)", beruf: "Sänger der Kastelruther Spatzen", st: true,
       f: ["Frontmann der Kastelruther Spatzen", "viele Preise für Volksmusik", "züchtet Haflinger-Pferde"], k: "Europa", sp: "Deutsch", a: ["Schnurrbart"] },
     { n: "Walther von der Vogelweide", alt: ["Walther", "Vogelweide"], b: K, g: "m", geb: 1170, tot: 1230, ca: true, land: "unklar – angeblich vom Vogelweidhof bei Lajen (Südtirol)", beruf: "Minnesänger und Dichter", st: true,
@@ -307,6 +301,18 @@
       f: ["früher bei der Boyband One Direction", "„As It Was“, „Watermelon Sugar“", "trägt gern Perlenketten und Glitzer"], k: "Europa", sp: "Englisch", a: ["braune Locken", "viele Tattoos"] },
     { n: "Zendaya", alt: [], b: F, g: "w", geb: 1996, land: "USA (Kalifornien)", beruf: "Schauspielerin",
       f: ["MJ in den „Spider-Man“-Filmen", "Serie „Euphoria“", "Film „Dune“", "begann beim Disney Channel"], k: "Nordamerika", sp: "Englisch", a: ["groß und schlank", "lockige Haare"], fam: "verheiratet mit Schauspieler Tom Holland (Spider-Man)" },
+    { n: "Thomas Müller", alt: ["Müller", "Mueller", "Thomas Mueller"], b: S, g: "m", geb: 1989, land: "Deutschland (Bayern)", beruf: "Fußballspieler",
+      f: ["Weltmeister 2014", "spielte über 20 Jahre beim FC Bayern München", "seit 2025 bei den Vancouver Whitecaps in Kanada", "nennt sich selbst „Raumdeuter“"], k: "Europa", sp: "Deutsch (Bairisch)", a: ["schlaksig", "immer einen frechen Spruch parat"], fam: "verheiratet mit der Dressurreiterin Lisa Müller" },
+    { n: "Gianluigi Buffon", alt: ["Buffon", "Gigi Buffon"], b: S, g: "m", geb: 1978, land: "Italien (Carrara, Toskana)", beruf: "Fußballtorwart",
+      f: ["Weltmeister 2006", "einer der besten Torhüter aller Zeiten", "spielte fast 20 Jahre bei Juventus Turin", "beendete seine Karriere mit 45"], k: "Europa", sp: "Italienisch", a: ["groß", "Torwarthandschuhe"], fam: "verheiratet, Kinder" },
+    { n: "Wayne Gretzky", alt: ["Gretzky", "The Great One"], b: S, g: "m", geb: 1961, land: "Kanada (Brantford, Ontario)", beruf: "Eishockeyspieler",
+      f: ["Spitzname „The Great One“", "die Nummer 99 darf in der NHL niemand mehr tragen", "4-mal Stanley-Cup-Sieger mit den Edmonton Oilers", "hält bis heute den NHL-Punkterekord"], k: "Nordamerika", sp: "Englisch", fam: "verheiratet mit der Schauspielerin Janet Jones, 5 Kinder" },
+    { n: "Sidney Crosby", alt: ["Crosby", "Sid the Kid"], b: S, g: "m", geb: 1987, land: "Kanada (Nova Scotia)", beruf: "Eishockeyspieler",
+      f: ["spielt seit 2005 bei den Pittsburgh Penguins, lange als Kapitän", "3-mal Stanley-Cup-Sieger", "schoss 2010 das „Golden Goal“ zu Olympia-Gold", "Rückennummer 87"], k: "Nordamerika", sp: "Englisch", a: ["kräftige Oberschenkel"] },
+    { n: "Connor McDavid", alt: ["McDavid", "Mc David", "MacDavid", "Connor MacDavid"], b: S, g: "m", geb: 1997, land: "Kanada (Ontario)", beruf: "Eishockeyspieler",
+      f: ["Kapitän der Edmonton Oilers", "gilt als bester Eishockeyspieler seiner Zeit, extrem schnell", "Olympia 2026: Rekord mit 13 Punkten, Silber mit Kanada", "Rückennummer 97"], k: "Nordamerika", sp: "Englisch", fam: "verheiratet" },
+    { n: "Leon Draisaitl", alt: ["Draisaitl", "Dreiseitl", "Leo Draisaitl", "Leon Dreiseitl"], b: S, g: "m", geb: 1995, land: "Deutschland (Köln), spielt in Kanada", beruf: "Eishockeyspieler",
+      f: ["Star der Edmonton Oilers an der Seite von Connor McDavid", "2020 als wertvollster Spieler der NHL ausgezeichnet", "Fahnenträger und Kapitän Deutschlands bei Olympia 2026", "sein Vater war auch Eishockey-Nationalspieler"], k: "Europa (lebt in Nordamerika)", sp: "Deutsch", fam: "seit 2025 verheiratet" },
     { n: "Kylian Mbappé", alt: ["Mbappé", "Mbappe"], b: S, g: "m", geb: 1998, land: "Frankreich (Paris)", beruf: "Fußballspieler",
       f: ["Weltmeister 2018", "Hattrick im WM-Finale 2022", "spielt seit 2024 für Real Madrid", "extrem schnell"], k: "Europa", sp: "Französisch", a: ["Glatze bzw. sehr kurze Haare"], fam: "nicht verheiratet" },
 
@@ -416,6 +422,49 @@
       f: ["Reformen „Perestroika“ und „Glasnost“", "machte die deutsche Einheit möglich", "Friedensnobelpreis 1990"], k: "Europa", sp: "Russisch", a: ["großes Muttermal auf der Glatze"], fam: "verheiratet mit Raissa, 1 Tochter" },
     { n: "Margaret Thatcher", alt: ["Thatcher"], b: P, g: "w", geb: 1925, tot: 2013, land: "Großbritannien", beruf: "Politikerin, Premierministerin",
       f: ["erste Premierministerin Großbritanniens (1979–1990)", "Spitzname „Eiserne Lady“", "Falklandkrieg 1982"], k: "Europa", sp: "Englisch", a: ["toupierte Frisur", "Handtasche", "Perlenkette"], fam: "verheiratet, Zwillinge" },
+    // ---------- Fernsehen (D) ----------
+    { n: "Günther Jauch", alt: ["Jauch"], b: F, g: "m", geb: 1956, land: "Deutschland (Münster)", beruf: "Fernsehmoderator",
+      f: ["„Wer wird Millionär?“", "früher „stern TV“", "besitzt ein Weingut an der Saar"], k: "Europa", sp: "Deutsch", a: ["grau melierte Haare", "Anzug"], fam: "verheiratet mit Thea, 4 Töchter (2 davon adoptiert)" },
+    { n: "Barbara Schöneberger", alt: ["Schöneberger", "Schoeneberger"], b: F, g: "w", geb: 1974, land: "Deutschland (München)", beruf: "Moderatorin und Sängerin",
+      f: ["moderiert „Verstehen Sie Spaß?“", "moderiert immer wieder den Deutschen Fernsehpreis", "schlagfertig und frech", "eigenes Radio und eigene Zeitschrift"], k: "Europa", sp: "Deutsch", a: ["blond", "groß"], fam: "verheiratet, 2 Kinder" },
+    { n: "Stefan Raab", alt: ["Raab"], b: F, g: "m", geb: 1966, land: "Deutschland (Köln)", beruf: "Moderator, Musiker, Produzent",
+      f: ["„TV total“ und „Schlag den Raab“", "brachte Lena zum Eurovision-Sieg 2010", "Lieder wie „Maschendrahtzaun“", "Comeback 2024 mit einem Boxkampf gegen Regina Halmich"], k: "Europa", sp: "Deutsch", fam: "lebt sehr zurückgezogen" },
+    { n: "Hape Kerkeling", alt: ["Kerkeling", "Horst Schlämmer"], b: F, g: "m", geb: 1964, land: "Deutschland (Recklinghausen)", beruf: "Komiker, Moderator, Autor",
+      f: ["Kunstfigur Horst Schlämmer", "„Hurz!“", "verkleidete sich als Königin Beatrix", "Buch „Ich bin dann mal weg“ über den Jakobsweg"], k: "Europa", sp: "Deutsch", a: ["Brille", "kurze Haare"], fam: "verheiratet mit seinem Mann" },
+    { n: "Joko Winterscheidt", alt: ["Joko", "Winterscheidt"], b: F, g: "m", geb: 1979, land: "Deutschland (Hamburg)", beruf: "Moderator und Unternehmer",
+      f: ["Duo „Joko & Klaas“", "„Circus HalliGalli“, „Joko & Klaas gegen ProSieben“", "„Wer stiehlt mir die Show?“"], k: "Europa", sp: "Deutsch", a: ["Bart", "groß"] },
+    { n: "Klaas Heufer-Umlauf", alt: ["Klaas", "Heufer-Umlauf"], b: F, g: "m", geb: 1983, land: "Deutschland (Oldenburg)", beruf: "Moderator, Schauspieler, Sänger",
+      f: ["Duo „Joko & Klaas“", "Late-Night-Show „Late Night Berlin“", "singt in der Band Gloria"], k: "Europa", sp: "Deutsch", a: ["dunkle Haare", "oft Bart"] },
+
+    // ---------- Musik ----------
+    { n: "Nena", alt: ["Gabriele Kerner"], b: M, g: "w", geb: 1960, land: "Deutschland (Hagen)", beruf: "Sängerin",
+      f: ["„99 Luftballons“ – auch weltweit ein Hit", "„Irgendwie, irgendwo, irgendwann“", "war Jurorin bei „The Voice of Germany“"], k: "Europa", sp: "Deutsch", a: ["dunkle, wilde Mähne"], fam: "4 Kinder, schon Großmutter" },
+    { n: "Lena Meyer-Landrut", alt: ["Lena", "Meyer-Landrut"], b: M, g: "w", geb: 1991, land: "Deutschland (Hannover)", beruf: "Sängerin",
+      f: ["gewann 2010 den Eurovision Song Contest mit „Satellite“", "entdeckt von Stefan Raab", "Jurorin bei „The Voice Kids“"], k: "Europa", sp: "Deutsch", a: ["dunkle Haare"] },
+    { n: "Tina Turner", alt: ["Turner"], b: M, g: "w", geb: 1939, tot: 2023, land: "USA, lebte zuletzt in der Schweiz", beruf: "Sängerin",
+      f: ["„Queen of Rock 'n' Roll“", "„The Best“, „Proud Mary“", "riesige Comeback-Karriere nach der Trennung von Ike Turner", "Beine und Energie auf der Bühne"], k: "Nordamerika (lebte in Europa)", sp: "Englisch", a: ["wilde, blonde Mähne", "kurze Kleider"], fam: "verheiratet mit dem Deutschen Erwin Bach, 4 Söhne (2 davon angenommen)" },
+
+    // ---------- Kunst & Literatur ----------
+    { n: "Astrid Lindgren", alt: ["Lindgren"], b: K, g: "w", geb: 1907, tot: 2002, land: "Schweden", beruf: "Kinderbuchautorin",
+      f: ["erfand Pippi Langstrumpf", "„Michel aus Lönneberga“, „Ronja Räubertochter“", "„Wir Kinder aus Bullerbü“, „Karlsson vom Dach“"], k: "Europa", sp: "Schwedisch", a: ["im Alter weiße, kurze Haare"], fam: "verheiratet, 2 Kinder" },
+
+    // ---------- Asien ----------
+    { n: "Dalai Lama", alt: ["Der Dalai Lama", "Tenzin Gyatso"], b: P, g: "m", geb: 1935, land: "Tibet, lebt im Exil in Indien", beruf: "geistliches Oberhaupt der Tibeter (Mönch)",
+      f: ["der 14. Dalai Lama", "lebt seit 1959 im Exil in Dharamsala", "Friedensnobelpreis 1989", "bekannt für sein herzliches Lachen"], k: "Asien", sp: "Tibetisch", a: ["Glatze", "Brille", "rot-gelbe Mönchsrobe"], fam: "keine (Mönch)" },
+    { n: "Malala Yousafzai", alt: ["Malala", "Yousafzai"], b: P, g: "w", geb: 1997, land: "Pakistan, lebt in Großbritannien", beruf: "Aktivistin für Bildung",
+      f: ["wurde 2012 von den Taliban angeschossen, weil sie für Schulbildung für Mädchen eintrat", "jüngste Friedensnobelpreisträgerin (2014, mit 17)", "studierte in Oxford"], k: "Asien (lebt in Europa)", sp: "Paschtu", a: ["Kopftuch"], fam: "seit 2021 verheiratet" },
+
+    // ---------- Weibliche Figuren ----------
+    { n: "Hermine Granger", alt: ["Hermine", "Hermione", "Hermione Granger"], b: X, g: "w", fik: true, aus: "Harry-Potter-Bücher und -Filme", land: "England", beruf: "Zauberschülerin",
+      f: ["klügste Schülerin von Hogwarts", "beste Freundin von Harry und Ron", "im Film gespielt von Emma Watson"], k: "Europa", sp: "Englisch", art: "Mensch (Hexe)", kraft: "kann zaubern", gut: "gut", a: ["buschige braune Haare", "Schuluniform von Gryffindor"], fam: "Eltern sind Zahnärzte ohne Zauberkräfte, heiratet später Ron" },
+    { n: "Barbie", alt: [], b: X, g: "w", fik: true, aus: "Spielzeugpuppe (Mattel, seit 1959), Filme", land: "USA", beruf: "hatte schon Hunderte Berufe",
+      f: ["berühmteste Puppe der Welt", "Freund Ken", "alles in Pink", "Kinofilm 2023"], k: "Nordamerika", sp: "Englisch", art: "Puppe", kraft: "keine", gut: "gut", a: ["lange blonde Haare", "rosa Kleidung"], fam: "Freund Ken, Schwestern (z. B. Skipper)" },
+    { n: "Mary Poppins", alt: ["Poppins"], b: X, g: "w", fik: true, aus: "Bücher (P. L. Travers), Disney-Film", land: "England (London)", beruf: "Kindermädchen",
+      f: ["fliegt mit ihrem Regenschirm", "Tasche, in die alles passt", "„Ein Löffelchen voll Zucker“", "„Supercalifragilisticexpialigetisch“"], k: "Europa", sp: "Englisch", art: "Mensch (mit Zauberkräften)", kraft: "fliegt, zaubert", gut: "gut (aber streng)", a: ["Hut mit Blumen", "Regenschirm mit Papageienkopf", "Reisetasche"], fam: "keine bekannt" },
+    { n: "Lisa Simpson", alt: ["Lisa"], b: X, g: "w", fik: true, aus: "Zeichentrickserie „Die Simpsons“", land: "USA (Springfield)", beruf: "Schülerin (8 Jahre)",
+      f: ["das klügste Mitglied der Familie", "spielt Saxofon", "Vegetarierin, setzt sich für die Umwelt ein"], k: "Nordamerika", sp: "Englisch (im Original)", art: "Mensch (Zeichentrick)", kraft: "keine", gut: "gut", a: ["gelbe Haut", "Stachelfrisur", "rotes Kleid, Perlenkette"], fam: "Eltern Homer und Marge, Geschwister Bart und Maggie" },
+    { n: "Minnie Maus", alt: ["Minnie", "Minnie Mouse"], b: X, g: "w", fik: true, aus: "Zeichentrick (Disney)", land: "USA", beruf: "Maus",
+      f: ["Freundin von Micky Maus", "beste Freundin von Daisy Duck", "gibt es seit 1928"], k: "Nordamerika", sp: "Englisch (im Original)", art: "Tier (Maus)", kraft: "keine", gut: "gut", a: ["große runde Ohren", "rote Schleife mit weißen Punkten", "Pünktchenkleid"], fam: "Freund Micky" },
   ];
 
   // ---------- Zusatzangaben für den Steckbrief ----------
