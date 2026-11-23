@@ -4271,11 +4271,9 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 /* ---------- Stubenmeisterschaft: Spielbrett & Tourenplan ---------- */
 .qb-main:has(.qbb-board) { max-width: 1180px; }
 .qbb-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 14px; align-items: start; }
-/* kurze, flache Leiste: über die volle Breite, Ergebnis und Stand darunter nebeneinander */
-.qbb-grid.line { grid-template-columns: minmax(0, 1fr); }
-.qbb-grid.line .qbb-board { max-width: 900px; justify-self: center; }
-.qbb-grid.line .qbb-side { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-@media (max-width: 860px) { .qbb-grid { grid-template-columns: minmax(0, 1fr); } .qbb-grid.line .qbb-side { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .qbb-grid { grid-template-columns: minmax(0, 1fr); } }
+.qbb-none .game-label { margin-bottom: 4px; }
+.qbb-none p { margin: 0; }
 .qbb-side { display: grid; gap: 14px; }
 .qbb-board { width: 100%; }
 .qbb-svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 14px 24px rgba(0, 0, 0, .5)); }
@@ -4286,20 +4284,18 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .qbb-ini { font: 700 15px Fredoka, sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; paint-order: stroke; stroke: rgba(0, 0, 0, .35); stroke-width: 2px; }
 .qbb-bub rect { fill: #1b1640; stroke: #ffc83d; stroke-width: 2; }
 .qbb-bub text { font: 700 16px Fredoka, sans-serif; fill: #fff; text-anchor: middle; dominant-baseline: central; }
-.qbb-stand h3 { margin: 0 0 8px; font-size: 1rem; }
-.qbb-row { display: grid; grid-template-columns: 26px 12px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 0; }
-.qbb-row .pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); }
+.qbb-stand h3 { margin: 0 0 10px; font: 800 .7rem Nunito, sans-serif; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); }
+.qbb-stand { display: grid; gap: 6px; }
+.qbb-row { display: grid; grid-template-columns: 26px 14px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 11px; background: rgba(255, 255, 255, .04); }
+.qbb-row:first-of-type { background: color-mix(in srgb, var(--accent) 13%, transparent); }
+.qbb-row .qb-place { color: var(--muted); font: 700 .85rem Fredoka, sans-serif; }
+.qbb-row .pdot { width: 14px; height: 14px; border-radius: 50%; background: var(--pc); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .25); }
 .qbb-row .qb-name small { display: block; color: var(--muted); font-size: .74rem; }
 .qbb-row b { font: 700 1.1rem Fredoka, sans-serif; }
 .qbb-bar { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .08); margin-top: 3px; overflow: hidden; }
 .qbb-bar i { display: block; height: 100%; background: var(--pc); border-radius: 3px; }
 .qb-plus.zero { color: var(--muted); }
-/* Siegerbanner: erst wenn die Figuren gezogen haben (--d), vorher ein Hinweis an derselben Stelle */
-.qbb-winner { position: relative; }
-.qbb-winner .qbb-post { animation: qbbIn .6s ease var(--d, 0ms) both; }
-.qbb-winner .qbb-pre { position: absolute; inset: 0; display: grid; place-items: center; font: 700 1.1rem Fredoka, sans-serif; color: var(--muted); animation: qbbOut .3s ease var(--d, 0ms) both; pointer-events: none; }
 .qbb-late { animation: qbbIn .5s ease var(--d, 0ms) both; } /* Endstand und Auszeichnungen erst, wenn der Sieger im Ziel ist */
-@keyframes qbbOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 @keyframes qbbIn { from { opacity: 0; transform: translateY(-10px) scale(.97); } to { opacity: 1; transform: none; } }
 /* Tourenplan: die Etappen als kleine Spielkarten, unabhängig davon, wo die Figuren stehen */
 .qbt { display: flex; align-items: flex-start; overflow-x: auto; padding: 8px 2px 2px; scrollbar-width: thin; }
@@ -4336,3 +4332,33 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .qbm-open.off { display: none; }
 @keyframes qbmIn { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
 @keyframes qbmPop { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* Siegerehrung als Fenster im Vordergrund: Pokal mit Strahlen und Funkeln, Sieger in seiner Farbe */
+.qbw { width: min(560px, 100%); text-align: center; padding: 26px 24px 22px; border-radius: 26px; border: 2px solid #ffc83d;
+  background: radial-gradient(120% 80% at 50% 0%, #4a3a12 0%, #2a2160 55%, #1d1748 100%); box-shadow: 0 0 0 6px rgba(255, 200, 61, .15), 0 30px 80px rgba(0, 0, 0, .7); display: grid; gap: 10px; justify-items: center; }
+.qbw-stage { position: relative; width: 220px; height: 200px; display: grid; place-items: center; margin-top: -6px; }
+.qbw-rays { position: absolute; inset: -40px; border-radius: 50%; opacity: .55;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 215, 106, .45) 0 9deg, transparent 9deg 24deg);
+  -webkit-mask: radial-gradient(circle, #000 0 30%, transparent 68%); mask: radial-gradient(circle, #000 0 30%, transparent 68%); animation: qbwSpin 18s linear infinite; }
+.qbw-cup { position: relative; width: 170px; height: auto; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .45)); }
+.qbm.anim .qbw-cup { animation: qbwDrop .9s cubic-bezier(.2, 1.4, .4, 1) calc(var(--d, 0ms) + .1s) both; }
+.qbw-spark { position: absolute; left: 50%; top: 50%; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))); color: #fff3c4; font-size: 1.2rem; text-shadow: 0 0 10px #ffc83d; animation: qbwTwinkle 1.8s ease-in-out var(--dl) infinite; }
+.qbw-kicker { font: 800 .72rem Nunito, sans-serif; letter-spacing: 3px; text-transform: uppercase; color: #ffd76a; }
+.qbw-names { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; }
+.qbw-name { display: inline-flex; align-items: center; gap: 8px; }
+.qbw-name b { font: 700 clamp(1.8rem, 5vw, 2.6rem)/1.05 Fredoka, sans-serif; color: var(--pc); text-shadow: 0 2px 0 rgba(0, 0, 0, .35); }
+.qbw-pawn { width: 40px; height: auto; }
+.qbw-amp { font: 700 1.4rem Fredoka, sans-serif; color: var(--muted); }
+.qbm.anim .qbw-names { animation: qbwPop .5s cubic-bezier(.2, 1.4, .4, 1) calc(var(--d, 0ms) + .55s) both; }
+.qbw-title { font: 700 1.35rem Fredoka, sans-serif; }
+.qbw-sub { color: var(--muted); font-size: .9rem; }
+.qbw-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 4px; }
+.qbw-badge { font-size: .8rem; padding: 5px 10px; border-radius: 99px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 215, 106, .35); }
+.qbw-badge b { font-weight: 700; margin-right: 4px; }
+.qbw-act { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 8px; }
+.qbm.win .qbm-x { top: 12px; right: 14px; }
+@keyframes qbwSpin { to { transform: rotate(360deg); } }
+@keyframes qbwDrop { 0% { opacity: 0; transform: translateY(-120px) scale(.6) rotate(-12deg); } 70% { opacity: 1; transform: translateY(6px) scale(1.05) rotate(3deg); } 100% { opacity: 1; transform: none; } }
+@keyframes qbwPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes qbwTwinkle { 0%, 100% { opacity: .2; scale: .7; } 50% { opacity: 1; scale: 1.15; } }
+@media (prefers-reduced-motion: reduce) { .qbw-rays, .qbw-spark { animation: none; } }

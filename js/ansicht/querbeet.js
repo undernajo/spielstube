@@ -204,8 +204,26 @@
   function qbAnimLeft() {
     const v = G.view, q = v && v.qb; if (!q || !q.stages.length) return 0;
     const sch = qbSchedule(q, v.players.map((p) => p.id)), k = v.code + ":" + q.stages.length;
-    return qbAnimKey === k && qbAnimT ? Math.max(0, sch.dur - (Date.now() - qbAnimT)) : sch.dur;
+    const left = qbAnimKey === k && qbAnimT ? Math.max(0, sch.dur - (Date.now() - qbAnimT)) : sch.dur;
+    return left ? Math.max(0, left - GAP + 1000) : 0; // wie das Fenster: eine Sekunde nach der letzten Figur
   }
+
+  // ---------- Siegerehrung: großer Pokal und die Spielfigur des Siegers ----------
+  const cupSvg = () => `<svg class="qbw-cup" viewBox="-80 -80 160 170" aria-hidden="true"><defs>
+      <linearGradient id="qbwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffc83d"/><stop offset="1" stop-color="#b07800"/></linearGradient>
+      <linearGradient id="qbwg2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c98d00"/><stop offset=".5" stop-color="#ffd76a"/><stop offset="1" stop-color="#a37400"/></linearGradient></defs>
+    <path d="M-44 -60 C-82 -60 -82 -6 -40 -2 M44 -60 C82 -60 82 -6 40 -2" fill="none" stroke="url(#qbwg2)" stroke-width="10" stroke-linecap="round"/>
+    <path d="M-48 -68 H48 V-40 C48 -4 26 18 0 20 C-26 18 -48 -4 -48 -40Z" fill="url(#qbwg)" stroke="#8a5a00" stroke-width="3"/>
+    <path d="M-36 -60 C-36 -30 -26 -10 -10 2" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".45"/>
+    <path d="${star(0, -36, 16, 7)}" fill="#fff6c8" stroke="#8a5a00" stroke-width="2"/>
+    <path d="M-10 20 H10 V40 H-10Z" fill="url(#qbwg2)" stroke="#8a5a00" stroke-width="3"/>
+    <path d="M-30 40 H30 L36 62 H-36Z" fill="url(#qbwg)" stroke="#8a5a00" stroke-width="3"/>
+    <rect x="-42" y="62" width="84" height="16" rx="4" fill="#6b3f1d" stroke="#3e2410" stroke-width="2"/>
+    <rect x="-22" y="66" width="44" height="8" rx="2" fill="#ffd76a"/></svg>`;
+  const pawnMini = (color, name) => `<svg class="qbw-pawn" viewBox="-22 -36 44 62" aria-hidden="true"><defs><radialGradient id="qbwp${color.slice(1)}" cx=".35" cy=".3" r=".8">
+      <stop offset="0" stop-color="${shade(color, .55)}"/><stop offset=".45" stop-color="${color}"/><stop offset="1" stop-color="${shade(color, -.45)}"/></radialGradient></defs>
+    <ellipse cy="20" rx="17" ry="5" fill="#000" opacity=".3"/><path d="M-16 18 C-16 6 -9 0 -8 -6 L8 -6 C9 0 16 6 16 18 C10 23 -10 23 -16 18Z" fill="url(#qbwp${color.slice(1)})" stroke="${shade(color, -.55)}" stroke-width="1.5"/>
+    <circle cy="-19" r="12" fill="url(#qbwp${color.slice(1)})" stroke="${shade(color, -.55)}" stroke-width="1.5"/><text y="-19" class="qbb-ini">${esc((name[0] || "?").toUpperCase())}</text></svg>`;
 
   // ---------- Tourenplan: gespielte Etappen (die letzten drei), die nächste und zwei kommende – das Ende ist offen ----------
   function planHtml(q, nameOf, colorOf) {
@@ -275,8 +293,9 @@
     let main = "";
     // Die nächste Etappe kommt als Fenster über dem Spielbrett – nach einer Etappe erst, wenn die Figuren gezogen haben.
     // Schließen (✕, „Spielbrett ansehen“, Esc) zeigt das Brett; „Nächste Etappe“ holt das Fenster zurück.
-    const mk = v.code + ":" + q.idx;
-    if (qbModal.key !== mk) qbModal = { key: mk, hidden: false, showAt: Date.now() + animLeft };
+    const mk = v.code + ":" + (q.step === "final" ? "sieg" : q.idx);
+    // nach einer Etappe: eine Sekunde Pause, nachdem die letzte Figur stehen geblieben ist (der Ablauf endet GAP ms nach ihrem letzten Sprung)
+    if (qbModal.key !== mk) qbModal = { key: mk, hidden: false, showAt: Date.now() + (animLeft ? animLeft - GAP + 1000 : 0) };
     // Einblenden nur beim ersten Erscheinen (nach dem Ziehen der Figuren); danach steht das Fenster einfach da
     const wait = qbModal.showAt - Date.now(), anim = wait > -400 ? "anim" : "";
     const modal = (n) => { const g = qbGame(n.game);
@@ -286,19 +305,33 @@
             <button type="button" class="btn ghost sm qbm-peek" data-qbmclose>Spielbrett ansehen</button></div></div>
         <button type="button" class="btn primary qbm-open ${qbModal.hidden ? "" : "off"}" data-qbmopen style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span> Nächste Etappe: ${esc(n.name)}</button>`; };
     if (q.step === "intro") {
-      main = `${planHtml(q, nameOf, colorOf)}${boardHtml}${modal(q.next)}`;
+      main = `${planHtml(q, nameOf, colorOf)}<div class="qbb-grid">${boardHtml}<div class="qbb-side">${standList}<div class="panel qbb-none"><div class="game-label">Letzte Etappe</div><p class="muted small">Noch keine Etappe gespielt – alle stehen am Start.</p></div></div></div>${modal(q.next)}`;
     } else if (q.step === "break") {
-      main = `${planHtml(q, nameOf, colorOf)}<div class="qbb-grid ${boardGeom(q.target).L.line ? "line" : ""}">${boardHtml}<div class="qbb-side">${stageRes(last, `Ergebnis Etappe ${q.stages.length}`)}${standList}</div></div>${modal(q.next)}`;
+      main = `${planHtml(q, nameOf, colorOf)}<div class="qbb-grid">${boardHtml}<div class="qbb-side">${standList}${stageRes(last, `Letzte Etappe · ${q.stages.length}`)}</div></div>${modal(q.next)}`;
     } else {
-      const w = ranking.filter((p) => (q.winners || []).includes(p.id));
-      main = `<div class="banner win qbb-winner" style="--d:${animLeft}ms">${animLeft ? `<div class="qbb-pre">🎲 Die Figuren ziehen … wer ist zuerst im Ziel?</div>` : ""}<div class="qbb-post"><div class="trophy">🏆</div><b>${w.map((p) => esc(p.name)).join(" & ")} ${w.length > 1 ? "sind Stubenmeister" : "ist Stubenmeister" + (/a$/i.test(w[0] ? w[0].name : "") ? "in" : "")}!</b>
-          <div class="muted small">nach ${q.stages.length} ${q.stages.length === 1 ? "Etappe" : "Etappen"} im Ziel</div>
-          <div class="banner-actions">${G.isHost ? `<button id="qb-restart" class="btn primary">Neue Meisterschaft</button><button id="toLobby" class="btn ghost">Zur Lobby</button>` : `<span class="muted">Der Gastgeber entscheidet, wie es weitergeht.</span>`}</div></div></div>
-        ${planHtml(q, nameOf, colorOf)}<div class="qbb-grid ${boardGeom(q.target).L.line ? "line" : ""}">${boardHtml}<div class="qbb-side qbb-late" style="--d:${animLeft}ms">${standList}${stageRes(last, `Letzte Etappe · ${q.stages.length}`)}</div></div>
-        ${(q.titles || []).length ? `<div class="panel qb-titles qbb-late" style="--d:${animLeft}ms"><h3>Auszeichnungen</h3><div class="qb-tgrid">${q.titles.map((t) => `<div class="qb-title"><b>${esc(t.name)}</b>
+      const w = ranking.filter((p) => (q.winners || []).includes(p.id)), one = w.length === 1, d = Math.max(0, wait);
+      const title = one ? "ist Stubenmeister" + (/a$/i.test(w[0].name) ? "in" : "") + "!" : "sind Stubenmeister!";
+      const sparkles = [[-150, -90, 0], [140, -110, .4], [-120, 40, .8], [160, 20, 1.2], [-40, -150, 1.6], [70, -160, .2]].map(([x, y, dl]) =>
+        `<span class="qbw-spark" style="--x:${x}px;--y:${y}px;--dl:${dl}s">✦</span>`).join("");
+      const winWin = `<div class="qbm win ${anim} ${qbModal.hidden ? "off" : ""}" style="--d:${d}ms" role="dialog" aria-modal="true" aria-label="Siegerehrung">
+          <div class="qbm-back" data-qbmclose></div>
+          <div class="qbm-win qbw">
+            <div class="qbw-stage"><div class="qbw-rays"></div>${sparkles}${cupSvg()}</div>
+            <div class="qbw-kicker">Stubenmeisterschaft</div>
+            <div class="qbw-names">${w.map((p) => `<span class="qbw-name" style="--pc:${colorOf(p.id)}">${pawnMini(colorOf(p.id), p.name)}<b>${esc(p.name)}</b></span>`).join(`<span class="qbw-amp">&</span>`)}</div>
+            <div class="qbw-title">${title}</div>
+            <div class="qbw-sub">nach ${q.stages.length} ${q.stages.length === 1 ? "Etappe" : "Etappen"} im Ziel</div>
+            ${(q.titles || []).length ? `<div class="qbw-badges">${q.titles.map((t) => `<span class="qbw-badge" title="${esc(t.why)}"><b>${esc(t.name)}</b> ${t.ids.map((id) => `<span style="color:${colorOf(id)}">${esc(nameOf(id))}</span>`).join(" & ")}</span>`).join("")}</div>` : ""}
+            <div class="qbw-act">${G.isHost ? `<button id="qb-restart" class="btn primary">Neue Meisterschaft</button><button id="toLobby" class="btn ghost">Zur Lobby</button>` : `<span class="muted small">Der Gastgeber entscheidet, wie es weitergeht.</span>`}
+              <button type="button" class="btn ghost sm" data-qbmclose>Spielbrett ansehen</button></div>
+            <button type="button" class="qbm-x" data-qbmclose aria-label="Fenster schließen und Spielbrett ansehen">✕</button></div></div>
+        <button type="button" class="btn primary qbm-open ${qbModal.hidden ? "" : "off"}" data-qbmopen>🏆 Siegerehrung</button>`;
+      main = `
+        ${planHtml(q, nameOf, colorOf)}<div class="qbb-grid">${boardHtml}<div class="qbb-side qbb-late" style="--d:${d}ms">${standList}${stageRes(last, `Letzte Etappe · ${q.stages.length}`)}</div></div>
+        ${(q.titles || []).length ? `<div class="panel qb-titles qbb-late" style="--d:${d}ms"><h3>Auszeichnungen</h3><div class="qb-tgrid">${q.titles.map((t) => `<div class="qb-title"><b>${esc(t.name)}</b>
           <span>${t.ids.map((id) => `<span style="color:${colorOf(id)}">${esc(nameOf(id))}</span>`).join(" & ")}</span><small class="muted">${esc(t.why)}</small></div>`).join("")}</div></div>` : ""}
         <div class="panel qb-table"><h3>Alle Etappen</h3><div class="qb-scroll"><table><thead><tr><th></th>${q.stages.map((x, i) => `<th title="${esc(qbGame(x.game).name)}"><span class="gt-icon xs">${qbGame(x.game).icon}</span><small>${i + 1}</small></th>`).join("")}<th>Σ</th></tr></thead>
-          <tbody>${ranking.map((p) => `<tr><td style="--pc:${colorOf(p.id)}"><span class="pdot"></span> ${esc(p.name)}</td>${q.stages.map((x) => `<td>${x.res[p.id] ? x.res[p.id].pts : "–"}</td>`).join("")}<td><b>${q.pts[p.id] || 0}</b></td></tr>`).join("")}</tbody></table></div></div>`;
+          <tbody>${ranking.map((p) => `<tr><td style="--pc:${colorOf(p.id)}"><span class="pdot"></span> ${esc(p.name)}</td>${q.stages.map((x) => `<td>${x.res[p.id] ? x.res[p.id].pts : "–"}</td>`).join("")}<td><b>${q.pts[p.id] || 0}</b></td></tr>`).join("")}</tbody></table></div></div>${winWin}`;
     }
     app.innerHTML = `
       <main class="screen game querbeet">
