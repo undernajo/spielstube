@@ -9,7 +9,7 @@
   // Zeichen: # Fels · r Dach · A/B/C/E Gatter (über Platten) · D Hüttentür (Schlüssel) · i dünnes Eis (Brücke über Platte) · w Wasser
   const base = (f, W) => { f(0, W - 1, 13, 14, "#"); f(0, 0, 0, 12, "#"); f(W - 1, W - 1, 0, 12, "#"); };
   const LEVELS = [
-    { n: 1, name: "Auf die Alm", sub: "Spalte, Doppelsprung, Huckepack", W: 44, par: 60,
+    { n: 1, name: "Auf die Alm", sub: "Spalte, Doppelsprung, Huckepack", W: 44, par: 35,
       build(f, grid, W) { base(f, W);
         f(12, 12, 0, 8, "#"); f(12, 12, 9, 11, "A");      // Wand mit Gatter, unten eine Spalte nur für die Gams
         f(24, 30, 10, 10, "#"); f(24, 24, 11, 12, "B");  // Felsdach: oben die Platte, darunter der Durchgang mit Gatter
@@ -18,7 +18,7 @@
       items: [{ id: "e1", x: 6, y: 10 }, { id: "e2", x: 18, y: 10 }, { id: "e3", x: 35, y: 6 }],
       signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 21.5, y: 13, t: "Gams: 2× springen" }, { x: 33.4, y: 13, t: "Huckepack!" }],
       boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 39.6, goal: { x: 41.5, y: 13, t: "Zur Alm ➜" } },
-    { n: 2, name: "Steinschlag", sub: "Zwei-Platten-Gatter, Huckepack, Tunnel mit Gegen-Gatter", W: 52, par: 120,
+    { n: 2, name: "Steinschlag", sub: "Zwei-Platten-Gatter, Huckepack, Tunnel mit Gegen-Gatter", W: 52, par: 60,
       build(f, grid, W) { base(f, W);
         f(10, 10, 0, 8, "#"); f(10, 10, 9, 12, "A");      // Gatter A: braucht BEIDE gelben Platten (oder die hinter dem Gatter)
         f(18, 26, 8, 10, "#");                            // Felswand, 5 hoch – nur huckepack zu erklimmen
@@ -32,7 +32,7 @@
       items: [{ id: "e1", x: 5, y: 6 }, { id: "e2", x: 25, y: 6 }, { id: "e3", x: 42, y: 4 }],
       signs: [{ x: 9.2, y: 13, t: "Zwei Platten!" }, { x: 16.4, y: 13, t: "Zu hoch?" }, { x: 20, y: 8, t: "Rein – dann loslassen" }, { x: 34.5, y: 13, t: "Fels als Stufe" }],
       boulders: [{ x: 3.6, y: 12 }, { x: 31, y: 12 }], start: { kraxler: 1.3, gams: 2.4 }, goalX: 46.2, goal: { x: 49.6, y: 10, t: "Zur Hütte ➜" } },
-    { n: 3, name: "Zur Almhütte", sub: "Brücke übers Eis, Schlüssel huckepack, Hüttentür", W: 56, par: 100,
+    { n: 3, name: "Zur Almhütte", sub: "Brücke übers Eis, Schlüssel huckepack, Hüttentür", W: 56, par: 45,
       build(f, grid, W) { base(f, W);
         f(6, 8, 10, 10, "#");
         f(12, 12, 0, 8, "#"); f(12, 12, 9, 11, "A");
@@ -125,8 +125,8 @@
         if (!may || !playable(n) || !unlocked(st, n)) return false;
         begin(st, n, now); return true;
       }
-      case "sgMap":
-        if (!may || st.step === "map") return false;
+      case "sgMap": // zur Tourenkarte: mitten im Level nur der Gastgeber, nach dem Sieg auch die Seilschaft
+        if (st.step === "map" || !(isHost || (st.step === "won" && seated(st, pid)))) return false;
         st.step = "map"; st.dead = null; return true;
       case "sgSwap": // Rollen tauschen (nur zu zweit, auf der Tourenkarte)
         if (!isHost || st.mode !== "duo" || st.step === "play") return false;

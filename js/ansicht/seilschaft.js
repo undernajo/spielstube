@@ -3,7 +3,7 @@
 // über den Live-Kanal der Stube an die anderen, die sie weich nachziehen. Gatter und Platten rechnet jedes Gerät gleich aus.
 // Sammeln, Neustart (wer verunglückt) und Sieg meldet man dem Gastgeber, der den Spielstand führt.
 (window.S10Views = window.S10Views || []).push((G) => {
-  const { app, esc, headBrandHtml, invite, leave, send, sfx, statusBarHtml, topActionsHtml } = G;
+  const { app, askConfirm, esc, headBrandHtml, invite, leave, send, sfx, statusBarHtml, topActionsHtml } = G;
   const SG = window.S10Seil;
   const K = window.S10Klang;
   const H = 15, DT = 1 / 120, GRAV = 38;
@@ -194,9 +194,15 @@
     if (k && myRoles().length) { e.preventDefault(); if (k === "j" && !keys.j) jumpQueued = true; keys[k] = true; }
     if ((e.key === "q" || e.key === "Q" || e.key === "Tab") && myRoles().length === 2) { e.preventDefault(); switchFig(); }
     if ((e.key === "r" || e.key === "R") && may() && !st().dead) send({ type: "sgDie", seq: cur.seq, who: null, why: "neu" });
-    if (e.key === "Escape" && may()) send({ type: "sgMap" });
+    if (e.key === "Escape" && G.isHost) toMap();
   });
   addEventListener("keyup", (e) => { const k = KEYMAP[e.key]; if (k) keys[k] = false; });
+  // Level verlassen (nur Gastgeber): zurück zur Tourenkarte, nach kurzer Rückfrage
+  async function toMap() {
+    const s = st(); if (!s || !G.isHost) return;
+    if (s.step === "play" && !(await askConfirm("Level verlassen?", "Ihr geht zurück zur Tourenkarte – dieses Level beginnt dann beim nächsten Mal von vorn.", "Zur Tourenkarte", "Weiterspielen"))) return;
+    send({ type: "sgMap" });
+  }
   function switchFig() { active = active === "kraxler" ? "gams" : "kraxler"; keys.l = keys.r = false; }
 
   // ---------- Zeichnen ----------
@@ -576,8 +582,8 @@
       app.innerHTML = `<main class="screen game seil">
         <header class="top topbar">${headBrandHtml("seil")}<div class="meta">${meta}<span class="stube-code"> · Stube <b>${esc(v.code)}</b></span></div>${topActionsHtml()}</header>
         <div class="sg-status">${statusBarHtml()}</div>
-        <section class="sg-main">${s.step === "map" ? mapHtml(s) : `<div class="sg-game"><canvas class="sg-cv"></canvas><div class="sg-hud"></div>${s.step === "won" ? `<div class="sg-over">${wonHtml(s)}</div>` : ""}</div>${touch}
-          ${s.step === "play" ? `<p class="sg-keys">${myRoles().length ? `←/→ oder A/D laufen · ↑/W/Leertaste springen (länger = höher)${myRoles().length === 2 ? " · <b>Q</b> Figur wechseln" : ""} · R neu starten · Esc Tourenkarte` : "Du schaust der Seilschaft zu."}</p>` : ""}`}</section></main>`;
+        <section class="sg-main">${s.step === "map" ? mapHtml(s) : `<div class="sg-game"><canvas class="sg-cv"></canvas><div class="sg-hud"></div>${G.isHost && s.step === "play" ? `<button type="button" class="sg-tomap" id="sg-tomap" title="Level verlassen – zurück zur Tourenkarte (Esc)">🗺️ <span>Tourenkarte</span></button>` : ""}${s.step === "won" ? `<div class="sg-over">${wonHtml(s)}</div>` : ""}</div>${touch}
+          ${s.step === "play" ? `<p class="sg-keys">${myRoles().length ? `←/→ oder A/D laufen · ↑/W/Leertaste springen (länger = höher)${myRoles().length === 2 ? " · <b>Q</b> Figur wechseln" : ""} · R neu starten${G.isHost ? " · Esc Tourenkarte" : ""}` : "Du schaust der Seilschaft zu."}</p>` : ""}`}</section></main>`;
       bind(s);
       if (s.step !== "map") { cv = app.querySelector(".sg-cv"); ctx = cv.getContext("2d"); resize(); if (!loopOn) { loopOn = true; last = performance.now(); requestAnimationFrame(frame); } }
     } else {
@@ -589,6 +595,7 @@
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
     on("#sg-swap", () => send({ type: "sgSwap" }));
+    on("#sg-tomap", toMap);
     app.querySelectorAll("[data-sel]").forEach((b) => b.onclick = () => { mapSel = +b.dataset.sel; built = null; renderSeil(); });
     app.querySelectorAll("[data-go]").forEach((b) => b.onclick = () => send({ type: "sgLevel", lv: +b.dataset.go }));
     app.querySelectorAll("[data-a]").forEach((b) => b.onclick = () => { const a = b.dataset.a;

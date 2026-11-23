@@ -4030,3 +4030,7 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
   .seil .sg-touch button { pointer-events: auto; width: 60px; height: 60px; background: rgba(40, 32, 100, .45); }
   .seil .topbar { margin-bottom: 4px; }
 }
+.seil .sg-tomap { position: absolute; top: 8px; right: 10px; z-index: 2; padding: 6px 12px; border-radius: 99px; border: 1px solid rgba(255, 255, 255, .25); background: rgba(20, 16, 50, .78); color: #fff; font: 700 .85rem Nunito, sans-serif; cursor: pointer; }
+.seil .sg-tomap:hover { background: rgba(75, 51, 181, .85); }
+.seil .sg-hud { right: 150px; }
+@media (max-width: 560px) { .seil .sg-tomap span { display: none; } .seil .sg-hud { right: 56px; } }
