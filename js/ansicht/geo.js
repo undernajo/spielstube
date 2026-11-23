@@ -69,7 +69,8 @@
 
   // Kopfzeile (gemeinsamer Baustein): Symbol, Spiel · Runde · Region, Ort groß, Spieler mit Lämpchen, Zeitring, Knopf
   const geoKm = (km) => km == null ? "keine Nadel" : (km < 10 ? km.toFixed(1).replace(".", ",") : Math.round(km).toLocaleString("de-DE")) + " km";
-  const geoPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, ptsTxt: (st.total[p.id] || 0).toLocaleString("de-DE"),
+  const geoPult = (v, st) => v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0,
+    prev: st.step === "reveal" && st.result ? (st.total[p.id] || 0) - ((st.result[p.id] || {}).points || 0) : undefined, ptsTxt: (st.total[p.id] || 0).toLocaleString("de-DE"),
     done: st.step === "reveal" ? !!st.ready[p.id] : st.submitted.includes(p.id),
     txt: st.step === "reveal" ? (() => { const r = st.result && st.result[p.id]; const t = r ? `${geoKm(r.km)} · +${r.points}` : "schaut sich die Lösung an"; return st.ready[p.id] ? "bereit · " + t : t; })()
       : st.submitted.includes(p.id) ? "hat getippt" : p.connected ? "sucht noch …" : "getrennt" }));
@@ -78,7 +79,7 @@
     const oben = st.mode === "oben";
     return G.gameHeadHtml({ ico: oben ? "🛰️" : "📍", small: `${oben ? "Von oben" : "Wo liegt das?"} · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`,
       big: oben ? "Was ist das?" : esc(st.place.name), sub: oben ? `Gesucht: ${esc(st.place.kind)} · <span id="oben-factor">Punkte ×1</span>` : esc(st.place.kind),
-      players: geoPills(v, st),
+      players: geoPills(v, st), final: st.final,
       ring: st.endsIn != null ? G.ringHtml("geo-timer", st.endsIn, st.timerMs || 30000) : "", btn });
   }
   function renderGeo() {
@@ -109,7 +110,7 @@
           <div class="geo-wrap oben-pic oben-target"><div id="geo-map" class="geo-map"></div><span class="oben-tag"><b>2</b> Hier auf der Karte antippen</span></div></div>` : `<div class="geo-wrap"><div id="geo-map" class="geo-map"></div></div>`}`;
       if (!oben) main = G.pultWrap(main, geoPult(v, st));
     } else if (st.step === "reveal") {
-      main = G.gameHeadHtml({ ico: oben ? "🛰️" : "📍", small: `Auflösung · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`, big: esc(st.place.name), sub: oben ? "" : esc(st.place.kind) }).replace('class="gh"', 'class="gh gh-rev"') + `
+      main = G.gameHeadHtml({ ico: oben ? "🛰️" : "📍", small: `Auflösung · Runde ${st.round} / ${st.rounds} · ${esc(st.regionName)}`, big: esc(st.place.name), sub: oben ? "" : esc(st.place.kind), final: st.final }).replace('class="gh"', 'class="gh gh-rev"') + `
         <div class="geo-bar">
           <div class="geo-target"><span class="game-label">Auflösung · Runde ${st.round}/${st.rounds}</span><div class="geo-name">${esc(st.place.name)}</div></div>
           <div class="geo-results">${geoResults(v, st)}</div>
@@ -120,7 +121,7 @@
     } else {
       const ranking = v.players.slice().sort((a, b) => (st.total[b.id] || 0) - (st.total[a.id] || 0));
       const medal = ["🥇", "🥈", "🥉"];
-      main = G.podiumHtml({ items: ranking.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, txt: `${(st.total[p.id] || 0).toLocaleString("de-DE")} Punkte` })), winners: st.winners, restartId: "geo-restart", info: `${esc(st.regionName)} · ${st.rounds} Runden · max. ${(st.rounds * 1000).toLocaleString("de-DE")} Punkte` });
+      main = G.podiumHtml({ items: ranking.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, txt: `${(st.total[p.id] || 0).toLocaleString("de-DE")} Punkte` })), winners: st.winners, restartId: "geo-restart", info: `${esc(st.regionName)} · ${st.rounds} Runden · max. ${((st.rounds + (st.rounds > 1 ? 1 : 0)) * 1000).toLocaleString("de-DE")} Punkte (letzte Runde doppelt)` });
     }
     if (geoMap) { geoMap.remove(); geoMap = null; }
     if (obenMap) { obenMap.remove(); obenMap = null; obenZoom = null; }

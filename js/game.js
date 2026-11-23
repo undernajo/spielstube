@@ -2239,6 +2239,25 @@
     el.classList.toggle("urgent", ms <= 10000);
   }
   // players: [{ id, name, pts (Text), done }]
+  const finalBadge = () => `<span class="gh-final">🔥 Finalrunde – doppelte Punkte!</span>`;
+  // Rangliste mit ▲▼: players mit prev (Punkte vor dieser Runde) – Platzwechsel als Pfeil, Überholen einmal als Hinweis
+  const rankToastSeen = new Set();
+  function rankMoves(players) {
+    if (!players.some((x) => typeof x.prev === "number")) return null;
+    if (players.every((x) => x.prev === players[0].prev)) return null; // vorher alle gleich (z. B. erste Runde): kein Platzwechsel
+    const place = (x, k) => 1 + players.filter((y) => y[k] > x[k]).length;
+    const mv = new Map(players.map((x) => [x.id, place(x, "prev") - place(x, "pts")]));
+    const key = (view ? view.code : "") + ":" + players.map((x) => x.id + "=" + x.prev + ">" + x.pts).join(",");
+    if (!rankToastSeen.has(key)) {
+      rankToastSeen.add(key);
+      const pass = [];
+      for (const a of players) for (const b of players) if (a !== b && a.pts > b.pts && a.prev < b.prev) pass.push([a, b]);
+      pass.sort((x, y) => (y[0].id === myId) - (x[0].id === myId) || (y[1].id === myId) - (x[1].id === myId));
+      if (pass.length) { const [a, b] = pass[0]; setTimeout(() => toast(`${a.id === myId ? "Du überholst" : esc(a.name) + " überholt"} ${b.id === myId ? "dich" : esc(b.name)}!`, "info"), 600); }
+    }
+    return mv;
+  }
+  const rankArrow = (d) => !d ? "" : `<span class="rk-mv ${d > 0 ? "up" : "dn"}">${d > 0 ? "▲" : "▼"}${Math.abs(d)}</span>`;
   function ghPillsHtml(players) {
     const pl = view && view.players ? view.players : [];
     const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
@@ -2250,10 +2269,10 @@
   function pultInner(players) {
     const pl = view && view.players ? view.players : [];
     const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
-    const r = players.slice().sort((a, b) => b.pts - a.pts);
+    const r = players.slice().sort((a, b) => b.pts - a.pts), mv = rankMoves(players);
     return `<span class="qz-lbl">Spieler</span>` + r.map((x, i) => { const place = 1 + r.filter((y) => y.pts > x.pts).length;
       return `<div class="qz-pod pult-pod ${x.done ? "done" : ""} ${x.turn ? "turn" : ""}" style="--pc:${col(x.id)}"><span class="pult-rk">${place}</span><span class="qz-lamp"></span>
-        <div><b>${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}</b><small>${esc(x.txt || "")}</small></div><span class="qz-sc">${x.ptsTxt != null ? x.ptsTxt : x.pts}</span></div>`; }).join("");
+        <div><b>${esc(x.name)}${x.id === myId ? " <em>(du)</em>" : ""}${mv ? rankArrow(mv.get(x.id)) : ""}</b><small>${esc(x.txt || "")}</small></div><span class="qz-sc">${x.ptsTxt != null ? x.ptsTxt : x.pts}</span></div>`; }).join("");
   }
   // Pult: Spieler oben, darunter das Kamera-Fenster (fest eingebaut), ganz unten die Knöpfe
   const pultWrap = (html, players) => `<div class="pult-lay"><div class="pult-main">${html}</div><aside class="qz-side pult"><div class="pult-list">${pultInner(players)}</div><div id="camslot" class="pult-cam"></div><div class="pult-acts"></div></aside></div>`;
@@ -2269,11 +2288,11 @@
   }
   new MutationObserver(() => pultPlace()).observe(app, { childList: true });
   if (pultWide.addEventListener) pultWide.addEventListener("change", pultPlace);
-  function gameHeadHtml({ ico = "", icoHtml = "", small = "", big = "", sub = "", hint = "", players = [], ring = "", btn = "" }) {
+  function gameHeadHtml({ ico = "", icoHtml = "", small = "", big = "", sub = "", hint = "", players = [], ring = "", btn = "", final = false }) {
     const pl = view && view.players ? view.players : [];
     const col = (id) => PLAYER_COLORS[Math.max(0, pl.findIndex((p) => p.id === id)) % PLAYER_COLORS.length];
     const conn = (id) => { const p = pl.find((x) => x.id === id); return !p || p.connected; };
-    return `<div class="gh">${icoHtml || `<span class="qz-ico">${ico}</span>`}<div class="gh-t"><small>${small}</small><b>${big}${sub ? `<span>${sub}</span>` : ""}</b>${hint ? `<div class="hint">${hint}</div>` : ""}</div>
+    return `<div class="gh">${icoHtml || `<span class="qz-ico">${ico}</span>`}<div class="gh-t"><small>${small}</small><b>${big}${sub ? `<span>${sub}</span>` : ""}</b>${final ? finalBadge() : ""}${hint ? `<div class="hint">${hint}</div>` : ""}</div>
       <div class="gh-pl">${ghPillsHtml(players)}</div>
       ${ring ? `<div class="gh-ring">${ring}</div>` : ""}${btn ? `<div class="gh-btn">${btn}</div>` : ""}</div>`;
   }
@@ -2771,6 +2790,7 @@
         <li>Tippe, ob der Wert des neuen Begriffs <b>höher</b> oder <b>tiefer</b> ist (bei Jahreszahlen: später oder früher). Alle wählen gleichzeitig, ohne Zeitdruck.</li>
         <li>Sobald alle gewählt haben, wird aufgedeckt: richtig = 1 Punkt. Der neue Begriff wird zur nächsten Vergleichszahl.</li>
         <li>Pro Kategorie ${HL.PER_CAT} Vergleiche, dann kommt die nächste Kategorie. Die meisten Punkte gewinnen.</li>
+        <li><b>Finale:</b> In der letzten Kategorie zählt jeder richtige Tipp doppelt.</li>
       </ul>
     </details>`;
   const obenRulesHtml = `
@@ -2780,6 +2800,7 @@
         <li>Alle ${GEO.OBEN.stepMs / 1000} Sekunden zoomt das Bild ein Stück heraus. Tippe auf der zweiten Karte, wo das ist, und lege deine Nadel fest.</li>
         <li>Punkte wie bei „Wo liegt das?“ (bis 1000, je näher, desto mehr), aber mal einem Faktor: früh getippt ×1, dann ×0,85, ×0,7 … bis ×0,4.</li>
         <li>Es kommen nur die wichtigsten Städte und ein paar Orte dran, die man von oben gut erkennt. Sie wiederholen sich erst, wenn alle dran waren.</li>
+        <li><b>Finalrunde:</b> Das letzte Bild zählt doppelt.</li>
       </ul>
     </details>`;
   const siebzehnRulesHtml = `
@@ -2823,6 +2844,7 @@
         <li>Wer am nächsten dran ist, bekommt 3 Punkte, der Zweite 2, der Dritte 1. Liegt man auf 1 % genau, gibt es einen Volltreffer-Bonus (+1).</li>
         <li>Kommazahlen mit Komma eingeben (z. B. 9,1). Tausenderpunkte sind erlaubt (1.370).</li>
         <li>Fragen: gemischt, nur Südtirol oder ohne Südtirol. Gespielte Fragen kommen erst wieder, wenn alle dran waren.</li>
+        <li><b>Finalrunde:</b> Die letzte Runde zählt doppelt.</li>
       </ul>
     </details>`;
   const hinweisRulesHtml = `
@@ -2831,6 +2853,7 @@
         <li>Gesucht ist ein Begriff, eine Person oder ein Ort. Alle 10 Sekunden kommt ein neuer, leichterer Hinweis – fünf insgesamt.</li>
         <li>Jeder hat <b>nur einen Versuch</b>. Wer beim 1. Hinweis richtig liegt, bekommt 5 Punkte, beim 2. Hinweis 4 … beim 5. Hinweis 1 Punkt.</li>
         <li>Kleine Tippfehler werden verziehen.</li>
+        <li><b>Finalrunde:</b> Die letzte Runde zählt doppelt.</li>
       </ul>
     </details>`;
   const umrissRulesHtml = `
@@ -2840,6 +2863,7 @@
         <li>Jeder hat einen Versuch (45 Sekunden). Richtig = 2 Punkte, wer als Erster richtig liegt, bekommt +1.</li>
         <li>Karten: Europa, Welt, deutsche und österreichische Bundesländer, italienische Regionen, Schweizer Kantone.</li>
         <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Gebiete, „Profi“ nur die schwereren, „Gemischt“ alle. Sehr kleine Gebiete kommen nicht vor.</li>
+        <li><b>Finalrunde:</b> Die letzte Runde zählt doppelt.</li>
       </ul>
     </details>`;
   const qbRulesHtml = `
@@ -2865,6 +2889,7 @@
         <li>Richtig = ${LAND.BASE} Punkte. Wer unter den Richtigen am schnellsten war, bekommt +${LAND.BONUS[0]}, der Zweite +${LAND.BONUS[1]}, der Dritte +${LAND.BONUS[2]}.</li>
         <li>Bei der Auflösung leuchtet das gesuchte Land grün; falsch getippte Länder werden mit Namen gezeigt.</li>
         <li>Schwierigkeit: „Leicht“ nimmt die bekannten Länder, „Profi“ nur die kleineren und schwereren, „Gemischt“ alle. Länder wiederholen sich erst, wenn alle dran waren.</li>
+        <li><b>Finalrunde:</b> Die letzte Runde zählt doppelt.</li>
       </ul>
     </details>`;
   const geoRulesHtml = `
@@ -2875,6 +2900,7 @@
         <li>Bis zu 1000 Punkte pro Runde – je näher, desto mehr. Die Skala passt sich der Region an.</li>
         <li>Schwierigkeit: „Leicht“ nimmt nur bekannte Orte, „Profi“ nur schwere, „Gemischt“ alle.</li>
         <li>Orte wiederholen sich erst, wenn alle der gewählten Auswahl einmal dran waren.</li>
+        <li><b>Finalrunde:</b> Die letzte Runde zählt doppelt.</li>
       </ul>
     </details>`;
   function almSettingsHtml() {
@@ -3163,6 +3189,9 @@
     checkHtml,
     podiumHtml,
     gameHeadHtml,
+    finalBadge,
+    rankMoves,
+    rankArrow,
     ghPillsHtml,
     pultWrap,
     pultUpdate,

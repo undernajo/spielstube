@@ -130,6 +130,8 @@
         res[p.id] = { given: a.t, ok: a.ok, hint: a.hint, points: pts, fast: st.mode === "umriss" && a.ok && right[0] === p.id && right.length > 1 };
       });
     }
+    // Finalrunde: Punkte der letzten Runde zählen doppelt (mehr Spannung bis zum Schluss)
+    if (st.rounds > 1 && st.round === st.rounds) Object.values(res).forEach((r) => { r.points *= 2; r.double = true; });
     Object.entries(res).forEach(([id, r]) => { st.total[id] = (st.total[id] || 0) + r.points; });
     st.result = res; st.step = "reveal"; st.ready = {}; st.hints = 5;
     st.history.push({ key: st.key, points: Object.fromEntries(Object.entries(res).map(([k, v]) => [k, v.points])) });
@@ -189,7 +191,7 @@
     const item = st.key ? keyItem(st.key) : null, open = st.step === "reveal" || st.step === "final";
     const out = {
       mode: st.mode, modeName: MODES[st.mode].name, step: st.step, round: st.round, rounds: st.rounds, theme: st.opts.theme, region: st.opts.region, level: st.opts.level,
-      endsIn: st.step === "ask" ? Math.max(0, st.deadline - now) : null,
+      endsIn: st.step === "ask" ? Math.max(0, st.deadline - now) : null, final: st.rounds > 1 && st.round === st.rounds,
       timerMs: st.mode === "hinweis" ? 4 * (st.hintMs || HINT_MS) + (st.afterMs || AFTER_LAST_HINT_MS) : st.askMs || ASK_MS[st.mode], submitted: Object.keys(st.answers || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
     };
     if (item) {

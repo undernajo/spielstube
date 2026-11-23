@@ -7,7 +7,7 @@
   // ---------- Höher oder tiefer ----------
   let hlRendered = null;
   const hlPult = (v, st) => v.players.map((p) => { const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id), ok = st.step === "reveal" && st.result ? st.result.ok[p.id] : undefined;
-    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, done: done || ok === true, txt: st.step === "guess" ? (done ? "hat gewählt" : p.connected ? "überlegt …" : "getrennt") : ok === true ? "✓ richtig" : ok === false ? "✗ falsch" : "" }; });
+    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, prev: st.step === "reveal" && st.result ? (st.total[p.id] || 0) - (ok ? (st.final ? 2 : 1) : 0) : undefined, done: done || ok === true, txt: st.step === "guess" ? (done ? "hat gewählt" : p.connected ? "überlegt …" : "getrennt") : ok === true ? "✓ richtig" : ok === false ? "✗ falsch" : "" }; });
   function hlChips(v, st) {
     return v.players.map((p, i) => {
       const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id);
@@ -45,7 +45,7 @@
       main = `
         <div class="geo-scores hl-pills">${hlChips(v, st)}</div>
         ${G.gameHeadHtml({ ico: emo, small: `Höher oder tiefer · Kategorie ${st.catNo} / ${st.catCount} · Vergleich ${st.pos} / ${st.steps}`, big: esc(st.cat.name), sub: st.cat.name.toLowerCase().includes(String(st.cat.q).toLowerCase()) ? "" : esc(st.cat.q),
-          hint: `${st.cat.approx ? "Werte ca." : ""}${st.cat.approx && st.cat.note ? " · " : ""}${st.cat.note ? esc(st.cat.note) : ""}` })}
+          hint: `${st.cat.approx ? "Werte ca." : ""}${st.cat.approx && st.cat.note ? " · " : ""}${st.cat.note ? esc(st.cat.note) : ""}`, final: st.final })}
         <div class="hl-main">
           <div class="hl-pips">${pips}</div>
           <div class="hl-cards">

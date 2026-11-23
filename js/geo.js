@@ -87,6 +87,8 @@
       const factor = st.mode === "oben" ? OBEN.factors[obenStep(g.at || 0)] : 1;
       res[p.id] = { lat: g.lat, lng: g.lng, km: Math.round(km * 10) / 10, points: Math.round(pointsFor(km, reg.scale) * factor), factor };
     });
+    // Finalrunde: Punkte der letzten Runde zählen doppelt (mehr Spannung bis zum Schluss)
+    if (st.rounds > 1 && st.round === st.rounds) Object.values(res).forEach((r) => { r.points *= 2; r.double = true; });
     Object.entries(res).forEach(([pid, r]) => { st.total[pid] = (st.total[pid] || 0) + r.points; });
     st.result = res;
     st.history.push({ place: pl[0], points: Object.fromEntries(Object.entries(res).map(([k, v]) => [k, v.points])) });
@@ -135,6 +137,7 @@
     if (!st) return null;
     const reg = data()[st.region], pl = reg.places[st.place];
     const out = {
+      final: st.rounds > 1 && st.round === st.rounds,
       step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: reg.name, levelName: LEVELS[st.level || "gemischt"].name, bounds: reg.bounds,
       timerName: TIMERS[st.timer].name, timerMs: TIMERS[st.timer].ms, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
       mode: st.mode || "karte",

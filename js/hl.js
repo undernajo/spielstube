@@ -93,6 +93,7 @@
   const activeIds = (s) => s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
   const val = (st, k) => data()[st.cats[st.ci]].items[st.items[k]][1];
 
+  const isFinalCat = (st) => st.cats.length > 1 && st.ci === st.cats.length - 1;
   function reveal(s, now) {
     const st = s.hl, prev = val(st, st.pos - 1), cur = val(st, st.pos);
     const right = cur > prev ? "up" : cur < prev ? "down" : "both";
@@ -100,7 +101,7 @@
     Object.entries(st.picks).forEach(([pid, d]) => {
       const ok = right === "both" || d === right;
       res[pid] = ok;
-      if (ok) st.total[pid] = (st.total[pid] || 0) + 1;
+      if (ok) st.total[pid] = (st.total[pid] || 0) + (isFinalCat(st) ? 2 : 1); // letzte Kategorie zählt doppelt
     });
     st.result = { right, ok: res };
     st.chain.push({ k: st.pos, right });
@@ -149,7 +150,7 @@
   function publicState(s, now) {
     const st = s.hl;
     if (!st) return null;
-    const out = { step: st.step, total: { ...st.total }, catCount: st.cats.length, catNo: Math.min(st.ci + 1, st.cats.length),
+    const out = { step: st.step, final: isFinalCat(st), total: { ...st.total }, catCount: st.cats.length, catNo: Math.min(st.ci + 1, st.cats.length),
       perCat: PER_CAT, lengthName: LENGTHS[st.opts.length].name };
     if (st.step !== "final") {
       const cat = data()[st.cats[st.ci]], item = (k) => cat.items[st.items[k]];
@@ -168,7 +169,7 @@
     } else {
       const max = Math.max(...Object.values(st.total));
       out.winners = Object.keys(st.total).filter((id) => st.total[id] === max);
-      out.max = st.cats.length * PER_CAT;
+      out.max = st.cats.length * PER_CAT + (st.cats.length > 1 ? PER_CAT : 0); // letzte Kategorie zählt doppelt
       out.cats = st.cats.map((k) => data()[k].name);
     }
     return out;

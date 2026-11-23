@@ -14,11 +14,13 @@
     return n.toLocaleString("de-DE", { maximumFractionDigits: Math.abs(n) >= 100 ? 0 : Math.abs(n) >= 10 ? 1 : 3 }); };
   // Spieler-Pult (rechts neben der Quizkarte): Lämpchen leuchtet, sobald jemand geantwortet hat bzw. bereit ist
   function quizPods(v, st) {
+    // Rangwechsel nach der Auflösung (▲▼) – Punkte vor dieser Runde = Gesamt minus Rundenpunkte
+    const mv = st.step === "reveal" && st.result ? G.rankMoves(v.players.map((p) => ({ id: p.id, name: p.name, pts: st.total[p.id] || 0, prev: (st.total[p.id] || 0) - ((st.result[p.id] || {}).points || 0) }))) : null;
     return `<span class="qz-lbl">Spieler</span>` + v.players.map((p, i) => {
       const done = st.step === "ask" ? st.submitted.includes(p.id) : st.step === "reveal" ? !!st.ready[p.id] : false;
       const txt = st.step === "ask" ? (done ? "hat geantwortet" : p.connected ? "überlegt …" : "getrennt") : done ? "bereit" : "schaut sich die Lösung an";
       return `<div class="qz-pod ${done ? "done" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="qz-lamp"></span>
-        <div><b>${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</b><small>${txt}</small></div><span class="qz-sc">${st.total[p.id] || 0}</span></div>`;
+        <div><b>${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}${mv ? G.rankArrow(mv.get(p.id)) : ""}</b><small>${txt}</small></div><span class="qz-sc">${st.total[p.id] || 0}</span></div>`;
     }).join("");
   }
   // Zeitring rechts oben in der Quizkarte (grün → gelb → rot)
@@ -194,7 +196,7 @@
       const sub = !ask ? "Auflösung" : st.mode === "hinweis" ? `Hinweis ${(it.hints || []).length} von 5 · alle antworten gleichzeitig` : "Alle antworten gleichzeitig";
       const ms0 = st.endsIn || 0, tot = quizTotalMs(st), p0 = Math.max(0, Math.min(1, ms0 / tot));
       const ring = ask ? `<div id="quiz-timer" class="qz-ring" style="--rc:${p0 > .5 ? "#7ee2b1" : p0 > .2 ? "#ffc83d" : "#ff7d8a"}"><svg viewBox="0 0 74 74" aria-hidden="true"><circle cx="37" cy="37" r="31" class="r0"/><circle cx="37" cy="37" r="31" class="r1" style="stroke-dasharray:${QZ_RING * p0} ${QZ_RING}"/></svg><b>${Math.ceil(ms0 / 1000)}</b></div>` : "";
-      q = `<div class="qz-head"><span class="qz-ico">${ico}</span><div><small>${label}</small><b id="quiz-hsub">${sub}</b></div>${ring}</div>` + q;
+      q = `<div class="qz-head"><span class="qz-ico">${ico}</span><div><small>${label}</small><b id="quiz-hsub">${sub}</b>${st.final ? G.finalBadge() : ""}</div>${ring}</div>` + q;
       const foot = st.step === "ask" ? `<div class="quiz-foot">${sent ? "" : `<form class="quiz-form" onsubmit="return false">
           <input id="quiz-in" ${st.mode === "schaetzen" ? `inputmode="decimal" placeholder="Deine Schätzung"` : `placeholder="Deine Antwort"`} autocomplete="off" maxlength="60">
           ${st.mode === "schaetzen" && it.unit ? `<span class="quiz-unit">${esc(it.unit)}</span>` : ""}<button class="btn primary" id="quiz-go">${st.mode === "schaetzen" ? "Festlegen" : "Antworten"}</button></form>

@@ -78,6 +78,8 @@
       const ok = g.c === st.target, rank = right.indexOf(p.id);
       res[p.id] = { c: g.c, ok, points: ok ? BASE + (BONUS[rank] || 0) : 0, fast: ok && rank === 0 && right.length > 1 };
     });
+    // Finalrunde: Punkte der letzten Runde zählen doppelt (mehr Spannung bis zum Schluss)
+    if (st.rounds > 1 && st.round === st.rounds) Object.values(res).forEach((r) => { r.points *= 2; r.double = true; });
     Object.entries(res).forEach(([pid, r]) => { st.total[pid] = (st.total[pid] || 0) + r.points; });
     st.result = res;
     st.history.push({ c: st.target, points: Object.fromEntries(Object.entries(res).map(([k, v]) => [k, v.points])) });
@@ -124,7 +126,7 @@
     const st = s.land;
     if (!st) return null;
     const out = { // ohne Kartendaten (noch nicht geladen) nur ohne Ländernamen
-      step: st.step, round: st.round, rounds: st.rounds, region: st.region, regionName: REGION_NAMES[st.region] || st.region, levelName: LEVELS[st.level].name,
+      step: st.step, round: st.round, rounds: st.rounds, final: st.rounds > 1 && st.round === st.rounds, region: st.region, regionName: REGION_NAMES[st.region] || st.region, levelName: LEVELS[st.level].name,
       timerName: TIMERS[st.timer].name, timerMs: TIMERS[st.timer].ms, endsIn: st.step === "guess" && st.deadline ? Math.max(0, st.deadline - now) : null,
       target: st.target, targetName: nameOf(st.region, st.target),
       submitted: Object.keys(st.picks || {}), total: { ...st.total }, ready: { ...(st.ready || {}) },
