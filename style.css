@@ -4018,14 +4018,42 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
     .seil .tour-node i { width: 23px; height: 23px; font-size: .72rem; box-shadow: 0 2px 0 #a89c7d, 0 0 0 2px #4b33b5; }
     .seil .tour-head small { font-size: .78rem; }
   }
-  /* Handy: nur der Name des angetippten Levels, keine Welt-Schilder (stehen unten im Infokasten) */
-  @media (max-width: 560px) {
-    .seil .tour-node b, .tour-world { display: none; } .tour-node.sel b { display: block; position: relative; z-index: 2; }
-    .seil .tour-hut b { display: none; } .tour-node em { display: none; } .tour-hut .hut-ico svg { width: 28px; } .tour-hut.peak .hut-ico svg { width: 36px; }
-    .seil .tour-node i { width: 23px; height: 23px; font-size: .72rem; box-shadow: 0 2px 0 #a89c7d, 0 0 0 2px #4b33b5; }
-    .seil .tour-head small { font-size: .78rem; }
-  }
 .seil .tour { width: min(100%, 720px); }
+.seil .tour-pano { display: none; }
+/* PC und Tablet quer: Tourenkarte als Panorama (Welten nebeneinander), darunter eine flache Leiste mit Team und Level – alles ohne Scrollen */
+@media (min-width: 900px) and (orientation: landscape) {
+  /* nur wenn das Panorama wirklich da ist (sonst – z. B. mit einer alten seilschaft.js im Zwischenspeicher – bleibt die Bergkarte) */
+  .seil .tour:has(.tour-pano) { width: min(100%, calc((100dvh - 134px - 92px) * 1200 / 620)); max-width: none; grid-template-columns: auto 1fr; grid-template-areas: "pano pano" "team info"; }
+  .seil .tour:has(.tour-pano) :is(.tour-head, .tour-map) { display: none; }
+  /* große Bildschirme: die Seilschaft-Seite darf breiter werden, damit das Panorama die Höhe ausnutzt */
+  .screen.game.seil:has(.tour-pano) { max-width: min(96vw, calc((100dvh - 226px) * 1200 / 620 + 32px)); }
+  .seil .tour-pano { display: block; grid-area: pano; position: relative; aspect-ratio: 1200 / 620; }
+  .seil .tour-pano > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .seil .tour:has(.tour-pano) .tour-team { grid-area: team; display: block; white-space: nowrap; align-self: center; padding: 8px 18px; border-right: 1px solid rgba(35, 29, 77, .15); }
+  .seil .tour:has(.tour-pano) .tour-team .btn { display: block; margin-top: 6px; }
+  .seil .tour:has(.tour-pano) .tour-info { grid-area: info; border-top: 0; padding: 8px 18px; align-content: center; gap: 2px 18px; }
+  .seil .tour:has(.tour-pano) .tour-info { grid-template-columns: 1fr auto; column-gap: 18px; }
+  .seil .tour:has(.tour-pano) :is(.tour-info .ti-h, .tour-info p) { grid-column: 1; }
+  .seil .tour:has(.tour-pano) .tour-info .row { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; gap: 4px; }
+  .seil .tour:has(.tour-pano) .tour-info p { font-size: .92rem; line-height: 1.3; }
+  .seil .tour:has(.tour-pano) .tour-info .row .sp { display: none; }
+  /* Stationen im Panorama: nur die Nummer – der Name erscheint beim gewählten Level und beim Darüberfahren */
+  .seil .tour-pano .tour-node i { width: clamp(24px, 2.4vw, 36px); height: clamp(24px, 2.4vw, 36px); font-size: clamp(.75rem, 1.1vw, 1rem); }
+  .seil .tour-pano .tour-node b { position: absolute; top: 100%; margin-top: 4px; font-size: clamp(.55rem, .75vw, .74rem); opacity: 0; pointer-events: none; transition: opacity .12s; z-index: 3; }
+  .seil .tour-pano .tour-node.sel b, .seil .tour-pano .tour-node:hover b, .seil .tour-pano .tour-node:focus-visible b { opacity: 1; }
+  .seil .tour-pano .tour-node em { position: absolute; top: 100%; margin-top: 2px; font-size: clamp(.5rem, .7vw, .68rem); }
+  .seil .tour-pano .tour-node.sel em { top: calc(100% + 1.5em); }
+  .seil .tour-pano .tour-hut { transform: translate(-50%, -62%); }
+  .seil .tour-pano .tour-hut b { font-size: clamp(.55rem, .75vw, .74rem); }
+  .seil .tour-pano .tour-hut .hut-ico svg { width: clamp(30px, 3.2vw, 48px); }
+  .seil .tour-pano .tour-hut.peak { transform: translate(-50%, -80%); } .seil .tour-pano .tour-hut.peak b { position: static; margin: 0; }
+  .seil .tour-pano .tour-hut.peak .hut-ico svg { width: clamp(38px, 4vw, 58px); }
+  .pano-world { position: absolute; top: 2%; transform: translateX(-50%); text-align: center; pointer-events: none; }
+  .pano-world span { display: block; font: 800 clamp(.55rem, .7vw, .7rem) Nunito, sans-serif; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255, 255, 255, .85); }
+  .pano-world b { display: block; font: 700 clamp(.8rem, 1.25vw, 1.2rem) Fredoka, sans-serif; color: #fff; text-shadow: 0 2px 6px rgba(20, 16, 46, .45); }
+  .pano-world small { display: inline-block; margin-top: 3px; font: 800 clamp(.55rem, .7vw, .72rem) Nunito, sans-serif; color: #fff8e6; background: rgba(35, 29, 77, .55); padding: 1px 8px; border-radius: 99px; }
+}
+}
 @media (prefers-reduced-motion: reduce) { .seil .tour-node.next i { animation: none; } }
 @media (pointer: coarse) and (orientation: landscape) {
   .seil .sg-main { position: relative; }
@@ -4432,14 +4460,3 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .intro-opt span { display: grid; gap: 1px; }
 .intro-opt b { font-size: .92rem; }
 .intro-opt small { color: var(--muted); font-size: .78rem; }
-
-/* Heute Abend: Siege des Abends in der Lobby */
-.evening { margin: 12px 0 4px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--panel, #241d4a) 70%, #000 30%); }
-.evening summary { cursor: pointer; font-weight: 700; list-style: none; }
-.evening summary::-webkit-details-marker { display: none; }
-.evening summary small { font-weight: 400; opacity: .7; margin-left: .4em; }
-.ev-table, .ev-log { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
-.ev-table li { display: flex; justify-content: space-between; gap: 8px; }
-.ev-table b { letter-spacing: 1px; white-space: nowrap; }
-.ev-log { font-size: .85em; opacity: .85; max-height: 8.5em; overflow: auto; }
-.ev-t { opacity: .6; margin-right: .3em; font-variant-numeric: tabular-nums; }

@@ -616,6 +616,124 @@
     </svg>`;
   }
 
+  // ---------- Tourenkarte als Panorama (PC und Tablet quer): die fünf Welten nebeneinander, links das Tal, rechts der Gipfel ----------
+  const PW = 1200, PH = 620, PCOL = PW / 5, PEAK = 1150;
+  const pGround = (x) => { const t = Math.min(1, x / PEAK), ss = t * t * (3 - 2 * t); // Oberkante des Geländes
+    return (x <= PEAK ? 400 - 245 * ss : 155 + (x - PEAK) * 0.8) + Math.sin(x / 41) * 8 + Math.sin(x / 17) * 3; };
+  // Höhe je Station: Welt 1–2 fast flach im Tal, Welt 3 steil hinauf zum Biwak, Welt 4 im Bogen hinab über den Gletscher, Welt 5 hinauf zum Gipfelkreuz
+  const PPROFILE = [542, 536, 528, 500, 508, 500, 492, 462, 420, 350, 285, 226, 262, 322, 350, 318, 288, 246, 204];
+  const PROUTE = (() => { // wie ROUTE: [Art, Nummer, x, y] in Kartenpunkten
+    const out = [];
+    for (let k = 0; k < 5; k++) for (let j = 0; j < 4; j++) {
+      const hut = j === 3, last = k === 4 && hut;
+      const x = last ? PEAK : k * PCOL + PCOL * (hut ? 0.92 : (k === 0 ? 0.13 : k === 4 ? 0.09 : 0.16) + j * (k === 0 ? 0.265 : k === 4 ? 0.23 : 0.25));
+      out.push([hut ? "H" : "L", hut ? k + 1 : k * 3 + j + 1, x, last ? pGround(PEAK) - 2 : PPROFILE[k * 4 + j]]);
+    }
+    return out;
+  })();
+  function panoSvg(doneUpTo) {
+    const pts = PROUTE.map((r) => [r[2], r[3]]);
+    const line = (a) => "M" + a.map((p) => p.map((v) => v.toFixed(1)).join(",")).join(" L");
+    let seed = 11; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const surf = Array.from({ length: 121 }, (_, k) => [k * 10, pGround(k * 10)]);
+    const land = "M0 " + PH + " L" + surf.map((p) => p.map((v) => v.toFixed(1)).join(" ")).join(" L") + ` L${PW} ${PH}Z`;
+    const nearRoute = (x, y, d) => pts.some(([px, py]) => Math.hypot(px - x, py - y) < d);
+    const spruce = (x, y, sc, c) => { const h = 22 * sc, w = 8 * sc; return `<g><rect x="${(x - 1.2 * sc).toFixed(1)}" y="${(y - 2).toFixed(1)}" width="${(2.4 * sc).toFixed(1)}" height="${(4 * sc).toFixed(1)}" fill="#4a3020"/>`
+      + [0, 1, 2].map((k) => { const ty = y - k * h * 0.27, tw = w * (1 - k * 0.24); return `<path d="M${x.toFixed(1)} ${(ty - h * 0.42).toFixed(1)} L${(x - tw).toFixed(1)} ${ty.toFixed(1)} L${(x + tw).toFixed(1)} ${ty.toFixed(1)}Z" fill="${c}"/>`; }).join("") + "</g>"; };
+    // Bergwald: zum Fels hin lichter, damit der Übergang weich wird
+    const trees = []; for (let x = PCOL * 0.68; x < PCOL * 2.35; x += 7 + rnd() * 6) for (let n = 0; n < 4; n++) {
+      if (x > PCOL * 1.9 && rnd() < (x - PCOL * 1.9) / (PCOL * 0.45)) continue;
+      const e = Math.min(1, Math.max(0, (x - PCOL * 0.68) / (PCOL * 0.55))); // 0 = Waldrand an der Alm … 1 = dichter Wald
+      if (rnd() > 0.12 + 0.88 * e * e) continue;
+      const y = pGround(x) + 10 + rnd() * (PH - pGround(x) - 16); if (nearRoute(x, y - 8, 20)) continue;
+      const f = (y - pGround(x)) / (PH - pGround(x));
+      const c = e < 0.55 ? ["#3d7646", "#4f8a4f", "#6e9f4f", "#7aa84f"][Math.floor(rnd() * 4)] : ["#1f4a33", "#2a5a3c", "#33693f", "#3d7646"][Math.min(3, Math.floor(f * 3 + rnd()))];
+      trees.push([x, y, (0.55 + f * 0.7 + rnd() * 0.2) * (0.8 + 0.2 * e), c]); }
+    trees.sort((a, b) => a[1] - b[1]);
+    const flowers = []; for (let k = 0; k < 90; k++) { const x = rnd() * PCOL * 1.05, y = pGround(x) + 10 + rnd() * (PH - pGround(x) - 14); if (!nearRoute(x, y, 14)) flowers.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(1.2 + rnd()).toFixed(1)}" fill="${["#fff8e6", "#ffd84a", "#e9a0d8", "#fff"][k % 4]}" opacity=".85"/>`); }
+    const ribs = []; for (let k = 0; k < 16; k++) { const x = PCOL * 2.1 + rnd() * PCOL, y = pGround(x) + 20 + rnd() * 160; ribs.push(`<path d="M${x.toFixed(1)} ${y.toFixed(1)} q${(8 + rnd() * 10).toFixed(1)} ${(30 + rnd() * 30).toFixed(1)} ${(-6 + rnd() * 12).toFixed(1)} ${(60 + rnd() * 40).toFixed(1)}" stroke="#6f6680" stroke-width="3" fill="none" opacity=".4" stroke-linecap="round"/>`); }
+    const crev = []; for (let k = 0; k < 14; k++) { const x = PCOL * 3.1 + rnd() * PCOL * 0.85, y = pGround(x) + 25 + rnd() * 150; crev.push(`<path d="M${x.toFixed(1)} ${y.toFixed(1)} q12 5 24 -1" stroke="#93add6" stroke-width="1.8" fill="none" stroke-linecap="round"/>`); }
+    const brook = [[PCOL * 1.55, pGround(PCOL * 1.55) + 20], [PCOL * 1.4, 400], [PCOL * 1.25, 450], [PCOL * 1.05, 500], [PCOL * 0.85, 540], [PCOL * 0.6, 590], [PCOL * 0.45, PH]];
+    // ---- Details je Welt ----
+    const g = pGround, f1 = (v) => v.toFixed(1);
+    // Himmel: Wolken, Adler über dem Klettersteig, Schneekappen auf den Bergen im Hintergrund
+    const cloud = (x, y, sc, o) => `<g fill="#fff" opacity="${o}"><ellipse cx="${x}" cy="${y}" rx="${34 * sc}" ry="${10 * sc}"/><ellipse cx="${x - 16 * sc}" cy="${y - 6 * sc}" rx="${15 * sc}" ry="${10 * sc}"/><ellipse cx="${x + 10 * sc}" cy="${y - 10 * sc}" rx="${19 * sc}" ry="${13 * sc}"/></g>`;
+    const clouds = cloud(330, 215, 1.15, .75) + cloud(560, 150, .8, .55) + cloud(225, 300, .7, .45) + cloud(985, 95, .75, .5) + cloud(760, 110, .55, .4);
+    const eagles = [[640, 160, 1], [668, 178, .75]].map(([x, y, sc]) => `<path d="M${x - 12 * sc} ${y} q${6 * sc} ${-7 * sc} ${12 * sc} 0 q${6 * sc} ${-7 * sc} ${12 * sc} 0" fill="none" stroke="#3a2f5a" stroke-width="2" stroke-linecap="round" opacity=".7"/>`).join("");
+    const caps = [[260, 270], [450, 230], [660, 190], [860, 150], [1060, 120]].map(([x, y]) => `<path d="M${x - 17} ${y + 15} L${x} ${y} L${x + 17} ${y + 15} L${x + 10} ${y + 11} L${x + 5} ${y + 16} L${x - 2} ${y + 10} L${x - 9} ${y + 15}Z" fill="#fff" opacity=".7"/>`).join("");
+    // Welt 1 – Almwiese: helle Wiesenhügel, Zaun, Kühe, Heuschober, einzelne Lärchen
+    const hills = `<path d="M0 ${f1(g(0) + 38)} Q70 ${f1(g(70) + 12)} 140 ${f1(g(140) + 40)} T300 ${f1(g(300) + 46)} L300 ${PH} L0 ${PH}Z" fill="url(#phill)" opacity=".35"/>
+      <path d="M0 ${f1(g(0) + 110)} Q90 ${f1(g(90) + 80)} 190 ${f1(g(190) + 118)} T330 ${f1(g(330) + 120)} L330 ${PH} L0 ${PH}Z" fill="url(#phill2)" opacity=".25"/>`;
+    // Büsche am Waldrand
+    const bushes = Array.from({ length: 16 }, () => { const x = PCOL * (0.72 + rnd() * 0.32), y = g(x) + 14 + rnd() * (PH - g(x) - 30);
+      return nearRoute(x, y, 16) ? "" : `<g><ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(5 + rnd() * 4)}" ry="${f1(3.5 + rnd() * 2)}" fill="#4f8a4f"/><ellipse cx="${f1(x - 2)}" cy="${f1(y - 1.5)}" rx="3" ry="2" fill="#6aa955" opacity=".8"/></g>`; }).join("");
+    const fence = (() => { let out = ""; const y0 = (x) => g(x) + 26; for (let x = 18; x <= 168; x += 15) out += `<rect x="${x - 1.2}" y="${f1(y0(x) - 9)}" width="2.4" height="11" fill="#7a5532"/>`;
+      return out + [5, 1].map((dy) => `<path d="M18 ${f1(y0(18) - dy)} ${Array.from({ length: 11 }, (_, k) => `L${18 + k * 15} ${f1(y0(18 + k * 15) - dy)}`).join(" ")}" stroke="#8a6238" stroke-width="1.6" fill="none"/>`).join(""); })();
+    const cow = (x, y, d) => `<g transform="translate(${x} ${y}) scale(${d} 1)"><path d="M-7 3v5M-3 3v5M4 3v5M7 3v5" stroke="#3a2a20" stroke-width="1.4"/><ellipse cx="0" cy="0" rx="10" ry="5.5" fill="#fff8ee"/>
+      <ellipse cx="-3" cy="-1" rx="3.2" ry="2.4" fill="#7a4e2a"/><ellipse cx="5" cy="1.5" rx="2.4" ry="1.8" fill="#7a4e2a"/><ellipse cx="11.5" cy="-3" rx="3.6" ry="3" fill="#fff8ee"/><path d="M10 -6 l-1.5 -2 M13 -6 l1.5 -2" stroke="#e9dcc4" stroke-width="1.2"/><circle cx="12.5" cy="-3.5" r=".7" fill="#3a2a20"/></g>`;
+    const cows = cow(62, 468, 1) + cow(118, 486, -1) + cow(170, 452, 1);
+    const hay = (x, y) => `<g><path d="M${x} ${y - 20} v24" stroke="#6b4a2a" stroke-width="1.6"/><path d="M${x - 11} ${y + 2} Q${x - 10} ${y - 16} ${x} ${y - 18} Q${x + 10} ${y - 16} ${x + 11} ${y + 2}Z" fill="#d8b45a"/><path d="M${x - 8} ${y - 6} q8 -4 16 0 M${x - 9} ${y - 1} q9 -4 18 0" stroke="#b89038" stroke-width="1" fill="none"/></g>`;
+    const larches = spruce(14, g(14) + 34, 1.1, "#7aa84f") + spruce(206, g(206) + 48, 1, "#86b35a") + spruce(96, g(96) + 30, .8, "#7aa84f");
+    // Welt 2 – Bergwald & Bach: dunkler Waldrücken hinten, Steine am Bach, kleiner Wasserfall oben
+    const backForest = `<path d="M${PCOL * .95} ${f1(g(PCOL * .95) + 4)} ${Array.from({ length: 31 }, (_, k) => { const x = PCOL * .95 + k * 9; return `L${f1(x)} ${f1(g(x) + 4 - 6 * Math.abs(Math.sin(k * 1.7)))}`; }).join(" ")} L${f1(PCOL * 2.25)} ${f1(g(PCOL * 2.25) + 70)} L${f1(PCOL * .95)} ${f1(g(PCOL * .95) + 70)}Z" fill="#163826" opacity=".55"/>`;
+    const stones = brook.slice(1, 6).flatMap(([x, y], k) => [[x + 7, y + 4], [x - 6, y - 3]]).map(([x, y], k) => `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${3 + (k % 3)}" ry="${2 + (k % 2)}" fill="#8d8a95"/>`).join("");
+    const fallX = brook[0][0], fallY = brook[0][1];
+    const waterfall = `<path d="M${f1(fallX)} ${f1(fallY - 22)} L${f1(fallX)} ${f1(fallY)}" stroke="#bfe6ff" stroke-width="6" stroke-linecap="round"/><path d="M${f1(fallX - 1)} ${f1(fallY - 20)} v16" stroke="#fff" stroke-width="1.5" opacity=".8"/>
+      <ellipse cx="${f1(fallX)}" cy="${f1(fallY + 2)}" rx="7" ry="2.5" fill="#fff" opacity=".7"/>`;
+    // Welt 3 – Klettersteig: Gesteinsschichten, Latschen, Geröllkegel, Leiter
+    const strata = Array.from({ length: 12 }, (_, k) => { const off = 18 + k * 26; return `<path d="M${PCOL * 1.95} ${f1(g(PCOL * 1.95) + off)} ${Array.from({ length: 14 }, (_, i) => { const x = PCOL * 1.95 + i * 22; return `L${f1(x)} ${f1(g(x) + off + Math.sin(i * 1.3 + k) * 3)}`; }).join(" ")}" stroke="#5d5470" stroke-width="1.4" fill="none" opacity=".22"/>`; }).join("");
+    const pines = []; for (let k = 0; k < 22; k++) { const x = PCOL * 2 + rnd() * PCOL * .95, y = g(x) + 20 + rnd() * 250; if (nearRoute(x, y, 18)) continue;
+      pines.push(`<g fill="#2f5a3a"><ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(5 + rnd() * 4)}" ry="3"/><ellipse cx="${f1(x + 4)}" cy="${f1(y - 2)}" rx="4" ry="2.6" fill="#3d6e47"/></g>`); }
+    const scree = `<path d="M${PCOL * 2.62} ${PH} Q${PCOL * 2.74} ${PH - 40} ${PCOL * 2.78} ${PH - 42} Q${PCOL * 2.84} ${PH - 38} ${PCOL * 2.94} ${PH}Z" fill="#b9b2c6" opacity=".45"/>` + Array.from({ length: 18 }, () => { const x = PCOL * 2.66 + rnd() * PCOL * .24, y = PH - rnd() * 34; return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(1 + rnd() * 1.6)}" fill="#8f87a0"/>`; }).join("");
+    const ladX = PCOL * 2.28, ladY = 372;
+    const ladder = `<g stroke="#8a5a2e" stroke-width="2"><path d="M${ladX} ${ladY} v58 M${ladX + 9} ${ladY} v58"/>${[0, 1, 2, 3, 4, 5].map((k) => `<path d="M${ladX} ${ladY + 6 + k * 9} h9"/>`).join("")}</g>`;
+    // Welt 4 – Gletscher: blaue Eiszunge, Spalten, Eistürme, Moränen, Gletschersee
+    const tongue = `<path d="M772 ${f1(g(772) + 4)} C792 300 828 420 842 515 Q848 560 860 ${PH - 30} L906 ${PH - 30} Q918 555 922 505 C932 400 944 300 956 ${f1(g(956) + 4)}Z" fill="#c6e3f6" opacity=".95"/>
+      <path d="M790 ${f1(g(790) + 20)} C812 320 845 430 856 520" stroke="#e9f5ff" stroke-width="5" fill="none" opacity=".8" stroke-linecap="round"/>
+      <path d="M940 ${f1(g(940) + 22)} C930 330 912 440 904 530" stroke="#93c2e8" stroke-width="4" fill="none" opacity=".6" stroke-linecap="round"/>
+      ${[[820, 290], [885, 275], [845, 370], [905, 360], [868, 450], [890, 515]].map(([x, y]) => `<path d="M${x - 13} ${y} q6.5 4 13 0 q6.5 -4 13 0" stroke="#6fa6d8" stroke-width="1.8" fill="none" stroke-linecap="round"/>`).join("")}
+      <path d="M772 ${f1(g(772) + 10)} C790 320 826 430 838 530" stroke="#7d7488" stroke-width="5" stroke-dasharray="1 6" stroke-linecap="round" fill="none" opacity=".55"/>
+      <path d="M958 ${f1(g(958) + 10)} C944 320 928 440 924 530" stroke="#7d7488" stroke-width="5" stroke-dasharray="1 6" stroke-linecap="round" fill="none" opacity=".55"/>`;
+    const seracs = [[852, 540], [862, 552], [910, 538], [900, 556]].map(([x, y]) => `<path d="M${x - 5} ${y + 7} L${x - 2} ${y - 5} L${x + 2} ${y - 2} L${x + 5} ${y + 7}Z" fill="#eef8ff" stroke="#9cc8ec" stroke-width=".8"/>`).join("");
+    const lake = `<ellipse cx="884" cy="${PH - 14}" rx="54" ry="11" fill="#56c2d6"/><ellipse cx="870" cy="${PH - 17}" rx="24" ry="3" fill="#bdf0f8" opacity=".7"/>`;
+    // Welt 5 – Gipfelgrat: Felsen im Schnee, Wechte am Grat, Glitzern, Schneefahne am Gipfel
+    const crags = [[1005, 150], [1095, 205], [1175, 120]].filter(([x, dy]) => !nearRoute(x, g(x) + dy, 30))
+      .map(([x, dy]) => { const y = g(x) + dy; return `<path d="M${x - 20} ${f1(y + 9)} Q${x - 12} ${f1(y - 4)} ${x - 5} ${f1(y - 9)} L${x + 3} ${f1(y - 5)} Q${x + 12} ${f1(y + 1)} ${x + 20} ${f1(y + 9)}Z" fill="#857d92"/>
+        <path d="M${x - 9} ${f1(y - 5)} Q${x - 5} ${f1(y - 11)} ${x + 3} ${f1(y - 5)} Q${x - 1} ${f1(y - 3)} ${x - 9} ${f1(y - 5)}Z" fill="#fff"/><path d="M${x - 20} ${f1(y + 9)} Q${x} ${f1(y + 4)} ${x + 20} ${f1(y + 9)}" fill="#fff" opacity=".9"/>`; }).join("");
+    const cornice = `<path d="M${PCOL * 4.15} ${f1(g(PCOL * 4.15) + 3)} ${Array.from({ length: 21 }, (_, i) => { const x = PCOL * 4.15 + i * 10; return `L${f1(x)} ${f1(g(x) + 3)}`; }).join(" ")}" stroke="#ffffff" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M${PCOL * 4.15} ${f1(g(PCOL * 4.15) + 9)} ${Array.from({ length: 21 }, (_, i) => { const x = PCOL * 4.15 + i * 10; return `L${f1(x)} ${f1(g(x) + 9)}`; }).join(" ")}" stroke="#b8c7e3" stroke-width="2" fill="none" opacity=".7"/>`;
+    const sparkle = Array.from({ length: 16 }, () => { const x = PCOL * 3.2 + rnd() * PCOL * 1.75, y = g(x) + 12 + rnd() * 220; return `<path d="M${f1(x)} ${f1(y - 3)} v6 M${f1(x - 3)} ${f1(y)} h6" stroke="#fff" stroke-width="1.2" opacity=".9"/>`; }).join("");
+    const plume = `<path d="M${PEAK + 6} ${f1(g(PEAK) - 6)} q22 -8 46 -2 q18 4 36 -6" stroke="#fff" stroke-width="3" fill="none" opacity=".7" stroke-linecap="round"/>
+      <path d="M${PEAK + 4} ${f1(g(PEAK) + 2)} q18 -4 36 0 q14 3 26 -3" stroke="#fff" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/>`;
+    return `<svg viewBox="0 0 ${PW} ${PH}" aria-hidden="true">
+      <defs>
+        <linearGradient id="psky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f9fe0"/><stop offset=".6" stop-color="#bcd3f2"/><stop offset="1" stop-color="#f6dcb6"/></linearGradient>
+        <linearGradient id="pzones" x1="0" y1="0" x2="${PW}" y2="0" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#8cc66f"/><stop offset=".14" stop-color="#7cba65"/><stop offset=".19" stop-color="#64a257"/><stop offset=".23" stop-color="#4b8649"/><stop offset=".27" stop-color="#376b40"/><stop offset=".31" stop-color="#2d5f3e"/><stop offset=".36" stop-color="#2a5a3c"/>
+          <stop offset=".46" stop-color="#8a8196"/><stop offset=".57" stop-color="#a59db3"/><stop offset=".63" stop-color="#cfdcf0"/><stop offset=".77" stop-color="#e6f0fb"/>
+          <stop offset=".83" stop-color="#f4f7fd"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+        <linearGradient id="pshade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#1a1440" stop-opacity=".28"/></linearGradient>
+        <linearGradient id="phill" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse"><stop offset=".55" stop-color="#a8dc86"/><stop offset="1" stop-color="#a8dc86" stop-opacity="0"/></linearGradient>
+        <linearGradient id="phill2" x1="0" y1="0" x2="330" y2="0" gradientUnits="userSpaceOnUse"><stop offset=".55" stop-color="#6aa955"/><stop offset="1" stop-color="#6aa955" stop-opacity="0"/></linearGradient>
+        <clipPath id="pland"><path d="${land}"/></clipPath>
+      </defs>
+      <rect width="${PW}" height="${PH}" fill="url(#psky)"/>
+      <circle cx="140" cy="120" r="34" fill="#fff6d8" opacity=".85"/>${clouds}${eagles}
+      <path d="M0 400 L90 330 L170 360 L260 270 L360 320 L450 230 L560 280 L660 190 L760 240 L860 150 L960 200 L1060 120 L1200 180 L1200 620 L0 620Z" fill="#9db0d6" opacity=".5"/>${caps}
+      <path d="M0 460 L120 400 L240 430 L380 360 L520 400 L640 320 L780 360 L900 290 L1040 330 L1200 280 L1200 620 L0 620Z" fill="#8fa5cc" opacity=".4"/>
+      <path d="${land}" fill="url(#pzones)"/>
+      <g clip-path="url(#pland)">${hills}${strata}${ribs.join("")}${scree}${tongue}${crev.join("")}${seracs}${lake}${crags}${sparkle}
+        <path d="M${brook.map((p) => p.map((v) => v.toFixed(1)).join(" ")).join(" L")}" stroke="#7fc3ee" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        ${stones}${waterfall}${flowers.join("")}${bushes}${fence}${hay(36, 442)}${hay(150, 425)}${larches}${cows}${trees.map((t) => spruce(...t)).join("")}${pines.join("")}${ladder}
+        <rect width="${PW}" height="${PH}" fill="url(#pshade)"/></g>${cornice}${plume}
+      <path d="${"M" + surf.map((p) => p.map((v) => v.toFixed(1)).join(" ")).join(" L")}" fill="none" stroke="#4d4466" stroke-width="2" opacity=".35"/>
+      ${[1, 2, 3, 4].map((k) => `<path d="M${k * PCOL} 64 L${k * PCOL} ${PH}" stroke="#fff" stroke-width="1.5" stroke-dasharray="3 7" opacity=".35"/>`).join("")}
+      <path d="${line(pts)}" fill="none" stroke="#fff8e6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+      <path d="${line(pts)}" fill="none" stroke="#7a4e2a" stroke-width="3.5" stroke-dasharray="2 7" stroke-linecap="round"/>
+      ${doneUpTo > 0 ? `<path d="${line(pts.slice(0, doneUpTo + 1))}" fill="none" stroke="#ffc83d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}
+    </svg>`;
+  }
+
   const stars = (k) => "★".repeat(k) + "☆".repeat(3 - k);
   function mapHtml(s) {
     const canPick = may(), prog = s.prog;
@@ -625,14 +743,20 @@
     let doneUpTo = 0;
     ROUTE.forEach((r, i) => { if (r[0] === "L" && prog[r[1]]) doneUpTo = i; if (r[0] === "H" && SG.PLAN.filter((l) => l.w === r[1]).every((l) => prog[l.n])) doneUpTo = i; });
     const totS = SG.PLAN.reduce((a, l) => a + ((prog[l.n] || {}).stars || 0), 0), totE = SG.PLAN.reduce((a, l) => a + ((prog[l.n] || {}).edel || 0), 0);
-    const nodes = ROUTE.map((r) => {
+    const nodeHtml = (r, left, top, pano) => {
       if (r[0] === "H") { const w = SG.WORLDS[r[1] - 1], plan = !SG.PLAN.filter((l) => l.w === w.n).every((l) => SG.playable(l.n));
-        return `<div class="tour-hut ${plan ? "plan" : ""} ${w.n === 5 ? "peak" : ""}" style="left:${r[2]}%;top:${r[3]}%"><span class="hut-ico">${HUT_SVG[w.n]}</span><b>${w.hut}</b></div>`; }
+        return `<div class="tour-hut ${plan ? "plan" : ""} ${w.n === 5 ? "peak" : ""}" style="left:${left}%;top:${top}%"><span class="hut-ico">${HUT_SVG[w.n]}</span><b>${w.hut}</b></div>`; }
       const l = SG.PLAN[r[1] - 1], pr = prog[l.n], ok = SG.playable(l.n) && unlocked(l.n);
       const cls = !SG.playable(l.n) ? "plan" : pr ? "done" : !ok ? "lock" : next && next.n === l.n ? "next" : "";
-      return `<button class="tour-node ${cls} ${mapSel === l.n ? "sel" : ""} ${l.w === 5 ? "side" : ""}" style="left:${r[2]}%;top:${r[3]}%" data-sel="${l.n}" title="${esc(l.name)}"><i>${!SG.playable(l.n) || ok ? l.n : "🔒"}</i><b>${esc(l.name)}</b>${pr ? `<em>${stars(pr.stars)}</em>` : ""}</button>`;
-    }).join("");
+      return `<button class="tour-node ${cls} ${mapSel === l.n ? "sel" : ""} ${l.w === 5 && !pano ? "side" : ""}" style="left:${left}%;top:${top}%" data-sel="${l.n}" title="${esc(l.name)}"><i>${!SG.playable(l.n) || ok ? l.n : "🔒"}</i><b>${esc(l.name)}</b>${pr ? `<em>${stars(pr.stars)}</em>` : ""}</button>`;
+    };
+    const nodes = ROUTE.map((r) => nodeHtml(r, r[2], r[3])).join("");
     const worldTags = [1, 2, 3, 4, 5].map((n) => `<span class="tour-world" style="top:${ROUTE[(n - 1) * 4 + 1][3]}%">Welt ${n} · ${SG.WORLDS[n - 1].name}</span>`).join("");
+    // Panorama: Stationen in Prozent der Bildfläche, Welt-Schilder mit Fortschritt oben über jedem Abschnitt
+    const pNodes = PROUTE.map((r) => nodeHtml(r, (r[2] / PW * 100).toFixed(2), (r[3] / PH * 100).toFixed(2), true)).join("");
+    const pWorlds = SG.WORLDS.map((w) => { const inW = SG.PLAN.filter((x) => x.w === w.n), plan = !inW.every((x) => SG.playable(x.n));
+      const st = inW.reduce((a, x) => a + ((prog[x.n] || {}).stars || 0), 0);
+      return `<div class="pano-world" style="left:${(w.n - 0.5) * 20}%"><span>Welt ${w.n}</span><b>${esc(w.name)}</b><small>${plan ? "geplant" : `⭐ ${st}/${inW.length * 3}`}</small></div>`; }).join("");
     const l = SG.PLAN[mapSel - 1], pr = prog[l.n], ok = SG.playable(l.n) && unlocked(l.n);
     const tag = !SG.playable(l.n) ? `<span class="tag plan">geplant</span>` : pr ? `<span class="tag ok">geschafft · ${stars(pr.stars)}</span>` : ok ? `<span class="tag">spielbar</span>` : `<span class="tag">🔒 erst Level ${l.n - 1} schaffen</span>`;
     const team = s.mode === "solo" ? `🙋 <b>${esc(nameOf(s.roles.kraxler))}</b> spielt allein – beide Figuren, <b>Q</b> wechselt`
@@ -640,6 +764,7 @@
     return `<div class="tour"><div class="tour-head"><h2>🗺️ Tourenkarte</h2><small>Vom Tal bis zum Gipfelkreuz · 5 Welten, 15 Etappen</small></div>
       <div class="tour-team">${team}</div>
       <div class="tour-map">${mapSvg(doneUpTo)}${worldTags}${nodes}</div>
+      <div class="tour-pano">${panoSvg(doneUpTo)}${pWorlds}${pNodes}</div>
       <div class="tour-info"><div class="ti-h"><b>Level ${l.n}: ${esc(l.name)}</b>${tag}<span class="sp"></span><small>Welt ${l.w} · ${SG.WORLDS[l.w - 1].name}</small></div>
         <p>${esc(l.idea)}</p>
         <div class="row"><small>⭐ ${totS}/${SG.PLAN.length * 3} · Edelweiß ${totE}/${SG.PLAN.length * 3} · spielbar: Level 1–${SG.LEVELS.length}</small><span class="sp"></span>

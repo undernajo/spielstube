@@ -741,43 +741,6 @@
     };
   }
 
-  // ---------- Heute Abend: wer hat welches Spiel gewonnen (nur beim Gastgeber, pro Stube; jeden Abend neu) ----------
-  const eveningDay = (t) => new Date(t - 6 * 3600e3).toDateString(); // bis 6 Uhr früh zählt noch zum Vorabend
-  function gameResult() { // Sieger des gerade beendeten Spiels – null, solange es läuft
-    if (S.qb) { const q = view.qb; return q && q.winners && q.winners.length ? { game: "querbeet", ids: q.winners } : null; } // Etappen zählen nicht einzeln
-    const ph = S.phase;
-    if (ph === "gameOver") return S.winners && S.winners.length ? { game: "zehn", ids: S.winners } : null;
-    const v = { slf: view.slf, geo: view.geo, hl: view.hl, land: view.land, quiz: view.quiz, karten: view.karten, alm: view.alm, jagd: view.jagd,
-      kurios: view.kurios, wand: view.wand, watten: view.watten, schnapsen: view.schnapsen }[ph];
-    if (v && v.step === "final" && Array.isArray(v.winners) && v.winners.length) return { game: S.game || ph, ids: v.winners };
-    if ((ph === "duell" || ph === "frage") && S[ph] && S[ph].step === "final" && !(S[ph].complaint && S[ph].complaint.state === "open")) {
-      const sc = S[ph].score, max = Math.max(...Object.values(sc)); return { game: ph, ids: Object.keys(sc).filter((id) => sc[id] === max) }; }
-    if (ph === "wer" && S.wer && S.wer.step === "final") { const ids = Object.keys(S.wer.solved).filter((id) => S.wer.solved[id].at === 1); return ids.length ? { game: "wer", ids } : null; }
-    return null; // Koop-Spiele (Wie tickst du?, Seilschaft) haben keinen Sieger
-  }
-  function eveningRecord() {
-    if (!isHost) return;
-    const now = Date.now(), day = eveningDay(now);
-    if (!S.evening || S.evening.day !== day) S.evening = { day, list: [] };
-    const r = gameResult();
-    if (!r) { S.evDone = false; return; }
-    if (S.evDone) return; // dieses Spiel ist schon eingetragen
-    S.evDone = true;
-    const names = r.ids.map((id) => (S.players.find((p) => p.id === id) || {}).name).filter(Boolean);
-    if (names.length) S.evening.list.push({ t: now, game: r.game, names });
-  }
-  const eveningList = () => (S.evening && S.evening.day === eveningDay(Date.now()) ? S.evening.list.slice() : []);
-  function eveningHtml() {
-    const list = (view && view.evening) || [];
-    if (!list.length) return "";
-    const wins = {}; list.forEach((e) => e.names.forEach((n) => { wins[n] = (wins[n] || 0) + 1; }));
-    const max = Math.max(...Object.values(wins)), gname = (k) => (GAMES.find((g) => g.key === k) || {}).name || k;
-    const table = Object.entries(wins).sort((a, b) => b[1] - a[1]).map(([n, c]) => `<li><span class="ev-n">${c === max ? "🥇 " : ""}${esc(n)}</span><b>${"🏆".repeat(Math.min(c, 8))}${c > 8 ? ` ${c}` : ""}</b></li>`).join("");
-    const log = list.slice().reverse().map((e) => `<li><span class="ev-t">${new Date(e.t).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span> ${esc(gname(e.game))} – <b>${e.names.map(esc).join(" & ")}</b></li>`).join("");
-    return `<details class="evening" open><summary>🏆 Heute Abend <small>${list.length} ${list.length === 1 ? "Spiel" : "Spiele"}</small></summary>
-      <ul class="ev-table">${table}</ul><ul class="ev-log">${log}</ul></details>`;
-  }
-
   function publish() {
     // In der Lobby keine „Geister“: getrennte Spieler entfernen (z. B. nach einem Spiel oder Neustart des Gastgebers).
     // Wer noch da ist, meldet sich automatisch wieder an.
@@ -878,8 +841,6 @@
       if (mq && roomTopic) S[S.phase].seats.filter((id) => id !== myId).forEach((id) =>
         sendSealed(T("hand/" + id), { seq: Date.now(), priv: M.privateState(S, id) }, { qos: 1, retain: true }));
     }
-    eveningRecord();
-    view.evening = eveningList();
     seq = Math.max(Date.now(), seq + 1); // steigt immer, auch nach einem Neustart des Gastgebers
     view.seq = seq;
     store.set("s10-host", { code: roomCode, state: S, hostId: myId, broker: brokerIdx, ts: Date.now() });
@@ -2024,7 +1985,6 @@
           <div class="gc-chips">${chips}</div>
           ${meP ? `<div class="gc-pause">${meP.paused ? `<span class="muted small">Du pausierst – du schaust bei den Spielen nur zu.</span>` : ""}${pauseBtnHtml(meP, true)}</div>` : ""}
           ${status ? `<p class="err">${esc(status)}</p>` : ""}
-          ${eveningHtml()}
         </div>
         <section class="panel gc-now">
           ${gameBannerHtml()}
@@ -2100,7 +2060,6 @@
             <ul class="plist">${view.players.map((p, i) => `<li class="${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span><span class="pl-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
               <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused && p.id !== myId ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
             ${view.players.length < 2 ? `<p class="muted small waiting">Warte auf Mitspieler …</p>` : ""}
-            ${eveningHtml()}
             <p class="err">${esc(status)}</p>
             <div class="lobby-tools ${camOK ? "" : "nocam"}">${camOK ? `<button class="btn ghost ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}">📷 Kamera${camOn ? " ✓" : ""}</button>
               <button class="btn ghost ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}">🎤 Mikro${micOn ? " ✓" : ""}</button>` : ""}
