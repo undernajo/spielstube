@@ -375,9 +375,12 @@
     // solange noch jemand die Erklärkarte liest, nimmt niemand einen Spielzug vor (Steuerung wie Lobby/Weiter bleibt erlaubt)
     if (S.intro && S.phase !== "lobby" && introOpen(Date.now()) && !/^(lobby|start|restart|next|skip|ping|kick|pause)$|(Next|Restart|Force)$/.test(String((action && action.type) || ""))) return false;
     const before = S.phase, ok = applyAnyInner(pid, action);
-    // Koop-Spiele (Lobby-Abschnitt „Gemeinsam spielen“): kein Warten – man spielt ohnehin zusammen
-    const coop = (SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1];
-    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && !coop.includes(S.phase)) introStart(Date.now());
+    // Warten nur bei Spielen mit Uhr oder gleichzeitigem Tippen – sonst bringt früher Anfangen keinen Vorteil:
+    // Koop-Spiele (Lobby-Abschnitt „Gemeinsam spielen“), reihum ohne Uhr (Wer bin ich?, Kaum zu glauben, Fragewand, Zehnkampf,
+    // Watten, Schnapsen, Stichhaltig), Busfahrt (ohne Uhr) und Auf der Jagd (erst verstecken)
+    const noWait = [...(SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1], "jagd", "wer", "kurios", "wand", "zehn", "watten", "schnapsen", "bus", "stich"];
+    const startKey = S.phase === "karten" && S.karten ? S.karten.mode : S.phase === "playing" ? "zehn" : S.phase;
+    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && !noWait.includes(startKey)) introStart(Date.now());
     if (ok && S.phase === "lobby") S.intro = null;
     return ok;
   }
