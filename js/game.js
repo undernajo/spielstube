@@ -2547,16 +2547,45 @@
     return `<div class="wz-path">${out.join("")}</div>`;
   }
   function winCardHide() { clearTimeout(winCardT); winCardEl.classList.remove("show"); }
+  // Erklärkarte beim Spielstart – gleicher Aufbau wie die Etappenkarten der Stubenmeisterschaft:
+  // Kopf, links „So geht's“ in 3 Schritten, darunter das Ziel als goldenes Band (passend zu den Einstellungen) und die Punkte,
+  // rechts die Vorführung oder das große Spielsymbol. Bleibt offen, bis man „Los geht's!“ tippt.
+  function winCardKey(v) {
+    const ph = v.phase;
+    if (ph === "playing" || ph === "roundEnd" || ph === "gameOver") return "zehn";
+    if (ph === "quiz" && v.quiz) return v.quiz.mode;
+    if (ph === "geo" && v.geo) return v.geo.mode === "oben" ? "oben" : "geo";
+    if (ph === "karten" && v.karten) return v.karten.mode;
+    return ph;
+  }
+  let winDemoT0 = 0;
   function winCardShow() {
     const spec = view && winSpec(view); if (!spec) return;
-    const key = view.phase === "querbeet" ? "querbeet" : view.game, gm = gameByKey(key) || gameByKey(view.game) || {};
-    winCardEl.innerHTML = `<div class="wz" role="dialog" aria-label="So gewinnst du"><div class="wz-top"><span class="wz-ico gt-icon" style="--gc:${gm.color || "#8b7cff"}">${gm.icon || "🏆"}</span><div><small>So gewinnst du</small><b>${esc(gm.name || "")}</b></div></div>
-      <div class="wz-goal"><span class="fl">🏁</span><b>${spec.goal}</b></div>${winPath(spec.path)}
-      <div class="wz-rules">${spec.rules.map(([i, t]) => `<div class="wz-rule"><i>${i}</i><span>${t}</span></div>`).join("")}</div>
-      <div class="wz-go"><button type="button" class="btn primary" data-wzgo>Los geht's!</button><span class="wz-bar"><i></i></span></div></div>`;
+    const key = winCardKey(view), gm = gameByKey(key) || gameByKey(view.game) || {};
+    const how = QB.HOWTO[key] || QB.HOWTO_SOLO[key];
+    const bold = (t) => esc(t).replace(/\*([^*]+)\*/g, "<b>$1</b>");
+    const demo = !!(how && window.S10Demo && S10Demo.has(key));
+    // ohne „So geht's“ (z. B. Seilschaft): die bisherige kurze Karte mit Ziel und Regeln
+    if (!how) {
+      winCardEl.innerHTML = `<div class="wz" role="dialog" aria-label="So gewinnst du"><div class="wz-top"><span class="wz-ico gt-icon" style="--gc:${gm.color || "#8b7cff"}">${gm.icon || "🏆"}</span><div><small>So gewinnst du</small><b>${esc(gm.name || "")}</b></div></div>
+        <div class="wz-goal"><span class="fl">🏁</span><b>${spec.goal}</b></div>${winPath(spec.path)}
+        <div class="wz-rules">${spec.rules.map(([i, t]) => `<div class="wz-rule"><i>${i}</i><span>${t}</span></div>`).join("")}</div>
+        <div class="wz-go"><button type="button" class="btn primary" data-wzgo>Los geht's!</button></div></div>`;
+    } else {
+      winCardEl.innerHTML = `<div class="panel qbx wzx" style="--gc:${gm.color || "#8b7cff"}" role="dialog" aria-label="So geht's: ${esc(gm.name || "")}">
+        <div class="qbx-head"><span class="gt-icon big">${gm.icon || "🏆"}</span><div><div class="game-label">So geht's</div><b class="qb-gname">${esc(gm.name || "")}</b></div></div>
+        <div class="qbx-body"><div class="qbx-info"><ol class="qbn-steps">${how.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${bold(t)}</span></li>`).join("")}</ol>
+            <div class="qbx-win"><span>🏆</span><span><b>Ziel:</b> ${spec.goal.replace(/<em>/g, "<b>").replace(/<\/em>/g, "</b>")}</span></div>
+            <div class="wzx-rules">${spec.rules.map(([i, t]) => `<span class="wzx-rule"><i>${i}</i>${t}</span>`).join("")}</div></div>
+          <div class="qbx-visual">${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : `<span class="gt-icon qbx-bigicon">${gm.icon || "🏆"}</span>`}</div></div>
+        <div class="qbx-foot"><span class="muted small">Die Regeln findest du jederzeit in der Lobby unter „So geht's“.</span><div class="qbx-go"><button type="button" class="btn primary" data-wzgo>Los geht's!</button></div></div>
+        <button type="button" class="qbm-x" data-wzgo aria-label="Schließen">✕</button></div>`;
+      if (demo) { winDemoT0 = Date.now(); const box = winCardEl.querySelector(".qbn-demo"); S10Demo.mount(box, key, winDemoT0);
+        const rb = box.querySelector(".dm-replay"); if (rb) rb.onclick = () => { winDemoT0 = Date.now(); S10Demo.mount(box, key, winDemoT0); }; }
+    }
     winCardEl.classList.add("show");
-    winCardEl.querySelector("[data-wzgo]").onclick = winCardHide;
-    clearTimeout(winCardT); winCardT = setTimeout(winCardHide, 15000);
+    winCardEl.querySelectorAll("[data-wzgo]").forEach((b) => b.onclick = winCardHide);
+    clearTimeout(winCardT);
   }
   winCardEl.addEventListener("click", (e) => { if (e.target === winCardEl) winCardHide(); });
   addEventListener("keydown", (e) => { if (e.key === "Escape" && winCardEl.classList.contains("show")) winCardHide(); });

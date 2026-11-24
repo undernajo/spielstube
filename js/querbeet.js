@@ -75,6 +75,14 @@
     }
     return HOWTO[game] ? HOWTO[game].win : "";
   }
+  // „So geht's“ für Spiele, die es nur einzeln gibt (gemeinsame Erklärkarte beim Spielstart)
+  const HOWTO_SOLO = {
+    watten: { steps: ["Jeder bekommt *5 Karten*. Der Nicht-Geber sagt den *Schlag*, der Geber den *Trumpf* – durch Tippen auf eine eigene Karte.", "Reihum je eine Karte legen – *Rechter, Guter, Trumpf* stechen. Wer *3 Stiche* hat, gewinnt die Runde.", "*Bieten* erhöht den Wert der Runde – wer ablehnt, gibt die Runde ab."] },
+    schnapsen: { steps: ["Jeder bekommt *5 Karten*, die aufgedeckte Karte unter dem Talon zeigt *Trumpf*.", "Stiche holen und Augen sammeln – König und Ober derselben Farbe *ansagen* (20, in Trumpf 40).", "Wer zuerst *66 Augen* hat, gewinnt die Runde – je nach Vorsprung 1 bis 3 Punkte."] },
+    wer: { steps: ["Jeder bekommt *geheim eine Person* – alle anderen sehen sie samt Steckbrief, nur du nicht.", "Wer dran ist, stellt *Ja/Nein-Fragen* über sich – die anderen antworten per Knopf.", "Bei *Ja* darfst du weiterfragen, bei *Nein* ist der Nächste dran. *Raten* geht, wenn du dran bist."] },
+    tick: { steps: ["Alle sehen eine *Skala* zwischen zwei Gegensätzen – Felder 1 bis 10.", "Wer dran ist, bekommt *geheim eine Zahl* und nennt etwas, das für ihn genau dazu passt.", "Die anderen *tippen die Zahl* – je näher dran, desto mehr Punkte."] },
+    kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."] },
+  };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
@@ -276,5 +284,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { winText, skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { HOWTO_SOLO, winText, skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);
