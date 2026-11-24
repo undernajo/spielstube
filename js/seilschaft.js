@@ -9,30 +9,33 @@
   // Zeichen: # Fels · r Dach · A/B/C/E Gatter (über Platten) · D Hüttentür (Schlüssel) · i dünnes Eis (Brücke über Platte) · w Wasser
   const base = (f, W) => { f(0, W - 1, 13, 14, "#"); f(0, 0, 0, 12, "#"); f(W - 1, W - 1, 0, 12, "#"); };
   const LEVELS = [
-    { n: 1, name: "Auf die Alm", sub: "Spalte, Doppelsprung, Huckepack", W: 44, par: 35,
+    { n: 1, name: "Auf die Alm", sub: "Spalte, Doppelsprung, Huckepack", W: 64, par: 55,
       build(f, grid, W) { base(f, W);
         f(12, 12, 0, 8, "#"); f(12, 12, 9, 11, "A");      // Wand mit Gatter, unten eine Spalte nur für die Gams
         f(24, 30, 10, 10, "#"); f(24, 24, 11, 12, "B");  // Felsdach: oben die Platte, darunter der Durchgang mit Gatter
+        f(40, 48, 12, 12, "#"); f(44, 48, 11, 11, "#");  // Felsstufen: je 1 hoch
+        f(52, 52, 0, 8, "#"); f(52, 52, 9, 11, "C");      // zweite Wand mit Spalte – wie die erste
       },
-      plates: [{ x: 14, y: 13, opens: ["A"] }, { x: 27, y: 10, opens: ["B"] }],
-      items: [{ id: "e1", x: 6, y: 10 }, { id: "e2", x: 18, y: 10 }, { id: "e3", x: 35, y: 6 }],
-      signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 21.5, y: 13, t: "Gams: 2× springen" }, { x: 33.4, y: 13, t: "Huckepack!" }],
-      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 39.6, goal: { x: 41.5, y: 13, t: "Zur Alm ➜" } },
-    { n: 2, name: "Steinschlag", sub: "Zwei-Platten-Gatter, Huckepack, Tunnel mit Gegen-Gatter", W: 52, par: 60,
+      plates: [{ x: 14, y: 13, opens: ["A"] }, { x: 27, y: 10, opens: ["B"] }, { x: 54, y: 13, opens: ["C"] }],
+      items: [{ id: "e1", x: 6, y: 10 }, { id: "e2", x: 18, y: 10 }, { id: "e3", x: 35, y: 6 }, { id: "e4", x: 46, y: 8 }, { id: "e5", x: 57, y: 10 }],
+      signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 21.5, y: 13, t: "Gams: 2× springen" }, { x: 33.4, y: 13, t: "Huckepack!" }, { x: 50, y: 13, t: "Nochmal die Gams" }],
+      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 59.6, goal: { x: 61.5, y: 13, t: "Zur Alm ➜" } },
+    { n: 2, name: "Steinschlag", sub: "Zwei-Platten-Gatter, Huckepack, Tunnel mit Gegen-Gatter", W: 76, par: 85,
       build(f, grid, W) { base(f, W);
         f(10, 10, 0, 8, "#"); f(10, 10, 9, 12, "A");      // Gatter A: braucht BEIDE gelben Platten (oder die hinter dem Gatter)
         f(18, 26, 8, 10, "#");                            // Felswand, 5 hoch – nur huckepack zu erklimmen
         f(18, 18, 11, 12, "B"); f(26, 26, 11, 12, "C");   // Tunnel darunter: B öffnet mit der blauen Platte, C schließt mit ihr
         f(38, 50, 10, 12, "#");                           // Hochfläche, 3 hoch
         f(45, 45, 0, 4, "#"); f(45, 45, 5, 9, "E");       // Gatter E oben
+        f(60, 74, 10, 12, "#");                           // zweite Hochfläche, 3 hoch – wieder mit dem Fels als Stufe
       },
       plates: [{ x: 6, y: 13, opens: ["A"], grp: 1 }, { x: 8, y: 13, opens: ["A"], grp: 1 }, { x: 12, y: 13, opens: ["A"], grp: 2 },
         { x: 22, y: 8, opens: ["B", "C"] }, { x: 41, y: 10, heavy: true, opens: ["E"] }, { x: 48, y: 10, opens: ["E"] }],
       inv: ["C"],
-      items: [{ id: "e1", x: 5, y: 6 }, { id: "e2", x: 25, y: 6 }, { id: "e3", x: 42, y: 4 }],
-      signs: [{ x: 9.2, y: 13, t: "Zwei Platten!" }, { x: 16.4, y: 13, t: "Zu hoch?" }, { x: 20, y: 8, t: "Rein – dann loslassen" }, { x: 34.5, y: 13, t: "Fels als Stufe" }],
-      boulders: [{ x: 3.6, y: 12 }, { x: 31, y: 12 }], start: { kraxler: 1.3, gams: 2.4 }, goalX: 46.2, goal: { x: 49.6, y: 10, t: "Zur Hütte ➜" } },
-    { n: 3, name: "Zur Almhütte", sub: "Brücke übers Eis, Schlüssel huckepack, Hüttentür", W: 56, par: 45,
+      items: [{ id: "e1", x: 5, y: 6 }, { id: "e2", x: 25, y: 6 }, { id: "e3", x: 42, y: 4 }, { id: "e4", x: 57, y: 9 }, { id: "e5", x: 67, y: 6 }],
+      signs: [{ x: 9.2, y: 13, t: "Zwei Platten!" }, { x: 16.4, y: 13, t: "Zu hoch?" }, { x: 20, y: 8, t: "Rein – dann loslassen" }, { x: 34.5, y: 13, t: "Fels als Stufe" }, { x: 53.5, y: 13, t: "Nochmal schieben" }],
+      boulders: [{ x: 3.6, y: 12 }, { x: 31, y: 12 }, { x: 55, y: 12 }], start: { kraxler: 1.3, gams: 2.4 }, goalX: 70.2, goal: { x: 73.4, y: 10, t: "Zur Hütte ➜" } },
+    { n: 3, name: "Zur Almhütte", sub: "Brücke übers Eis, Schlüssel huckepack, Hüttentür", W: 72, par: 65,
       build(f, grid, W) { base(f, W);
         f(6, 8, 10, 10, "#");
         f(12, 12, 0, 8, "#"); f(12, 12, 9, 11, "A");
@@ -40,53 +43,58 @@
         grid[13][25] = ".";                              // Mulde für die schwere Platte
         f(28, 28, 0, 8, "#"); f(28, 28, 9, 12, "B");
         f(31, 42, 13, 13, "i"); f(31, 42, 14, 14, "w"); // dünnes Eis über dem Almsee
-        f(46, 48, 8, 8, "#");                            // Felsband mit Schlüssel – 5 hoch, nur huckepack
-        f(48, 54, 7, 7, "r"); f(50, 50, 8, 12, "D");    // Almhütte: Dach und Tür
+        grid[13][52] = ".";                              // zweite Mulde – der Fels muss hinein, sonst bleibt Gatter C zu
+        f(56, 56, 0, 8, "#"); f(56, 56, 9, 12, "C");
+        f(62, 64, 8, 8, "#");                            // Felsband mit Schlüssel – 5 hoch, nur huckepack
+        f(64, 70, 7, 7, "r"); f(66, 66, 8, 12, "D");    // Almhütte: Dach und Tür
       },
-      plates: [{ x: 14, y: 13, opens: ["A"] }, { x: 25, y: 14, heavy: true, opens: ["B"] }, { x: 44, y: 13, opens: ["bridge"] }],
-      items: [{ id: "e1", x: 7, y: 9 }, { id: "e2", x: 22, y: 9 }, { id: "e3", x: 36, y: 9 }, { id: "key", x: 47, y: 7, key: true }],
-      signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 23.6, y: 13, t: "Schwer!" }, { x: 29.6, y: 13, t: "Dünnes Eis" }, { x: 45, y: 13, t: "Brücke" }],
-      boulders: [{ x: 19, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 51.2, hut: { x0: 48.6, x1: 54.4, name: "Almhütte" } },
+      plates: [{ x: 14, y: 13, opens: ["A"] }, { x: 25, y: 14, heavy: true, opens: ["B"] }, { x: 44, y: 13, opens: ["bridge"] }, { x: 52, y: 14, heavy: true, opens: ["C"] }],
+      items: [{ id: "e1", x: 7, y: 9 }, { id: "e2", x: 22, y: 9 }, { id: "e3", x: 36, y: 9 }, { id: "e4", x: 53, y: 9 }, { id: "key", x: 63, y: 7, key: true }],
+      signs: [{ x: 9.6, y: 13, t: "Nur die Gams passt durch" }, { x: 23.6, y: 13, t: "Schwer!" }, { x: 29.6, y: 13, t: "Dünnes Eis" }, { x: 45, y: 13, t: "Brücke" }, { x: 49.2, y: 13, t: "Fels in die Mulde" }],
+      boulders: [{ x: 19, y: 12 }, { x: 48.5, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 67.2, hut: { x0: 64.6, x1: 70.4, name: "Almhütte" } },
     // ---------- Welt 2: Bergwald & Bach ----------
     // Neu: Fichten (der Kraxler drückt sie um – sie fallen in Schieberichtung und werden zur Brücke), Bach mit Strömung
     // (reißt die Gams mit; huckepack trägt der Kraxler sie hinüber), Steg (k), Seilwinde (Plattform fährt, solange eine Kurbel-Platte gedrückt ist), Zeit-Gatter
-    { n: 4, name: "Im Fichtenwald", sub: "Fichten umdrücken – Stämme als Brücken über die Schluchten", W: 52, par: 50,
+    { n: 4, name: "Im Fichtenwald", sub: "Fichten umdrücken – Stämme als Brücken über die Schluchten", W: 62, par: 65,
       build(f, grid, W) { base(f, W);
         f(12, 16, 13, 13, "."); f(12, 16, 14, 14, "w");   // Schlucht 1 mit Wildwasser
         f(22, 22, 0, 8, "#"); f(22, 22, 9, 11, "A");      // Wand mit Gatter, unten Spalte (nur Gams)
         f(28, 33, 13, 13, "."); f(28, 33, 14, 14, "w");   // Schlucht 2
         grid[13][41] = ".";                               // Mulde für den Fels
         f(45, 45, 0, 8, "#"); f(45, 45, 9, 12, "B");
+        f(50, 54, 13, 13, "."); f(50, 54, 14, 14, "w");   // Schlucht 3 – wie Schlucht 1
       },
-      trees: [{ x: 11, h: 6 }, { x: 27, h: 7 }],
+      trees: [{ x: 11, h: 6 }, { x: 27, h: 7 }, { x: 49, h: 6 }],
       plates: [{ x: 24, y: 13, opens: ["A"] }, { x: 41, y: 14, heavy: true, opens: ["B"] }],
-      items: [{ id: "e1", x: 14, y: 9 }, { id: "e2", x: 30, y: 8 }, { id: "e3", x: 5, y: 7 }],
-      signs: [{ x: 8.6, y: 13, t: "Kraxler: Baum umdrücken!" }, { x: 19.6, y: 13, t: "Nur die Gams passt durch" }, { x: 38, y: 13, t: "Fels in die Mulde" }],
-      boulders: [{ x: 36.5, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 46.2, goal: { x: 49.6, y: 13, t: "Zum Bach ➜" } },
-    { n: 5, name: "Wilder Bach", sub: "Strömung, huckepack durchs Wasser, Trittsteine und Steg", W: 58, par: 55,
+      items: [{ id: "e1", x: 14, y: 9 }, { id: "e2", x: 30, y: 8 }, { id: "e3", x: 5, y: 7 }, { id: "e4", x: 52, y: 9 }],
+      signs: [{ x: 8.6, y: 13, t: "Kraxler: Baum umdrücken!" }, { x: 19.6, y: 13, t: "Nur die Gams passt durch" }, { x: 38, y: 13, t: "Fels in die Mulde" }, { x: 47, y: 13, t: "Noch eine Fichte" }],
+      boulders: [{ x: 36.5, y: 12 }], start: { kraxler: 2, gams: 3.6 }, goalX: 56.2, goal: { x: 59.6, y: 13, t: "Zum Bach ➜" } },
+    { n: 5, name: "Wilder Bach", sub: "Strömung, huckepack durchs Wasser, Trittsteine und Steg", W: 74, par: 70,
       build(f, grid, W) { base(f, W);
         f(10, 26, 12, 12, "s");                           // Bach: Strömung nach links (spült die Gams ans Ufer zurück)
         f(33, 49, 13, 13, "."); f(33, 49, 14, 14, "w");   // tiefer Fluss …
         f(38, 38, 13, 14, "#"); f(44, 44, 13, 14, "#");   // … mit zwei Trittsteinen
         f(33, 37, 13, 13, "k"); f(39, 43, 13, 13, "k"); f(45, 49, 13, 13, "k"); // Steg, wenn die Platte gedrückt ist
+        f(56, 66, 12, 12, "s");                           // zweiter Bacharm – wieder huckepack hinüber
       },
       plates: [{ x: 51, y: 13, opens: ["bridge"] }],
-      items: [{ id: "e1", x: 18, y: 8 }, { id: "e2", x: 38, y: 10 }, { id: "e3", x: 44, y: 8 }],
-      signs: [{ x: 5.4, y: 13, t: "Gams: huckepack rüber!" }, { x: 30, y: 13, t: "Trittsteine" }],
-      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 52.2, goal: { x: 55, y: 13, t: "Zur Seilwinde ➜" } },
-    { n: 6, name: "Die Seilwinde", sub: "Kurbeln und hochfahren, Zeit-Gatter, Schlüssel huckepack", W: 56, par: 60,
+      items: [{ id: "e1", x: 18, y: 8 }, { id: "e2", x: 38, y: 10 }, { id: "e3", x: 44, y: 8 }, { id: "e4", x: 61, y: 8 }],
+      signs: [{ x: 5.4, y: 13, t: "Gams: huckepack rüber!" }, { x: 30, y: 13, t: "Trittsteine" }, { x: 53.6, y: 13, t: "Noch ein Bacharm" }],
+      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 68.2, goal: { x: 71, y: 13, t: "Zur Seilwinde ➜" } },
+    { n: 6, name: "Die Seilwinde", sub: "Kurbeln und hochfahren, Zeit-Gatter, Schlüssel huckepack", W: 70, par: 75,
       build(f, grid, W) { base(f, W);
-        f(18, 54, 8, 12, "#");                            // Hochfläche (5 hoch) – hinauf nur mit der Seilwinde
+        f(18, 68, 8, 12, "#");                            // Hochfläche (5 hoch) – hinauf nur mit der Seilwinde
         f(36, 36, 0, 3, "#"); f(36, 36, 4, 7, "C");       // Zeit-Gatter oben
-        f(44, 46, 3, 3, "#");                             // Felsband mit Schlüssel – 5 hoch, nur huckepack
-        f(47, 53, 2, 2, "r"); f(49, 49, 3, 7, "D");       // Holzerhütte: Dach und Tür
+        f(49, 49, 0, 3, "#"); f(49, 49, 4, 7, "E");       // zweites Zeit-Gatter – gleich weit von seiner Platte wie das erste
+        f(58, 60, 3, 3, "#");                             // Felsband mit Schlüssel – 5 hoch, nur huckepack
+        f(61, 67, 2, 2, "r"); f(63, 63, 3, 7, "D");       // Holzerhütte: Dach und Tür
       },
       lifts: [{ x: 15, w: 3, bottom: 12.65, top: 8 }],
-      plates: [{ x: 11, y: 13, opens: ["lift"] }, { x: 22, y: 8, opens: ["lift"] }, { x: 27, y: 8, opens: ["C"] }],
-      hold: { C: 1.1 },
-      items: [{ id: "e1", x: 16, y: 4 }, { id: "e2", x: 31, y: 5 }, { id: "e3", x: 5, y: 7 }, { id: "key", x: 45, y: 2, key: true }],
-      signs: [{ x: 9.4, y: 13, t: "Kurbel" }, { x: 24.4, y: 8, t: "Kurbel" }, { x: 30.6, y: 8, t: "Schnell durch!" }],
-      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 50.2, hut: { x0: 47.6, x1: 53.4, name: "Holzerhütte", y0: 3, logs: true } },
+      plates: [{ x: 11, y: 13, opens: ["lift"] }, { x: 22, y: 8, opens: ["lift"] }, { x: 27, y: 8, opens: ["C"] }, { x: 40, y: 8, opens: ["E"] }],
+      hold: { C: 1.1, E: 1.1 },
+      items: [{ id: "e1", x: 16, y: 4 }, { id: "e2", x: 31, y: 5 }, { id: "e3", x: 5, y: 7 }, { id: "e4", x: 44, y: 4 }, { id: "key", x: 59, y: 2, key: true }],
+      signs: [{ x: 9.4, y: 13, t: "Kurbel" }, { x: 24.4, y: 8, t: "Kurbel" }, { x: 30.6, y: 8, t: "Schnell durch!" }, { x: 43.6, y: 8, t: "Nochmal schnell!" }],
+      boulders: [], start: { kraxler: 2, gams: 3.6 }, goalX: 64.2, hut: { x0: 61.6, x1: 67.4, name: "Holzerhütte", y0: 3, logs: true } },
   ];
   // Baut das Gelände eines Levels als Raster (Zeilen × Spalten)
   function grid(L) {
