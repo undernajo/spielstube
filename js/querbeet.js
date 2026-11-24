@@ -51,6 +51,30 @@
     alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 8 Wochen." },
     jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
+  // „Etappensieg: …“ passend zur Kurzfassung (Rundenzahl usw. aus den Etappen-Einstellungen)
+  function winText(game, o) {
+    o = o || {};
+    const n = (k, one, many) => `*${k} ${k === 1 ? one : many}*`;
+    switch (game) {
+      case "zehn": return `Die meisten Punkte nach ${n(o.cards || 1, "Karte", "Karten")}.`;
+      case "wand": return `Die meisten Punkte, wenn alle gleich oft gewählt haben (Wand mit ${n(o.n || 5, "Kategorie", "Kategorien")}).`;
+      case "hl": return `Die meisten richtigen Tipps in ${n(o.cats || 2, "Kategorie", "Kategorien")} mit je 6 Vergleichen.`;
+      case "schaetzen": return `Die meisten Punkte nach ${n(o.rounds || 5, "Schätzfrage", "Schätzfragen")}.`;
+      case "hinweis": return `Die meisten Punkte nach ${n(o.rounds || 4, "Begriff", "Begriffen")}.`;
+      case "geo": return `Die meisten Punkte nach ${n(o.rounds || 5, "Ort", "Orten")}.`;
+      case "land": return `Die meisten Punkte nach ${n(o.rounds || 8, "Gebiet", "Gebieten")}.`;
+      case "umriss": return `Die meisten Punkte nach ${n(o.rounds || 6, "Umriss", "Umrissen")}.`;
+      case "oben": return `Die meisten Punkte nach ${n(o.rounds || 3, "Bild", "Bildern")}.`;
+      case "slf": return `Die meisten Punkte nach ${n(o.rounds || 2, "Buchstabe", "Buchstaben")} (eigene Antworten zählen mehr).`;
+      case "siebzehn": return `Wer zuerst ${n(o.wins || 3, "Runde", "Runden")} gewinnt – nach spätestens *${o.maxRounds || 8} Runden* zählen die meisten Rundensiege.`;
+      case "bus": return `Die meisten Punkte nach ${n(o.rounds || 3, "Runde", "Runden")}.`;
+      case "stich": return `Die meisten Punkte nach ${n(o.rounds || 4, "Runde", "Runden")} (1 bis ${o.rounds || 4} Karten).`;
+      case "alm": return `Die meisten Punkte nach ${n(o.weeks || 8, "Woche", "Wochen")}.`;
+      case "jagd": return `Die meisten Punkte für Treffer und erlegtes Wild nach ${n(o.rounds || 12, "Runde", "Runden")}.`;
+      case "duell": case "frage": return `Wer zuerst ${n(o.target || 3, "Runde", "Runden")} gewinnt.`;
+    }
+    return HOWTO[game] ? HOWTO[game].win : "";
+  }
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
@@ -252,5 +276,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { winText, skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

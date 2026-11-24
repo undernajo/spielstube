@@ -623,7 +623,7 @@
     const LAND_RULE = { de: "Tippt das genannte Bundesland auf der Karte an.", at: "Tippt das genannte Bundesland auf der Karte an.",
       it: "Tippt die genannte Region auf der Karte an.", ch: "Tippt den genannten Kanton auf der Karte an." };
     const rule = (st) => st.game === "land" ? LAND_RULE[st.opts.region] || "Tippt das genannte Land auf der Karte an." : QB.STAGES[st.game].rule;
-    const q = S.qb, info = (st) => st ? { game: st.game, cards: (st.opts && st.opts.cards) || null, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] || null } : null;
+    const q = S.qb, info = (st) => st ? { game: st.game, cards: (st.opts && st.opts.cards) || null, name: QB.STAGES[st.game].name, detail: qbDetail(st), rule: rule(st), how: QB.HOWTO[st.game] ? { ...QB.HOWTO[st.game], win: QB.winText(st.game, st.opts) } : null } : null;
     const nextSt = q.step === "intro" || q.step === "break" ? q.plan[q.idx + 1] : null;
     return {
       step: q.step, idx: q.idx, plan: q.plan.map((p) => p.game), pts: { ...q.pts }, ready: { ...q.ready }, target: q.target, length: q.opts.length,
@@ -2525,7 +2525,7 @@
     if (ph === "wer" && v.wer) return { goal: `Finde heraus, <em>wer du bist</em> – mit Ja/Nein-Fragen. Wer seine Person zuerst errät, gewinnt.`, path: null,
       rules: [["✓", "Bei <b>Ja</b> darfst du weiterfragen"], ["✗", "Bei <b>Nein</b> ist der Nächste dran"], ["🎯", "Raten, wenn du dran bist – falsch = der Nächste ist dran"]] };
     if (ph === "jagd" && v.jagd) { const n = v.jagd.rounds;
-      return { goal: `${n ? `<em>${n} Runden</em>` : "Bis einer das Revier seines Nachbarn leergejagt hat"} – Punkte gibt es für Treffer und erlegtes Wild. Die größte Strecke gewinnt.`, path: n ? { type: "rounds", n, fin: false } : null,
+      return { goal: `${n ? `<em>${n} Runden</em>` : "Bis einer das Revier seines Nachbarn leergejagt hat"} – Punkte gibt es für Treffer und erlegtes Wild. Die meisten Punkte gewinnen.`, path: n ? { type: "rounds", n, fin: false } : null,
         rules: [["🎯", "Treffer <b>+1</b>"], ["🦌", "Tier ganz erlegt <b>+2</b> bis <b>+4</b>"], ["🔭", "Einmal den Hochsitz nutzen"]] }; }
     return null;
   }
@@ -3310,7 +3310,7 @@
         <li><b>Treffer</b> = Wild getroffen, <b>🐾 Fuchsspur</b> = direkt daneben (oben, unten, links, rechts) steht der Fuchs, sonst nichts. Nur der Fuchs hinterlässt Spuren.</li>
         <li><b>Punkte:</b> jeder Treffer +${JG.HIT}. Wer ein Tier fertig trifft, erlegt es und bekommt dazu ${JG.ANIMALS.map((a) => `${a.name} +${a.kill}`).join(", ")}.</li>
         <li><b>🔭 Hochsitz:</b> einmal pro Partie, kostet keinen Schuss: einen 3×3-Bereich im Revier deines Nachbarn beobachten. Nur du siehst das Ergebnis; gesichtetes Wild musst du danach noch schießen.</li>
-        <li>Die Jagd endet nach der Rundenzahl (kurz 12, lang 20) – oder sobald jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde); die <b>ganze Jagd</b> geht genau so lange. Die größte Strecke (meiste Punkte) gewinnt.</li>
+        <li>Die Jagd endet nach der Rundenzahl (kurz 12, lang 20) – oder sobald jemand das Revier seines Nachbarn leergejagt hat (am Ende dieser Runde); die <b>ganze Jagd</b> geht genau so lange. Wer die meisten Punkte hat, gewinnt.</li>
       </ul>
     </details>`;
   const almRulesHtml = `
