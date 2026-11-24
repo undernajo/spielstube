@@ -34,24 +34,24 @@
   };
   // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
   const HOWTO = {
-    zehn: { steps: ["Eine Karte mit *10 Antworten* – reihum ist einer dran.", "Wer dran ist, *nennt eine Antwort* oder *passt* (sichert seine Punkte).", "Richtig = +1. *Falsch = alle Punkte dieser Runde weg.*"], win: "Wer am Ende die meisten Punkte hat." },
-    wand: { steps: ["Wer dran ist, *wählt ein Feld* – je höher die Zahl, desto schwerer.", "*Nur du antwortest* – eintippen oder auswählen, ohne Zeitdruck.", "*Richtig = Punkte* des Feldes. Falsch kostet nichts."], win: "Wer nach allen Zügen die meisten Punkte hat." },
-    hl: { steps: ["Ein Begriff mit Wert, daneben der nächste *ohne* Wert.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = 1 Punkt – der neue Begriff wird die nächste Vergleichszahl."], win: "Die meisten richtigen Tipps." },
-    schaetzen: { steps: ["Eine Frage mit einer *Zahl* als Antwort.", "Alle *schätzen gleichzeitig*.", "*Am nächsten dran* = die meisten Punkte, ganz genau = Bonus."], win: "Die meisten Punkte nach allen Fragen." },
-    hinweis: { steps: ["Gesucht ist ein Begriff – alle 10 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "*Früh richtig* = viele Punkte, spät richtig = wenige."], win: "Die meisten Punkte nach allen Begriffen." },
-    geo: { steps: ["Oben steht ein *Ort*.", "*Alle tippen gleichzeitig* auf die Karte, wo er liegt.", "*Je näher* am echten Ort, desto mehr Punkte."], win: "Die meisten Punkte nach allen Orten." },
-    land: { steps: ["Oben steht ein *Gebiet* (Land, Bundesland, Region oder Kanton).", "*Tippt es auf der Karte an* – alle gleichzeitig.", "*Richtig* getippt = Punkt."], win: "Die meisten richtigen Gebiete." },
-    umriss: { steps: ["Zu sehen ist nur ein *Umriss*.", "*Welches Gebiet ist das?* Eintippen – nur ein Versuch.", "Richtig = Punkte, *wer zuerst richtig liegt*, bekommt mehr."], win: "Die meisten Punkte nach allen Umrissen." },
+    zehn: { steps: ["Eine Karte mit einer Frage und *10 verdeckten Antworten*.", "Reihum *wählt jeder ein Feld und antwortet* – oder *passt* und sichert seine Punkte dieser Karte.", "Richtig = +1. *Falsch = alle Punkte dieser Karte weg* und du bist für diese Karte raus."], win: "Wer am Ende die meisten Punkte hat." },
+    wand: { steps: ["Wer dran ist, *wählt ein Feld* – je höher die Zahl, desto schwerer.", "*Nur wer gewählt hat, antwortet* – eintippen oder auswählen, ohne Zeitdruck.", "*Richtig = Punkte* des Feldes. Falsch kostet nichts."], win: "Wer nach allen Zügen die meisten Punkte hat." },
+    hl: { steps: ["Links ein Begriff *mit* Wert, rechts der nächste *ohne*.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = *1 Punkt*. Danach zeigt der Begriff seinen Wert – und ist der Vergleich für den nächsten."], win: "Die meisten richtigen Tipps." },
+    schaetzen: { steps: ["Eine Frage mit einer *Zahl* als Antwort.", "Alle *schätzen gleichzeitig*.", "*Am nächsten dran* = 3 Punkte, dann 2 und 1 – *genau getroffen* (höchstens 1 % daneben) +1."], win: "Die meisten Punkte nach allen Fragen." },
+    hinweis: { steps: ["Gesucht ist ein Begriff – alle 10 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "Richtig beim *1. Hinweis* = 5 Punkte, beim 5. noch *1*."], win: "Die meisten Punkte nach allen Begriffen." },
+    geo: { steps: ["Oben steht ein *Ort*.", "*Alle tippen gleichzeitig* auf die Karte, wo er liegt.", "*Je näher* am echten Ort, desto mehr Punkte – *bis 1000*."], win: "Die meisten Punkte nach allen Orten." },
+    land: { steps: ["Oben steht ein *Gebiet* (Land, Bundesland, Region oder Kanton).", "*Tippt es auf der Karte an* – alle gleichzeitig.", "Richtig = *100 Punkte* – die Schnellsten bekommen noch +30, +20, +10."], win: "Die meisten richtigen Gebiete." },
+    umriss: { steps: ["Zu sehen ist nur ein *Umriss*.", "*Welches Gebiet ist das?* Eintippen – nur ein Versuch.", "Richtig = *2 Punkte* – wer als Erster richtig liegt, *+1*."], win: "Die meisten Punkte nach allen Umrissen." },
     oben: { steps: ["Ein Ort *von oben* – das Bild zoomt langsam heraus.", "*Tippe auf der Karte*, wo das ist.", "*Je näher und je früher*, desto mehr Punkte."], win: "Die meisten Punkte nach allen Bildern." },
-    slf: { steps: ["Ein *Buchstabe*, sechs Kategorien.", "Zu jeder Kategorie *ein Wort* mit diesem Anfangsbuchstaben.", "Wer fertig ist, ruft *Stopp* – dann bleiben noch 10 Sekunden."], win: "Die meisten Punkte (eigene Antworten zählen mehr)." },
+    slf: { steps: ["Ein *Buchstabe*, sechs Kategorien.", "Zu jeder Kategorie *ein Wort* mit diesem Anfangsbuchstaben.", "Wer fertig ist, ruft *Stopp* – dann bleiben noch 10 Sekunden."], win: "Die meisten Punkte (Antworten, die *sonst keiner hat*, zählen mehr)." },
     duell: { steps: ["Ein Thema mit fester Liste, z. B. „die 10 größten Städte …“.", "*Abwechselnd* je eine Antwort nennen.", "*Falsch, doppelt oder zu spät* = Runde verloren."], win: "Wer die meisten Runden gewinnt." },
     frage: { steps: ["Einer bekommt eine *Antwort* und eine Kategorie.", "Er *erfindet eine Frage* dazu – der andere muss sie beantworten.", "*Richtig beantwortet* = Punkt für den Antwortenden, sonst für den Fragesteller."], win: "Wer die meisten Runden gewinnt." },
     siebzehn: { steps: ["Jeder bekommt *zwei Karten* (Unter 2, Ober 3, König 4, Ass 11).", "*Weitere Karte* ziehen oder *genug* – alle gleichzeitig.", "*Am nächsten an 21* gewinnt die Runde. Über 21 = raus, Gleichstand vorne zählt für keinen."], win: "Wer zuerst *3 Runden* gewinnt – nach spätestens *8 Runden* zählen die meisten Rundensiege." },
-    bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
-    stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
-    alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 8 Wochen." },
+    bus: { steps: ["An jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? Zwischen oder außerhalb? Farbe? Wert?", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
+    stich: { steps: ["Runde 1 mit *1 Karte*, jede Runde *eine mehr*. Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
+    alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "Bis zu *so viele Felder, wie der Würfel zeigt*, von diesem Gelände ankreuzen – zusammenhängend, Start am Hof.", "Ist eine Fläche *ganz angekreuzt*, bekommst du die Punkte, die in ihrer Ecke stehen."], win: "Die meisten Punkte nach 8 Wochen." },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."], win: "Die meisten richtig erkannten Aussagen." },
-    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
+    jagd: { steps: ["*Versteck dein Wild* im eigenen Revier: Fuchs, Hirschpaar, Gamsrudel, Murmeltiere.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn. Eine *Fuchsspur* 🐾 heißt: Der Fuchs steht direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
   // „Etappensieg: …“ passend zur Kurzfassung (Rundenzahl usw. aus den Etappen-Einstellungen)
   function winText(game, o) {
@@ -59,7 +59,7 @@
     const n = (k, one, many) => `*${k} ${k === 1 ? one : many}*`;
     switch (game) {
       case "zehn": return `Die meisten Punkte nach ${n(o.cards || 1, "Karte", "Karten")}.`;
-      case "wand": return `Die meisten Punkte, wenn alle gleich oft gewählt haben (Wand mit ${n(o.n || 5, "Kategorie", "Kategorien")}).`;
+      case "wand": return `Die meisten Punkte, wenn die Wand mit ${n(o.n || 5, "Kategorie", "Kategorien")} gespielt ist.`;
       case "hl": return `Die meisten richtigen Tipps in ${n(o.cats || 2, "Kategorie", "Kategorien")} mit je 6 Vergleichen.`;
       case "schaetzen": return `Die meisten Punkte nach ${n(o.rounds || 5, "Schätzfrage", "Schätzfragen")}.`;
       case "hinweis": return `Die meisten Punkte nach ${n(o.rounds || 4, "Begriff", "Begriffen")}.`;
@@ -67,7 +67,7 @@
       case "land": return `Die meisten Punkte nach ${n(o.rounds || 8, "Gebiet", "Gebieten")}.`;
       case "umriss": return `Die meisten Punkte nach ${n(o.rounds || 6, "Umriss", "Umrissen")}.`;
       case "oben": return `Die meisten Punkte nach ${n(o.rounds || 3, "Bild", "Bildern")}.`;
-      case "slf": return `Die meisten Punkte nach ${n(o.rounds || 2, "Buchstabe", "Buchstaben")} (eigene Antworten zählen mehr).`;
+      case "slf": return `Die meisten Punkte nach ${n(o.rounds || 2, "Buchstabe", "Buchstaben")} (Antworten, die *sonst keiner hat*, zählen mehr).`;
       case "siebzehn": return `Wer zuerst ${n(o.wins || 3, "Runde", "Runden")} gewinnt – nach spätestens *${o.maxRounds || 8} Runden* zählen die meisten Rundensiege.`;
       case "bus": return `Die meisten Punkte nach ${n(o.rounds || 3, "Runde", "Runden")}.`;
       case "stich": return `Die meisten Punkte nach ${n(o.rounds || 4, "Runde", "Runden")} (1 bis ${o.rounds || 4} Karten).`;
@@ -80,7 +80,7 @@
   }
   // „So geht's“ für Spiele, die es nur einzeln gibt (gemeinsame Erklärkarte beim Spielstart)
   const HOWTO_SOLO = {
-    watten: { steps: ["Jeder bekommt *5 Karten*. Der Nicht-Geber sagt den *Schlag*, der Geber den *Trumpf* – durch Tippen auf eine eigene Karte.", "Reihum je eine Karte legen – *Rechter, Guter, Trumpf* stechen. Wer *3 Stiche* hat, gewinnt die Runde.", "*Bieten* erhöht den Wert der Runde – wer ablehnt, gibt die Runde ab."] },
+    watten: { steps: ["Jeder bekommt *5 Karten*. Der Nicht-Geber sagt den *Schlag*, der Geber den *Trumpf* – durch Tippen auf eine eigene Karte.", "Reihum je eine Karte legen. Am höchsten sticht der *Gute* (Trumpf einen Rang über dem Schlag), dann der *Rechte* (Schlag in Trumpffarbe), dann die übrigen Schläge und Trümpfe. Wer *3 Stiche* hat, gewinnt die Runde.", "*Bieten* erhöht den Wert der Runde – wer ablehnt, gibt die Runde ab."] },
     schnapsen: { steps: ["Jeder bekommt *5 Karten*, die aufgedeckte Karte unter dem Talon zeigt *Trumpf*.", "Stiche holen und Augen sammeln – König und Ober derselben Farbe *ansagen* (20, in Trumpf 40).", "Wer zuerst *66 Augen* hat, gewinnt die Runde – je nach Vorsprung 1 bis 3 Punkte."] },
     wer: { steps: ["Jeder bekommt *geheim eine Person* – alle anderen sehen sie samt Steckbrief, nur du nicht.", "Wer dran ist, stellt *Ja/Nein-Fragen* über sich – die anderen antworten per Knopf.", "Bei *Ja* darfst du weiterfragen, bei *Nein* ist der Nächste dran. *Raten* geht, wenn du dran bist."] },
     tick: { steps: ["Alle sehen eine *Skala* zwischen zwei Gegensätzen – Felder 1 bis 10.", "Wer dran ist, bekommt *geheim eine Zahl* und nennt etwas, das für ihn genau dazu passt.", "Die anderen *tippen die Zahl* – je näher dran, desto mehr Punkte."] },
