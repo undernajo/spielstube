@@ -71,5 +71,6 @@
     ["Schlechter Name für einen Hund", "Toller Name für einen Hund"],
     ["Halb so schlimm", "Weltuntergang"],
     ["Völlig sinnlose Erfindung", "Rettet die Menschheit"],
+  ["Typisch Südtirol", "Könnte überall sein"],
   ];
 })(typeof window !== "undefined" ? window : globalThis);

@@ -4432,3 +4432,14 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .intro-opt span { display: grid; gap: 1px; }
 .intro-opt b { font-size: .92rem; }
 .intro-opt small { color: var(--muted); font-size: .78rem; }
+
+/* Heute Abend: Siege des Abends in der Lobby */
+.evening { margin: 12px 0 4px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--panel, #241d4a) 70%, #000 30%); }
+.evening summary { cursor: pointer; font-weight: 700; list-style: none; }
+.evening summary::-webkit-details-marker { display: none; }
+.evening summary small { font-weight: 400; opacity: .7; margin-left: .4em; }
+.ev-table, .ev-log { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.ev-table li { display: flex; justify-content: space-between; gap: 8px; }
+.ev-table b { letter-spacing: 1px; white-space: nowrap; }
+.ev-log { font-size: .85em; opacity: .85; max-height: 8.5em; overflow: auto; }
+.ev-t { opacity: .6; margin-right: .3em; font-variant-numeric: tabular-nums; }
