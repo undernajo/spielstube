@@ -130,12 +130,6 @@ window.SCHLAU10_CARDS.push(
     ["Start des Hubble-Teleskops", 1990], ["Erstes Modul der ISS im All", 1990], ["Pluto wird zum Zwergplaneten erklärt", 2000],
     ["Mars-Rover Curiosity landet", 2010], ["Erstes Foto eines Schwarzen Lochs", 2010], ["Start des James-Webb-Teleskops", 2020] ] },
 
-  { q: "Weltraum – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Durchmesser der Sonne (km)", 1392000], ["Durchmesser des Jupiters (km)", 139820], ["Kleinster Abstand Erde–Mars (Mio. km)", 55],
-    ["Flughöhe der ISS (km)", 400], ["Geschwindigkeit der ISS (km/h)", 28000], ["Dauer einer ISS-Erdumrundung (Minuten)", 92],
-    ["Temperatur auf der Venus (°C)", 465], ["Ein Venusjahr (Erdtage)", 225], ["Ein Saturnjahr (Erdjahre)", 29.5],
-    ["Entfernung zu Proxima Centauri (Lichtjahre)", 4.2] ] },
-
   { q: "Was am Himmel ist gemeint?", type: "choice", items: [
     ["Hellster Stern am Nachthimmel", "Sirius"], ["Zeigt die Nordrichtung", "Polarstern"], ["Himmelsjäger mit Gürtel", "Orion"],
     ["Sternbild in W-Form", "Kassiopeia", ["Cassiopeia"]], ["Nächste große Spiralgalaxie", "Andromeda", ["Andromedagalaxie", "Andromedanebel"]],
@@ -232,9 +226,4 @@ window.SCHLAU10_CARDS.push(
     ["Dreirädriges Taxi in Thailand", "Tuk-Tuk", ["Tuktuk"]], ["Seilgezogene Straßenbahn in San Francisco", "Cable Car"],
     ["Zug durch den Ärmelkanal", "Eurostar"], ["Legendärer Luxuszug Paris–Istanbul", "Orient-Express", ["Orient Express"]] ] },
 
-  { q: "Verkehr – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.15, items: [
-    ["Pkw in Deutschland (Mio.)", 49], ["Länge des deutschen Schienennetzes (km)", 33000], ["Geschwindigkeitsrekord des TGV (km/h)", 575],
-    ["Spannweite eines Airbus A380 (m)", 80], ["Maximale Passagierzahl eines A380", 850], ["Reiseflughöhe eines Linienflugzeugs (km)", 11],
-    ["Länge eines 40-Fuß-Containers (m)", 12.2], ["Höchstgeschwindigkeit eines Formel-1-Autos (km/h)", 370],
-    ["Gewicht eines VW Golf (kg)", 1300], ["Spurweite der Normalspur (mm)", 1435] ] },
 );

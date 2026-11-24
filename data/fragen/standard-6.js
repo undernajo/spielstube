@@ -87,11 +87,6 @@ window.SCHLAU10_CARDS.push(
     ["Wir nutzen nur 10 % unseres Gehirns.", false], ["Blut in den Venen ist blau.", false], ["Rasierte Haare wachsen dicker nach.", false],
     ["Der Magen liegt unterhalb des Bauchnabels.", false] ] },
 
-  { q: "Körper – schätze!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Hautfläche eines Erwachsenen (m²)", 1.8], ["Herzschläge pro Tag", 100000], ["Liter Blut, die das Herz pro Tag pumpt", 7000],
-    ["Haarwachstum pro Monat (cm)", 1], ["Nervenzellen im Gehirn (Mrd.)", 86], ["Gewicht der Leber (kg)", 1.5], ["Länge des Dünndarms (m)", 6],
-    ["Atemzüge pro Tag", 20000], ["Lidschläge pro Minute", 15], ["Fingernagelwachstum pro Monat (mm)", 3] ] },
-
   // ===================== Wirtschaft & Alltag =====================
   { q: "Wer hat die Firma gegründet?", type: "choice", names: true, items: [
     ["Microsoft", "Bill Gates", ["Paul Allen"]], ["Apple", "Steve Jobs", ["Steve Wozniak", "Wozniak"]], ["Amazon", "Jeff Bezos"],

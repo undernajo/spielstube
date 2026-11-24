@@ -57,39 +57,6 @@ window.SCHLAU10_CARDS.push(
     ["Uruguay", 1], ["Italien", 2], ["Frankreich", 3], ["Brasilien", 4], ["Schweiz", 5],
     ["Schweden", 6], ["Chile", 7], ["England", 8], ["Mexiko", 9], ["Deutschland (BRD)", 10] ] },
 
-  // ===================== Schätzen (±10 %) =====================
-  { q: "Wie hoch ist das?", type: "estimate", tol: 0.1, unit: "m", items: [
-    ["Zugspitze", 2962], ["Mount Everest", 8849], ["Mont Blanc", 4806], ["Matterhorn", 4478], ["Kilimandscharo", 5895],
-    ["Eiffelturm", 330], ["Kölner Dom", 157], ["Burj Khalifa", 828], ["Berliner Fernsehturm", 368],
-    ["Freiheitsstatue (mit Sockel)", 93] ] },
-
-  { q: "Wie viele Einwohner hat die Stadt (ungefähr)?", type: "estimate", tol: 0.15, items: [
-    ["Berlin", 3750000], ["Hamburg", 1900000], ["München", 1550000], ["Köln", 1050000], ["Wien", 2000000],
-    ["Zürich", 430000], ["Paris (Stadtgebiet)", 2100000], ["London (Greater London)", 8900000],
-    ["New York City", 8400000], ["Tokio (Präfektur)", 14000000] ] },
-
-  { q: "Wie lang ist das?", type: "estimate", tol: 0.15, unit: "km", items: [
-    ["Rhein", 1230], ["Donau", 2850], ["Elbe", 1094], ["Nil", 6650], ["Marathonstrecke", 42.195],
-    ["Eurotunnel unter dem Ärmelkanal", 50], ["Gotthard-Basistunnel", 57], ["Panamakanal", 82],
-    ["Erdumfang am Äquator", 40075], ["Luftlinie Berlin–München", 504] ] },
-
-  { q: "Zahlen aus dem All – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Entfernung Erde–Mond (km)", 384400], ["Entfernung Erde–Sonne (Mio. km)", 149.6], ["Durchmesser der Erde (km)", 12742],
-    ["Durchmesser des Mondes (km)", 3474], ["Lichtgeschwindigkeit (km pro Sekunde)", 299792],
-    ["Alter des Universums (Mrd. Jahre)", 13.8], ["Alter der Erde (Mrd. Jahre)", 4.54],
-    ["Ein Marsjahr (Erdtage)", 687], ["Ein Mondumlauf um die Erde (Tage)", 27.3], ["Oberflächentemperatur der Sonne (°C)", 5500] ] },
-
-  { q: "Der menschliche Körper – schätze!", hint: "bei Erwachsenen, ungefähr", type: "estimate", tol: 0.2, items: [
-    ["Knochen im Körper", 206], ["Liter Blut", 5], ["Haare auf dem Kopf", 100000], ["Zähne im Milchgebiss", 20],
-    ["Muskeln", 650], ["Wasseranteil am Körper (%)", 60], ["Gewicht des Gehirns (g)", 1400],
-    ["Ruhepuls (Schläge pro Minute)", 70], ["Atemzüge pro Minute in Ruhe", 15], ["Länge aller Blutgefäße (km)", 100000] ] },
-
-  { q: "Wie viele sind es (ungefähr)?", type: "estimate", tol: 0.15, items: [
-    ["Mitgliedstaaten der UN", 193], ["Länder in Afrika", 54], ["Sprachen weltweit", 7000],
-    ["Einwohner Deutschlands (Mio.)", 84], ["Menschen auf der Erde (Mrd.)", 8.2], ["Gemeinden in Deutschland", 10800],
-    ["Autobahnkilometer in Deutschland", 13200], ["Sitze im Bundestag (seit 2025)", 630],
-    ["Fußballvereine im DFB", 24000], ["Seen in Finnland", 188000] ] },
-
   // ===================== Wer war's? (Nachname reicht) =====================
   { q: "Wer hat das erfunden oder entdeckt?", type: "choice", names: true, items: [
     ["Telefon (Patent 1876)", "Alexander Graham Bell"], ["Relativitätstheorie", "Albert Einstein"],

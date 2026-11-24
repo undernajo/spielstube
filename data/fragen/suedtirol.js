@@ -46,14 +46,6 @@ window.SCHLAU10_CARDS.push(...[
     ["Langkofel", true], ["Schlern", true], ["Rosengarten", true], ["Sella", true], ["Peitlerkofel", true],
     ["Drei Zinnen", true], ["Ortler", false], ["Similaun", false], ["Hochfeiler", false], ["Weißkugel", false] ] },
 
-  { q: "Wie hoch ist der Berg?", type: "estimate", tol: 0.05, unit: "m", items: [
-    ["Ortler", 3905], ["Königsspitze", 3851], ["Weißkugel", 3739], ["Similaun", 3606], ["Hochfeiler", 3510],
-    ["Hochgall", 3436], ["Langkofel", 3181], ["Kesselkogel (Rosengarten)", 3004], ["Peitlerkofel", 2875], ["Schlern", 2563] ] },
-
-  { q: "Wie hoch liegt der Pass?", type: "estimate", tol: 0.1, unit: "m", items: [
-    ["Brennerpass", 1370], ["Reschenpass", 1504], ["Stilfser Joch", 2757], ["Timmelsjoch", 2474], ["Jaufenpass", 2094],
-    ["Grödner Joch", 2121], ["Sellajoch", 2240], ["Penser Joch", 2211], ["Staller Sattel", 2052], ["Würzjoch", 2000] ] },
-
   // ===================== Geschichte & Personen =====================
   { q: "In welchem Jahr war das?", type: "num", items: [
     ["Andreas Hofer wird in Mantua hingerichtet", 1810], ["Vertrag von Saint-Germain: Südtirol kommt zu Italien", 1919],
@@ -128,17 +120,6 @@ window.SCHLAU10_CARDS.push(...[
     ["Landeshauptleute seit 1948", 5], ["Kehren am Stilfser Joch (Trafoier Seite)", 48], ["Ladinische Täler in Südtirol", 2],
     ["Angrenzende Staaten", 2], ["Angrenzende italienische Provinzen", 3], ["Achttausender, die Reinhold Messner bestiegen hat", 14] ] },
 
-  { q: "Südtirol in Zahlen – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.15, items: [
-    ["Einwohner Südtirols", 535000], ["Fläche (km²)", 7400], ["Anteil deutschsprachig (%)", 69],
-    ["Anteil italienischsprachig (%)", 26], ["Anteil ladinischsprachig (%)", 4.5], ["Ötzis Alter (Jahre)", 5300],
-    ["Tätowierungen auf Ötzis Körper", 61], ["Höhe der Ötzi-Fundstelle (m)", 3210], ["Länge der Etsch (km)", 410],
-    ["Höhe von Bozen über dem Meer (m)", 262] ] },
-
-  { q: "Wie viele Einwohner hat der Ort (ungefähr)?", type: "estimate", tol: 0.15, items: [
-    ["Bozen", 108000], ["Meran", 41500], ["Brixen", 23000], ["Leifers", 18000], ["Bruneck", 17000],
-    ["Eppan", 15000], ["Lana", 12800], ["Kaltern", 8200], ["Sterzing", 7000], ["Glurns", 900] ] },
-
-
   // ===================== Erweiterung =====================
   { q: "Steht die Burg / das Schloss in Südtirol?", type: "tf", items: [
     ["Schloss Tirol", true], ["Schloss Runkelstein", true], ["Churburg", true], ["Burg Taufers", true], ["Trostburg", true],
@@ -187,15 +168,6 @@ window.SCHLAU10_CARDS.push(...[
     ["Stilfser Joch", 1], ["Timmelsjoch", 2], ["Sellajoch", 3], ["Penser Joch", 4], ["Grödner Joch", 5],
     ["Jaufenpass", 6], ["Staller Sattel", 7], ["Würzjoch", 8], ["Reschenpass", 9], ["Brennerpass", 10] ] },
 
-  { q: "Wie hoch liegt der Ort / der See?", type: "estimate", tol: 0.15, unit: "m", items: [
-    ["Meran", 325], ["Brixen", 560], ["Bruneck", 835], ["Sterzing", 948], ["Toblach", 1256], ["Sulden", 1900],
-    ["Kalterer See", 215], ["Reschensee", 1498], ["Pragser Wildsee", 1496], ["Karersee", 1519] ] },
-
-  { q: "Wie lang ist das?", hint: "Südtirol & Umgebung", type: "estimate", tol: 0.15, unit: "km", items: [
-    ["Brenner-Basistunnel (Haupttunnel)", 55], ["Eisack", 96], ["Vinschgaubahn Meran–Mals", 60], ["Brennerautobahn A22 bis Modena", 314],
-    ["Straße Bozen–Innsbruck", 118], ["Straße Bozen–Verona", 154], ["Straße Bozen–München", 280], ["Pisten der Sellaronda", 26],
-    ["Meraner Höhenweg", 100], ["Reschensee (Länge)", 6] ] },
-
   { q: "Wer ist gemeint?", hint: "berühmte Südtiroler", type: "choice", names: true, items: [
     ["Erfand in Partschins eine Schreibmaschine", "Peter Mitterhofer"], ["Bergfilmer und Schauspieler aus Gröden", "Luis Trenker"],
     ["Gotischer Maler und Schnitzer aus Bruneck", "Michael Pacher"], ["Täufer aus dem Pustertal, Namensgeber einer Glaubensgemeinschaft", "Jakob Hutter"],
@@ -220,12 +192,6 @@ window.SCHLAU10_CARDS.push(...[
     ["Standorte der Freien Universität Bozen", 3], ["Spronser Seen", 10], ["Ladinische Gemeinden in Südtirol", 8],
     ["Naturparks in Südtirol", 7], ["Ladinische Täler insgesamt (in Italien)", 5], ["Provinzen der Region Trentino-Südtirol", 2],
     ["Städte mit Stadtrecht", 8] ] },
-
-  { q: "Südtirol schätzen", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Alter der ältesten Weinrebe Südtirols in Prissian (Jahre)", 350], ["Minusgrade, bei denen Ötzi im Museum lagert (°C)", 6],
-    ["Fläche des Kalterer Sees (km²)", 1.5], ["Länge des Marlinger Waalwegs (km)", 12], ["Ötzis Körpergröße (cm)", 160], ["Ötzis Gewicht (kg)", 50],
-    ["Ötzis Alter beim Tod (Jahre)", 45], ["Fläche der Seiser Alm (km²)", 56], ["Waldanteil an der Landesfläche (%)", 50],
-    ["Größte Tiefe des Pragser Wildsees (m)", 36] ] },
 
   // ===================== Erweiterung 2 =====================
   { q: "Welcher Berg ist gemeint?", type: "choice", items: [

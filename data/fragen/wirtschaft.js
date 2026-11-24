@@ -196,17 +196,6 @@ window.SCHLAU10_CARDS.push(...[
     ["Bitcoin", true], ["Ether", true], ["Dogecoin", true], ["Litecoin", true], ["Solana", true], ["XRP", true],
     ["Klarna", false], ["PayPal", false], ["Revolut", false], ["Visa", false] ] },
 
-  { q: "Wirtschaft in Deutschland – schätze!", hint: "Stand 2024 – Einheit steht dabei", type: "estimate", tol: 0.15, items: [
-    ["Bruttoinlandsprodukt (Billionen €)", 4.3], ["Erwerbstätige (Mio.)", 46], ["Warenexporte (Billionen €)", 1.56], ["Anteil am BIP der EU (%)", 24],
-    ["Ausgaben im Bundeshaushalt (Mrd. €)", 477], ["Gesetzlicher Mindestlohn (€ pro Stunde)", 12.41], ["Staatsschuldenquote (% des BIP)", 63],
-    ["Inflationsrate 2023 (%)", 5.9], ["Inflationsrate 2024 (%)", 2.2], ["BIP der USA zum Vergleich (Billionen $)", 29] ] },
-
-  { q: "Historische Wirtschaftszahlen – schätze!", hint: "Einheit steht dabei", type: "estimate", tol: 0.1, items: [
-    ["D-Mark pro Euro (fester Umrechnungskurs)", 1.96], ["Mehrwertsteuer bei Einführung 1968 (%)", 10], ["Rekord-Ölpreis 2008 ($ pro Barrel)", 147],
-    ["Höchste Arbeitslosenzahl in Deutschland, 2005 (Mio.)", 5.2], ["Euro-Kurs zum Start 1999 ($)", 1.18], ["Euro-Tiefstand im Jahr 2000 ($)", 0.82],
-    ["US-Leitzins auf dem Höhepunkt 1981 (%)", 20], ["Tiefster EZB-Einlagesatz (%)", -0.5], ["Arbeitslosenquote der USA 1933 (%)", 25],
-    ["Länder, die 1999 den Euro einführten", 11] ] },
-
   // ===================== Consulting =====================
   { q: "Gehört die Firma zu den „Big Four“ der Wirtschaftsprüfung?", type: "tf", items: [
     ["Deloitte", true], ["PwC", true], ["EY", true], ["KPMG", true], ["McKinsey", false],

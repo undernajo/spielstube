@@ -64,12 +64,6 @@ window.SCHLAU10_CARDS.push(
     ["Fledermaus", true], ["Kolibri", true], ["Libelle", true], ["Flughund", true], ["Albatros", true],
     ["Marienkäfer", true], ["Strauß", false], ["Pinguin", false], ["Kiwi", false], ["Emu", false] ] },
 
-  { q: "Tierisch geschätzt!", hint: "ungefähr – Einheit steht dabei", type: "estimate", tol: 0.2, items: [
-    ["Höchstgeschwindigkeit Gepard (km/h)", 110], ["Laufgeschwindigkeit Strauß (km/h)", 70], ["Tragzeit Elefant (Monate)", 22],
-    ["Tragzeit Pferd (Monate)", 11], ["Schwangerschaft Mensch (Wochen)", 40], ["Höhe einer Giraffe (m)", 5.5],
-    ["Schlaf eines Koalas pro Tag (Stunden)", 20], ["Eier einer Legehenne pro Jahr", 300], ["Lebensdauer einer Sommer-Arbeitsbiene (Tage)", 40],
-    ["Maximale Länge eines Blauwals (m)", 30] ] },
-
   { q: "Welches Tier ist das Wappen- oder Nationaltier?", type: "choice", items: [
     ["Deutschland", "Adler", ["Bundesadler"]], ["Frankreich", "Hahn", ["Gallischer Hahn"]], ["Schottland", "Einhorn"], ["Wales", "Drache"],
     ["Berlin", "Bär"], ["Neuseeland", "Kiwi"], ["Indien", "Tiger", ["Bengal-Tiger", "Königstiger"]], ["Kanada", "Biber"],
