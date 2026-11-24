@@ -9,17 +9,16 @@
   const qbGame = (k) => GAMES.find((g) => g.key === k) || GAMES[0];
   const qbFmt = (n) => Number(n || 0).toLocaleString("de-DE");
   // Joker-Feld neben der nächsten Etappe: setzen / zurücknehmen, wer ihn hier schon gesetzt hat
+  // Joker als schmale Zeile über den Knöpfen: setzen / zurücknehmen, wer ihn hier schon gesetzt hat
   function qbJokerHtml(q) {
     if (!q.jokerOn || !G.view.players.some((p) => p.id === G.myId)) return "";
     const next = q.idx + 1, mine = q.joker[G.myId];
     const others = Object.keys(q.joker).filter((id) => q.joker[id] === next && id !== G.myId).map((id) => esc((G.view.players.find((p) => p.id === id) || { name: "?" }).name));
-    const who = others.length ? `<small class="qbj-who">Hier auch: ${others.join(", ")}</small>` : "";
-    const box = (cls, inner, attr = "") => `<button type="button" class="qb-jbox ${cls}" ${attr}><span class="qbj-card" aria-hidden="true">🃏</span><span class="qbj-txt">${inner}</span></button>`;
-    let b;
-    if (mine === next) b = box("set", `<b>Joker gesetzt</b><small>Diese Etappe zählt für dich doppelt · tippen zum Zurücknehmen</small>`, `data-qbjoker="off"`);
-    else if (mine != null) b = box("off", `<b>Joker verbraucht</b><small>Schon in Etappe ${mine + 1} eingesetzt</small>`, "disabled");
-    else b = box("", `<b>Joker setzen</b><small>Deine Felder dieser Etappe zählen doppelt – einmal pro Meisterschaft</small>`, `data-qbjoker="on"`);
-    return `<div class="qbn-joker">${b}${who}</div>`;
+    const who = others.length ? `<span class="qbj-who">hier auch: ${others.join(", ")}</span>` : "";
+    const row = (cls, inner, attr = "") => `<button type="button" class="qbx-joker ${cls}" ${attr}><span class="qbj-card" aria-hidden="true">🃏</span><span class="qbj-txt">${inner}</span>${who}</button>`;
+    if (mine === next) return row("set", `<b>Joker gesetzt</b> – deine Felder zählen doppelt <small>· tippen zum Zurücknehmen</small>`, `data-qbjoker="off"`);
+    if (mine != null) return row("off", `<b>Joker verbraucht</b> <small>· in Etappe ${mine + 1}</small>`, "disabled");
+    return row("", `<b>Joker setzen</b> – deine Felder dieser Etappe zählen doppelt <small>· einmal pro Meisterschaft</small>`, `data-qbjoker="on"`);
   }
   function qbReadyBtnHtml(q, label) {
     return G.nextBtnsHtml({ attr: 'data-qb="ready"', hostAttr: 'data-qb="go"', label, ready: !!q.ready[G.myId], waiting: G.waitingNames(G.view, q.ready) });
@@ -281,29 +280,36 @@
     };
     // So geht's: drei Schritte (*fett*) + Etappensieg; bei schweren Spielen dazu eine kleine Vorführung
     const bold = (t) => esc(t).replace(/\*([^*]+)\*/g, "<b>$1</b>");
-    const howHtml = (n) => n.how ? `<ol class="qbn-steps">${n.how.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${bold(t)}</span></li>`).join("")}
-        <li class="win"><span class="n">🏆</span><span><b>Etappensieg:</b> ${bold(n.how.win)}</span></li></ol>` : `<p>${esc(n.rule)}</p>`;
-    const nextCard = (n) => { const g = qbGame(n.game), jk = qbJokerHtml(q), demo = window.S10Demo && S10Demo.has(n.game);
-      return `<div class="panel qb-next ${jk ? "with-joker" : ""} ${demo ? "with-demo" : ""}" style="--gc:${g.color}" data-demo="${demo ? esc(n.game) : ""}">
-        <div class="qbn-head"><div class="game-label">Etappe ${q.idx + 2}${q.skipped ? `<span class="qb-skipped"> · statt ${esc(q.skipped)}</span>` : ""}</div>
-          <div class="qb-head"><span class="gt-icon big">${g.icon}</span><div><b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div></div></div>
-        ${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : ""}
-        <div class="qbn-info">${howHtml(n)}</div>
-        ${jk}<div class="qbn-act">${qbReadyBtnHtml(q, "Bereit")}${G.isHost ? `<button type="button" class="btn ghost qb-skip" data-qbskip>🔄 Anderes Spiel</button>` : ""}</div></div>`; };
+    // Etappenkarte im Fenster: Kopf (mit eigenem Stand), links Schritte + Etappensieg, rechts Vorführung oder großes Symbol,
+    // darunter der Joker als Zeile und eine Fußleiste (links Nebensachen, rechts „Bereit“)
+    const myRank = (() => { if (!ids.includes(G.myId) || q.step === "intro") return "";
+      const pl = 1 + ids.filter((id) => posOf(id) > posOf(G.myId)).length, left = q.target - posOf(G.myId);
+      return `Du bist ${pl}. · noch ${left} ${left === 1 ? "Feld" : "Felder"} bis zum Ziel`; })();
+    const nextCard = (n) => { const g = qbGame(n.game), demo = window.S10Demo && S10Demo.has(n.game);
+      const steps = n.how ? `<ol class="qbn-steps">${n.how.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${bold(t)}</span></li>`).join("")}</ol>` : `<p>${esc(n.rule)}</p>`;
+      return `<div class="panel qbx" style="--gc:${g.color}" data-demo="${demo ? esc(n.game) : ""}">
+        <div class="qbx-head"><span class="gt-icon big">${g.icon}</span><div><div class="game-label">Etappe ${q.idx + 2}${q.skipped ? `<span class="qb-skipped"> · statt ${esc(q.skipped)}</span>` : ""}</div>
+          <b class="qb-gname">${esc(n.name)}</b><div class="muted small">${esc(n.detail)}</div></div>${myRank ? `<span class="qbx-pos">${myRank}</span>` : ""}</div>
+        <div class="qbx-body"><div class="qbx-info">${steps}${n.how ? `<div class="qbx-win"><span>🏆</span><span><b>Etappensieg:</b> ${bold(n.how.win)}</span></div>` : ""}</div>
+          <div class="qbx-visual">${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : `<span class="gt-icon qbx-bigicon">${g.icon}</span>`}</div></div>
+        ${qbJokerHtml(q)}
+        <div class="qbx-foot"><div class="qbx-side">${G.isHost ? `<button type="button" class="btn ghost sm" data-qbskip>🔄 Anderes Spiel</button>` : ""}<button type="button" class="btn ghost sm" data-qbmclose>Spielbrett ansehen</button></div>
+          <div class="qbx-go">${qbReadyBtnHtml(q, "Bereit")}</div></div></div>`; };
     let main = "";
     // Die nächste Etappe kommt als Fenster über dem Spielbrett – nach einer Etappe erst, wenn die Figuren gezogen haben.
     // Schließen (✕, „Spielbrett ansehen“, Esc) zeigt das Brett; „Nächste Etappe“ holt das Fenster zurück.
     const mk = v.code + ":" + (q.step === "final" ? "sieg" : q.idx);
     // nach einer Etappe: eine Sekunde Pause, nachdem die letzte Figur stehen geblieben ist (der Ablauf endet GAP ms nach ihrem letzten Sprung)
-    if (qbModal.key !== mk) qbModal = { key: mk, hidden: false, showAt: Date.now() + (animLeft ? animLeft - GAP + 1000 : 0) };
+    if (qbModal.key !== mk) qbModal = { key: mk, hidden: q.step === "intro", showAt: Date.now() + (animLeft ? animLeft - GAP + 1000 : 0) };
     // Einblenden nur beim ersten Erscheinen (nach dem Ziehen der Figuren); danach steht das Fenster einfach da
     const wait = qbModal.showAt - Date.now(), anim = wait > -400 ? "anim" : "";
     const modal = (n) => { const g = qbGame(n.game);
       return `<div class="qbm ${anim} ${qbModal.hidden ? "off" : ""}" style="--d:${Math.max(0, wait)}ms" role="dialog" aria-modal="true" aria-label="Nächste Etappe: ${esc(n.name)}">
           <div class="qbm-back" data-qbmclose></div>
           <div class="qbm-win">${nextCard(n)}<button type="button" class="qbm-x" data-qbmclose aria-label="Fenster schließen und Spielbrett ansehen">✕</button>
-            <button type="button" class="btn ghost sm qbm-peek" data-qbmclose>Spielbrett ansehen</button></div></div>
-        <button type="button" class="btn primary qbm-open ${qbModal.hidden ? "" : "off"}" data-qbmopen style="--gc:${g.color}"><span class="gt-icon xs" aria-hidden="true">${g.icon}</span> Nächste Etappe: ${esc(n.name)}</button>`; };
+</div></div>
+        <button type="button" class="btn primary qbm-open ${q.step === "intro" ? "big" : ""} ${qbModal.hidden ? "" : "off"}" data-qbmopen style="--gc:${g.color}">${q.step === "intro"
+          ? "▶ Meisterschaft starten" : `<span class="gt-icon xs" aria-hidden="true">${g.icon}</span> Nächste Etappe: ${esc(n.name)}`}</button>`; };
     if (q.step === "intro") {
       main = `${planHtml(q, nameOf, colorOf)}<div class="qbb-grid">${boardHtml}<div class="qbb-side">${standList}<div class="panel qbb-none"><div class="game-label">Letzte Etappe</div><p class="muted small">Noch keine Etappe gespielt – alle stehen am Start.</p></div></div></div>${modal(q.next)}`;
     } else if (q.step === "break") {
@@ -345,7 +351,7 @@
       </main>`;
     qbAnimate(q, ids);
     // Vorführung: läuft je Etappe ab dem ersten Zeigen durch, Neuzeichnen setzt an derselben Stelle fort
-    const dmCard = app.querySelector(".qb-next[data-demo]:not([data-demo=''])");
+    const dmCard = app.querySelector(".qbx[data-demo]:not([data-demo=''])");
     if (dmCard) {
       const dk = v.code + ":" + q.idx + ":" + dmCard.dataset.demo;
       if (qbDemo.key !== dk) qbDemo = { key: dk, t0: Date.now() };

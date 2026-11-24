@@ -4330,6 +4330,7 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .qbm-peek { display: block; margin: 10px auto 0; }
 .qbm-open { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 55; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, .5), 0 4px 0 #a37400; }
 .qbm-open.off { display: none; }
+.qbm-open.big { padding: 14px 28px; font-size: 1.15rem; }
 @keyframes qbmIn { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
 @keyframes qbmPop { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
 
@@ -4362,3 +4363,43 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 @keyframes qbwPop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
 @keyframes qbwTwinkle { 0%, 100% { opacity: .2; scale: .7; } 50% { opacity: 1; scale: 1.15; } }
 @media (prefers-reduced-motion: reduce) { .qbw-rays, .qbw-spark { animation: none; } }
+
+/* Stubenmeisterschaft: Etappenkarte im Fenster */
+.qbx { border: 2px solid var(--gc); display: grid; gap: 14px; padding: 20px 22px; margin: 0; box-shadow: 0 30px 70px rgba(0, 0, 0, .65); }
+.qbx-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-right: 36px; }
+.qbx-head .gt-icon.big { width: 52px; height: 52px; }
+.qbx-head .qb-gname { display: block; font-size: 1.4rem; line-height: 1.15; }
+.qbx-pos { justify-self: end; font-size: .8rem; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: rgba(255, 255, 255, .07); border: 1px solid var(--line); white-space: nowrap; }
+.qbx-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+.qbx-info { display: grid; gap: 10px; }
+.qbx-info p { margin: 0; }
+.qbx-win { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; line-height: 1.35;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+.qbx-win > span:first-child { font-size: 1.3rem; text-align: center; }
+.qbx-visual { display: grid; place-items: center; align-self: stretch; min-height: 150px; border-radius: 16px; background: color-mix(in srgb, var(--gc) 12%, rgba(255, 255, 255, .03)); }
+.qbx-visual .qbn-demo { width: 100%; min-width: 0; overflow: hidden; border-radius: 16px; }
+.qbx-bigicon.gt-icon { width: 120px; height: 120px; background: none; box-shadow: none; }
+.qbx-bigicon.gt-icon svg { width: 120px; height: 120px; }
+.qbx-joker { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; padding: 9px 14px; border-radius: 12px; font: inherit; font-size: .9rem; text-align: left; color: var(--ink); cursor: pointer;
+  background: transparent; border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent); transition: background .2s; }
+.qbx-joker:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.qbx-joker .qbj-card { font-size: 1.4rem; }
+.qbx-joker .qbj-txt { display: inline; }
+.qbx-joker small { color: var(--muted); }
+.qbx-joker.set { border-style: solid; border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.qbx-joker.set b { color: var(--accent); }
+.qbx-joker.off { opacity: .55; cursor: default; border-color: var(--line); }
+.qbx-joker .qbj-who { margin-left: auto; color: var(--muted); font-size: .78rem; }
+.qbx-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line); }
+.qbx-side { display: flex; gap: 8px; flex-wrap: wrap; }
+.qbx-go { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+.qbx-go .btn.primary { min-width: 200px; }
+.qbx-go .next-off { flex-basis: 100%; text-align: right; }
+@media (max-width: 720px) {
+  .qbx-body { grid-template-columns: minmax(0, 1fr); }
+  .qbx-visual { order: -1; min-height: 0; padding: 8px; }
+  .qbx-bigicon.gt-icon, .qbx-bigicon.gt-icon svg { width: 72px; height: 72px; }
+  .qbx-head { grid-template-columns: auto minmax(0, 1fr); }
+  .qbx-pos { grid-column: 1 / -1; justify-self: start; }
+  .qbx-go { width: 100%; } .qbx-go .btn.primary { flex: 1; }
+}
