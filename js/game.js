@@ -1454,7 +1454,8 @@
     if (!view) return renderStart();
     if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
     // Spielstart aus der Lobby: „So gewinnst du“-Karte (bei „Nochmal spielen“ und den Etappen der Meisterschaft nicht)
-    if (lastPhase === "lobby" && view.phase !== "lobby" && !(view.qb && view.phase !== "querbeet")) winCardShow();
+    // Startkarte „So gewinnst du“ – nicht bei der Stubenmeisterschaft (Brett, Ziel und „+2 / ±0“ nach der ersten Etappe erklären sich selbst)
+    if (lastPhase === "lobby" && view.phase !== "lobby" && !view.qb) winCardShow();
     lastPhase = view.phase;
     if (!isHost && view.phase === "lobby") {
       if (lastLobbyGame && view.game !== lastLobbyGame) {
