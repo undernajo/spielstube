@@ -45,7 +45,9 @@
     }
     if (st.step === "final") {
       const items = st.seats.map((id) => ({ id, name: nameOf(id), pts: st.score[id] || 0, txt: `${st.score[id] || 0} ${st.score[id] === 1 ? "Punkt" : "Punkte"}` }));
-      panel = G.podiumHtml({ items, winners: st.winners || [], restartId: "ku-restart" });
+      // in der Stubenmeisterschaft geht es über die Leiste unten weiter – kein „Nochmal spielen“
+      panel = v.qb ? `<div class="banner win"><b>${(st.winners || []).map((id) => esc(nameOf(id))).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"} die Etappe!</b></div>`
+        : G.podiumHtml({ items, winners: st.winners || [], restartId: "ku-restart" });
     }
 
     // Spielpult (ab 1200 px): Platzierung, wer dran ist, Kamera fest eingebaut, „Weiter“ unten

@@ -29,6 +29,7 @@
     stich: { kind: "karten", name: "Stichhaltig", short: "4 Runden (1 bis 4 Karten)", rule: "Stiche ansagen und genau so viele holen – Farbe bedienen, Trumpf sticht." },
     alm: { kind: "wuerfel", name: "Almsommer", short: "8 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
     jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "12 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
+    kurios: { kind: "wissen", min2: true, name: "Kaum zu glauben", short: "3 Fragen pro Spieler", rule: "Reihum ein Feld der Tafel wählen – von drei Aussagen stimmt nur eine. Richtig erkannt = 1 Punkt." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "6 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
   // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
@@ -49,6 +50,7 @@
     bus: { steps: ["Vor jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? …", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
     stich: { steps: ["Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
     alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "*Maximal so viele Felder* dieses Geländes ankreuzen – aneinander grenzend, Start am Hof.", "*Fläche voll* = Punkte im Eck erhalten."], win: "Die meisten Punkte nach 8 Wochen." },
+    kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."], win: "Die meisten richtig erkannten Aussagen." },
     jagd: { steps: ["*Versteck dein Wild* im eigenen Revier.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn – 🐾 = Fuchs direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
   // „Etappensieg: …“ passend zur Kurzfassung (Rundenzahl usw. aus den Etappen-Einstellungen)
@@ -71,6 +73,7 @@
       case "stich": return `Die meisten Punkte nach ${n(o.rounds || 4, "Runde", "Runden")} (1 bis ${o.rounds || 4} Karten).`;
       case "alm": return `Die meisten Punkte nach ${n(o.weeks || 8, "Woche", "Wochen")}.`;
       case "jagd": return `Die meisten Punkte für Treffer und erlegtes Wild nach ${n(o.rounds || 12, "Runde", "Runden")}.`;
+      case "kurios": return `Die meisten richtig erkannten Aussagen – jeder wählt ${n(o.per || 3, "Feld", "Felder")}.`;
       case "duell": case "frage": return `Wer zuerst ${n(o.target || 3, "Runde", "Runden")} gewinnt.`;
     }
     return HOWTO[game] ? HOWTO[game].win : "";
@@ -83,13 +86,13 @@
     tick: { steps: ["Alle sehen eine *Skala* zwischen zwei Gegensätzen – Felder 1 bis 10.", "Wer dran ist, bekommt *geheim eine Zahl* und nennt etwas, das für ihn genau dazu passt.", "Die anderen *tippen die Zahl* – je näher dran, desto mehr Punkte."] },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."] },
   };
-  const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
     alle: { icon: "🎲", name: "Bunt gemischt", games: null },
-    wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "wand", "hl", "schaetzen", "hinweis", "duell"] },
+    wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "duell"] },
     welt: { icon: "🗺️", name: "Rund um die Welt", games: ["geo", "land", "umriss", "oben"] },
-    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd"] },
+    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd", "kurios"] },
     karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
     kurz: { icon: "⚡", name: "Kurz & schnell", games: ["hl", "schaetzen", "bus", "siebzehn", "oben", "geo"] },
     // allein spielbar und ohne Fragenvorrat (nur Karten, Würfel, Buchstaben)
@@ -169,6 +172,7 @@
       case "slf": return { ...(st ? { preset: "suedtirol", rounds: 2, timer: "stopp" } : { preset: "zufall", classics: 2, rounds: 2, timer: "stopp" }), letters: level === "leicht" ? "leicht" : "alle" };
       case "alm": return { weeks: 8, storms: 0, map: "zufall" }; // Kurzsommer: 8 Wochen ohne Gewitter, Tal ausgelost
       case "jagd": return { rounds: 12, map: "zufall" }; // 12 Runden, Jagdgebiet ausgelost
+      case "kurios": return { per: 3 }; // jeder wählt 3 Felder
       case "duell": return { target: 3, timer: "0" }; // ohne Zeitlimit
       case "frage": return { target: 3, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben
     }

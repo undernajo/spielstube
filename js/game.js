@@ -623,6 +623,7 @@
       case "siebzehn": case "stich": case "bus": return !!S.karten && S.karten.step === "final";
       case "alm": return !!S.alm && S.alm.step === "final";
       case "jagd": return !!S.jagd && S.jagd.step === "final";
+      case "kurios": return !!S.kurios && S.kurios.step === "final";
     }
     return false;
   }
@@ -642,6 +643,7 @@
       case "siebzehn": case "stich": case "bus": return all(S.karten.total);
       case "alm": return all(ALM.publicState(S).totals);
       case "jagd": return all(S.jagd.pts);
+      case "kurios": return all(S.kurios.score);
     }
     return all({});
   }
@@ -665,6 +667,7 @@
       case "siebzehn": case "stich": case "bus": ok = KG.start(S, { ...o, free: true }, now); break;
       case "alm": ok = ALM.start(S, { ...o, free: true }); break;
       case "jagd": ok = JG.start(S, { ...o, free: true }); break;
+      case "kurios": ok = KU.start(S, { ...o, avoid: store.get("s10-kurios-seen") || [] }); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;

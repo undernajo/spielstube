@@ -13,12 +13,15 @@
     opts = opts || {};
     const seats = s.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
     if (seats.length < 2) return false;
-    const size = SIZES[String(opts.size)] ? String(opts.size) : "12", n = Math.min(SIZES[size].n, data().length);
+    const size = SIZES[String(opts.size)] ? String(opts.size) : "12";
+    // per: Stubenmeisterschaft – jeder bekommt so viele Fragen (Tafel 6 bis 16 Felder)
+    const per = Number(opts.per) > 0 ? Number(opts.per) : 0;
+    const n = Math.min(per ? Math.max(6, Math.min(16, per * seats.length)) : SIZES[size].n, data().length), cols = n <= 9 ? 3 : 4;
     const avoid = new Set(opts.avoid || []), all = data().map((_, i) => i);
     const picks = [...shuffle(all.filter((i) => !avoid.has(key(i)))), ...shuffle(all.filter((i) => avoid.has(key(i))))].slice(0, n);
     s.game = "kurios"; s.phase = "kurios";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.kurios = { opts: { size }, seats, turn: Math.floor(Math.random() * seats.length), score: Object.fromEntries(seats.map((id) => [id, 0])),
+    s.kurios = { opts: { size, per }, cols, seats, turn: Math.floor(Math.random() * seats.length), score: Object.fromEntries(seats.map((id) => [id, 0])),
       // je Feld: welche Frage und in welcher Reihenfolge die Aussagen erscheinen (0 = die wahre)
       board: picks.map((i) => ({ i, order: shuffle([0, 1, 2]), done: null })),
       step: "pick", cur: null, round: 0, move: 0, winners: null,
@@ -82,7 +85,7 @@
   function publicState(s) {
     const st = s.kurios;
     if (!st) return null;
-    const D = data(), cols = SIZES[st.opts.size].cols;
+    const D = data(), cols = st.cols || SIZES[st.opts.size].cols;
     const cur = st.cur ? (() => { const cell = st.board[st.cur.k], q = D[cell.i], open = st.step === "reveal";
       return { k: st.cur.k, by: st.cur.by, ico: q.ico, tag: q.tag, s: cell.order.map((o) => q.s[o]), pick: st.cur.pick,
         right: open ? cell.order.indexOf(0) : null, e: open ? q.e : null }; })() : null;
