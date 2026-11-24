@@ -4422,3 +4422,10 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 #intronote .in-dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: inDot 1.2s ease-in-out infinite; }
 #intronote .in-dots i:nth-child(2) { animation-delay: .2s; } #intronote .in-dots i:nth-child(3) { animation-delay: .4s; }
 @keyframes inDot { 0%, 100% { opacity: .25; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-4px); } }
+
+/* Lobby: Häkchen „Zu Beginn kurz erklären“ */
+.intro-opt { display: flex; align-items: center; gap: 10px; margin: 4px 0 10px; padding: 9px 12px; border-radius: 12px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); cursor: pointer; }
+.intro-opt input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; cursor: pointer; }
+.intro-opt span { display: grid; gap: 1px; }
+.intro-opt b { font-size: .92rem; }
+.intro-opt small { color: var(--muted); font-size: .78rem; }

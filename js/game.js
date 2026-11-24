@@ -119,6 +119,9 @@
   const almMapOk = (m) => m === "zufall" || ALM.MAP_LIST.some((x) => x.id === m);
   const JG = window.S10Jagd;
   const WER = window.S10Wer;
+  // Erklärkarte zu Beginn: pro Spiel ein-/ausschaltbar (Gastgeber, Standard: an)
+  let introOpts = store.get("s10-intro") || {};
+  const introOnFor = (key) => introOpts[key] !== false;
   const TK = window.S10Tick;
   const KU = window.S10Kurios;
   let kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
@@ -380,7 +383,8 @@
     // Watten, Schnapsen, Stichhaltig), Busfahrt (ohne Uhr) und Auf der Jagd (erst verstecken)
     const noWait = [...(SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1], "jagd", "wer", "kurios", "wand", "zehn", "watten", "schnapsen", "bus", "stich"];
     const startKey = S.phase === "karten" && S.karten ? S.karten.mode : S.phase === "playing" ? "zehn" : S.phase;
-    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && !noWait.includes(startKey)) introStart(Date.now());
+    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb) S.introOn = introOnFor(chosenGame);
+    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && S.introOn && !noWait.includes(startKey)) introStart(Date.now());
     if (ok && S.phase === "lobby") S.intro = null;
     return ok;
   }
@@ -680,9 +684,10 @@
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
     view.roomName = S.roomName || "";
+    view.introOn = S.introOn !== false;
     view.intro = S.intro && introOpen(Date.now()) ? S.intro.wait.filter((id) => !S.intro.seen[id]) : null;
     view.kicked = (S.kicked || []).slice();
-    if (S.phase === "lobby") view.lobby = { seilSwap: !!seilOpts.swap,
+    if (S.phase === "lobby") view.lobby = { seilSwap: !!seilOpts.swap, introOn: introOnFor(chosenGame),
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
       sets: currentSets(), target: chosenTarget || 30,
       slf: { preset: slfOpts.preset, cats: SLF.categoriesFrom(slfOpts), rounds: Number(slfOpts.rounds), timer: slfOpts.timer, surprise: slfOpts.surprise !== false, letters: SLF.LETTER_SETS[slfOpts.letters] ? slfOpts.letters : "alle" },
@@ -1495,7 +1500,7 @@
     if (!isHost && view.phase === "lobby" && lastPhase && lastPhase !== "lobby") toast("Der Gastgeber hat das Spiel beendet – ihr seid wieder in der Lobby.", "info");
     // Spielstart aus der Lobby: „So gewinnst du“-Karte (bei „Nochmal spielen“ und den Etappen der Meisterschaft nicht)
     // Startkarte „So gewinnst du“ – nicht bei der Stubenmeisterschaft (Brett, Ziel und „+2 / ±0“ nach der ersten Etappe erklären sich selbst)
-    if (lastPhase === "lobby" && view.phase !== "lobby" && !view.qb) winCardShow();
+    if (lastPhase === "lobby" && view.phase !== "lobby" && !view.qb && view.introOn !== false) winCardShow();
     introNoteRender();
     if (winCardEl.classList.contains("show")) { const h = app.querySelector("header.topbar"); winCardEl.style.top = (h ? Math.max(0, Math.round(h.getBoundingClientRect().bottom + 8)) : 0) + "px"; }
     // Erklärkarte nicht (mehr) offen, aber der Gastgeber wartet noch auf mich (z. B. nach Neuladen): Bescheid geben
@@ -1936,7 +1941,9 @@
   }
   function renderLobby() {
     const isFile = location.protocol === "file:";
-    const settings = !isHost ? "" : `
+    const introBox = chosenGame === "querbeet" ? "" : `<label class="intro-opt"><input type="checkbox" id="intro-on" ${introOnFor(chosenGame) ? "checked" : ""}>
+        <span><b>Zu Beginn kurz erklären, wie es geht</b><small>Erklärkarte vor dem Spiel – ohne Haken geht es sofort los</small></span></label>`;
+    const settings0 = !isHost ? "" : `
           ${setHeadHtml()}
           ${isMode(chosenGame) ? modeSwitchHtml() : ""}
           ${chosenGame === "slf" ? slfSettingsHtml() : ""}
@@ -1965,6 +1972,8 @@
             <button id="start" class="btn primary big" ${playing().length < 1 || !currentSets().length ? "disabled" : ""}>Spiel starten</button>
             
           ` : ""}`;
+    // Häkchen direkt über „Spiel starten“ (in allen Einstellungen gleich)
+    const settings = settings0.includes('<button id="start"') ? settings0.replace('<button id="start"', introBox + '<button id="start"') : settings0 + introBox;
     // Am Computer: Gastgeber in drei Spalten (Stube & Spieler · Spiel wählen · Einstellungen), Gäste in zwei
     // Scroll-Stellung der Spalten merken: die Lobby wird bei jeder Änderung neu gezeichnet (z. B. nach einem Wunsch)
     const keepScroll = [...app.querySelectorAll(".lobby .lobby-col")].map((c) => c.scrollTop), keepY = scrollY;
@@ -2739,8 +2748,9 @@
   function guestSettingsHtml() {
     const lb = view.lobby;
     if (!lb) return "";
-    if (isMode(view.game)) return modeSwitchHtml(view.game, true) + guestModeSettingsHtml(lb);
-    return guestModeSettingsHtml(lb);
+    const intro = view.game === "querbeet" ? "" : `<p class="muted small intro-guest">${lb.introOn === false ? "⏩ Ohne Erklärung – es geht sofort los" : "💡 Mit kurzer Erklärung zu Beginn"}</p>`;
+    if (isMode(view.game)) return modeSwitchHtml(view.game, true) + guestModeSettingsHtml(lb) + intro;
+    return guestModeSettingsHtml(lb) + intro;
   }
   function guestModeSettingsHtml(lb) {
     // radio = Einfachauswahl beim Gastgeber -> runder Punkt statt Häkchen
@@ -2873,6 +2883,8 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { werOpts[k] = el.value; store.set("s10-wer", werOpts); publish(); };
     });
+    const iO = app.querySelector("#intro-on");
+    if (iO) iO.onchange = () => { introOpts[chosenGame] = iO.checked; store.set("s10-intro", introOpts); publish(); };
     const jgL = app.querySelector("#jagd-length");
     if (jgL) jgL.onchange = () => { jagdOpts.length = jgL.value; store.set("s10-jagd", jagdOpts); publish(); };
     const jgM = app.querySelector("#jagd-map");
