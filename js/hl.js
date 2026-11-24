@@ -67,6 +67,19 @@
     return out;
   }
 
+  // Ähnliche Kategorien bilden eine Gruppe – pro Spiel möglichst nur eine davon (z. B. nicht dreimal Jahreszahlen)
+  const GROUPS = { tiereGewicht: "tiere", tiereAlter: "tiere", tempo: "tiere", herzschlag: "tiere",
+    suedtirolBerge: "suedtirol", gemeinden: "suedtirol", entfernung: "suedtirol", orteHoehe: "suedtirol",
+    gewicht: "gewicht", sportgeraete: "gewicht" };
+  const groupOf = (k) => GROUPS[k] || (data()[k] && data()[k].year ? "jahr" : k);
+  // zuerst je Gruppe höchstens eine Kategorie, reicht das nicht, wird mit den übrigen aufgefüllt
+  function pickCats(keys, n) {
+    const pool = shuffle(keys.slice()), out = [], used = new Set();
+    pool.forEach((k) => { if (out.length < n && !used.has(groupOf(k))) { out.push(k); used.add(groupOf(k)); } });
+    pool.forEach((k) => { if (out.length < n && !out.includes(k)) out.push(k); });
+    return out;
+  }
+
   function start(s, opts, now) {
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "mittel";
@@ -75,7 +88,7 @@
     const n = Number.isInteger(opts.cats) && opts.cats > 0 ? opts.cats : LENGTHS[length].cats; // Querbeet: 1 Kategorie
     // Querbeet-Themenabend: nur bestimmte Kategorien (only) oder ohne (not)
     const allKeys = Object.keys(data()).filter((k) => (!Array.isArray(opts.only) || opts.only.includes(k)) && (!Array.isArray(opts.not) || !opts.not.includes(k)));
-    const keys = shuffle(allKeys.length ? allKeys : Object.keys(data())).slice(0, n);
+    const keys = pickCats(allKeys.length ? allKeys : Object.keys(data()), n);
     s.game = "hl"; s.phase = "hl";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
     s.hl = { opts: { length, level, scoring }, cats: keys, ci: -1, total: {}, streak: {}, history: [] };
@@ -182,5 +195,5 @@
     return out;
   }
 
-  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS, LEVELS, SCORING };
+  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS, LEVELS, SCORING, pickCats, groupOf };
 })(typeof window !== "undefined" ? window : globalThis);
