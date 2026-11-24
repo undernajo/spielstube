@@ -155,6 +155,9 @@ async function playGame(browser, base, game) {
     }
     if (!started) return { started, errs: [...errs, "Spiel ließ sich nicht starten (Gast nicht angekommen?)"] };
     await sleep(4000);
+    // Erklärkarte bei beiden wegklicken (vorher nimmt der Gastgeber keine Spielzüge an)
+    for (const p of [host, guest]) await p.evaluate(() => { const b = document.querySelector("#wincard.show [data-wzgo]"); if (b) b.click(); });
+    await sleep(1500);
     if (DEEP[game]) { await DEEP[game](host, guest, errs); return { started, errs }; }
     // ein paar Spielknöpfe antippen (nicht Verlassen, Lobby usw.)
     for (const p of [guest, host]) {

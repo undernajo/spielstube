@@ -330,6 +330,7 @@
   // Zeitsteuerung für Stadt, Land, Fluss (nur beim Gastgeber)
   setInterval(() => {
     if (!isHost || !S) return;
+    if (S.intro) { introHold(Date.now()); publish(); } // angehaltene Uhren laufend neu verteilen (die Anzeige bei allen bleibt stehen)
     if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
@@ -344,8 +345,41 @@
   function act(pid, action) {
     if (applyAny(pid, action)) publish();
   }
+  // Erklärkarte beim Spielstart: Die Uhren des Spiels (deadline, startedAt, startAt) stehen still, bis alle die Karte
+  // weggeklickt haben – höchstens 60 Sekunden. Dafür schiebt der Gastgeber die Zeitpunkte laufend nach hinten.
+  const INTRO_MAX = 60000;
+  function introStart(now) {
+    const wait = S.players.filter((p) => p.connected && !p.paused).map((p) => p.id);
+    S.intro = wait.length ? { wait, seen: {}, until: now + INTRO_MAX, last: now } : null;
+  }
+  function introOpen(now) {
+    const I = S.intro; if (!I) return false;
+    const conn = new Set(S.players.filter((p) => p.connected && !p.paused).map((p) => p.id));
+    return now < I.until && S.phase !== "lobby" && I.wait.some((id) => conn.has(id) && !I.seen[id]);
+  }
+  function introHold(now) { // Uhren anhalten; true, wenn die Erklärzeit gerade vorbei ist
+    const I = S.intro; if (!I) return false;
+    if (!introOpen(now)) { S.intro = null; return true; }
+    const dt = now - I.last; I.last = now;
+    const st = S[S.phase];
+    if (st && typeof st === "object" && dt > 0) ["deadline", "startedAt", "startAt"].forEach((k) => { if (typeof st[k] === "number" && st[k] > 0) st[k] += dt; });
+    return false;
+  }
   // Verteilt eine Aktion an das richtige Spiel; true = Zustand geändert
   function applyAny(pid, action) {
+    if (action && action.type === "introSeen") {
+      if (!S.intro || S.intro.seen[pid]) return false;
+      introHold(Date.now()); S.intro && (S.intro.seen[pid] = true); introHold(Date.now());
+      return true;
+    }
+    // solange noch jemand die Erklärkarte liest, nimmt niemand einen Spielzug vor (Steuerung wie Lobby/Weiter bleibt erlaubt)
+    if (S.intro && S.phase !== "lobby" && introOpen(Date.now()) && !/^(lobby|start|restart|next|skip|ping|kick|pause)$|(Next|Restart|Force)$/.test(String((action && action.type) || ""))) return false;
+    const before = S.phase, ok = applyAnyInner(pid, action);
+    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb) introStart(Date.now());
+    if (ok && S.phase === "lobby") S.intro = null;
+    return ok;
+  }
+  function applyAnyInner(pid, action) {
     if (!action || typeof action !== "object") return false;
     const host = pid === myId, now = Date.now(), type = String(action.type || "");
     if (type === "setGame") {
@@ -641,6 +675,7 @@
     view = L.publicState(S, CARDS, roomCode);
     view.game = S.game || "zehn";
     view.roomName = S.roomName || "";
+    view.intro = S.intro && introOpen(Date.now()) ? S.intro.wait.filter((id) => !S.intro.seen[id]) : null;
     view.kicked = (S.kicked || []).slice();
     if (S.phase === "lobby") view.lobby = { seilSwap: !!seilOpts.swap,
       wishes: Object.fromEntries(Object.entries(S.wishes || {}).filter(([id]) => S.players.some((p) => p.id === id))),
@@ -1456,6 +1491,10 @@
     // Spielstart aus der Lobby: „So gewinnst du“-Karte (bei „Nochmal spielen“ und den Etappen der Meisterschaft nicht)
     // Startkarte „So gewinnst du“ – nicht bei der Stubenmeisterschaft (Brett, Ziel und „+2 / ±0“ nach der ersten Etappe erklären sich selbst)
     if (lastPhase === "lobby" && view.phase !== "lobby" && !view.qb) winCardShow();
+    introNoteRender();
+    if (winCardEl.classList.contains("show")) { const h = app.querySelector("header.topbar"); winCardEl.style.top = (h ? Math.max(0, Math.round(h.getBoundingClientRect().bottom + 8)) : 0) + "px"; }
+    // Erklärkarte nicht (mehr) offen, aber der Gastgeber wartet noch auf mich (z. B. nach Neuladen): Bescheid geben
+    if (view.intro && view.intro.includes(myId) && !winCardEl.classList.contains("show") && introSentKey !== view.code + ":" + view.phase) { introSentKey = view.code + ":" + view.phase; send({ type: "introSeen" }); }
     lastPhase = view.phase;
     if (!isHost && view.phase === "lobby") {
       if (lastLobbyGame && view.game !== lastLobbyGame) {
@@ -2546,7 +2585,24 @@
       arr(); step(p.type === "stages" ? "👑" : "🏆", "goal"); }
     return `<div class="wz-path">${out.join("")}</div>`;
   }
-  function winCardHide() { clearTimeout(winCardT); winCardEl.classList.remove("show"); }
+  var introSentKey = null;
+  // Hinweis oben, solange die Uhr auf andere wartet (eigenes Element – unabhängig vom Neuzeichnen der Spiele)
+  var introNoteEl = null; // var: render() kann schon vor dieser Zeile laufen
+  function introNoteRender() {
+    if (!introNoteEl) { introNoteEl = document.createElement("div"); introNoteEl.id = "intronote"; document.body.appendChild(introNoteEl); }
+    const names = view && view.intro && !view.intro.includes(myId) && view.phase !== "lobby" ? view.intro.map((id) => (view.players.find((p) => p.id === id) || {}).name).filter(Boolean) : [];
+    // Wartefenster über dem verdeckten Spielfeld – niemand soll schon spielen, während andere noch lesen
+    introNoteEl.className = names.length ? "on" : "";
+    // nur die Spielfläche verdecken – die Kopfleiste (Einladen, Zur Lobby …) bleibt frei
+    if (names.length) { const h = app.querySelector("header.topbar"); introNoteEl.style.top = (h ? Math.max(0, Math.round(h.getBoundingClientRect().bottom + 8)) : 0) + "px"; }
+    introNoteEl.innerHTML = names.length ? `<div class="in-box"><div class="in-ico">⏳</div><b>Gleich geht's los!</b>
+      <span>Warte auf ${esc(names.length <= 2 ? names.join(" & ") : names.length + " Mitspieler")} – ${names.length > 1 ? "sie lesen" : "liest"} noch die Erklärung.</span><span class="in-dots"><i></i><i></i><i></i></span></div>` : "";
+  }
+  function winCardHide() {
+    clearTimeout(winCardT); winCardEl.classList.remove("show");
+    if (view && view.intro && view.intro.includes(myId) && introSentKey !== view.code + ":" + view.phase) { introSentKey = view.code + ":" + view.phase; send({ type: "introSeen" }); }
+    render();
+  }
   // Erklärkarte beim Spielstart – gleicher Aufbau wie die Etappenkarten der Stubenmeisterschaft:
   // Kopf, links „So geht's“ in 3 Schritten, darunter das Ziel als goldenes Band (passend zu den Einstellungen) und die Punkte,
   // rechts die Vorführung oder das große Spielsymbol. Bleibt offen, bis man „Los geht's!“ tippt.
@@ -2584,6 +2640,8 @@
         const rb = box.querySelector(".dm-replay"); if (rb) rb.onclick = () => { winDemoT0 = Date.now(); S10Demo.mount(box, key, winDemoT0); }; }
     }
     winCardEl.classList.add("show");
+    // erst unter der Kopfleiste beginnen – Einladen, Zur Lobby usw. bleiben erreichbar
+    { const h = app.querySelector("header.topbar"); winCardEl.style.top = (h ? Math.max(0, Math.round(h.getBoundingClientRect().bottom + 8)) : 0) + "px"; }
     winCardEl.querySelectorAll("[data-wzgo]").forEach((b) => b.onclick = winCardHide);
     clearTimeout(winCardT);
   }
