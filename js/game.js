@@ -2592,7 +2592,9 @@
   var introNoteEl = null; // var: render() kann schon vor dieser Zeile laufen
   function introNoteRender() {
     if (!introNoteEl) { introNoteEl = document.createElement("div"); introNoteEl.id = "intronote"; document.body.appendChild(introNoteEl); }
-    const names = view && view.intro && !view.intro.includes(myId) && view.phase !== "lobby" ? view.intro.map((id) => (view.players.find((p) => p.id === id) || {}).name).filter(Boolean) : [];
+    // sobald meine Erklärkarte zu ist, gelte ich schon als fertig (nicht erst, wenn der Gastgeber es bestätigt – sonst wäre das Spiel kurz scharf)
+    const open = winCardEl.classList.contains("show");
+    const names = view && view.intro && !open && view.phase !== "lobby" ? view.intro.filter((id) => id !== myId).map((id) => (view.players.find((p) => p.id === id) || {}).name).filter(Boolean) : [];
     // Wartefenster über dem verdeckten Spielfeld – niemand soll schon spielen, während andere noch lesen
     introNoteEl.className = names.length ? "on" : "";
     // nur die Spielfläche verdecken – die Kopfleiste (Einladen, Zur Lobby …) bleibt frei
