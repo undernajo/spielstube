@@ -321,6 +321,50 @@ window.SCHLAU10_DUELL = [
   { cat: "Südtirol", q: "Die 10 häufigsten Nachnamen Südtirols", ranked: true, note: "nach Zahl der Träger, ASTAT-Erhebung 2010", items: [
     ["Mair"], ["Hofer"], ["Pichler"], ["Kofler"], ["Gruber"], ["Pircher"], ["Gasser"], ["Egger"], ["Thaler"], ["Gamper"]] },
   // ---------- lange Listen: kaum jemand kennt alle ----------
+  { cat: "Südtirol", q: "Die 13 Gemeinden des Eisacktals", note: "Bezirksgemeinschaft Eisacktal", items: [
+    ["Brixen", ["Bressanone"]], ["Klausen", ["Chiusa"]], ["Barbian", ["Barbiano"]], ["Feldthurns", ["Velturno"]], ["Villanders", ["Villandro"]], ["Lajen", ["Laion"]],
+    ["Waidbruck", ["Ponte Gardena"]], ["Villnöß", ["Villnöss", "Funes"]], ["Natz-Schabs", ["Natz", "Schabs", "Naz-Sciaves"]], ["Mühlbach", ["Muehlbach", "Rio di Pusteria"]],
+    ["Rodeneck", ["Rodengo"]], ["Lüsen", ["Luesen", "Luson"]], ["Vahrn", ["Varna"]]] },
+  { cat: "Südtirol", q: "Die 6 Gemeinden des Wipptals", note: "Bezirksgemeinschaft Wipptal", items: [
+    ["Sterzing", ["Vipiteno"]], ["Brenner", ["Brennero"]], ["Pfitsch", ["Val di Vizze"]], ["Ratschings", ["Racines"]], ["Freienfeld", ["Campo di Trens"]],
+    ["Franzensfeste", ["Fortezza"]]] },
+  { cat: "Südtirol", q: "Die 26 Gemeinden des Burggrafenamts", note: "Bezirksgemeinschaft Burggrafenamt, mit Passeier, Ulten und Deutschnonsberg", items: [
+    ["Meran", ["Merano"]], ["Algund", ["Lagundo"]], ["Partschins", ["Parcines"]], ["Plaus"], ["Naturns", ["Naturno"]], ["Tirol", ["Dorf Tirol", "Tirolo"]],
+    ["Riffian", ["Rifiano"]], ["Kuens", ["Caines"]], ["Schenna", ["Scena"]], ["St. Martin in Passeier", ["Sankt Martin in Passeier", "St. Martin"]],
+    ["St. Leonhard in Passeier", ["Sankt Leonhard in Passeier", "St. Leonhard"]], ["Moos in Passeier", ["Moos"]], ["Hafling", ["Avelengo"]], ["Vöran", ["Voeran", "Verano"]],
+    ["Marling", ["Marlengo"]], ["Tscherms", ["Cermes"]], ["Lana"], ["Burgstall", ["Postal"]], ["Gargazon", ["Gargazzone"]], ["Tisens", ["Tesimo"]], ["Nals", ["Nalles"]],
+    ["Ulten", ["Ultimo"]], ["St. Pankraz", ["Sankt Pankraz", "San Pancrazio"]], ["Laurein", ["Lauregno"]], ["Proveis", ["Proves"]],
+    ["Unsere Liebe Frau im Walde-St. Felix", ["Unsere Liebe Frau im Walde", "St. Felix", "Senale-San Felice"]]] },
+  { cat: "Südtirol", q: "Die 13 Gemeinden von Salten-Schlern", note: "Bezirksgemeinschaft Salten-Schlern, mit Gröden", items: [
+    ["Kastelruth", ["Castelrotto"]], ["Völs am Schlern", ["Völs", "Voels", "Fiè allo Sciliar"]], ["Tiers", ["Tires"]], ["Karneid", ["Cornedo"]], ["Deutschnofen", ["Nova Ponente"]],
+    ["Welschnofen", ["Nova Levante"]], ["Jenesien", ["San Genesio"]], ["Mölten", ["Moelten", "Meltina"]], ["Ritten", ["Renon"]], ["Sarntal", ["Sarentino"]],
+    ["St. Ulrich in Gröden", ["St. Ulrich", "Urtijëi", "Ortisei"]], ["St. Christina in Gröden", ["St. Christina", "Santa Cristina"]], ["Wolkenstein in Gröden", ["Wolkenstein", "Sëlva", "Selva"]]] },
+  { cat: "Südtirol", q: "Die 18 Gemeinden von Überetsch-Unterland", note: "Bezirksgemeinschaft Überetsch-Unterland", items: [
+    ["Eppan", ["Appiano"]], ["Kaltern", ["Caldaro"]], ["Tramin", ["Termeno"]], ["Kurtatsch", ["Cortaccia"]], ["Margreid", ["Magrè"]], ["Kurtinig", ["Cortina sulla Strada del Vino"]],
+    ["Salurn", ["Salorno"]], ["Neumarkt", ["Egna"]], ["Montan", ["Montagna"]], ["Auer", ["Ora"]], ["Branzoll", ["Bronzolo"]], ["Pfatten", ["Vadena"]],
+    ["Leifers", ["Laives"]], ["Truden", ["Trodena"]], ["Altrei", ["Anterivo"]], ["Aldein", ["Aldino"]], ["Andrian", ["Andriano"]], ["Terlan", ["Terlano"]]] },
+  { cat: "Länder", q: "Die 14 Metropolitanstädte Italiens", note: "Città metropolitane", items: [
+    ["Rom", ["Roma"]], ["Mailand", ["Milano"]], ["Neapel", ["Napoli"]], ["Turin", ["Torino"]], ["Bari"], ["Bologna"], ["Florenz", ["Firenze"]], ["Genua", ["Genova"]],
+    ["Venedig", ["Venezia"]], ["Reggio Calabria", ["Reggio"]], ["Messina"], ["Palermo"], ["Catania"], ["Cagliari"]] },
+  { cat: "Länder", q: "Die 5 Regionen Italiens mit Sonderstatut", items: [
+    ["Sizilien", ["Sicilia"]], ["Sardinien", ["Sardegna"]], ["Aostatal", ["Valle d'Aosta", "Aosta"]], ["Trentino-Südtirol", ["Trentino-Alto Adige", "Trentino", "Südtirol"]],
+    ["Friaul-Julisch Venetien", ["Friaul", "Friuli-Venezia Giulia", "Friuli"]]] },
+  { cat: "Geschichte", q: "Die 7 neuen Weltwunder", note: "weltweite Wahl 2007", items: [
+    ["Chinesische Mauer", ["Große Mauer"]], ["Petra"], ["Christusstatue in Rio de Janeiro", ["Cristo Redentor", "Christusstatue", "Christus der Erlöser"]], ["Machu Picchu"],
+    ["Chichén Itzá", ["Chichen Itza"]], ["Kolosseum", ["Colosseum"]], ["Taj Mahal"]] },
+  { cat: "Unterhaltung", q: "Die 12 Mitglieder von ABBA, Queen und den Beatles", note: "Stammbesetzungen · Nachname reicht", names: true, items: [
+    ["John Lennon"], ["Paul McCartney"], ["George Harrison"], ["Ringo Starr"], ["Freddie Mercury"], ["Brian May"], ["Roger Taylor"], ["John Deacon"],
+    ["Agnetha Fältskog", ["Agnetha", "Faeltskog"]], ["Björn Ulvaeus", ["Björn", "Bjoern"]], ["Benny Andersson", ["Benny"]], ["Anni-Frid Lyngstad", ["Frida", "Anni-Frid"]]] },
+  { cat: "Geschichte", q: "Die olympischen Götter", note: "12 Hauptgötter der Griechen – je nach Überlieferung Hestia oder Dionysos, hier zählen beide", items: [
+    ["Zeus"], ["Hera"], ["Poseidon"], ["Demeter"], ["Athene", ["Athena"]], ["Apollon", ["Apollo"]], ["Artemis"], ["Ares"], ["Aphrodite"],
+    ["Hephaistos", ["Hephaestus", "Hephaistus"]], ["Hermes"], ["Hestia"], ["Dionysos", ["Dionysus"]]] },
+  { cat: "Wissen", q: "Die 14 Elemente mit nur einem Buchstaben als Symbol", note: "Name des Elements nennen, nicht das Symbol", items: [
+    ["Wasserstoff (H)", ["Wasserstoff"]], ["Bor (B)", ["Bor"]], ["Kohlenstoff (C)", ["Kohlenstoff"]], ["Stickstoff (N)", ["Stickstoff"]], ["Sauerstoff (O)", ["Sauerstoff"]],
+    ["Fluor (F)", ["Fluor"]], ["Phosphor (P)", ["Phosphor"]], ["Schwefel (S)", ["Schwefel"]], ["Kalium (K)", ["Kalium"]], ["Vanadium (V)", ["Vanadium"]],
+    ["Yttrium (Y)", ["Yttrium"]], ["Iod (I)", ["Iod", "Jod"]], ["Wolfram (W)", ["Wolfram"]], ["Uran (U)", ["Uran"]]] },
+  { cat: "Länder", q: "Die 9 Länder Europas mit einem Kreuz in der Flagge", note: "Kreuz als Teil des Flaggenmusters, nicht nur in einem Wappen", items: [
+    ["Schweiz"], ["Dänemark", ["Daenemark"]], ["Norwegen"], ["Schweden"], ["Finnland"], ["Island"], ["Griechenland"],
+    ["Vereinigtes Königreich", ["Großbritannien", "Grossbritannien", "UK", "England"]], ["Georgien"]] },
   { cat: "Südtirol", q: "Die 13 Gemeinden des Vinschgaus", note: "Bezirksgemeinschaft Vinschgau", items: [
     ["Graun im Vinschgau", ["Graun", "Curon"]], ["Mals", ["Malles"]], ["Glurns", ["Glorenza"]], ["Taufers im Münstertal", ["Taufers", "Tubre"]],
     ["Prad am Stilfserjoch", ["Prad", "Prato allo Stelvio"]], ["Stilfs", ["Stelvio"]], ["Schluderns", ["Sluderno"]], ["Laas", ["Lasa"]],
