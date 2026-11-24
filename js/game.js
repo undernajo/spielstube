@@ -375,7 +375,9 @@
     // solange noch jemand die Erklärkarte liest, nimmt niemand einen Spielzug vor (Steuerung wie Lobby/Weiter bleibt erlaubt)
     if (S.intro && S.phase !== "lobby" && introOpen(Date.now()) && !/^(lobby|start|restart|next|skip|ping|kick|pause)$|(Next|Restart|Force)$/.test(String((action && action.type) || ""))) return false;
     const before = S.phase, ok = applyAnyInner(pid, action);
-    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb) introStart(Date.now());
+    // Koop-Spiele (Lobby-Abschnitt „Gemeinsam spielen“): kein Warten – man spielt ohnehin zusammen
+    const coop = (SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1];
+    if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && !coop.includes(S.phase)) introStart(Date.now());
     if (ok && S.phase === "lobby") S.intro = null;
     return ok;
   }
