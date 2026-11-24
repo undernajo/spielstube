@@ -115,9 +115,9 @@
   let landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t45" }, store.get("s10-land") || {});
   const WL = window.S10Wl;
   const HL = window.S10Hl, HLDATA = window.SCHLAU10_HL || {};
-  let hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt" }, store.get("s10-hl") || {});
+  let hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt", scoring: "serie" }, store.get("s10-hl") || {});
   // Höher oder tiefer: Kategorien mit Südtirol-Bezug (für „Ohne Südtirol“; „Nur Südtirol“ wären zu wenige Kategorien)
-  const HL_ST = ["suedtirolBerge", "gemeinden"];
+  const HL_ST = ["suedtirolBerge", "gemeinden", "orteHoehe", "entfernung"];
   const HL_THEMES = { mix: "Gemischt", allgemein: "Ohne Südtirol" };
   const hlCatCount = (theme) => Object.keys(HLDATA).filter((k) => theme !== "allgemein" || !HL_ST.includes(k)).length;
   const DU = window.S10Duell, DUDATA = window.SCHLAU10_DUELL || [];
@@ -176,7 +176,7 @@
     quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
     qbOpts = Object.assign({ length: 4, off: [], joker: true }, store.get("s10-qb") || {});
     landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t45" }, store.get("s10-land") || {});
-    hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt" }, store.get("s10-hl") || {});
+    hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt", scoring: "serie" }, store.get("s10-hl") || {});
     duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
     fwOpts = Object.assign({ cats: [] }, store.get("s10-fw") || {});
     fqOpts = Object.assign({ target: 5, write: "0", answer: "0", choices: "3" }, store.get("s10-fq") || {});
@@ -762,7 +762,7 @@
       tick: { rounds: TK.ROUNDS[tkOpts.rounds] ? tkOpts.rounds : "2", mode: TK.MODES[tkOpts.mode] ? tkOpts.mode : "laut" },
       wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
-      hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt" },
+      hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt", scoring: HL.SCORING[hlOpts.scoring] ? hlOpts.scoring : "serie" },
       qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
       kg: { rounds: Number(kgOpts.rounds), wins: Number(kgOpts.wins), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
@@ -2132,7 +2132,7 @@
       if (chosenGame === "kurios") return send({ type: "start", game: "kurios", opts: kuOpts });
       if (chosenGame === "seil") return send({ type: "start", game: "seil", opts: seilOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
-      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
+      if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, scoring: hlOpts.scoring, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
       if (chosenGame === "land") return send({ type: "start", game: "land", opts: landOpts });
       if (chosenGame === "querbeet") return send({ type: "start", game: "querbeet", opts: qbOpts });
       if (QZ.MODES[chosenGame]) return send({ type: "start", game: chosenGame, opts: quizOpts });
@@ -2610,8 +2610,10 @@
     if (ph === "land" && v.land) { const n = v.land.rounds, fin = n > 1;
       return rounds(n, ["Gebiet", "Gebiete"], fin, "jedes richtig angetippte Gebiet bringt Punkte", [["✓", "Richtig <b>+100</b>"], ["⚡", "Die Schnellsten <b>+30</b> / <b>+20</b> / <b>+10</b>"], ...(fin ? [["🔥", "Letztes Gebiet zählt <b>doppelt</b>"]] : [])]); }
     if (ph === "hl" && v.hl) { const n = v.hl.catCount;
-      return { goal: `<em>${N(n, "Kategorie", "Kategorien")}</em> mit je ${v.hl.steps || 6} Vergleichen – jeder richtige Tipp ist 1 Punkt. Wer am Ende die meisten hat, gewinnt.`, path: { type: "rounds", n, fin: n > 1, unit: "K" },
-        rules: [["✓", "Richtig getippt <b>+1</b>"], ...(n > 1 ? [["🔥", "In der letzten Kategorie <b>+2</b>"]] : [])] }; }
+      const se = v.hl.scoring === "serie";
+      return { goal: `<em>${N(n, "Kategorie", "Kategorien")}</em> mit je ${v.hl.steps || 6} Vergleichen – ${se ? "wer mehrmals hintereinander richtig liegt, bekommt immer mehr Punkte" : "jeder richtige Tipp ist 1 Punkt"}. Wer am Ende die meisten hat, gewinnt.`, path: { type: "rounds", n, fin: n > 1, unit: "K" },
+        rules: se ? [["✓", "Richtig <b>+1</b>, dann <b>+2</b>, <b>+3</b> … hintereinander"], ["✗", "Falsch: Serie startet neu – Punkte bleiben"], ...(n > 1 ? [["🏁", "Letzte Kategorie zählt <b>doppelt</b>"]] : [])]
+          : [["✓", "Richtig getippt <b>+1</b>"], ...(n > 1 ? [["🔥", "In der letzten Kategorie <b>+2</b>"]] : [])] }; }
     if (ph === "slf" && v.slf) return rounds(v.slf.rounds, ["Runde", "Runden"], false, "jede gültige Antwort bringt Punkte", [["✍️", "Eigene Antwort <b>+10</b>"], ["👥", "Gleiche Antwort wie jemand <b>+5</b>"], ["⭐", "Als Einziger in der Kategorie <b>+20</b>"]]);
     if (ph === "duell" && v.duell) return wins(v.duell.target, [["✗", "Eine Runde verliert, wer etwas Falsches nennt, etwas doppelt nennt oder keine Antwort mehr weiß"], ["🔁", "Jede Runde eine neue Liste"]]);
     if (ph === "frage" && v.frage) return wins(v.frage.target, [["💡", "Richtig beantwortet: <b>der Antwortende</b> gewinnt die Runde"], ["✍️", "Nicht gewusst: <b>der Fragesteller</b> gewinnt die Runde"], ["🔁", "Die Rollen wechseln jede Runde"]]);
@@ -2877,7 +2879,7 @@
       return `<p class="muted small">Zu zweit · bis ${lb.duell.target} Punkte · ${esc((DU.TIMERS[lb.duell.timer] || DU.TIMERS["30"]).name)} pro Antwort · ${DUDATA.length} Themen</p>`;
     }
     if (view.game === "hl" && lb.hl) {
-      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}</p>`;
+      return `<p class="muted small">${(HL.LENGTHS[lb.hl.length] || HL.LENGTHS.mittel).cats} von ${hlCatCount(lb.hl.theme)} Kategorien${lb.hl.theme === "allgemein" ? " · ohne Südtirol" : ""} · je ${HL.PER_CAT} Vergleiche · ${esc((HL.LEVELS[lb.hl.level] || HL.LEVELS.gemischt).name)}${lb.hl.scoring === "einfach" ? "" : " · mit Serienbonus"}</p>`;
     }
     if (view.game === "seil") return `<p class="muted small">${seilTeamText()}</p>`;
     if (view.game === "jagd" && lb.jagd) {
@@ -3024,6 +3026,8 @@
     if (hlT) hlT.onchange = () => { hlOpts.theme = hlT.value; store.set("s10-hl", hlOpts); publish(); };
     const hlLv = app.querySelector("#hl-level");
     if (hlLv) hlLv.onchange = () => { hlOpts.level = hlLv.value; store.set("s10-hl", hlOpts); publish(); };
+    const hlSc = app.querySelector("#hl-scoring");
+    if (hlSc) hlSc.onchange = () => { hlOpts.scoring = hlSc.value; store.set("s10-hl", hlOpts); publish(); };
     const wr = app.querySelector("#wl-rounds");
     if (wr) wr.onchange = () => { wlOpts.rounds = Number(wr.value); store.set("s10-wl", wlOpts); publish(); };
   }
@@ -3128,6 +3132,8 @@
         `<option value="${k}" ${hlOpts.theme === k ? "selected" : ""}>${n} (${hlCatCount(k)})</option>`).join("")}</select></label>
       <label class="field"><span>Schwierigkeit</span><select id="hl-level">${Object.entries(HL.LEVELS).map(([k, l]) =>
         `<option value="${k}" ${(HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
+      <label class="field"><span>Punkte</span><select id="hl-scoring">${Object.entries(HL.SCORING).map(([k, l]) =>
+        `<option value="${k}" ${(HL.SCORING[hlOpts.scoring] ? hlOpts.scoring : "serie") === k ? "selected" : ""}>${esc(l.name)} – ${esc(l.desc)}</option>`).join("")}</select></label>
       <button id="start" class="btn primary big" ${playing().length < 1 ? "disabled" : ""}>Spiel starten</button>
       `;
   }
@@ -3245,7 +3251,8 @@
       <ul>
         <li>Ein Begriff wird mit seinem Wert gezeigt (z. B. „Schlern – 2.563 m“), daneben der nächste Begriff ohne Wert.</li>
         <li>Tippe, ob der Wert des neuen Begriffs <b>höher</b> oder <b>tiefer</b> ist (bei Jahreszahlen: später oder früher). Alle wählen gleichzeitig, ohne Zeitdruck.</li>
-        <li>Sobald alle gewählt haben, wird aufgedeckt: richtig = 1 Punkt. Der neue Begriff wird zur nächsten Vergleichszahl.</li>
+        <li>Sobald alle gewählt haben, wird aufgedeckt. Danach zeigt der neue Begriff seinen Wert und ist der Vergleich für den nächsten.</li>
+        <li><b>Serienbonus</b> (Standard): Wer hintereinander richtig liegt, bekommt 1, dann 2, dann 3 Punkte usw. Ein falscher Tipp setzt die Serie zurück – gesammelte Punkte bleiben. Jede Kategorie beginnt eine neue Serie. Mit „Punkte: Einfach“ zählt jeder richtige Tipp 1 Punkt.</li>
         <li>Pro Kategorie ${HL.PER_CAT} Vergleiche, dann kommt die nächste Kategorie. Die meisten Punkte gewinnen.</li>
         <li><b>Finale:</b> In der letzten Kategorie zählt jeder richtige Tipp doppelt.</li>
       </ul>

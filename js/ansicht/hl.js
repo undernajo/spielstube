@@ -7,7 +7,10 @@
   // ---------- Höher oder tiefer ----------
   let hlRendered = null;
   const hlPult = (v, st) => v.players.map((p) => { const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id), ok = st.step === "reveal" && st.result ? st.result.ok[p.id] : undefined;
-    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, prev: st.step === "reveal" && st.result ? (st.total[p.id] || 0) - (ok ? (st.final ? 2 : 1) : 0) : undefined, done: done || ok === true, txt: st.step === "guess" ? (done ? "hat gewählt" : p.connected ? "überlegt …" : "getrennt") : ok === true ? "✓ richtig" : ok === false ? "✗ falsch" : "" }; });
+    return { id: p.id, name: p.name, pts: st.total[p.id] || 0, prev: st.step === "reveal" && st.result ? (st.total[p.id] || 0) - hlGot(st, p.id) : undefined, done: done || ok === true, txt: st.step === "guess" ? (done ? "hat gewählt" : p.connected ? "überlegt …" : "getrennt") + hlFire(st, p.id, " · ") : ok === true ? `✓ +${hlGot(st, p.id)}${hlFire(st, p.id, " · ")}` : ok === false ? "✗ falsch" : "" }; });
+  // Punkte dieses Vergleichs und laufende Serie (🔥×3 ab zwei richtigen hintereinander)
+  const hlGot = (st, id) => (st.result && st.result.pts ? st.result.pts[id] || 0 : st.result && st.result.ok[id] ? (st.final ? 2 : 1) : 0);
+  const hlFire = (st, id, pre) => st.scoring === "serie" && st.streak && st.streak[id] >= 2 ? `${pre || ""}🔥×${st.streak[id]}` : "";
   function hlChips(v, st) {
     return v.players.map((p, i) => {
       const done = st.step === "guess" && st.submitted && st.submitted.includes(p.id);
@@ -15,7 +18,7 @@
       const mark = st.step === "guess" ? (done ? "✓" : "…") : ok === true ? "✓" : ok === false ? "✗" : "";
       return `<span class="geo-score ${done || ok ? "done" : ""} ${ok === false ? "miss" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}">
         <span class="pdot ${p.connected ? "" : "off"}"></span><span class="geo-score-name">${esc(p.name)}${p.id === G.myId ? " <em>(du)</em>" : ""}</span>
-        <b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}</span>`;
+        <b>${st.total[p.id] || 0}</b>${mark ? `<span class="geo-mark">${mark}</span>` : ""}${hlFire(st, p.id) ? `<span class="hl-fire">${hlFire(st, p.id)}</span>` : ""}</span>`;
     }).join("");
   }
   function renderHl() {
@@ -56,7 +59,7 @@
           </div>
           <p class="muted small hl-status">${st.step === "guess"
             ? (mine ? `Du hast „${mine === "up" ? up : down}“ gewählt – warte auf die anderen … (du kannst noch umentscheiden)` : "")
-            : okMe === true ? "✓ Richtig! Gleich geht es weiter …" : okMe === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
+            : okMe === true ? `✓ Richtig – <b>+${hlGot(st, G.myId)}</b>${st.scoring === "serie" && st.streak[G.myId] >= 2 ? ` (🔥 ${st.streak[G.myId]} richtig hintereinander)` : ""}. Gleich geht es weiter …` : okMe === false ? "✗ Leider falsch. Gleich geht es weiter …" : "Gleich geht es weiter …"}</p>
           ${st.chain.length ? `<div class="hl-chain"><span class="hl-link">${esc(st.start.name)} <b>${esc(st.start.value)}</b></span>${st.chain.map((c) =>
             `<span class="hl-arrow">${c.right === "up" ? "▲" : c.right === "down" ? "▼" : "="}</span><span class="hl-link">${esc(c.name)} <b>${esc(c.value)}</b></span>`).join("")}</div>` : ""}
         </div>`;

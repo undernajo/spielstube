@@ -15,7 +15,7 @@
   const STAGES = {
     zehn: { kind: "wissen", name: "Zehnkampf", short: "3 Karten", rule: "Eine Karte mit 10 Antworten – reihum aufdecken oder passen. Wer danebenliegt, verliert die Punkte dieser Runde." },
     wand: { kind: "wissen", min2: true, name: "Fragewand", short: "5 Kategorien", rule: "Reihum ein Feld wählen und die Frage beantworten – je mehr Punkte, desto schwerer. Falsch kostet nichts." },
-    hl: { kind: "wissen", name: "Höher oder tiefer", short: "2 Kategorien, je 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig." },
+    hl: { kind: "wissen", name: "Höher oder tiefer", short: "2 Kategorien, je 6 Vergleiche", rule: "Ist der Wert des nächsten Begriffs höher oder tiefer? Alle tippen gleichzeitig – richtig hintereinander bringt immer mehr Punkte." },
     geo: { kind: "karte", name: "Wo liegt das?", short: "5 Orte", rule: "Tippt auf der Karte, wo der Ort liegt – je näher, desto mehr Punkte." },
     land: { kind: "karte", name: "Länder finden", short: "8 Gebiete", rule: "Tippt das genannte Land (oder Bundesland, Region, Kanton) auf der Karte an." },
     oben: { kind: "karte", name: "Von oben", short: "3 Satellitenbilder", rule: "Erkennt den Ort von oben und tippt ihn auf der Karte an – wer früh tippt, bekommt mehr." },
@@ -36,7 +36,7 @@
   const HOWTO = {
     zehn: { steps: ["Eine Karte mit einer Frage und *10 verdeckten Antworten*.", "Reihum *wählt jeder ein Feld und antwortet* – oder *passt* und sichert seine Punkte dieser Karte.", "Richtig = +1. *Falsch = alle Punkte dieser Karte weg* und du bist für diese Karte raus."], win: "Wer am Ende die meisten Punkte hat." },
     wand: { steps: ["Wer dran ist, *wählt ein Feld* – je höher die Zahl, desto schwerer.", "*Nur wer gewählt hat, antwortet* – eintippen oder auswählen, ohne Zeitdruck.", "*Richtig = Punkte* des Feldes. Falsch kostet nichts."], win: "Wer nach allen Zügen die meisten Punkte hat." },
-    hl: { steps: ["Links ein Begriff *mit* Wert, rechts der nächste *ohne*.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = *1 Punkt*. Danach zeigt der Begriff seinen Wert – und ist der Vergleich für den nächsten."], win: "Die meisten richtigen Tipps." },
+    hl: { steps: ["Links ein Begriff *mit* Wert, rechts der nächste *ohne*.", "*Höher oder tiefer?* Alle tippen gleichzeitig.", "Richtig = *1 Punkt* – *hintereinander richtig* gibt 2, 3, 4 … Punkte. Falsch startet die Serie neu."], win: "Die meisten Punkte." },
     schaetzen: { steps: ["Eine Frage mit einer *Zahl* als Antwort.", "Alle *schätzen gleichzeitig*.", "*Am nächsten dran* = 3 Punkte, dann 2 und 1 – *genau getroffen* (höchstens 1 % daneben) +1."], win: "Die meisten Punkte nach allen Fragen." },
     hinweis: { steps: ["Gesucht ist ein Begriff – alle 10 Sekunden kommt ein *leichterer Hinweis*.", "Jeder hat *nur einen Versuch*.", "Richtig beim *1. Hinweis* = 5 Punkte, beim 5. noch *1*."], win: "Die meisten Punkte nach allen Begriffen." },
     geo: { steps: ["Oben steht ein *Ort*.", "*Alle tippen gleichzeitig* auf die Karte, wo er liegt.", "*Je näher* am echten Ort, desto mehr Punkte – *bis 1000*."], win: "Die meisten Punkte nach allen Orten." },
@@ -60,7 +60,7 @@
     switch (game) {
       case "zehn": return `Die meisten Punkte nach ${n(o.cards || 1, "Karte", "Karten")}.`;
       case "wand": return `Die meisten Punkte, wenn die Wand mit ${n(o.n || 5, "Kategorie", "Kategorien")} gespielt ist.`;
-      case "hl": return `Die meisten richtigen Tipps in ${n(o.cats || 2, "Kategorie", "Kategorien")} mit je 6 Vergleichen.`;
+      case "hl": return `Die meisten Punkte in ${n(o.cats || 2, "Kategorie", "Kategorien")} mit je 6 Vergleichen – Serien bringen mehr.`;
       case "schaetzen": return `Die meisten Punkte nach ${n(o.rounds || 5, "Schätzfrage", "Schätzfragen")}.`;
       case "hinweis": return `Die meisten Punkte nach ${n(o.rounds || 4, "Begriff", "Begriffen")}.`;
       case "geo": return `Die meisten Punkte nach ${n(o.rounds || 5, "Ort", "Orten")}.`;
@@ -145,7 +145,7 @@
   }
 
   // Kurzfassung je Spiel – großzügige Zeiten, damit es nicht hektisch wird; theme: mix | suedtirol | welt
-  const HL_ST = ["suedtirolBerge", "gemeinden"];
+  const HL_ST = ["suedtirolBerge", "gemeinden", "orteHoehe", "entfernung"];
   function stageOpts(game, theme, level) {
     const st = theme === "suedtirol", w = theme === "welt";
     // „Gemischt“: Weltkarte bei Ländern/Umrissen leicht (sonst zu viele unbekannte Kleinstaaten); „Leicht“/„Profi“ gelten überall

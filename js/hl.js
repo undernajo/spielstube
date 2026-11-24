@@ -5,6 +5,8 @@
   // Schwierigkeit: Abstand der verglichenen Werte. „Gemischt“ = bisher (keine einseitigen Paare, höchstens ein ganz knappes)
   const LEVELS = { leicht: { name: "Leicht", desc: "deutliche Unterschiede" }, gemischt: { name: "Gemischt", desc: "mal deutlich, mal knapp" },
     profi: { name: "Profi", desc: "möglichst knappe Vergleiche" } };
+  // Punkte: Serienbonus = richtig hintereinander 1, 2, 3 … Punkte (falsch setzt die Serie zurück, Punkte bleiben)
+  const SCORING = { serie: { name: "Serienbonus", desc: "richtig hintereinander = 1, 2, 3 … Punkte" }, einfach: { name: "Einfach", desc: "jeder richtige Tipp = 1 Punkt" } };
   const REVEAL_MS = 3500;   // so lange bleibt die Auflösung stehen, dann geht es automatisch weiter
   const data = () => root.SCHLAU10_HL || {};
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -69,13 +71,14 @@
     opts = opts || {};
     const length = LENGTHS[opts.length] ? opts.length : "mittel";
     const level = LEVELS[opts.level] ? opts.level : "gemischt";
+    const scoring = SCORING[opts.scoring] ? opts.scoring : "serie";
     const n = Number.isInteger(opts.cats) && opts.cats > 0 ? opts.cats : LENGTHS[length].cats; // Querbeet: 1 Kategorie
     // Querbeet-Themenabend: nur bestimmte Kategorien (only) oder ohne (not)
     const allKeys = Object.keys(data()).filter((k) => (!Array.isArray(opts.only) || opts.only.includes(k)) && (!Array.isArray(opts.not) || !opts.not.includes(k)));
     const keys = shuffle(allKeys.length ? allKeys : Object.keys(data())).slice(0, n);
     s.game = "hl"; s.phase = "hl";
     s.cardIdx = null; s.pending = null; s.undo = null; s.undoReq = null; s.winners = null;
-    s.hl = { opts: { length, level }, cats: keys, ci: -1, total: {}, history: [] };
+    s.hl = { opts: { length, level, scoring }, cats: keys, ci: -1, total: {}, streak: {}, history: [] };
     s.players.forEach((p) => { s.hl.total[p.id] = 0; p.waiting = false; p.status = "active"; });
     nextCat(s, now);
   }
@@ -85,7 +88,7 @@
     st.ci++;
     if (st.ci >= st.cats.length) { st.step = "final"; return; }
     st.items = pickItems(data()[st.cats[st.ci]], st.opts.level);
-    st.pos = 1; st.chain = [];
+    st.pos = 1; st.chain = []; st.streak = {}; // jede Kategorie beginnt eine neue Serie
     beginGuess(st);
   }
   function beginGuess(st) { st.step = "guess"; st.picks = {}; st.result = null; st.revealAt = 0; }
@@ -97,13 +100,16 @@
   function reveal(s, now) {
     const st = s.hl, prev = val(st, st.pos - 1), cur = val(st, st.pos);
     const right = cur > prev ? "up" : cur < prev ? "down" : "both";
-    const res = {};
+    const res = {}, pts = {}, serie = (st.opts.scoring || "serie") === "serie";
+    if (!st.streak) st.streak = {};
     Object.entries(st.picks).forEach(([pid, d]) => {
       const ok = right === "both" || d === right;
       res[pid] = ok;
-      if (ok) st.total[pid] = (st.total[pid] || 0) + (isFinalCat(st) ? 2 : 1); // letzte Kategorie zählt doppelt
+      st.streak[pid] = ok ? (st.streak[pid] || 0) + 1 : 0;
+      pts[pid] = ok ? (serie ? st.streak[pid] : 1) * (isFinalCat(st) ? 2 : 1) : 0; // letzte Kategorie zählt doppelt
+      st.total[pid] = (st.total[pid] || 0) + pts[pid];
     });
-    st.result = { right, ok: res };
+    st.result = { right, ok: res, pts };
     st.chain.push({ k: st.pos, right });
     st.step = "reveal"; st.revealAt = now;
   }
@@ -143,7 +149,7 @@
   }
 
   function fmt(cat, v) {
-    if (cat.year) return String(v);
+    if (cat.year) return v < 0 ? `${-v} v. Chr.` : String(v);
     return v.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + (cat.unit ? " " + cat.unit : "");
   }
 
@@ -151,7 +157,7 @@
     const st = s.hl;
     if (!st) return null;
     const out = { step: st.step, final: isFinalCat(st), total: { ...st.total }, catCount: st.cats.length, catNo: Math.min(st.ci + 1, st.cats.length),
-      perCat: PER_CAT, lengthName: LENGTHS[st.opts.length].name };
+      perCat: PER_CAT, lengthName: LENGTHS[st.opts.length].name, scoring: st.opts.scoring || "serie", streak: { ...(st.streak || {}) } };
     if (st.step !== "final") {
       const cat = data()[st.cats[st.ci]], item = (k) => cat.items[st.items[k]];
       out.cat = { name: cat.name, q: cat.q, year: !!cat.year, approx: !!cat.approx, note: cat.note || "" };
@@ -169,11 +175,12 @@
     } else {
       const max = Math.max(...Object.values(st.total));
       out.winners = Object.keys(st.total).filter((id) => st.total[id] === max);
-      out.max = st.cats.length * PER_CAT + (st.cats.length > 1 ? PER_CAT : 0); // letzte Kategorie zählt doppelt
+      const perCat = out.scoring === "serie" ? PER_CAT * (PER_CAT + 1) / 2 : PER_CAT; // Serie: 1 + 2 + … + 6
+      out.max = st.cats.length * perCat + (st.cats.length > 1 ? perCat : 0); // letzte Kategorie zählt doppelt
       out.cats = st.cats.map((k) => data()[k].name);
     }
     return out;
   }
 
-  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS, LEVELS };
+  root.S10Hl = { start, apply, tick, publicState, fmt, pickItems, pairKind, LENGTHS, PER_CAT, REVEAL_MS, LEVELS, SCORING };
 })(typeof window !== "undefined" ? window : globalThis);

@@ -452,6 +452,7 @@ textarea { resize: vertical; font: inherit; }
 .geo-score b { font-variant-numeric: tabular-nums; }
 .geo-mark { color: var(--muted); font-size: .85em; }
 .geo-score.done .geo-mark { color: var(--ok); }
+.hl-fire { font-size: .8em; font-weight: 700; color: #e8590c; margin-left: .25em; white-space: nowrap; }
 @media (max-width: 640px) {
   .geo-map { height: max(320px, calc(100vh - 260px)); }
   .geo-bar { padding: 10px 12px; }
