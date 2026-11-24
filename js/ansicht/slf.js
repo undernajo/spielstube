@@ -103,8 +103,10 @@
     // Zeiten nur bei einem neuen Spielstand übernehmen – beim Neuzeichnen ohne neuen Stand wären sie veraltet
     if (st !== slfLastSt) { slfLastSt = st; slfDeadline = Date.now() + (st.endsIn || 0); slfStartAt = st.step === "writing" ? Date.now() + (st.startsIn || 0) : 0; }
     const spinning = st.step === "writing" && Date.now() < slfStartAt;
+    // solange noch jemand die Erklärkarte liest, steht der Buchstabe still (die Uhr läuft ja auch noch nicht) – gedreht wird danach
+    const hold = !!(v.intro && v.intro.length);
     if (st.step === "collecting" && slfSubmitted !== slfLocal.key) { slfSubmitted = slfLocal.key; slfSend(true); }
-    const key = slfLocal.key + ":" + st.step + (spinning ? ":spin" : "") + (st.step === "review" ? ":" + st.ci : "");
+    const key = slfLocal.key + ":" + st.step + (spinning ? ":spin" : "") + (spinning && hold ? ":hold" : "") + (st.step === "review" ? ":" + st.ci : "");
     const nameOf = (id) => (v.players.find((p) => p.id === id) || { name: "?" }).name;
     if (st.step === "writing" && slfRendered === key && app.querySelector(".slf-form")) {
       // Eingaben nicht neu zeichnen – nur Spieler, Stopp-Hinweis und Knopf aktualisieren
@@ -196,7 +198,7 @@
       };
       inp.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); (inputs[i + 1] || inp).focus(); } };
     });
-    if (spinning) slfSpin(key, st.letter, slfStartAt - Date.now());
+    if (spinning && !hold) slfSpin(key, st.letter, slfStartAt - Date.now());
     else if (st.step === "writing" && inputs.length && !inputs.some((x) => x.value) && matchMedia("(pointer: fine)").matches) inputs[0].focus();
   }
   function slfStopHtml(st, nameOf) {
