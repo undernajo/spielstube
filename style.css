@@ -3936,7 +3936,9 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .rooms h3 { margin: 6px 0 0; font: 700 .95rem Fredoka, sans-serif; } .rooms h3 small { font: 600 .78rem Nunito, sans-serif; color: var(--muted); }
 .rooms ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .rooms li { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
-.rooms .rm-ico { font-size: 1.2rem; }
+.rooms .rm-ico { display: grid; place-items: center; }
+.room-sign { width: 36px; height: 36px; flex: none; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); }
+.room-sign.sm { width: 24px; height: 24px; vertical-align: -6px; }
 .rooms .rm-t { flex: 1; min-width: 0; display: grid; } .rooms .rm-t b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .rooms .rm-t small { color: var(--muted); font-size: .78rem; }
 .rooms .rm-t small:empty { display: none; }
 .rooms .rm-x { padding: 6px 9px; }

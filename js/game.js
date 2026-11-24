@@ -203,6 +203,18 @@
   // Logo: „Spielstube“ mit gelber Würfel-Münze
   // Logo: ein kleines Haus (die Stube), dessen Vorderseite ein Würfel mit fünf Augen ist
   const MARK = `<svg class="mark-svg" viewBox="0 -5 32 37" aria-hidden="true"><path d="M20.5 5.5 V0.5 h5.5 V9.8Z" fill="#c48f0a" stroke="#8a5f00" stroke-width=".9" stroke-linejoin="round"/><rect x="19.8" y="-0.3" width="6.9" height="1.8" rx=".6" fill="#a87400" stroke="#8a5f00" stroke-width=".6"/><circle cx="24.5" cy="-2.3" r="1.5" fill="#e6e2f5" opacity=".85"/><circle cx="26.6" cy="-3.6" r="1.1" fill="#e6e2f5" opacity=".6"/><path d="M16 2.6 30 13.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V13.4Z" fill="#c48f0a"/><path d="M16 1.6 30 12.4v13.4a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V12.4Z" fill="#ffc83d" stroke="#8a5f00" stroke-width="1" stroke-linejoin="round"/><path d="M16 1.6 30 12.4v1.6L16 3.2 2 14v-1.6Z" fill="#fff" opacity=".35"/><g fill="#2a1d00"><circle cx="9.5" cy="16" r="2"/><circle cx="22.5" cy="16" r="2"/><circle cx="16" cy="20.3" r="2"/><circle cx="9.5" cy="24.6" r="2"/><circle cx="22.5" cy="24.6" r="2"/></g></svg>`;
+  // Türschild einer Stube: kleines Schild am Nagel mit dem Anfangsbuchstaben des Namens (sonst des Codes); Farbe je nach Name
+  const SIGN_COLORS = [["#c98a3c", "#7a4e1e"], ["#6f9a4a", "#3d5a26"], ["#4a86b8", "#264d70"], ["#b85a5a", "#6e2f2f"], ["#8a6ab8", "#4c3570"], ["#c2a13a", "#6e5a18"], ["#3e9e94", "#1f5a54"]];
+  function roomSignHtml(name, code, cls = "") {
+    const t = String(name || code || "?").trim(), ch = (t.match(/[A-Za-zÄÖÜäöü0-9]/) || ["?"])[0].toUpperCase();
+    let h = 0; for (const c of t.toLowerCase()) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+    const [bg, dk] = SIGN_COLORS[h % SIGN_COLORS.length];
+    return `<svg class="room-sign ${cls}" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 10.5 L16 2.6 L25 10.5" fill="none" stroke="#d9cfb6" stroke-width="1.3" stroke-linejoin="round"/>
+      <circle cx="16" cy="2.4" r="1.6" fill="#8a8aa0" stroke="#4a4a60" stroke-width=".6"/>
+      <rect x="1.5" y="10" width="29" height="21" rx="4" fill="${dk}"/><rect x="1.5" y="8.5" width="29" height="21" rx="4" fill="${bg}" stroke="${dk}" stroke-width="1"/>
+      <path d="M4 13 H28 M4 25.5 H28" stroke="#fff" stroke-opacity=".13" stroke-width="1"/>
+      <text x="16" y="19.6" text-anchor="middle" dominant-baseline="central" font-family="Fredoka, sans-serif" font-weight="700" font-size="15" fill="#fffaf0">${esc(ch)}</text></svg>`;
+  }
   const LOGO = `<span class="mark">${MARK}</span><span class="brand-name">Spielstube</span>`;
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const cleanName = (n) => String(n || "").trim().slice(0, 20) || "Spieler";
@@ -1841,7 +1853,7 @@
   // Startseite: „Meine Stuben“ (wieder öffnen – der alte Link gilt dann wieder) und „Zuletzt dabei“ (wieder beitreten)
   function roomListsHtml(skip) {
     const mine = roomsGet("s10-myrooms"), seen = roomsGet("s10-visited").filter((e) => !mine.some((m) => m.code === e.code) && e.code !== skip);
-    const row = (e, btn, extra) => `<li><span class="rm-ico">🏠</span><span class="rm-t"><b>${roomLabel(e)}</b><small>${e.name ? `Stube ${esc(e.code)}` : ""}${extra ? `${e.name ? " · " : ""}${extra}` : ""}</small></span>${btn}</li>`;
+    const row = (e, btn, extra) => `<li><span class="rm-ico">${roomSignHtml(e.name, e.code)}</span><span class="rm-t"><b>${roomLabel(e)}</b><small>${e.name ? `Stube ${esc(e.code)}` : ""}${extra ? `${e.name ? " · " : ""}${extra}` : ""}</small></span>${btn}</li>`;
     return (mine.length ? `<div class="rooms"><h3>Meine Stuben <small>– wieder öffnen, der alte Link gilt wieder</small></h3><ul>${mine.map((e) => row(e,
         `${e.code === skip ? `<button class="btn sm primary" data-resume="1" title="Den letzten Spielstand fortsetzen">Fortsetzen</button>` : `<button class="btn sm" data-reopen="${e.code}">Öffnen</button>`}<button class="btn ghost sm rm-x" data-rmren="${e.code}" title="Umbenennen" aria-label="Umbenennen">✎</button><button class="btn ghost sm rm-x" data-rmdel="s10-myrooms:${e.code}" title="Entfernen" aria-label="Entfernen">✕</button>`)).join("")}</ul></div>` : "")
       + (seen.length ? `<div class="rooms"><h3>Zuletzt dabei</h3><ul>${seen.map((e) => row(e,
@@ -1962,7 +1974,7 @@
     return `
       <main class="screen lobby lobby-guest gc">
         <div class="panel gc-bar">
-          <div class="gc-top"><button type="button" class="gc-code" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>${view.roomName ? `<span class="gc-room">🏠 ${esc(view.roomName)}</span>` : ""}
+          <div class="gc-top"><button type="button" class="gc-code" id="copycode" title="Code kopieren" aria-label="Stuben-Code ${esc(view.code)} – zum Kopieren tippen">${esc(view.code)}</button>${view.roomName ? `<span class="gc-room">${roomSignHtml(view.roomName, view.code, "sm")} ${esc(view.roomName)}</span>` : ""}
             <span class="gc-btns">${camOK ? `<button class="btn ghost sm ${camOn ? "cam-on" : ""}" data-cam title="${camOn ? "Kamera ausschalten" : "Kamera einschalten"}" aria-label="Kamera">📷</button>
               <button class="btn ghost sm ${micOn ? "cam-on" : ""}" data-mic title="${micOn ? "Mikrofon ausschalten" : "Mikrofon einschalten"}" aria-label="Mikrofon">🎤</button>` : ""}
               <input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn ghost sm" title="Mitspieler einladen" aria-label="Mitspieler einladen">🔗</button>
@@ -2040,7 +2052,7 @@
             ${isFile ? `<p class="muted small">Schick deinen Mitspielern diesen Code. Sie öffnen das Spiel bei sich und geben ihn unter „Beitreten“ ein.</p>`
               : `<input id="link" type="hidden" value="${esc(shareLink())}"><button id="lobbyInvite" class="btn">🔗 Mitspieler einladen</button>`}
             ${isHost ? `<label class="field room-name"><span>Name der Stube <small>(zum Wiederöffnen)</small></span><input id="roomName" maxlength="20" placeholder="z. B. Familie" value="${esc(view.roomName || "")}"></label>`
-              : view.roomName ? `<p class="room-name-g">🏠 ${esc(view.roomName)}</p>` : ""}
+              : view.roomName ? `<p class="room-name-g">${roomSignHtml(view.roomName, view.code, "sm")} ${esc(view.roomName)}</p>` : ""}
             <h3>Spieler</h3>
             <ul class="plist">${view.players.map((p, i) => `<li class="${p.paused ? "paused" : ""}" style="--pc:${PLAYER_COLORS[i % PLAYER_COLORS.length]}"><span class="dot pc ${p.connected ? "on" : ""}" title="Deine Farbe im Spiel"></span><span class="pl-name">${esc(p.name)}${p.id === myId ? " <em>(du)</em>" : ""}</span>
               <span class="pl-right">${p.id === view.hostId ? `<span class="host-tag">Gastgeber</span>` : ""}${p.paused && p.id !== myId ? `<span class="pause-tag">⏸ pausiert</span>` : ""}${pauseBtnHtml(p)}${isHost && p.id !== myId ? `<button type="button" class="kick" data-kick="${esc(p.id)}" title="${esc(p.name)} aus der Stube entfernen" aria-label="${esc(p.name)} entfernen">✕</button>` : ""}</span></li>`).join("")}</ul>
