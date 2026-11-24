@@ -29,6 +29,9 @@ window.SCHLAU10_WAND = [
       { t: "Auf welchem Hochplateau über Bozen stehen die bekannten Erdpyramiden von Lengmoos?", a: "Ritten", alt: ["Rittner Hochplateau"] },
       { t: "Welcher Fluss fließt durch das Pustertal und mündet bei Brixen in den Eisack?", a: "Rienz" },
       { t: "Wie heißt der Hausberg von Brixen mit Skigebiet?", a: "Plose" },
+      { t: "Welcher Pass verbindet Gröden mit dem Gadertal?", a: "Grödner Joch", alt: ["Grödnerjoch","Passo Gardena"] },
+      { t: "Wie heißt der Hauptort des Vinschgaus, Sitz der Bezirksgemeinschaft?", a: "Schlanders", alt: ["Silandro"] },
+      { t: "Wie heißt der für seine Farben berühmte Bergsee am Fuß des Latemar?", a: "Karersee", alt: ["Karer See","Lago di Carezza"] },
     ],
     50: [
       { t: "In welchem Jahr trat das Zweite Autonomiestatut für Südtirol in Kraft?", a: "1972" },
@@ -37,8 +40,11 @@ window.SCHLAU10_WAND = [
       { t: "In welchem Tal liegt das Kloster Marienberg, die höchstgelegene Benediktinerabtei Europas?", a: "Vinschgau", alt: ["Obervinschgau"] },
       { t: "Wer war von 1960 bis 1989 Landeshauptmann von Südtirol?", a: "Silvius Magnago", alt: ["Magnago"] },
       { t: "Wie heißt der höchste Berg der Dolomiten?", a: "Marmolata", alt: ["Marmolada","Punta Penia"] },
-    ] } },
-
+      { t: "Wie heißt die typische Südtiroler Rotweinsorte, aus der der Kalterersee-Wein gekeltert wird?", a: "Vernatsch", alt: ["Schiava","Trollinger"] },
+      { t: "Welcher Kapuzinerpater kämpfte 1809 an der Seite von Andreas Hofer?", a: "Joachim Haspinger", alt: ["Haspinger","Pater Haspinger"] },
+      { t: "Mit wem bestieg Reinhold Messner 1978 den Mount Everest ohne Flaschensauerstoff?", a: "Peter Habeler", alt: ["Habeler"] },
+    ],
+  } },
   { key: "essen", ico: "🍝", name: "Essen & Trinken", q: {
     10: [
       { t: "Aus welchem Land stammt die Pizza Margherita?", a: "Italien", c: ["Spanien","Griechenland","Italien","Frankreich"] },
@@ -66,6 +72,9 @@ window.SCHLAU10_WAND = [
       { t: "Welches Gewürz wird aus den Narben einer Krokusblüte gewonnen?", a: "Safran" },
       { t: "Welche Spirituose wird traditionell aus Agaven gebrannt?", a: "Tequila", alt: ["Mezcal"] },
       { t: "Welche Pilze gehören mit Preisen von mehreren tausend Euro pro Kilo zu den teuersten Lebensmitteln?", a: "Trüffel", alt: ["Trueffel","Weiße Trüffel"] },
+      { t: "Aus der Wurzel welcher Pflanze wird Tapioka gewonnen?", a: "Maniok", alt: ["Cassava","Kassava","Yuca"] },
+      { t: "Wie heißt die italienische Nachspeise aus „gekochter Sahne“?", a: "Panna cotta", alt: ["Pannacotta"] },
+      { t: "Wie heißt der spanische Schinken von schwarzen, mit Eicheln gemästeten Schweinen?", a: "Jamón Ibérico", alt: ["Jamon Iberico","Ibérico","Iberico","Pata Negra"] },
     ],
     50: [
       { t: "Aus welchem Teil der Pflanze wird Zimt gewonnen?", a: "Rinde", alt: ["Baumrinde"] },
@@ -74,8 +83,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt die japanische Würzpaste aus vergorenen Sojabohnen, Grundlage einer bekannten Suppe?", a: "Miso", alt: ["Misopaste"] },
       { t: "Welches Gewürz besteht aus getrockneten Blütenknospen und steckt oft im Glühwein?", a: "Gewürznelke", alt: ["Nelke","Nelken","Gewürznelken"] },
       { t: "Welche Nudelsorte heißt übersetzt „kleine Zungen“?", a: "Linguine" },
-    ] } },
-
+      { t: "In welcher Region Italiens wird der Parmigiano Reggiano hergestellt?", a: "Emilia-Romagna", alt: ["Emilia Romagna","Emilia"] },
+      { t: "Welches Gewürz gilt nach Safran und Vanille als das drittteuerste der Welt?", a: "Kardamom", alt: ["Kardamon"] },
+      { t: "Wie heißt der Südtiroler Kuchen aus Buchweizenmehl, gefüllt mit Preiselbeermarmelade?", a: "Buchweizentorte", alt: ["Schwarzplententorte","Buchweizenkuchen"] },
+    ],
+  } },
   { key: "berge", ico: "⛷️", name: "Berge & Winter", q: {
     10: [
       { t: "Welcher ist der höchste Berg der Erde?", a: "Mount Everest", alt: ["Everest","Mt. Everest"], c: ["K2","Mount Everest","Kilimandscharo","Mont Blanc"] },
@@ -102,6 +114,9 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt der höchste Berg Afrikas?", a: "Kilimandscharo", alt: ["Kilimanjaro","Kibo"] },
       { t: "Wie nennt man einen mit Stahlseilen gesicherten Kletterweg mit italienischem Namen?", a: "Via ferrata", alt: ["Ferrata"] },
       { t: "Wie heißt die berühmte Abfahrtsstrecke in Kitzbühel?", a: "Streif" },
+      { t: "Welches Gebirge gilt als Grenze zwischen Europa und Asien?", a: "Ural" },
+      { t: "Wie heißt der größte Gletscher Österreichs, am Fuß des Großglockners?", a: "Pasterze" },
+      { t: "Welche Sportart wird bei der Nordischen Kombination mit dem Skispringen kombiniert?", a: "Langlauf", alt: ["Skilanglauf"] },
     ],
     50: [
       { t: "Wie viele Achttausender gibt es auf der Erde?", a: "14", alt: ["vierzehn"] },
@@ -110,8 +125,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt der längste Gletscher der Alpen?", a: "Aletschgletscher", alt: ["Großer Aletschgletscher","Aletsch"] },
       { t: "Wie heißt der höchste Gipfel der Schweiz?", a: "Dufourspitze", alt: ["Dufour"] },
       { t: "In welchem Jahr gelang die Erstbesteigung des Matterhorns?", a: "1865" },
-    ] } },
-
+      { t: "Welcher ist der höchste Berg, der ganz auf italienischem Staatsgebiet liegt?", a: "Gran Paradiso" },
+      { t: "Wie heißt die höchstgelegene Schutzhütte Europas, auf der Signalkuppe im Monte-Rosa-Massiv?", a: "Capanna Regina Margherita", alt: ["Capanna Margherita","Margherita-Hütte","Margheritahütte"] },
+      { t: "In welchem Jahr fanden in Innsbruck zum ersten Mal Olympische Winterspiele statt?", a: "1964" },
+    ],
+  } },
   { key: "laender", ico: "🌍", name: "Länder & Städte", q: {
     10: [
       { t: "Wie heißt die Hauptstadt Frankreichs?", a: "Paris", c: ["Lyon","Paris","Marseille","Nizza"] },
@@ -137,6 +155,9 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt die Hauptstadt Neuseelands?", a: "Wellington" },
       { t: "Wie hieß Istanbul, bevor es diesen Namen bekam? (Name ab dem 4. Jahrhundert)", a: "Konstantinopel", alt: ["Byzanz"] },
       { t: "Wie heißt die Meerenge zwischen Spanien und Marokko?", a: "Straße von Gibraltar", alt: ["Gibraltar","Meerenge von Gibraltar"] },
+      { t: "Wie heißt die Hauptstadt von Marokko?", a: "Rabat" },
+      { t: "Welcher Fluss fließt durch Prag?", a: "Moldau", alt: ["Vltava"] },
+      { t: "Wie heißt die Hauptstadt Brasiliens?", a: "Brasília", alt: ["Brasilia"] },
     ],
     50: [
       { t: "Durch wie viele Länder fließt die Donau?", a: "10", alt: ["zehn"] },
@@ -145,8 +166,11 @@ window.SCHLAU10_WAND = [
       { t: "Welches ist der tiefste See der Erde?", a: "Baikalsee", alt: ["Baikal"] },
       { t: "Welches Land hat mit seinen Überseegebieten die meisten Zeitzonen?", a: "Frankreich" },
       { t: "Welche Stadt ist der höchstgelegene Regierungssitz der Welt?", a: "La Paz" },
-    ] } },
-
+      { t: "Wie heißt die Hauptstadt von Bhutan?", a: "Thimphu", alt: ["Thimpu"] },
+      { t: "Welcher Staat liegt vollständig innerhalb von Südafrika?", a: "Lesotho" },
+      { t: "Welches Land hat die längste Küstenlinie der Welt?", a: "Kanada" },
+    ],
+  } },
   { key: "geschichte", ico: "📜", name: "Geschichte", q: {
     10: [
       { t: "Wer betrat 1969 als erster Mensch den Mond?", a: "Neil Armstrong", alt: ["Armstrong"], c: ["Buzz Aldrin","Neil Armstrong","Juri Gagarin","John Glenn"] },
@@ -172,6 +196,9 @@ window.SCHLAU10_WAND = [
       { t: "Welches Herrscherhaus regierte Österreich bis 1918?", a: "Habsburger", alt: ["Habsburg","Habsburg-Lothringen"] },
       { t: "Wie hieß die Hauptstadt des Byzantinischen Reiches?", a: "Konstantinopel", alt: ["Byzanz"] },
       { t: "Welcher Pharao wurde durch sein 1922 entdecktes, fast unberührtes Grab berühmt?", a: "Tutanchamun", alt: ["Tutenchamun","Tutanchamon"] },
+      { t: "Wie hieß der erste römische Kaiser?", a: "Augustus", alt: ["Octavian","Oktavian"] },
+      { t: "Welcher Kaiser ließ den Bau des Kolosseums beginnen?", a: "Vespasian" },
+      { t: "Wer war von 1970 bis 1983 Bundeskanzler Österreichs?", a: "Bruno Kreisky", alt: ["Kreisky"] },
     ],
     50: [
       { t: "In welchem Jahr fand die Schlacht bei Waterloo statt?", a: "1815" },
@@ -180,8 +207,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt das Abkommen von 1946 zwischen Österreich und Italien über Südtirol?", a: "Gruber-De-Gasperi-Abkommen", alt: ["Gruber-De Gasperi","Pariser Abkommen","Gruber De Gasperi Abkommen"] },
       { t: "Welcher Seefahrer leitete die erste Weltumsegelung, überlebte sie aber nicht?", a: "Ferdinand Magellan", alt: ["Magellan","Magalhães","Fernão de Magalhães"] },
       { t: "In welchem Jahr v. Chr. wurde Rom der Sage nach gegründet?", a: "753", alt: ["753 v. Chr."] },
-    ] } },
-
+      { t: "Wie heißt die Schlacht von 1683, mit der die zweite Belagerung Wiens durch die Osmanen endete?", a: "Schlacht am Kahlenberg", alt: ["Kahlenberg","Schlacht bei Wien"] },
+      { t: "In welchem Jahr endete das Weströmische Reich?", a: "476" },
+      { t: "Welcher Tiroler Landesfürst wurde „Friedl mit der leeren Tasche“ genannt?", a: "Friedrich IV.", alt: ["Friedrich IV","Friedrich der Vierte","Herzog Friedrich IV."] },
+    ],
+  } },
   { key: "natur", ico: "🦊", name: "Natur & Tiere", q: {
     10: [
       { t: "Wie nennt man ein männliches Reh?", a: "Rehbock", alt: ["Bock"], c: ["Hirsch","Rehbock","Keiler","Widder"] },
@@ -208,6 +238,9 @@ window.SCHLAU10_WAND = [
       { t: "Wie heißt der Vorgang, bei dem Pflanzen mit Licht Zucker herstellen?", a: "Photosynthese", alt: ["Fotosynthese"] },
       { t: "Wie lautet der wissenschaftliche Name des heutigen Menschen?", a: "Homo sapiens" },
       { t: "Aus wie vielen Mägen besteht der Magen einer Kuh (Pansen, Netzmagen …)?", a: "4", alt: ["vier"] },
+      { t: "Wie nennt man die Umwandlung einer Raupe in einen Schmetterling?", a: "Metamorphose", alt: ["Verwandlung"] },
+      { t: "Wie nennt man Tiere, die sowohl Pflanzen als auch Fleisch fressen?", a: "Allesfresser", alt: ["Omnivoren","Omnivore"] },
+      { t: "Welches ist das größte Raubtier an Land?", a: "Eisbär", alt: ["Eisbaer"] },
     ],
     50: [
       { t: "Welches Landsäugetier ist mit rund 22 Monaten am längsten trächtig?", a: "Elefant", alt: ["Afrikanischer Elefant"] },
@@ -216,8 +249,11 @@ window.SCHLAU10_WAND = [
       { t: "Welches ist die größte Hirschart der Welt?", a: "Elch" },
       { t: "Wie viele Augen hat eine Honigbiene?", a: "5", alt: ["fünf"] },
       { t: "Wie nennt man ein Walbaby?", a: "Kalb", alt: ["Walkalb"] },
-    ] } },
-
+      { t: "Wie viele Herzkammern hat ein Krokodil?", a: "4", alt: ["vier"] },
+      { t: "Zu welcher Gattung gehören Wolf und Haushund (lateinischer Name)?", a: "Canis" },
+      { t: "Welches Raubtier ist auf der Erde am weitesten verbreitet?", a: "Rotfuchs", alt: ["Fuchs"] },
+    ],
+  } },
   { key: "wissenschaft", ico: "🔬", name: "Wissenschaft", q: {
     10: [
       { t: "Welcher Planet ist der Sonne am nächsten?", a: "Merkur", c: ["Venus","Merkur","Mars","Erde"] },
@@ -244,6 +280,9 @@ window.SCHLAU10_WAND = [
       { t: "Wer entdeckte 1928 das Penicillin?", a: "Alexander Fleming", alt: ["Fleming"] },
       { t: "Welches Element ist das häufigste im Universum?", a: "Wasserstoff" },
       { t: "Welches Metall ist bei Raumtemperatur flüssig?", a: "Quecksilber" },
+      { t: "In welcher Einheit wird die Frequenz gemessen?", a: "Hertz", alt: ["Hz"] },
+      { t: "Welcher Planet hat die meisten bekannten Monde?", a: "Saturn" },
+      { t: "Was misst man mit der Richterskala?", a: "Erdbeben", alt: ["Stärke von Erdbeben","Erdbebenstärke","die Stärke von Erdbeben"] },
     ],
     50: [
       { t: "Wer stellte 1869 das Periodensystem der Elemente auf?", a: "Dmitri Mendelejew", alt: ["Mendelejew","Mendeleev","Mendelejeff"] },
@@ -252,8 +291,11 @@ window.SCHLAU10_WAND = [
       { t: "Welche Farbe bekommt blaues Lackmuspapier in einer Säure?", a: "Rot" },
       { t: "Welches chemische Element hat das Zeichen W?", a: "Wolfram" },
       { t: "Wie heißt das positiv geladene Gegenstück zum Elektron?", a: "Positron" },
-    ] } },
-
+      { t: "Nach welchem Physiker ist die Unschärferelation benannt?", a: "Werner Heisenberg", alt: ["Heisenberg"] },
+      { t: "Welches chemische Zeichen hat Natrium?", a: "Na" },
+      { t: "Wie heißt der Stern, der der Sonne am nächsten ist?", a: "Proxima Centauri", alt: ["Proxima"] },
+    ],
+  } },
   { key: "sprache", ico: "🗣️", name: "Sprache & Wörter", q: {
     10: [
       { t: "Was ist das Gegenteil von „heiß“?", a: "kalt", c: ["warm","kalt","lau","nass"] },
@@ -290,8 +332,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie nennt man ein Wort, das aus den umgestellten Buchstaben eines anderen entsteht, etwa „Lampe“ aus „Ampel“?", a: "Anagramm" },
       { t: "Wie heißt die Lehre von der Herkunft der Wörter?", a: "Etymologie" },
       { t: "Wie nennt man ein Wort mit mehreren Bedeutungen, etwa „Bank“ oder „Schloss“?", a: "Homonym", alt: ["Teekesselchen","Homonyme"] },
-    ] } },
-
+      { t: "Was bedeutet „errare humanum est“?", a: "Irren ist menschlich", alt: ["Irren ist menschlich."] },
+      { t: "Wie nennt man ein Wort, das einen Laut nachahmt, etwa „Kuckuck“ oder „zischen“?", a: "Lautmalerei", alt: ["Onomatopoesie","Onomatopoetikon"] },
+      { t: "Aus welcher Sprache stammt das Wort „Joghurt“?", a: "Türkisch", alt: ["Tuerkisch"] },
+    ],
+  } },
   { key: "sport", ico: "⚽", name: "Sport", q: {
     10: [
       { t: "Wie viele Spieler einer Fußballmannschaft stehen gleichzeitig auf dem Feld?", a: "11", alt: ["elf"], c: ["9","10","11","12"] },
@@ -319,6 +364,9 @@ window.SCHLAU10_WAND = [
       { t: "Wie viele Felder hat ein Schachbrett?", a: "64" },
       { t: "In welchem Land wurde Judo erfunden?", a: "Japan" },
       { t: "Wie viele Grand-Slam-Turniere gibt es im Tennis pro Jahr?", a: "4", alt: ["vier"] },
+      { t: "Wie viele Punkte bringt ein Touchdown im American Football?", a: "6", alt: ["sechs"] },
+      { t: "Wie heißt das Grand-Slam-Turnier in Paris?", a: "French Open", alt: ["Roland Garros","Roland-Garros"] },
+      { t: "Wie viele Spieler einer Eishockeymannschaft stehen gleichzeitig auf dem Eis (mit Torwart)?", a: "6", alt: ["sechs"] },
     ],
     50: [
       { t: "Wer hat die meisten olympischen Goldmedaillen gewonnen?", a: "Michael Phelps", alt: ["Phelps"] },
@@ -327,8 +375,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie viele Spieler einer Wasserball-Mannschaft sind gleichzeitig im Wasser?", a: "7", alt: ["sieben"] },
       { t: "Wie wird der Pokal der Champions League im Deutschen gern genannt?", a: "Henkelpott" },
       { t: "In welcher Stadt fanden 1972 die Olympischen Sommerspiele statt?", a: "München" },
-    ] } },
-
+      { t: "In welchem Jahr fanden die ersten Olympischen Spiele der Neuzeit statt?", a: "1896" },
+      { t: "Welcher Südtiroler wurde 1972 in Sapporo Olympiasieger im Riesentorlauf?", a: "Gustav Thöni", alt: ["Thöni","Thoeni"] },
+      { t: "Welches Radrennen wird wegen seines Kopfsteinpflasters „Hölle des Nordens“ genannt?", a: "Paris–Roubaix", alt: ["Paris-Roubaix","Paris Roubaix"] },
+    ],
+  } },
   { key: "film", ico: "🎬", name: "Film & Serien", q: {
     10: [
       { t: "Wie heißt der Schneemann in „Die Eiskönigin“?", a: "Olaf", c: ["Sven","Olaf","Hans","Kristoff"] },
@@ -365,8 +416,11 @@ window.SCHLAU10_WAND = [
       { t: "Welcher Film gewann 1998 elf Oscars?", a: "Titanic" },
       { t: "Wer führte Regie bei den „Herr der Ringe“-Filmen?", a: "Peter Jackson", alt: ["Jackson"] },
       { t: "Wie heißt Walter Whites Partner in „Breaking Bad“?", a: "Jesse Pinkman", alt: ["Jesse","Pinkman"] },
-    ] } },
-
+      { t: "In welchem Jahr kam der erste „Star Wars“-Film ins Kino?", a: "1977" },
+      { t: "Welcher italienische Regisseur drehte „La Dolce Vita“?", a: "Federico Fellini", alt: ["Fellini"] },
+      { t: "Welcher Film von und mit Roberto Benigni gewann 1999 den Oscar als bester fremdsprachiger Film?", a: "Das Leben ist schön", alt: ["La vita è bella","La vita e bella"] },
+    ],
+  } },
   { key: "musik", ico: "🎵", name: "Musik", q: {
     10: [
       { t: "Welche Band sang „Yellow Submarine“?", a: "The Beatles", alt: ["Beatles"], c: ["The Beatles","The Rolling Stones","Queen","ABBA"] },
@@ -402,8 +456,11 @@ window.SCHLAU10_WAND = [
       { t: "Wie viele Musiker spielen in einem Nonett?", a: "9", alt: ["neun"] },
       { t: "Welcher Komponist schrieb „Die Moldau“?", a: "Bedřich Smetana", alt: ["Smetana","Bedrich Smetana"] },
       { t: "Wie nennt man eine Tonleiter aus nur fünf Tönen?", a: "Pentatonik", alt: ["pentatonische Tonleiter"] },
-    ] } },
-
+      { t: "Wer komponierte die Melodie von „Stille Nacht“?", a: "Franz Xaver Gruber", alt: ["Gruber","Franz Gruber"] },
+      { t: "Wer komponierte die Oper „Carmen“?", a: "Georges Bizet", alt: ["Bizet"] },
+      { t: "In welcher Stadt an der ligurischen Küste findet Italiens berühmtestes Schlagerfestival statt?", a: "Sanremo", alt: ["San Remo"] },
+    ],
+  } },
   { key: "wirtschaft", ico: "💶", name: "Wirtschaft", q: {
     10: [
       { t: "Mit welcher Währung bezahlt man in Italien?", a: "Euro", c: ["Lira","Euro","Franken","Dollar"] },
@@ -438,8 +495,11 @@ window.SCHLAU10_WAND = [
       { t: "Nach welchem Ökonomen ist die Kurve benannt, die Steuersatz und Steuereinnahmen verbindet?", a: "Arthur Laffer", alt: ["Laffer","Laffer-Kurve"] },
       { t: "Wofür steht die Abkürzung WTO?", a: "Welthandelsorganisation", alt: ["World Trade Organization"] },
       { t: "Wie heißen die Wertpapiere, mit denen sich ein Staat Geld leiht?", a: "Staatsanleihen", alt: ["Anleihen","Staatsanleihe"] },
-    ] } },
-
+      { t: "Wie heißt der wichtigste Aktienindex der Börse in Tokio?", a: "Nikkei", alt: ["Nikkei 225"] },
+      { t: "In welchem Jahr ging die US-Bank Lehman Brothers pleite?", a: "2008" },
+      { t: "Wie heißt die Zentralbank der USA?", a: "Federal Reserve", alt: ["Fed","Federal Reserve System"] },
+    ],
+  } },
   { key: "koerper", ico: "🫀", name: "Mensch & Körper", q: {
     10: [
       { t: "Wie viele Zähne hat ein Milchgebiss?", a: "20", alt: ["zwanzig"], c: ["16","20","24","32"] },
@@ -474,8 +534,11 @@ window.SCHLAU10_WAND = [
       { t: "Welches Hormon steuert den Schlaf-Wach-Rhythmus?", a: "Melatonin" },
       { t: "Wie viele Wirbel hat die Halswirbelsäule?", a: "7", alt: ["sieben"] },
       { t: "Wie heißt die Kniescheibe in der Fachsprache?", a: "Patella" },
-    ] } },
-
+      { t: "Wie heißt der längste Nerv des Menschen?", a: "Ischiasnerv", alt: ["Ischias","Nervus ischiadicus"] },
+      { t: "Wie heißt der Farbstoff, der die Haut in der Sonne bräunt?", a: "Melanin" },
+      { t: "Wie viele Rippenpaare hat ein Mensch normalerweise?", a: "12", alt: ["zwölf","zwoelf"] },
+    ],
+  } },
   { key: "kunst", ico: "🎨", name: "Kunst & Bücher", q: {
     10: [
       { t: "Wer malte die „Mona Lisa“?", a: "Leonardo da Vinci", alt: ["da Vinci","Leonardo"], c: ["Michelangelo","Leonardo da Vinci","Raffael","Botticelli"] },
@@ -512,8 +575,11 @@ window.SCHLAU10_WAND = [
       { t: "Wer schrieb „Die Blechtrommel“?", a: "Günter Grass", alt: ["Grass"] },
       { t: "Wer schrieb „Der kleine Prinz“?", a: "Antoine de Saint-Exupéry", alt: ["Saint-Exupéry","Saint-Exupery","Saint Exupery"] },
       { t: "Wer malte „Die Geburt der Venus“?", a: "Sandro Botticelli", alt: ["Botticelli"] },
-    ] } },
-
+      { t: "Wer schuf die berühmte Bronzefigur „Der Denker“?", a: "Auguste Rodin", alt: ["Rodin"] },
+      { t: "Welcher Südtiroler Schriftsteller schrieb den Roman „Die Walsche“?", a: "Joseph Zoderer", alt: ["Zoderer"] },
+      { t: "Wer schrieb den Roman „Der Name der Rose“?", a: "Umberto Eco", alt: ["Eco"] },
+    ],
+  } },
   { key: "kindheit", ico: "🧸", name: "Kindheit", q: {
     10: [
       { t: "Wie heißt Disneys Maus mit den großen runden Ohren?", a: "Micky Maus", alt: ["Mickey Mouse","Micky","Mickey"], c: ["Micky Maus","Jerry","Speedy Gonzales","Die Maus"] },
@@ -540,6 +606,9 @@ window.SCHLAU10_WAND = [
       { t: "Bei wem lebt Heidi auf der Alm?", a: "Alm-Öhi", alt: ["Almöhi","Großvater","Opa","Alpöhi"] },
       { t: "Wer ist der Anführer der Schlümpfe?", a: "Papa Schlumpf", alt: ["Großer Schlumpf"] },
       { t: "Wie heißt der Affe von Pippi Langstrumpf?", a: "Herr Nilsson", alt: ["Nilsson"] },
+      { t: "Wie heißt der beste Freund von Tom Sawyer?", a: "Huckleberry Finn", alt: ["Huck Finn","Huckleberry","Huck"] },
+      { t: "Wie heißt Disneys kleiner Elefant, der mit seinen großen Ohren fliegen kann?", a: "Dumbo" },
+      { t: "Wie heißt der Hase, mit dem sich Bambi anfreundet?", a: "Klopfer" },
     ],
     50: [
       { t: "Wer schrieb die Bücher über „Das Sams“?", a: "Paul Maar", alt: ["Maar"] },
@@ -548,8 +617,11 @@ window.SCHLAU10_WAND = [
       { t: "Nach wem sind die vier Teenage Mutant Ninja Turtles benannt?", a: "Renaissance-Maler", alt: ["Renaissancemaler","Maler der Renaissance","Künstler der Renaissance"], c: ["Renaissance-Maler","Komponisten","Philosophen","Erfinder"] },
       { t: "Wie heißt Michel aus Lönneberga mit Nachnamen?", a: "Svensson" },
       { t: "In welcher Stadt wohnen Bibi Blocksberg und Benjamin Blümchen?", a: "Neustadt" },
-    ] } },
-
+      { t: "Aus welchem Land stammt der Bär Paddington?", a: "Peru" },
+      { t: "Wie heißt das Land, in dem Peter Pan lebt?", a: "Nimmerland", alt: ["Neverland","Nimmerlandia"] },
+      { t: "Wie heißt die Schildkröte in Michael Endes „Momo“?", a: "Kassiopeia", alt: ["Cassiopeia"] },
+    ],
+  } },
   { key: "marken", ico: "🏷️", name: "Marken & Firmen", q: {
     10: [
       { t: "Welche Firma hat einen angebissenen Apfel als Logo?", a: "Apple", c: ["Apple","Samsung","Microsoft","Sony"] },
@@ -584,8 +656,11 @@ window.SCHLAU10_WAND = [
       { t: "Zu welcher Bozner Firmengruppe gehören die Bergsportmarken Salewa und Dynafit?", a: "Oberalp", alt: ["Oberalp-Gruppe","Oberalp Group"] },
       { t: "Wie hieß der Gründer von IKEA?", a: "Ingvar Kamprad", alt: ["Kamprad"] },
       { t: "Wofür steht der Name „Haribo“?", a: "Hans Riegel Bonn", alt: ["Hans Riegel aus Bonn"] },
-    ] } },
-
+      { t: "Wofür steht die Abkürzung FIAT?", a: "Fabbrica Italiana Automobili Torino", alt: ["Fabbrica Italiana Automobili Turin"] },
+      { t: "Welche Brauerei hat ihren Sitz in Algund bei Meran?", a: "Forst", alt: ["Brauerei Forst"] },
+      { t: "Wie heißt der Mutterkonzern von Google?", a: "Alphabet", alt: ["Alphabet Inc."] },
+    ],
+  } },
   { key: "emoji", ico: "😀", name: "Emoji-Rätsel", q: {
     10: [
       { t: "Film: 🦁👑", a: "Der König der Löwen", alt: ["König der Löwen","The Lion King"], c: ["Der König der Löwen","Madagascar","Das Dschungelbuch","Zoomania"] },
@@ -622,5 +697,9 @@ window.SCHLAU10_WAND = [
       { t: "Märchen: 👧🐻🐻🐻🥣", a: "Goldlöckchen und die drei Bären", alt: ["Goldlöckchen"] },
       { t: "Film: 👨‍🚀🌽🕳️⏳", a: "Interstellar" },
       { t: "Film: 🧠😢😡😱😊", a: "Alles steht Kopf", alt: ["Inside Out"] },
-    ] } },
+      { t: "Film: 🦈🏖️🏊😱", a: "Der weiße Hai", alt: ["Der weisse Hai","Jaws"] },
+      { t: "Sprichwort: 🌅🪙👄", a: "Morgenstund hat Gold im Mund", alt: ["Morgenstunde hat Gold im Mund"] },
+      { t: "Märchen: 👦👧🍬🏠🧙‍♀️🔥", a: "Hänsel und Gretel", alt: ["Haensel und Gretel"] },
+    ],
+  } },
 ];

@@ -20,7 +20,20 @@ window.SCHLAU10_GEO = {
       ["Hamburg", "Stadt", 53.5511, 9.9937], ["Frankfurt am Main", "Stadt", 50.1109, 8.6821], ["Köln", "Stadt", 50.9375, 6.9603],
       ["Zürich", "Stadt", 47.3769, 8.5417], ["Paris", "Stadt", 48.8566, 2.3522], ["London", "Stadt", 51.5074, -0.1278],
       ["Amsterdam", "Stadt", 52.3676, 4.9041], ["Barcelona", "Stadt", 41.3851, 2.1734], ["Prag", "Stadt", 50.0755, 14.4378],
-      ["Budapest", "Stadt", 47.4979, 19.0402] ] },
+      ["Budapest", "Stadt", 47.4979, 19.0402],
+      ["Glurns", "Stadt", 46.6714, 10.5547], ["Seiser Alm", "Alm", 46.545, 11.62], ["Sellastock", "Berg", 46.511, 11.805],
+      ["Schloss Neuschwanstein", "Schloss", 47.5576, 10.7498], ["Zugspitze", "Berg", 47.4211, 10.9853], ["Hallstatt", "Ort", 47.5622, 13.6493],
+      ["Königssee", "See", 47.56, 12.98], ["Lindau (Insel)", "Stadt", 47.546, 9.684], ["Herrenchiemsee", "Insel", 47.862, 12.399],
+      ["Zell am See", "Ort", 47.325, 12.796], ["Achensee", "See", 47.45, 11.71],
+      ["Siena", "Stadt", 43.3183, 11.3316], ["Lucca", "Stadt", 43.8429, 10.5027], ["Bergamo (Città Alta)", "Stadt", 45.7037, 9.662],
+      ["Mantua", "Stadt", 45.1564, 10.7914], ["Como", "Stadt", 45.8081, 9.0852], ["San Marino", "Stadt", 43.9356, 12.4473],
+      ["Vatikanstadt", "Stadt", 41.9029, 12.4534], ["Assisi", "Stadt", 43.0707, 12.6175],
+      ["Ferrara", "Stadt", 44.8381, 11.6198], ["Pompeji", "Ausgrabung", 40.7489, 14.4848],
+      ["Mont-Saint-Michel", "Insel", 48.6361, -1.5115], ["Schloss Versailles", "Schloss", 48.8049, 2.1204], ["Bern", "Stadt", 46.948, 7.4474],
+      ["Genf", "Stadt", 46.2044, 6.1432], ["Monaco", "Stadt", 43.7384, 7.4246], ["Straßburg", "Stadt", 48.5815, 7.7505],
+      ["Bled", "See", 46.3625, 14.0938], ["Dubrovnik", "Stadt", 42.6407, 18.1077], ["Krakau", "Stadt", 50.0614, 19.9366],
+      ["Dresden", "Stadt", 51.0504, 13.7373], ["Helgoland", "Insel", 54.1824, 7.8857], ["Brügge", "Stadt", 51.2093, 3.2247],
+      ["Luxemburg", "Stadt", 49.6116, 6.1319] ] },
 
   suedtirol: {
     name: "Südtirol", scale: 10, // km: bei dieser Entfernung gibt es noch ~37 % der Punkte
