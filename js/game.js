@@ -3202,7 +3202,7 @@
         <li>Es erscheint ein Thema mit einer festen Zahl von Antworten – meist zehn (z. B. „Die 10 größten Städte Österreichs“), manchmal mehr (z. B. „Die 27 EU-Länder“). Die Reihenfolge ist egal.</li>
         <li>Ihr nennt <b>abwechselnd</b> je eine Antwort. Für jede Antwort gibt es ein Feld mit „?“ – richtige Antworten werden dort aufgedeckt.</li>
         <li>Wer eine <b>falsche</b> oder eine <b>schon genannte</b> Antwort gibt oder die <b>Zeit</b> überzieht, verliert die Runde – der andere bekommt den Punkt.</li>
-        <li>Sind alle gefunden, bekommt den Punkt, wer die <b>letzte</b> genannt hat.</li>
+        <li>Sind alle gefunden, hat sich keiner vertan – die Runde <b>zählt nicht</b>, weiter geht es mit dem nächsten Thema.</li>
         <li>Kleine Tippfehler zählen. Ist eine Antwort nur ähnlich, entscheidet der Gegner, ob sie gilt.</li>
         <li>Wer anfängt, wechselt jede Runde. Wer zuerst die Zielpunkte hat, gewinnt.</li>
       </ul>

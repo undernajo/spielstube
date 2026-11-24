@@ -57,7 +57,7 @@
           : `<div class="muted small">Ähnlich wie eine Antwort auf der Liste – ${esc(nameOf(opp(j.by)))} entscheidet, ob es zählt …</div>`}</div>`;
     } else {
       const r = st.result, iWon = !r.voided && r.winner === G.myId, cp = st.complaint;
-      const reason = r.why === "full" ? `Alle ${st.items.length} gefunden – ${esc(nameOf(r.winner))} hat die letzte genannt.`
+      const reason = r.why === "full" ? `Alle ${st.items.length} gefunden – keiner hat sich vertan, deshalb gibt es keinen Punkt.`
         : r.why === "time" ? `Bei ${esc(nameOf(r.loser))} ist die Zeit abgelaufen.`
         : `${esc(nameOf(r.loser))}: „${esc(last ? last.text : "")}“ ${why[r.why]}.`;
       // Wertungskarte: große Plakette (+1 bzw. ✗), schiebt sich von der Seite des Punktenden herein

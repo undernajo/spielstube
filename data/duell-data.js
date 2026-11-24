@@ -20,9 +20,6 @@ window.SCHLAU10_DUELL = [
   { cat: "Städte", q: "Die 10 größten Städte Frankreichs", ranked: true, note: "nach Einwohnern der Gemeinde, Stand 2021", items: [
     ["Paris"], ["Marseille"], ["Lyon"], ["Toulouse"], ["Nizza", ["Nice"]], ["Nantes"], ["Montpellier"], ["Straßburg", ["Strassburg", "Strasbourg"]],
     ["Bordeaux"], ["Lille"]] },
-  { cat: "Städte", q: "Die 10 größten Städte Nordrhein-Westfalens", ranked: true, note: "nach Einwohnern, Stand 2023", items: [
-    ["Köln", ["Koeln"]], ["Düsseldorf", ["Duesseldorf"]], ["Dortmund"], ["Essen"], ["Duisburg"], ["Bochum"], ["Wuppertal"], ["Bielefeld"],
-    ["Bonn"], ["Münster", ["Muenster"]]] },
 
   // ---------- Länder ----------
   { cat: "Länder", q: "Die 10 flächengrößten Länder der Welt", ranked: true, items: [
@@ -83,18 +80,11 @@ window.SCHLAU10_DUELL = [
   { cat: "Natur", q: "Die 10 größten Seen der Welt", ranked: true, note: "nach Fläche, Kaspisches Meer zählt als See", items: [
     ["Kaspisches Meer"], ["Oberer See", ["Lake Superior"]], ["Victoriasee", ["Viktoriasee"]], ["Huronsee"], ["Michigansee"], ["Tanganjikasee"],
     ["Baikalsee", ["Baikal"]], ["Großer Bärensee", ["Grosser Baerensee"]], ["Malawisee", ["Njassasee"]], ["Großer Sklavensee", ["Grosser Sklavensee"]]] },
-  { cat: "Natur", q: "Die 10 längsten Flüsse Deutschlands", ranked: true, note: "Gesamtlänge, auch außerhalb Deutschlands", items: [
-    ["Donau"], ["Rhein"], ["Elbe"], ["Oder"], ["Mosel"], ["Main"], ["Inn"], ["Weser"], ["Saale"], ["Spree"]] },
-  { cat: "Natur", q: "Die 10 größten Seen Deutschlands", ranked: true, note: "nach Fläche, Bodensee ganz gezählt", items: [
-    ["Bodensee"], ["Müritz", ["Mueritz"]], ["Chiemsee"], ["Schweriner See"], ["Starnberger See"], ["Ammersee"], ["Plauer See"],
-    ["Kummerower See"], ["Steinhuder Meer"], ["Großer Plöner See", ["Grosser Ploener See", "Plöner See"]]] },
 
   // ---------- Geschichte & Gesellschaft ----------
   { cat: "Geschichte", q: "Die 10 deutschen Bundeskanzler", ranked: true, note: "bis Friedrich Merz, Stand 2025", names: true, items: [
     ["Konrad Adenauer"], ["Ludwig Erhard"], ["Kurt Georg Kiesinger"], ["Willy Brandt"], ["Helmut Schmidt"], ["Helmut Kohl"],
     ["Gerhard Schröder", ["Schroeder"]], ["Angela Merkel"], ["Olaf Scholz"], ["Friedrich Merz"]] },
-  { cat: "Gesellschaft", q: "Die 10 häufigsten Nachnamen in Deutschland", ranked: true, items: [
-    ["Müller", ["Mueller"]], ["Schmidt"], ["Schneider"], ["Fischer"], ["Weber"], ["Meyer"], ["Wagner"], ["Becker"], ["Schulz"], ["Hoffmann"]] },
 
   // ---------- Wissen & Zahlen ----------
   { cat: "Wissen", q: "Die ersten 10 Elemente des Periodensystems", ranked: true, note: "Name oder Symbol", items: [
@@ -153,42 +143,19 @@ window.SCHLAU10_DUELL = [
     ["Großbritannien", ["Grossbritannien", "Vereinigtes Königreich", "UK", "England"]]] },
   { cat: "Sport", q: "Die 8 Fußball-Weltmeister (Länder)", ranked: true, note: "Männer, Stand 2026", items: [
     ["Brasilien"], ["Deutschland"], ["Italien"], ["Argentinien"], ["Frankreich"], ["Uruguay"], ["England"], ["Spanien"]] },
-  { cat: "Wissen", q: "Die 8 Planeten unseres Sonnensystems", ranked: true, items: [
-    ["Merkur"], ["Venus"], ["Erde"], ["Mars"], ["Jupiter"], ["Saturn"], ["Uranus"], ["Neptun"]] },
-  { cat: "Wissen", q: "Die 7 Kontinente", items: [
-    ["Afrika"], ["Antarktika", ["Antarktis"]], ["Asien"], ["Australien", ["Ozeanien", "Australien und Ozeanien"]], ["Europa"],
-    ["Nordamerika"], ["Südamerika", ["Suedamerika"]]] },
   { cat: "Wissen", q: "Die 7 Edelgase", items: [
     ["Helium"], ["Neon"], ["Argon"], ["Krypton"], ["Xenon"], ["Radon"], ["Oganesson"]] },
-  { cat: "Wissen", q: "Die 12 Sternzeichen", ranked: true, items: [
-    ["Widder"], ["Stier"], ["Zwillinge"], ["Krebs"], ["Löwe", ["Loewe"]], ["Jungfrau"], ["Waage"], ["Skorpion"], ["Schütze", ["Schuetze"]],
-    ["Steinbock"], ["Wassermann"], ["Fische"]] },
   { cat: "Wissen", q: "Die 12 Tiere des chinesischen Tierkreises", ranked: true, items: [
     ["Ratte", ["Maus"]], ["Büffel", ["Bueffel", "Ochse", "Rind"]], ["Tiger"], ["Hase", ["Kaninchen"]], ["Drache"], ["Schlange"], ["Pferd"],
     ["Ziege", ["Schaf"]], ["Affe"], ["Hahn"], ["Hund"], ["Schwein"]] },
-  { cat: "Wissen", q: "Die 5 Farben der Olympischen Ringe", items: [["Blau"], ["Gelb"], ["Schwarz"], ["Grün", ["Gruen"]], ["Rot"]] },
-  { cat: "Sprache", q: "Die 12 Monate auf Italienisch", ranked: true, items: [
-    ["gennaio"], ["febbraio"], ["marzo"], ["aprile"], ["maggio"], ["giugno"], ["luglio"], ["agosto"], ["settembre"], ["ottobre"], ["novembre"], ["dicembre"]] },
-  { cat: "Sprache", q: "Die 7 Wochentage auf Italienisch", ranked: true, items: [
-    ["lunedì", ["lunedi"]], ["martedì", ["martedi"]], ["mercoledì", ["mercoledi"]], ["giovedì", ["giovedi"]], ["venerdì", ["venerdi"]], ["sabato"], ["domenica"]] },
 
   // ---------- Erweiterung: feste Mengen ----------
   { cat: "Sprache", q: "Die 26 Wörter des NATO-Buchstabieralphabets", ranked: true, items: [
     ["Alfa", ["Alpha"]], ["Bravo"], ["Charlie"], ["Delta"], ["Echo"], ["Foxtrot"], ["Golf"], ["Hotel"], ["India"], ["Juliett", ["Juliet"]],
     ["Kilo"], ["Lima"], ["Mike"], ["November"], ["Oscar"], ["Papa"], ["Quebec"], ["Romeo"], ["Sierra"], ["Tango"], ["Uniform"], ["Victor"],
     ["Whiskey", ["Whisky"]], ["X-Ray", ["Xray"]], ["Yankee"], ["Zulu"]] },
-  { cat: "Wissen", q: "Die 7 Monate mit 31 Tagen", ranked: true, items: [
-    ["Januar"], ["März", ["Maerz"]], ["Mai"], ["Juli"], ["August"], ["Oktober"], ["Dezember"]] },
-  { cat: "Wissen", q: "Die 5 Sinne des Menschen", items: [
-    ["Sehen", ["Sehsinn", "Augen"]], ["Hören", ["Hoeren", "Gehör", "Ohren"]], ["Riechen", ["Geruch", "Geruchssinn", "Nase"]],
-    ["Schmecken", ["Geschmack", "Geschmackssinn", "Zunge"]], ["Tasten", ["Fühlen", "Tastsinn", "Haut"]]] },
-  { cat: "Wissen", q: "Die 5 Ozeane", items: [
-    ["Pazifik", ["Pazifischer Ozean", "Stiller Ozean"]], ["Atlantik", ["Atlantischer Ozean"]], ["Indischer Ozean", ["Indik"]],
-    ["Arktischer Ozean", ["Nordpolarmeer", "Arktis"]], ["Südlicher Ozean", ["Südpolarmeer", "Antarktischer Ozean"]]] },
   { cat: "Wissen", q: "Die 6 Halogene", items: [
     ["Fluor"], ["Chlor"], ["Brom"], ["Iod", ["Jod"]], ["Astat"], ["Tenness"]] },
-  { cat: "Wissen", q: "Die 6 Schachfiguren", items: [
-    ["König", ["Koenig"]], ["Dame", ["Königin"]], ["Turm"], ["Läufer", ["Laeufer"]], ["Springer", ["Pferd", "Rössl"]], ["Bauer"]] },
   { cat: "Geschichte", q: "Die 7 Weltwunder der Antike", items: [
     ["Pyramiden von Gizeh", ["Pyramiden", "Cheops-Pyramide", "Cheopspyramide"]], ["Hängende Gärten der Semiramis", ["Hängende Gärten", "Hängende Gärten von Babylon"]],
     ["Tempel der Artemis in Ephesos", ["Artemistempel", "Tempel der Artemis", "Artemis-Tempel"]], ["Zeusstatue des Phidias", ["Zeusstatue", "Statue des Zeus"]],
@@ -240,21 +207,18 @@ window.SCHLAU10_DUELL = [
   { cat: "Sport", q: "Die 9 Olympia-Winterorte in den Alpenländern", note: "Gastgeber in Frankreich, Schweiz, Deutschland, Österreich und Italien, bis 2026", items: [
     ["Chamonix"], ["St. Moritz", ["Sankt Moritz", "St Moritz"]], ["Garmisch-Partenkirchen", ["Garmisch"]], ["Cortina d'Ampezzo", ["Cortina"]], ["Innsbruck"],
     ["Grenoble"], ["Albertville"], ["Turin", ["Torino"]], ["Mailand", ["Milano"]]] },
-  { cat: "Sport", q: "Die 18 Vereine der Fußball-Bundesliga", note: "Saison 2025/26", items: [
+  { cat: "Sport", q: "Die 18 Vereine der Fußball-Bundesliga", note: "Saison 2026/27", items: [
     ["FC Bayern München", ["Bayern", "Bayern München"]], ["Bayer 04 Leverkusen", ["Leverkusen", "Bayer Leverkusen", "Bayer"]], ["Eintracht Frankfurt", ["Frankfurt", "Eintracht"]],
     ["Borussia Dortmund", ["Dortmund", "BVB"]], ["SC Freiburg", ["Freiburg"]], ["1. FSV Mainz 05", ["Mainz", "Mainz 05"]], ["RB Leipzig", ["Leipzig"]],
     ["Werder Bremen", ["Bremen", "Werder"]], ["VfB Stuttgart", ["Stuttgart"]], ["Borussia Mönchengladbach", ["Gladbach", "Mönchengladbach"]],
-    ["VfL Wolfsburg", ["Wolfsburg"]], ["FC Augsburg", ["Augsburg"]], ["1. FC Union Berlin", ["Union Berlin", "Union"]], ["FC St. Pauli", ["St. Pauli", "St Pauli"]],
-    ["TSG Hoffenheim", ["Hoffenheim"]], ["1. FC Heidenheim", ["Heidenheim"]], ["1. FC Köln", ["Köln", "Koeln"]], ["Hamburger SV", ["HSV", "Hamburg"]]] },
+    ["FC Augsburg", ["Augsburg"]], ["1. FC Union Berlin", ["Union Berlin", "Union"]],
+    ["TSG Hoffenheim", ["Hoffenheim"]], ["1. FC Köln", ["Köln", "Koeln"]], ["Hamburger SV", ["HSV", "Hamburg"]],
+    ["FC Schalke 04", ["Schalke", "Schalke 04"]], ["SV Elversberg", ["Elversberg"]], ["SC Paderborn 07", ["Paderborn", "SC Paderborn"]]] },
 
-  { cat: "Unterhaltung", q: "Die 7 Zwerge aus Disneys „Schneewittchen“", note: "deutsche Namen (englisch geht auch)", items: [
-    ["Chef", ["Doc"]], ["Brummbär", ["Brummbaer", "Grumpy"]], ["Happy"], ["Pimpel", ["Bashful"]], ["Hatschi", ["Sneezy"]], ["Schlafmütz", ["Schlafmuetz", "Sleepy"]],
-    ["Seppl", ["Dopey"]]] },
   { cat: "Unterhaltung", q: "Die 7 Harry-Potter-Bände", ranked: true, note: "Titel ohne „Harry Potter und …“ reicht", items: [
     ["der Stein der Weisen", ["Stein der Weisen"]], ["die Kammer des Schreckens", ["Kammer des Schreckens"]], ["der Gefangene von Askaban", ["Gefangene von Askaban", "Askaban"]],
     ["der Feuerkelch", ["Feuerkelch"]], ["der Orden des Phönix", ["Orden des Phönix", "Orden des Phoenix"]], ["der Halbblutprinz", ["Halbblutprinz"]],
     ["die Heiligtümer des Todes", ["Heiligtümer des Todes"]]] },
-  { cat: "Unterhaltung", q: "Die 5 Mitglieder der Familie Simpson", items: [["Homer"], ["Marge"], ["Bart"], ["Lisa"], ["Maggie"]] },
   { cat: "Unterhaltung", q: "Die 5 Spice Girls", note: "Vor-/Nachname oder Spitzname", items: [
     ["Victoria Beckham", ["Victoria Adams", "Posh Spice", "Posh"]], ["Melanie Brown", ["Mel B", "Scary Spice", "Scary"]], ["Emma Bunton", ["Baby Spice", "Baby"]],
     ["Melanie Chisholm", ["Mel C", "Sporty Spice", "Sporty"]], ["Geri Halliwell", ["Ginger Spice", "Ginger"]]], names: true },
@@ -278,10 +242,6 @@ window.SCHLAU10_DUELL = [
     ["Innere Stadt"], ["Leopoldstadt"], ["Landstraße", ["Landstrasse"]], ["Wieden"], ["Margareten"], ["Mariahilf"], ["Neubau"], ["Josefstadt"],
     ["Alsergrund"], ["Favoriten"], ["Simmering"], ["Meidling"], ["Hietzing"], ["Penzing"], ["Rudolfsheim-Fünfhaus", ["Rudolfsheim", "Fünfhaus"]],
     ["Ottakring"], ["Hernals"], ["Währing", ["Waehring"]], ["Döbling", ["Doebling"]], ["Brigittenau"], ["Floridsdorf"], ["Donaustadt"], ["Liesing"]] },
-  { cat: "Städte", q: "Die 12 Bezirke Berlins", items: [
-    ["Mitte"], ["Friedrichshain-Kreuzberg", ["Friedrichshain", "Kreuzberg"]], ["Pankow"], ["Charlottenburg-Wilmersdorf", ["Charlottenburg", "Wilmersdorf"]],
-    ["Spandau"], ["Steglitz-Zehlendorf", ["Steglitz", "Zehlendorf"]], ["Tempelhof-Schöneberg", ["Tempelhof", "Schöneberg"]], ["Neukölln", ["Neukoelln"]],
-    ["Treptow-Köpenick", ["Treptow", "Köpenick"]], ["Marzahn-Hellersdorf", ["Marzahn", "Hellersdorf"]], ["Lichtenberg"], ["Reinickendorf"]] },
   { cat: "Geschichte", q: "Die 12 deutschen Bundespräsidenten", ranked: true, note: "Stand 2026", names: true, items: [
     ["Theodor Heuss"], ["Heinrich Lübke", ["Luebke"]], ["Gustav Heinemann"], ["Walter Scheel"], ["Karl Carstens"], ["Richard von Weizsäcker", ["Weizsäcker", "Weizsaecker"]],
     ["Roman Herzog"], ["Johannes Rau"], ["Horst Köhler", ["Koehler"]], ["Christian Wulff"], ["Joachim Gauck"], ["Frank-Walter Steinmeier", ["Steinmeier"]]] },
@@ -334,9 +294,10 @@ window.SCHLAU10_DUELL = [
   { cat: "Südtirol", q: "Die 5 Stadtviertel von Bozen", note: "ein Teil des Namens reicht", items: [
     ["Zentrum-Bozner Boden-Rentsch", ["Zentrum", "Bozner Boden", "Rentsch", "Altstadt"]], ["Oberau-Haslach", ["Oberau", "Haslach"]],
     ["Europa-Neustift", ["Europa", "Neustift"]], ["Don Bosco"], ["Gries-Quirein", ["Gries", "Quirein"]]] },
-  { cat: "Südtirol", q: "Südtiroler Olympiasieger", note: "Goldmedaillen bis einschließlich 2022, Einzel und Team · Nachname reicht", names: true, items: [
+  { cat: "Südtirol", q: "Die 14 Südtiroler Olympiasieger", note: "Goldmedaillen bis einschließlich 2026, Einzel und Team · Nachname reicht", names: true, items: [
     ["Gustav Thöni", ["Thoeni"]], ["Paul Hildgartner"], ["Walter Plaikner"], ["Erika Lechner"], ["Armin Zöggeler", ["Zoeggeler"]], ["Gerda Weissensteiner", ["Weißensteiner"]],
-    ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"]] },
+    ["Kurt Brugger"], ["Wilfried Huber"], ["Günther Huber", ["Guenther Huber"]], ["Klaus Dibiasi"],
+    ["Andrea Vötter", ["Voetter"]], ["Marion Oberhofer"], ["Emanuel Rieder"], ["Simon Kainzwaldner"]] },
   { cat: "Südtirol", q: "Die 5 Landeshauptleute Südtirols", ranked: true, note: "seit 1948, Stand 2026 · Nachname reicht", names: true, items: [
     ["Karl Erckert"], ["Alois Pupp"], ["Silvius Magnago"], ["Luis Durnwalder", ["Alois Durnwalder"]], ["Arno Kompatscher"]] },
   { cat: "Geschichte", q: "Die 18 österreichischen Bundeskanzler seit 1945", ranked: true, note: "jede Person einmal, Stand 2026 · Nachname reicht", names: true, items: [
@@ -349,4 +310,61 @@ window.SCHLAU10_DUELL = [
     ["Giorgio Napolitano"], ["Sergio Mattarella"]] },
   { cat: "Länder", q: "Die 7 Provinzen Venetiens", items: [
     ["Belluno"], ["Padua", ["Padova"]], ["Rovigo"], ["Treviso"], ["Venedig", ["Venezia"]], ["Verona"], ["Vicenza"]] },
+  { cat: "Wissen", q: "Die 8 Planeten unseres Sonnensystems", ranked: true, items: [
+    ["Merkur"], ["Venus"], ["Erde"], ["Mars"], ["Jupiter"], ["Saturn"], ["Uranus"], ["Neptun"]] },
+  { cat: "Wissen", q: "Die 12 Sternzeichen", ranked: true, items: [
+    ["Widder"], ["Stier"], ["Zwillinge"], ["Krebs"], ["Löwe", ["Loewe"]], ["Jungfrau"], ["Waage"], ["Skorpion"], ["Schütze", ["Schuetze"]],
+    ["Steinbock"], ["Wassermann"], ["Fische"]] },
+  { cat: "Wissen", q: "Die 5 Ozeane", items: [
+    ["Pazifik", ["Pazifischer Ozean", "Stiller Ozean"]], ["Atlantik", ["Atlantischer Ozean"]], ["Indischer Ozean", ["Indik"]],
+    ["Arktischer Ozean", ["Nordpolarmeer", "Arktis"]], ["Südlicher Ozean", ["Südpolarmeer", "Antarktischer Ozean"]]] },
+  { cat: "Südtirol", q: "Die 10 häufigsten Nachnamen Südtirols", ranked: true, note: "nach Zahl der Träger, ASTAT-Erhebung 2010", items: [
+    ["Mair"], ["Hofer"], ["Pichler"], ["Kofler"], ["Gruber"], ["Pircher"], ["Gasser"], ["Egger"], ["Thaler"], ["Gamper"]] },
+  // ---------- lange Listen: kaum jemand kennt alle ----------
+  { cat: "Südtirol", q: "Die 13 Gemeinden des Vinschgaus", note: "Bezirksgemeinschaft Vinschgau", items: [
+    ["Graun im Vinschgau", ["Graun", "Curon"]], ["Mals", ["Malles"]], ["Glurns", ["Glorenza"]], ["Taufers im Münstertal", ["Taufers", "Tubre"]],
+    ["Prad am Stilfserjoch", ["Prad", "Prato allo Stelvio"]], ["Stilfs", ["Stelvio"]], ["Schluderns", ["Sluderno"]], ["Laas", ["Lasa"]],
+    ["Schlanders", ["Silandro"]], ["Martell", ["Martello"]], ["Latsch", ["Laces"]], ["Kastelbell-Tschars", ["Kastelbell", "Castelbello"]], ["Schnals", ["Senales"]]] },
+  { cat: "Südtirol", q: "Die 26 Gemeinden des Pustertals", note: "Bezirksgemeinschaft Pustertal, mit Gadertal", items: [
+    ["Bruneck", ["Brunico"]], ["Ahrntal", ["Valle Aurina"]], ["Prettau", ["Predoi"]], ["Sand in Taufers", ["Campo Tures", "Sand"]], ["Mühlwald", ["Muehlwald", "Selva dei Molini"]],
+    ["Gais"], ["Percha", ["Perca"]], ["Rasen-Antholz", ["Rasen", "Antholz", "Rasun-Anterselva"]], ["Olang", ["Valdaora"]], ["Welsberg-Taisten", ["Welsberg", "Monguelfo"]],
+    ["Gsies", ["Gsieser Tal", "Valle di Casies"]], ["Prags", ["Braies"]], ["Niederdorf", ["Villabassa"]], ["Toblach", ["Dobbiaco"]], ["Innichen", ["San Candido"]],
+    ["Sexten", ["Sesto"]], ["St. Lorenzen", ["Sankt Lorenzen", "San Lorenzo"]], ["Kiens", ["Chienes"]], ["Pfalzen", ["Falzes"]], ["Terenten", ["Terento"]],
+    ["Vintl", ["Vandoies"]], ["Enneberg", ["Mareo", "Marebbe"]], ["St. Martin in Thurn", ["Sankt Martin in Thurn", "San Martin de Tor"]], ["Abtei", ["Badia"]],
+    ["Corvara"], ["Wengen", ["La Val"]]] },
+  { cat: "Südtirol", q: "Die 8 ladinischen Gemeinden Südtirols", note: "in Gröden und im Gadertal", items: [
+    ["St. Ulrich in Gröden", ["St. Ulrich", "Sankt Ulrich", "Urtijëi", "Ortisei"]], ["St. Christina in Gröden", ["St. Christina", "Santa Cristina"]],
+    ["Wolkenstein in Gröden", ["Wolkenstein", "Sëlva", "Selva"]], ["Abtei", ["Badia"]], ["Corvara"], ["Enneberg", ["Mareo", "Marebbe"]],
+    ["St. Martin in Thurn", ["San Martin de Tor"]], ["Wengen", ["La Val"]]] },
+  { cat: "Tirol", q: "Die 10 Landeshauptleute Tirols seit 1945", ranked: true, note: "Stand 2026 · Nachname reicht", names: true, items: [
+    ["Karl Gruber"], ["Alfons Weißgatterer", ["Weissgatterer"]], ["Alois Grauß", ["Grauss"]], ["Hans Tschiggfrey"], ["Eduard Wallnöfer", ["Wallnoefer"]],
+    ["Alois Partl"], ["Wendelin Weingartner"], ["Herwig van Staa", ["van Staa"]], ["Günther Platter", ["Guenther Platter"]], ["Anton Mattle"]] },
+  { cat: "Länder", q: "Die 12 Provinzen der Lombardei", items: [
+    ["Mailand", ["Milano"]], ["Bergamo"], ["Brescia"], ["Como"], ["Cremona"], ["Lecco"], ["Lodi"], ["Mantua", ["Mantova"]],
+    ["Monza und Brianza", ["Monza", "Monza e Brianza"]], ["Pavia"], ["Sondrio"], ["Varese"]] },
+  { cat: "Länder", q: "Die 54 Länder Afrikas", items: [
+    ["Ägypten", ["Aegypten"]], ["Algerien"], ["Angola"], ["Äquatorialguinea", ["Aequatorialguinea"]], ["Äthiopien", ["Aethiopien"]], ["Benin"], ["Botsuana", ["Botswana"]],
+    ["Burkina Faso"], ["Burundi"], ["Dschibuti", ["Djibouti"]], ["Elfenbeinküste", ["Côte d'Ivoire", "Elfenbeinkueste"]], ["Eritrea"], ["Eswatini", ["Swasiland"]],
+    ["Gabun"], ["Gambia"], ["Ghana"], ["Guinea"], ["Guinea-Bissau"], ["Kamerun"], ["Kap Verde", ["Cabo Verde"]], ["Kenia"], ["Komoren"],
+    ["Republik Kongo", ["Kongo-Brazzaville"]], ["Demokratische Republik Kongo", ["DR Kongo", "Kongo-Kinshasa", "Kongo"]], ["Lesotho"], ["Liberia"], ["Libyen"],
+    ["Madagaskar"], ["Malawi"], ["Mali"], ["Marokko"], ["Mauretanien"], ["Mauritius"], ["Mosambik"], ["Namibia"], ["Niger"], ["Nigeria"], ["Ruanda"],
+    ["Sambia"], ["São Tomé und Príncipe", ["Sao Tome und Principe", "São Tomé"]], ["Senegal"], ["Seychellen"], ["Sierra Leone"], ["Simbabwe"], ["Somalia"],
+    ["Südafrika", ["Suedafrika"]], ["Sudan"], ["Südsudan", ["Suedsudan"]], ["Tansania"], ["Togo"], ["Tschad"], ["Tunesien"], ["Uganda"],
+    ["Zentralafrikanische Republik"]] },
+  { cat: "Länder", q: "Die 14 Nachbarländer Russlands", note: "mit gemeinsamer Landgrenze, auch über Kaliningrad", items: [
+    ["Norwegen"], ["Finnland"], ["Estland"], ["Lettland"], ["Litauen"], ["Polen"], ["Belarus", ["Weißrussland", "Weissrussland"]], ["Ukraine"], ["Georgien"],
+    ["Aserbaidschan"], ["Kasachstan"], ["China"], ["Mongolei"], ["Nordkorea"]] },
+  { cat: "Natur", q: "Die 14 Achttausender", items: [
+    ["Mount Everest", ["Everest", "Chomolungma"]], ["K2"], ["Kangchendzönga", ["Kangchenjunga", "Kantsch"]], ["Lhotse"], ["Makalu"], ["Cho Oyu"], ["Dhaulagiri"],
+    ["Manaslu"], ["Nanga Parbat"], ["Annapurna"], ["Gasherbrum I", ["Hidden Peak"]], ["Broad Peak"], ["Gasherbrum II"], ["Shishapangma", ["Xixabangma"]]] },
+  { cat: "Sport", q: "Die 19 Gastgeberländer der Fußball-WM", note: "Männer, bis einschließlich 2026", items: [
+    ["Uruguay"], ["Italien"], ["Frankreich"], ["Brasilien"], ["Schweiz"], ["Schweden"], ["Chile"], ["England"], ["Mexiko"], ["Deutschland"], ["Argentinien"],
+    ["Spanien"], ["USA", ["Vereinigte Staaten"]], ["Japan"], ["Südkorea", ["Korea", "Suedkorea"]], ["Südafrika", ["Suedafrika"]], ["Russland"], ["Katar"], ["Kanada"]] },
+  { cat: "Sport", q: "Die 23 Städte der Olympischen Sommerspiele", note: "bis einschließlich 2024", items: [
+    ["Athen"], ["Paris"], ["St. Louis", ["Saint Louis"]], ["London"], ["Stockholm"], ["Antwerpen"], ["Amsterdam"], ["Los Angeles"], ["Berlin"], ["Helsinki"],
+    ["Melbourne"], ["Rom"], ["Tokio", ["Tokyo"]], ["Mexiko-Stadt", ["Mexico City", "Mexiko"]], ["München"], ["Montreal"], ["Moskau"], ["Seoul"], ["Barcelona"],
+    ["Atlanta"], ["Sydney"], ["Peking", ["Beijing"]], ["Rio de Janeiro", ["Rio"]]] },
+  { cat: "Geschichte", q: "Die 12 Apostel", items: [
+    ["Petrus", ["Simon Petrus"]], ["Andreas"], ["Jakobus der Ältere", ["Jakobus"]], ["Johannes"], ["Philippus"], ["Bartholomäus", ["Bartholomaeus"]], ["Thomas"],
+    ["Matthäus", ["Matthaeus"]], ["Jakobus der Jüngere", ["Jakobus"]], ["Judas Thaddäus", ["Thaddäus", "Judas Thaddaeus"]], ["Simon Zelotes", ["Simon"]], ["Judas Iskariot", ["Judas"]]] },
 ];

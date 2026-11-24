@@ -1,7 +1,7 @@
 // „Listen-Duell“ – Spiellogik (läuft beim Gastgeber, testbar in Node). Zustand in s.duell.
 // Zwei Spieler, ein Thema mit einer festen Liste von Antworten (meist zehn, manchmal mehr oder weniger). Abwechselnd eine Antwort nennen – wer falsch liegt,
 // eine schon genannte Antwort wiederholt oder die Zeit überzieht, verliert die Runde (der andere bekommt den Punkt).
-// Sind alle gefunden, bekommt den Punkt, wer die letzte genannt hat.
+// Sind alle gefunden, zählt die Runde nicht (sonst entschiede bei kurzen, bekannten Listen nur, wer anfängt).
 (function (root) {
   const TARGETS = [3, 5, 7];
   const TIMERS = { "20": { name: "20 Sekunden", ms: 20000 }, "30": { name: "30 Sekunden", ms: 30000 }, "45": { name: "45 Sekunden", ms: 45000 }, "0": { name: "ohne Zeitlimit", ms: 0 } };
@@ -98,7 +98,7 @@
     const st = s.duell;
     st.found[i] = { by: pid };
     st.moves.push({ by: pid, text, ok: true, item: i });
-    if (st.found.every(Boolean)) return endRound(s, pid, "full", now);
+    if (st.found.every(Boolean)) return endRound(s, null, "full", now);
     st.turn = other(st, pid); st.step = "turn"; st.judge = null;
     setDeadline(st, now);
   }
@@ -109,11 +109,11 @@
   }
   function endRound(s, winner, why, now, loser) {
     const st = s.duell;
-    st.score[winner]++;
-    st.result = { winner, loser: loser || null, why };
+    if (winner) st.score[winner]++;
+    st.result = { winner, loser: loser || null, why, voided: !winner }; // alle gefunden: kein Punkt
     st.history.push({ q: list(st).q, winner });
     st.judge = null; st.deadline = 0;
-    st.step = st.score[winner] >= st.opts.target ? "final" : "roundEnd";
+    st.step = winner && st.score[winner] >= st.opts.target ? "final" : "roundEnd";
   }
 
   function answer(s, pid, text, now) {
