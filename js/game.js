@@ -6,11 +6,31 @@
   const modalEl = document.getElementById("modal");
   const toastEl = document.getElementById("toast");
 
+  // Speicher im Browser. Einstellungen und „schon gespielt“-Listen merkt sich der Gastgeber pro Stube (Schlüssel „…@CODE“):
+  // - Einstellungen: pro Stube; eine neue Stube übernimmt die zuletzt benutzten (die globale Kopie ist immer die letzte)
+  // - gespielte Fragen und die Erklärkarte: nur pro Stube – eine neue Stube beginnt frisch (Erklärung an, alles ungespielt)
+  const ROOM_SEEN = ["s10-seen", "s10-geo-seen", "s10-quiz-seen", "s10-land-seen", "s10-du-seen", "s10-fw-seen", "s10-fq-seen", "s10-wer-seen", "s10-tick-seen", "s10-kurios-seen", "s10-intro"];
+  const ROOM_OPTS = ["s10-game", "s10-sets", "s10-target", "s10-geo", "s10-kg", "s10-quiz", "s10-qb", "s10-land", "s10-hl", "s10-du", "s10-fw", "s10-fq", "s10-watten", "s10-schnapsen",
+    "s10-wl", "s10-alm", "s10-kurios", "s10-tick", "s10-wer", "s10-seil-opts", "s10-jagd", "s10-slf"];
+  let storeRoom = null; // Code der Stube, die man gerade als Gastgeber führt
+  const raw = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
   const store = {
-    get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    get(k) {
+      if (storeRoom && (ROOM_SEEN.includes(k) || ROOM_OPTS.includes(k))) { const v = raw.get(k + "@" + storeRoom); if (v !== null || ROOM_SEEN.includes(k)) return v; }
+      return raw.get(k);
+    },
+    set(k, v) {
+      if (storeRoom && (ROOM_SEEN.includes(k) || ROOM_OPTS.includes(k))) { raw.set(k + "@" + storeRoom, v); if (ROOM_SEEN.includes(k)) return; }
+      raw.set(k, v);
+    },
     del(k) { try { localStorage.removeItem(k); } catch {} },
   };
+  // einmalig: bisherige „schon gespielt“-Listen und Erklär-Einstellungen für die schon bekannten Stuben übernehmen
+  if (!raw.get("s10-roomstore")) {
+    const codes = [...(raw.get("s10-myrooms") || []).map((e) => e && e.code), (raw.get("s10-host") || {}).code].filter(Boolean);
+    codes.forEach((c) => ROOM_SEEN.forEach((k) => { const v = raw.get(k); if (v !== null && raw.get(k + "@" + c) === null) raw.set(k + "@" + c, v); }));
+    raw.set("s10-roomstore", 1);
+  }
 
   // Kennung pro Tab (bleibt beim Neuladen erhalten, ist aber in jedem Tab anders)
   const setTabId = (id) => { try { sessionStorage.setItem("s10-id", id); } catch {} };
@@ -149,6 +169,33 @@
   const isMode = (key) => GAMES.some((g) => g.key === key && g.group);
   let chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes && !g.hidden) ? store.get("s10-game") : "zehn";
   let slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true, letters: "alle" }, store.get("s10-slf") || {}); // Auswahl in der Lobby merken (Lobby wird bei jedem Update neu gezeichnet)
+  // Einstellungen (neu) aus dem Speicher lesen – beim Öffnen einer Stube gelten deren eigene bzw. die zuletzt benutzten
+  function loadSettings() {
+    geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
+    kgOpts = Object.assign({ rounds: 5, wins: 3, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
+    quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
+    qbOpts = Object.assign({ length: 4, off: [], joker: true }, store.get("s10-qb") || {});
+    landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t45" }, store.get("s10-land") || {});
+    hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt" }, store.get("s10-hl") || {});
+    duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
+    fwOpts = Object.assign({ cats: [] }, store.get("s10-fw") || {});
+    fqOpts = Object.assign({ target: 5, write: "0", answer: "0", choices: "3" }, store.get("s10-fq") || {});
+    wattenOpts = Object.assign({ target: 15, weli: "schell" }, store.get("s10-watten") || {});
+    schOpts = Object.assign({ mode: "gemuetlich" }, store.get("s10-schnapsen") || {});
+    wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
+    almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
+    kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
+    tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
+    werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
+    seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
+    jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
+    slfOpts = Object.assign({ preset: "klassisch", custom: "", rounds: 5, timer: "stopp", surprise: true, letters: "alle" }, store.get("s10-slf") || {});
+    if (!QB.LENGTHS[qbOpts.length]) qbOpts.length = 4;
+    introOpts = store.get("s10-intro") || {};
+    chosenSets = store.get("s10-sets"); if (!Array.isArray(chosenSets)) { const old = store.get("s10-set"); chosenSets = old ? L.normSets(old) : null; }
+    chosenTarget = store.get("s10-target");
+    chosenGame = GAMES.some((g) => g.key === store.get("s10-game") && !g.modes && !g.hidden) ? store.get("s10-game") : chosenGame;
+  }
   const params = new URLSearchParams(location.search);
   const urlRoom = (params.get("room") || "").toUpperCase();
   const urlBroker = params.has("b") ? Number(params.get("b")) : null;
@@ -234,6 +281,7 @@
     if (!hasCrypto) { toast(errorMsg, "bad"); return; }
     if (isHost) return;
     isHost = true; roomCode = reuse ? reuse.code : genCode();
+    storeRoom = roomCode; loadSettings();
     S = L.newGame(CARDS.length);
     S.seen = store.get("s10-seen") || [];
     S.geoSeen = store.get("s10-geo-seen") || {};
@@ -249,6 +297,7 @@
   function hostResume(saved) {
     if (isHost) return; // schon am Öffnen (doppelt getippt)
     isHost = true; roomCode = saved.code; S = saved.state;
+    storeRoom = roomCode; loadSettings();
     if (!S.geoSeen) S.geoSeen = store.get("s10-geo-seen") || {};
     if (!S.quizSeen) S.quizSeen = store.get("s10-quiz-seen") || {};
     if (!S.landSeen) S.landSeen = store.get("s10-land-seen") || {};
@@ -284,7 +333,7 @@
         try { c.end(false); } catch {} // ordentlich trennen: sonst setzt der Server unser „offline“ (Letzter Wille) über die offene Stube
         mq = null; isHost = false; S = null; view = null; roomTopic = null;
         errorMsg = `Die Stube ${roomCode} ist gerade schon offen – auf einem anderen Gerät oder in einem anderen Tab. Dort weiterspielen oder später nochmal versuchen.`;
-        roomCode = null; return renderStart();
+        roomCode = null; storeRoom = null; return renderStart();
       }
       c.subscribe([T("up"), T("rtc/" + myId), T("live")], { qos: 1 });
       sendSealed(T("host"), "online", { qos: 1, retain: true });
