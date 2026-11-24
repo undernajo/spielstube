@@ -11,7 +11,7 @@
     kraxler: { w: 0.8, h: 1.5, speed: 6, jump: 13, jumps: 1, name: "Kraxler" },
     gams: { w: 0.7, h: 0.75, speed: 8, jump: 13.5, jumps: 2, name: "Gams" },
   };
-  const GCOL = { A: "#ffc83d", B: "#4fc3f7", C: "#c084fc", E: "#7ee2b1", bridge: "#ff9f5a", lift: "#e9a0d8" };
+  const GCOL = { A: "#ffc83d", B: "#4fc3f7", C: "#c084fc", E: "#7ee2b1", F: "#ff7aa8", bridge: "#ff9f5a", lift: "#e9a0d8" };
 
   // ---------- lokaler Zustand ----------
   let L = null, GR = null, W = 0;          // Level, Gelände-Raster, Breite
@@ -45,7 +45,7 @@
     trees = (L.trees || []).map((t) => ({ x: t.x, h: t.h, state: 0, anim: 1, push: 0 }));
     lifts = (L.lifts || []).map((l) => ({ x: l.x, w: l.w, top: l.top, bottom: l.bottom, y: l.bottom, dy: 0 }));
     holdT = {}; simT = 0; prevX = {};
-    S.open = { A: false, B: false, C: false, E: false, bridge: false }; for (const g of L.inv || []) S.open[g] = true;
+    S.open = { A: false, B: false, C: false, E: false, F: false, bridge: false }; for (const g of L.inv || []) S.open[g] = true;
     gotLocal = {}; sentWin = false; sentDie = false; frozen = false; t0 = performance.now(); camX = 0;
     remote.kraxler = []; remote.gams = [];
     const roles = myRoles(); active = roles.includes("kraxler") ? "kraxler" : roles[0] || "kraxler";
@@ -58,7 +58,7 @@
     if (ty < 0) return false;
     switch (GR[ty][tx]) {
       case "#": case "r": return true;
-      case "A": case "B": case "C": case "E": return !S.open[GR[ty][tx]];
+      case "A": case "B": case "C": case "E": case "F": return !S.open[GR[ty][tx]];
       case "D": return !got().key;
       case "i": return who !== "kraxler" || S.open.bridge;
       case "k": return S.open.bridge; // Steg über den Bach: nur solange seine Platte gedrückt ist
@@ -180,7 +180,7 @@
   }
   function updateWorld(list) {
     const all = list.concat(boulders), before = JSON.stringify(S.open);
-    for (const g of ["A", "B", "C", "E"]) {
+    for (const g of ["A", "B", "C", "E", "F"]) {
       const ps = L.plates.filter((p) => p.opens.includes(g)); if (!ps.length) { S.open[g] = false; continue; }
       const groups = {}; ps.forEach((p, i) => { (groups[p.grp || "s" + i] = groups[p.grp || "s" + i] || []).push(p); });
       const pressed = Object.values(groups).some((gr) => gr.every((p) => plateDown(p, all)));
@@ -315,12 +315,12 @@
       } else if (c === "r") {
         ctx.fillStyle = "#9b3d2e"; ctx.fillRect(px, py + T * 0.3, T + 0.5, T * 0.7);
         ctx.fillStyle = "#7d2e22"; ctx.fillRect(px, py + T * 0.62, T + 0.5, T * 0.08);
-      } else if ("ABCE".includes(c)) {
+      } else if ("ABCEF".includes(c)) {
         ctx.globalAlpha = S.open[c] ? 0.22 : 1;
         ctx.fillStyle = "#a8743a"; ctx.fillRect(px + T * 0.15, py, T * 0.16, T + 0.5); ctx.fillRect(px + T * 0.69, py, T * 0.16, T + 0.5);
         ctx.fillStyle = GCOL[c]; ctx.fillRect(px, py + T * 0.25, T, T * 0.16); ctx.fillRect(px, py + T * 0.65, T, T * 0.16);
         ctx.globalAlpha = 1;
-        if (y === 0 || !"ABCE".includes(GR[y - 1][x])) { ctx.fillStyle = GCOL[c]; ctx.font = `700 ${T * 0.42}px Fredoka`; ctx.textAlign = "center"; ctx.fillText((L.inv || []).includes(c) ? "⊘" : "●", px + T / 2, py - T * 0.08); }
+        if (y === 0 || !"ABCEF".includes(GR[y - 1][x])) { ctx.fillStyle = GCOL[c]; ctx.font = `700 ${T * 0.42}px Fredoka`; ctx.textAlign = "center"; ctx.fillText((L.inv || []).includes(c) ? "⊘" : "●", px + T / 2, py - T * 0.08); }
       } else if (c === "D") {
         if (!got().key) { ctx.fillStyle = "#5e3a1f"; ctx.fillRect(px + T * 0.05, py, T * 0.9, T + 0.5); ctx.fillStyle = "#4a2d17"; ctx.fillRect(px + T * 0.45, py, T * 0.1, T + 0.5);
           if (y === 10) { ctx.fillStyle = "#ffd84a"; ctx.beginPath(); ctx.arc(px + T * 0.72, py + T * 0.5, T * 0.1, 0, 7); ctx.fill(); } }
