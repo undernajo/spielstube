@@ -83,7 +83,7 @@ const DEEP = {
     }
     if (!(await until(guest, "#au-reveal"))) return errs.push("Unterm Hammer: kein Kassensturz am Ende");
     await click(guest, "#au-reveal");
-    for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".au-res:not(.au-hidden)"))) errs.push(`Unterm Hammer: beim Kassensturz kein Preis beim ${w}`);
+    for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".au-k-box.price"))) errs.push(`Unterm Hammer: beim Kassensturz kein Preis beim ${w}`);
     await click(host, "#au-revall"); await sleep(1000);
     if (!(await until(host, "#au-reveal"))) return errs.push("Unterm Hammer: nach „Alle aufdecken“ kein Weiter");
     await click(host, "#au-reveal");

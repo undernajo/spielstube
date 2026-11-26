@@ -1822,7 +1822,8 @@
       if (v.auktion) {
         const au = v.auktion, it = au.step === "kasse" ? au.items[au.kcur] : au.items[au.idx];
         // Ton, sobald der echte Preis eines eigenen Kaufs aufgedeckt wird (gleich nach dem Zuschlag oder beim Kassensturz)
-        if (now.auKey !== prev.auKey && (au.step === "sold" || au.step === "kasse") && it && it.p != null && it.buyer === myId) (it.paid < it.p ? sfx.right : sfx.wrong)();
+        // (beim Kassensturz spielt die Ansicht die Töne passend zur Show)
+        if (now.auKey !== prev.auKey && au.step === "sold" && it && it.p != null && it.buyer === myId) (it.paid < it.p ? sfx.right : sfx.wrong)();
         if (now.auKey !== prev.auKey && au.step === "final") { if ((au.winners || []).includes(myId)) sfx.win(); else if (au.seats.includes(myId)) sfx.lose(); confetti(); }
       }
       if (v.tick) {
