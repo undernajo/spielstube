@@ -276,7 +276,7 @@
       const rows = Object.entries(x.res).sort((a, b) => a[1].place - b[1].place);
       return `<div class="panel qb-result" style="--gc:${g.color}"><div class="qb-head"><span class="gt-icon">${g.icon}</span><div><div class="game-label">${title}</div><b>${esc(g.name)}</b></div></div>
         ${rows.map(([id, r]) => `<div class="qb-row" style="--pc:${colorOf(id)}"><span class="qb-place">${medal[r.place - 1] || r.place + "."}</span><span class="pdot"></span>
-          <span class="qb-name">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${qbFmt(r.score)} ${["zehn", "hl", "land", "kurios"].includes(x.game) ? "richtig" : r.score === 1 ? "Punkt" : "Punkte"}</span><b class="qb-plus ${r.pts ? "" : "zero"}">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}${r.pts ? "+" + r.pts : "±0"}</b></div>`).join("")}</div>`;
+          <span class="qb-name">${esc(nameOf(id))}${id === G.myId ? " <em>(du)</em>" : ""}</span><span class="muted small">${x.game === "auktion" ? `${r.score > 0 ? "+" : r.score < 0 ? "−" : "±"}${(Math.abs(r.score) / 100).toLocaleString("de-DE", Math.abs(r.score) % 100 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 })} €` : `${qbFmt(r.score)} ${["zehn", "hl", "land", "kurios"].includes(x.game) ? "richtig" : r.score === 1 ? "Punkt" : "Punkte"}`}</span><b class="qb-plus ${r.pts ? "" : "zero"}">${r.joker ? `<span class="qb-jk" title="Joker: doppelt">🃏</span>` : ""}${r.pts ? "+" + r.pts : "±0"}</b></div>`).join("")}</div>`;
     };
     // So geht's: drei Schritte (*fett*) + Etappensieg; bei schweren Spielen dazu eine kleine Vorführung
     const bold = (t) => esc(t).replace(/\*([^*]+)\*/g, "<b>$1</b>");

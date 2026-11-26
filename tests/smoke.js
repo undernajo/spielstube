@@ -66,14 +66,14 @@ const DEEP = {
     await click(guest, "[data-aubid]");
     if (!(await until(guest, ".au-lead"))) return errs.push("Unterm Hammer: Gast führt nach seinem Gebot nicht");
     if (!(await until(host, ".au-form"))) return errs.push("Unterm Hammer: Gastgeber kann nicht mitbieten");
-    const amt = await host.evaluate(() => Number(document.querySelector("#au-amt").min) + 3);
-    await host.type("#au-amt", String(amt));
+    const amt = "123,45"; // Cent-Betrag mit Komma, wie man ihn eintippt
+    await host.type("#au-amt", amt);
     await host.evaluate(() => document.querySelector(".au-form").requestSubmit());
     if (!(await until(host, ".au-lead"))) return errs.push("Unterm Hammer: eigenes Gebot des Gastgebers kommt nicht an");
     if (!(await until(guest, "#au-pass"))) return errs.push("Unterm Hammer: Gast kann nicht aussteigen");
     await click(guest, "#au-pass");
     for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".au-hidden"))) errs.push(`Unterm Hammer: kein Zuschlag beim ${w}`);
-    if (!(await host.evaluate((a) => document.querySelector(".au-high b").textContent.includes(String(a)), amt))) errs.push("Unterm Hammer: Zuschlag nicht zum Gebot des Gastgebers");
+    if (!(await host.evaluate((a) => document.querySelector(".au-high b").textContent.includes(a), amt))) errs.push("Unterm Hammer: Zuschlag nicht zum Gebot des Gastgebers (Cent-Betrag)");
     if (await guest.evaluate(() => /Echter Preis/i.test(document.querySelector(".au-card").innerText))) errs.push("Unterm Hammer: echter Preis schon vor dem Kassensturz zu sehen");
     // restliche Produkte: beide steigen aus, dann weiter – bis zum Kassensturz
     for (let k = 0; k < 12 && !(await host.evaluate(() => !!document.querySelector("#au-reveal"))); k++) {

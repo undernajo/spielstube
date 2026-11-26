@@ -13,7 +13,16 @@
   const kStart = new Map(); // Produkt → Zeitpunkt, an dem es hier zum ersten Mal aufgedeckt wurde
   let kTimers = [], kRaf = 0, kKey = null;
   const reduced = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const eur = (n) => `${Number(n).toLocaleString("de-DE")} €`;
+  // Beträge kommen in Cent; ganze Euro ohne Nachkommastellen, sonst mit Cent („12,50 €“)
+  const eur = (c) => { c = Math.round(Number(c) || 0); const v = c / 100;
+    return `${v.toLocaleString("de-DE", c % 100 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumFractionDigits: 0 })} €`; };
+  // Eingabe „12,50“, „12.50“, „1.234,56“ oder „12 €“ → Cent (NaN, wenn unlesbar)
+  const parseEur = (txt) => { let t = String(txt).replace(/[€\s]/g, "");
+    if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+    return /^\d+(\.\d{1,2})?$/.test(t) ? Math.round(Number(t) * 100) : NaN; };
+  // Auktionshammer: Zeitpunkt, an dem er fällt (lokal aus der Restzeit), und der laufende Anzeige-Takt
+  let hamEnd = 0, hamKey = null, hamTimer = 0;
   const sgn = (n) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${eur(Math.abs(n))}`; // Gewinn/Verlust mit Vorzeichen
 
   function renderAuktion() {
@@ -51,9 +60,10 @@
         else if (st.out[me]) act = `<div class="au-lead out">${st.passed[me] ? "Du bist bei diesem Produkt ausgestiegen." : myBudget < (high ? high.amt + 1 : st.min) ? `Dein Geld reicht nicht für ein höheres Gebot (noch ${eur(myBudget)}).` : "Du bist bei diesem Produkt raus."}</div>`;
         else {
           const base = high ? high.amt : 0;
-          const quick = [...new Set(st.steps.map((d) => base + d))].filter((x) => x <= myBudget);
+          // Schnellknöpfe auf glatte Euro: mindestens so viel über dem Höchstgebot
+          const quick = [...new Set(st.steps.map((d) => { const x = Math.floor((base + d) / 100) * 100; return x > base ? x : x + 100; }))].filter((x) => x <= myBudget);
           act = `<div class="au-bids">${quick.map((x) => `<button type="button" class="btn au-q" data-aubid="${x}">${eur(x)}</button>`).join("")}</div>
-            <form class="au-form"><input id="au-amt" type="number" inputmode="numeric" min="${base + 1}" max="${myBudget}" step="1" placeholder="Betrag in €" title="Eigenes Gebot: ${eur(base + 1)} bis ${eur(myBudget)}" autocomplete="off"><button type="submit" class="btn primary">Bieten</button><button type="button" id="au-pass" class="btn ghost au-pass">Aussteigen</button></form>`;
+            <form class="au-form"><input id="au-amt" type="text" inputmode="decimal" placeholder="Betrag in €" title="Eigenes Gebot: ${eur(base + 1)} bis ${eur(myBudget)}" autocomplete="off"><button type="submit" class="btn primary">Bieten</button><button type="button" id="au-pass" class="btn ghost au-pass">Aussteigen</button></form>`;
         }
       }
       // Auflösung: echter Preis und ob es sich gelohnt hat
@@ -75,8 +85,8 @@
           ${sold && lead1 ? `<em class="au-acct-delta spend">−${eur(high.amt)}</em>` : ""}</div>`;
       }).join("");
       panel = `<div class="au-accts au-accts-top">${chips}</div>
-        <div class="au-top"><div class="au-prod"><small>Produkt ${st.idx + 1} von ${st.total}</small><span class="ico">${it.e}</span><b>${esc(it.n)}</b></div>${bidBox}</div>
-        ${act}${res}`;
+        <div class="au-top"><div class="au-prod"><small>Produkt ${st.idx + 1} von ${st.total}${it.k ? ` · ${esc(it.k)}` : ""}</small><span class="ico">${it.e}</span><b>${esc(it.n)}</b>${it.b ? `<p class="au-desc">${esc(it.b)}</p>` : ""}</div>${bidBox}</div>
+        ${st.step === "bid" && st.hammerIn != null ? `<div class="au-hammer"><i></i><span>🔨 Zum Ersten …</span></div>` : ""}${act}${res}`;
     }
     // Kassensturz: wie weit die Show des aktuellen Produkts ist
     let kEl = T.done, kFresh = false;
@@ -101,7 +111,7 @@
           <small>${sgn(shownVal(a) - st.budget0)} seit Start</small>
           ${a.mine && diff ? `<em class="au-acct-delta">${sgn(diff)}</em>` : ""}</div>`).join("");
       const stage = !x ? `<p class="au-kasse-intro">Alle Produkte sind versteigert. Jetzt kommen die echten Preise – eins nach dem anderen.<br>Unter Wert gekauft gibt <b>Plus</b>, zu teuer gekauft <b>Minus</b>. Alle starten mit <b>${eur(st.budget0)}</b>.</p>`
-        : `<div class="au-k-prod"><span class="ico">${x.e}</span><b>${esc(x.n)}</b></div>
+        : `<div class="au-k-prod"><span class="ico">${x.e}</span><b>${esc(x.n)}</b>${x.b ? `<p class="au-desc">${esc(x.b)}</p>` : ""}</div>
           <div class="au-k-row">
             ${x.buyer ? `<div class="au-k-box paid" style="--pc:${colorOf(x.buyer)}"><small>Ersteigert von</small><span class="who"><i class="pdot"></i>${esc(nameOf(x.buyer))}${x.buyer === me ? " (du)" : ""}</span><b>${eur(x.paid)}</b></div>`
               : `<div class="au-k-box paid none"><small>Unverkauft</small><span class="who">Keiner wollte bieten</span><b>–</b></div>`}
@@ -117,7 +127,9 @@
     }
     if (st.step === "final") {
       const items = st.seats.map((id) => ({ id, name: nameOf(id), pts: st.gain[id], txt: `Endstand ${eur(st.budget0 + st.gain[id])}`, sub: `${sgn(st.gain[id])} ${st.gain[id] < 0 ? "Verlust" : "Gewinn"}` }));
-      panel = G.podiumHtml({ items, winners: st.winners || [], restartId: "au-restart", info: `Unterm Hammer · ${st.total} Produkte · Startgeld ${eur(st.budget0)}` });
+      // in der Stubenmeisterschaft geht es über die Leiste unten weiter – kein „Nochmal spielen“
+      panel = v.qb ? `<div class="banner win"><b>${(st.winners || []).map((id) => esc(nameOf(id))).join(" & ")} ${(st.winners || []).length > 1 ? "gewinnen" : "gewinnt"} die Etappe!</b></div>`
+        : G.podiumHtml({ items, winners: st.winners || [], restartId: "au-restart", info: `Unterm Hammer · ${st.total} Produkte · Startgeld ${eur(st.budget0)}` });
     }
 
     // Sortiment: was kommt, was ist weg (mit echtem Preis und Käufer)
@@ -171,6 +183,14 @@
       }
     }
 
+    // Auktionshammer: Endzeit nur neu setzen, wenn sich etwas getan hat (neues Gebot = neuer Zug)
+    if (st.step === "bid" && st.hammerIn != null) {
+      const hk = v.code + ":" + st.idx + ":" + st.move;
+      if (hamKey !== hk) { hamKey = hk; hamEnd = Date.now() + st.hammerIn; }
+      if (!hamTimer) hamTimer = setInterval(hammerTick, 200);
+      hammerTick();
+    } else { hamEnd = 0; hamKey = null; }
+
     const on = (id, fn) => { const el = app.querySelector(id); if (el) el.onclick = fn; };
     on("#leave", leave); on("#invite", invite);
     on("#mute", () => { sfx.toggle(); const b = app.querySelector("#mute"); if (b) b.textContent = sfx.muted ? "🔇" : "🔊"; });
@@ -187,12 +207,24 @@
     if (inp && keep) { inp.value = keep.val; if (keep.focus) inp.focus(); }
     if (form) form.onsubmit = (e) => {
       e.preventDefault();
-      const amt = Math.round(Number(String(inp.value).replace(",", ".")));
+      const amt = parseEur(inp.value);
       const base = high ? high.amt : 0;
       if (!(amt > base) || amt > myBudget) { inp.classList.add("shake"); setTimeout(() => inp.classList.remove("shake"), 400);
-        G.toast(amt > myBudget ? `So viel Geld hast du nicht (noch ${eur(myBudget)}).` : `Das Gebot muss über ${eur(base)} liegen.`, "info"); return; }
+        G.toast(isNaN(amt) ? "Bitte einen Betrag eingeben, z. B. 12,50." : amt > myBudget ? `So viel Geld hast du nicht (noch ${eur(myBudget)}).` : `Das Gebot muss über ${eur(base)} liegen.`, "info"); return; }
       inp.value = ""; bid(amt);
     };
+  }
+
+  // Auktionshammer-Anzeige: Balken läuft ab, in den letzten 6 Sekunden „Zum Ersten / Zweiten / Dritten“ (mit Ton)
+  function hammerTick() {
+    const el = app.querySelector(".au-hammer");
+    if (!el || !hamEnd) { clearInterval(hamTimer); hamTimer = 0; return; }
+    const st = G.view && G.view.auktion, total = (st && st.hammerMs) || 15000, left = Math.max(0, hamEnd - Date.now());
+    const call = left > 6000 ? "" : left > 4000 ? "Zum Ersten …" : left > 2000 ? "Zum Zweiten …" : "Zum Dritten …";
+    el.querySelector("i").style.width = (100 * left / total) + "%";
+    const sp = el.querySelector("span"), txt = call ? `🔨 ${call}` : `🔨 Der Hammer fällt in ${Math.ceil(left / 1000)} s ohne neues Gebot`;
+    if (sp.textContent !== txt) { if (call && sp.dataset.call !== call) { sp.dataset.call = call; sfx.tick(); } sp.textContent = txt; }
+    el.classList.toggle("calling", !!call);
   }
 
   return {

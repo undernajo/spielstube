@@ -147,7 +147,7 @@
   const KU = window.S10Kurios;
   let kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
   const AU = window.S10Auktion;
-  let auOpts = Object.assign({ size: "8", reveal: "ende" }, store.get("s10-auktion") || {});
+  let auOpts = Object.assign({ size: "8", reveal: "ende", hammer: "aus" }, store.get("s10-auktion") || {});
   let tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
   let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
   const SEIL = window.S10Seil;
@@ -188,7 +188,7 @@
     wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
     almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
     kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
-    auOpts = Object.assign({ size: "8", reveal: "ende" }, store.get("s10-auktion") || {});
+    auOpts = Object.assign({ size: "8", reveal: "ende", hammer: "aus" }, store.get("s10-auktion") || {});
     tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
     werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
     seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
@@ -399,7 +399,7 @@
   setInterval(() => {
     if (!isHost || !S) return;
     if (S.intro) { introHold(Date.now()); publish(); } // angehaltene Uhren laufend neu verteilen (die Anzeige bei allen bleibt stehen)
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "auktion" && AU.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "auktion" && AU.tick(S, Date.now())) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -635,6 +635,7 @@
       case "alm": return !!S.alm && S.alm.step === "final";
       case "jagd": return !!S.jagd && S.jagd.step === "final";
       case "kurios": return !!S.kurios && S.kurios.step === "final";
+      case "auktion": return !!S.auktion && S.auktion.step === "final";
     }
     return false;
   }
@@ -655,6 +656,7 @@
       case "alm": return all(ALM.publicState(S).totals);
       case "jagd": return all(S.jagd.pts);
       case "kurios": return all(S.kurios.score);
+      case "auktion": return all(S.auktion.gain); // Gewinn/Verlust in Cent
     }
     return all({});
   }
@@ -679,6 +681,7 @@
       case "alm": ok = ALM.start(S, { ...o, free: true }); break;
       case "jagd": ok = JG.start(S, { ...o, free: true }); break;
       case "kurios": ok = KU.start(S, { ...o, avoid: store.get("s10-kurios-seen") || [] }); break;
+      case "auktion": ok = AU.start(S, { ...o, avoid: store.get("s10-au-seen") || [] }); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
@@ -770,7 +773,7 @@
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
       kurios: { size: KU.SIZES[kuOpts.size] ? kuOpts.size : "12" },
-      auktion: { size: AU.SIZES[auOpts.size] ? auOpts.size : "8", reveal: AU.REVEALS[auOpts.reveal] ? auOpts.reveal : "ende" },
+      auktion: { size: AU.SIZES[auOpts.size] ? auOpts.size : "8", reveal: AU.REVEALS[auOpts.reveal] ? auOpts.reveal : "ende", hammer: AU.HAMMERS[auOpts.hammer] ? auOpts.hammer : "aus" },
       tick: { rounds: TK.ROUNDS[tkOpts.rounds] ? tkOpts.rounds : "2", mode: TK.MODES[tkOpts.mode] ? tkOpts.mode : "laut" },
       wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
@@ -2894,7 +2897,7 @@
       return `<p class="muted small">Ab 2 Spielern · ${esc((KU.SIZES[lb.kurios.size] || KU.SIZES["12"]).name)} · reihum ein Feld wählen</p>`;
     }
     if (view.game === "auktion" && lb.auktion) {
-      return `<p class="muted small">Ab 2 Spielern · ${esc((AU.SIZES[lb.auktion.size] || AU.SIZES["8"]).name)} · frei bieten, ohne Zeitdruck · Preise ${lb.auktion.reveal === "sofort" ? "nach jedem Zuschlag" : "am Ende (Kassensturz)"}</p>`;
+      return `<p class="muted small">Ab 2 Spielern · ${esc((AU.SIZES[lb.auktion.size] || AU.SIZES["8"]).name)} · ${lb.auktion.hammer && lb.auktion.hammer !== "aus" ? `Hammer nach ${lb.auktion.hammer} s ohne Gebot` : "frei bieten, ohne Zeitdruck"} · Preise ${lb.auktion.reveal === "sofort" ? "nach jedem Zuschlag" : "am Ende (Kassensturz)"}</p>`;
     }
     if (view.game === "tick" && lb.tick) {
       return `<p class="muted small">Ab 2 Spielern · ${esc((TK.ROUNDS[lb.tick.rounds] || TK.ROUNDS["2"]).name)} · ${lb.tick.mode === "tippen" ? "Hinweise eintippen" : "Hinweise laut"}</p>`;
@@ -2975,6 +2978,8 @@
     if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
     const auS = app.querySelector("#au-size");
     if (auS) auS.onchange = () => { auOpts.size = auS.value; store.set("s10-auktion", auOpts); publish(); };
+    const auH = app.querySelector("#au-hammer-opt");
+    if (auH) auH.onchange = () => { auOpts.hammer = auH.value; store.set("s10-auktion", auOpts); publish(); };
     const auR = app.querySelector("#au-reveal-opt");
     if (auR) auR.onchange = () => { auOpts.reveal = auR.value; store.set("s10-auktion", auOpts); publish(); };
     const kuS = app.querySelector("#ku-size");
@@ -3442,6 +3447,7 @@
   function auSettingsHtml() {
     const n = playing().length, D = window.SCHLAU10_AUKTION || [], seen = store.get("s10-au-seen") || [], fresh = D.filter((_, i) => !seen.includes(AU.key(i))).length;
     return `<label class="field"><span>Länge</span><select id="au-size">${Object.entries(AU.SIZES).map(([k, t]) => `<option value="${k}" ${(AU.SIZES[auOpts.size] ? auOpts.size : "8") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+      <label class="field"><span>Auktionshammer („Zum Ersten, zum Zweiten …“)</span><select id="au-hammer-opt">${Object.entries(AU.HAMMERS).map(([k, t]) => `<option value="${k}" ${(AU.HAMMERS[auOpts.hammer] ? auOpts.hammer : "aus") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
       <label class="field"><span>Echte Preise aufdecken</span><select id="au-reveal-opt">${Object.entries(AU.REVEALS).map(([k, t]) => `<option value="${k}" ${(AU.REVEALS[auOpts.reveal] ? auOpts.reveal : "ende") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
       ${freshHtml(fresh, D.length, "Produkte", "auktion")}
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
@@ -3451,7 +3457,8 @@
     <details class="rules"><summary>Regeln: Unterm Hammer</summary>
       <ul>
         <li>Ein <b>Sortiment</b> kommt nacheinander unter den Hammer – die echten Preise kennt keiner. Alle bekommen das gleiche <b>Startgeld</b>.</li>
-        <li><b>Bieten, wann du willst:</b> Schnellknopf oder eigener Betrag, in ganzen Euro, ohne Zeitdruck. Mehr als dein Geld kannst du nicht bieten.</li>
+        <li><b>Bieten, wann du willst:</b> Schnellknopf oder eigener Betrag, auf den Cent genau (z. B. 12,49), ohne Zeitdruck. Mehr als dein Geld kannst du nicht bieten.</li>
+        <li>Wahlweise mit <b>Auktionshammer</b>: Kommt 15 oder 30 Sekunden kein höheres Gebot, heißt es „Zum Ersten, zum Zweiten, zum Dritten“ – und der Höchstbietende bekommt den Zuschlag.</li>
         <li><b>Aussteigen</b> gilt für das ganze Produkt. Sind alle außer dem Höchstbietenden ausgestiegen, fällt der Hammer: Er bekommt es zu seinem Gebot. Bietet keiner, bleibt es unverkauft.</li>
         <li>Die <b>echten Preise</b> kommen beim <b>Kassensturz am Ende</b> – Produkt für Produkt, bis dahin weiß keiner, wer vorne liegt (in der Lobby umstellbar: gleich nach jedem Zuschlag). Unter Wert gekauft gibt <b>Plus</b> (echter Preis minus Gebot), zu teuer gekauft <b>Minus</b>.</li>
         <li>Am Ende zählt dein <b>Endstand: übriges Geld + echter Wert</b> deiner Einkäufe. Wer am meisten hat, gewinnt.</li>
