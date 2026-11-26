@@ -9,9 +9,9 @@
   // Speicher im Browser. Einstellungen und „schon gespielt“-Listen merkt sich der Gastgeber pro Stube (Schlüssel „…@CODE“):
   // - Einstellungen: pro Stube; eine neue Stube übernimmt die zuletzt benutzten (die globale Kopie ist immer die letzte)
   // - gespielte Fragen und die Erklärkarte: nur pro Stube – eine neue Stube beginnt frisch (Erklärung an, alles ungespielt)
-  const ROOM_SEEN = ["s10-seen", "s10-geo-seen", "s10-quiz-seen", "s10-land-seen", "s10-du-seen", "s10-fw-seen", "s10-fq-seen", "s10-wer-seen", "s10-tick-seen", "s10-kurios-seen", "s10-intro"];
+  const ROOM_SEEN = ["s10-seen", "s10-geo-seen", "s10-quiz-seen", "s10-land-seen", "s10-du-seen", "s10-fw-seen", "s10-fq-seen", "s10-wer-seen", "s10-tick-seen", "s10-kurios-seen", "s10-au-seen", "s10-intro"];
   const ROOM_OPTS = ["s10-game", "s10-sets", "s10-target", "s10-geo", "s10-kg", "s10-quiz", "s10-qb", "s10-land", "s10-hl", "s10-du", "s10-fw", "s10-fq", "s10-watten", "s10-schnapsen",
-    "s10-wl", "s10-alm", "s10-kurios", "s10-tick", "s10-wer", "s10-seil-opts", "s10-jagd", "s10-slf"];
+    "s10-wl", "s10-alm", "s10-kurios", "s10-auktion", "s10-tick", "s10-wer", "s10-seil-opts", "s10-jagd", "s10-slf"];
   let storeRoom = null; // Code der Stube, die man gerade als Gastgeber führt
   const raw = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
   const store = {
@@ -54,7 +54,7 @@
   const {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon, auktionIcon
   } = window.S10Icons;
   // Gemeinsamer Kontext für die Ansichten in js/ansicht/ (wird unten befüllt)
   const G = {};
@@ -66,6 +66,7 @@
     { key: "duell", two: true, color: "#3ccf8e", name: "Listen-Duell", desc: "Nennen, bis einer patzt", icon: duellIcon() },
     { key: "frage", two: true, color: "#c084fc", name: "Antwort sucht Frage", desc: "Erfinde die Frage", icon: frageIcon() },
     { key: "kurios", min2: true, color: "#f472b6", name: "Kaum zu glauben", desc: "Drei Aussagen – eine stimmt", icon: kuriosIcon() },
+    { key: "auktion", min2: true, color: "#e8a33d", name: "Unterm Hammer", short: "Hammer", desc: "Steigern – und billiger kaufen", icon: auktionIcon() },
     { key: "tick", min2: true, color: "#4fd1c5", name: "Wie tickst du?", desc: "Auf der Skala einschätzen", icon: tickIcon() },
     { key: "wer", min2: true, color: "#ff7eb6", name: "Wer bin ich?", desc: "Ja/Nein-Fragen über dich", icon: werIcon() },
     { key: "hl", color: "#ffa64d", name: "Höher oder tiefer", desc: "Welcher Wert ist größer?", icon: hlIcon() },
@@ -145,6 +146,8 @@
   const TK = window.S10Tick;
   const KU = window.S10Kurios;
   let kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
+  const AU = window.S10Auktion;
+  let auOpts = Object.assign({ size: "8", reveal: "ende" }, store.get("s10-auktion") || {});
   let tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
   let werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
   const SEIL = window.S10Seil;
@@ -153,7 +156,7 @@
   let jagdOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-jagd") || {});
   const jagdMapOk = (m) => m === "zufall" || JG.MAP_LIST.some((x) => x.id === m);
   // Kacheln in Lobby und Startseite, nach Abschnitten geordnet (Querbeet oben ohne Überschrift)
-  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "duell", "schaetzen", "hl", "slf", "frage", "wer", "kurios"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Gemeinsam spielen (Koop)", ["seil", "tick"]]];
+  const SECTIONS = [["", ["querbeet"]], ["Quiz & Wissen", ["zehn", "wand", "hinweis", "duell", "schaetzen", "hl", "slf", "frage", "wer", "kurios", "auktion"]], ["Erdkunde", ["geo", "land", "umriss", "oben"]], ["Karten, Würfel & Taktik", ["siebzehn", "bus", "stich", "klassik", "alm", "jagd"]], ["Gemeinsam spielen (Koop)", ["seil", "tick"]]];
   // Gleiche Wellenlänge ist ausgeblendet (hidden) – Code bleibt, Zurückholen: hidden entfernen und hier wieder einen Abschnitt eintragen
   {
     const listed = new Set(SECTIONS.flatMap(([, ks]) => ks));
@@ -185,6 +188,7 @@
     wlOpts = Object.assign({ pack: "mix", rounds: 5 }, store.get("s10-wl") || {});
     almOpts = Object.assign({ length: "normal", map: "zufall" }, store.get("s10-alm") || {});
     kuOpts = Object.assign({ size: "12" }, store.get("s10-kurios") || {});
+    auOpts = Object.assign({ size: "8", reveal: "ende" }, store.get("s10-auktion") || {});
     tkOpts = Object.assign({ rounds: "2", mode: "laut" }, store.get("s10-tick") || {});
     werOpts = Object.assign({ theme: "mix", hint: "aus", end: "alle", ask: "laut", level: "leicht" }, store.get("s10-wer") || {});
     seilOpts = Object.assign({ swap: false }, store.get("s10-seil-opts") || {});
@@ -395,7 +399,7 @@
   setInterval(() => {
     if (!isHost || !S) return;
     if (S.intro) { introHold(Date.now()); publish(); } // angehaltene Uhren laufend neu verteilen (die Anzeige bei allen bleibt stehen)
-    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
+    if ((S.phase === "slf" && SLF.tick(S, Date.now())) || (S.phase === "wl" && WL.tick(S)) || (S.phase === "geo" && GEO.tick(S, Date.now())) || (S.phase === "hl" && HL.tick(S, Date.now())) || (S.phase === "duell" && DU.tick(S, Date.now())) || (S.phase === "frage" && FQ.tick(S, Date.now())) || (S.phase === "land" && LAND.tick(S, Date.now())) || (S.phase === "quiz" && QZ.tick(S, Date.now())) || (S.phase === "karten" && KG.tick(S, Date.now())) || (S.phase === "alm" && ALM.tick(S)) || (S.phase === "jagd" && JG.tick(S)) || (S.phase === "wer" && WER.tick(S)) || (S.phase === "tick" && TK.tick(S)) || (S.phase === "kurios" && KU.tick(S)) || (S.phase === "auktion" && AU.tick(S)) || (S.phase === "seil" && SEIL.tick(S, Date.now()))) publish();
   }, 400);
 
   // Mitspieler ohne Lebenszeichen als getrennt markieren
@@ -442,7 +446,7 @@
     // Warten nur bei Spielen mit Uhr oder gleichzeitigem Tippen – sonst bringt früher Anfangen keinen Vorteil:
     // Koop-Spiele (Lobby-Abschnitt „Gemeinsam spielen“), reihum ohne Uhr (Wer bin ich?, Kaum zu glauben, Fragewand, Zehnkampf,
     // Watten, Schnapsen, Stichhaltig), Busfahrt (ohne Uhr) und Auf der Jagd (erst verstecken)
-    const noWait = [...(SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1], "jagd", "wer", "kurios", "wand", "zehn", "watten", "schnapsen", "bus", "stich"];
+    const noWait = [...(SECTIONS.find(([t]) => /Koop/.test(t)) || [, []])[1], "jagd", "wer", "kurios", "auktion", "wand", "zehn", "watten", "schnapsen", "bus", "stich"];
     const startKey = S.phase === "karten" && S.karten ? S.karten.mode : S.phase === "playing" ? "zehn" : S.phase;
     if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb) S.introOn = introOnFor(chosenGame);
     if (ok && before === "lobby" && S.phase !== "lobby" && !S.qb && S.introOn && !noWait.includes(startKey)) introStart(Date.now());
@@ -511,6 +515,13 @@
     if (type === "kuRestart" && S.phase === "kurios" && S.kurios && S.kurios.step === "final")
       return KU.start(S, { ...S.kurios.opts, avoid: store.get("s10-kurios-seen") || [] });
     if (type.startsWith("ku")) return S.phase === "kurios" && KU.apply(S, pid, action, host);
+    if (type === "start" && action.game === "auktion") {
+      if (!host || S.phase !== "lobby") return false;
+      return AU.start(S, { ...action.opts, avoid: store.get("s10-au-seen") || [] });
+    }
+    if (type === "auRestart" && S.phase === "auktion" && S.auktion && S.auktion.step === "final")
+      return AU.start(S, { ...S.auktion.opts, avoid: store.get("s10-au-seen") || [] });
+    if (type.startsWith("au")) return S.phase === "auktion" && AU.apply(S, pid, action, host);
     if (type === "start" && action.game === "tick") {
       if (!host || S.phase !== "lobby") return false;
       return TK.start(S, { ...action.opts, avoid: store.get("s10-tick-seen") || [] });
@@ -600,7 +611,7 @@
     if (type.startsWith("jg")) return S.phase === "jagd" && JG.apply(S, pid, action, host);
     if (type.startsWith("sg")) return S.phase === "seil" && SEIL.apply(S, pid, action, host, now);
     if (type === "start") S.game = "zehn";
-    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null; }
+    if (type === "lobby" && host) { S.slf = null; S.wl = null; S.geo = null; S.hl = null; S.duell = null; S.frage = null; S.wand = null; S.land = null; S.watten = null; S.schnapsen = null; S.qb = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null; S.auktion = null; }
     return L.applyAction(S, CARDS, pid, action, host);
   }
 
@@ -674,7 +685,7 @@
   }
   // Nach einer Etappe: Spielzustand aufräumen, es geht im Querbeet-Bildschirm weiter
   function qbCleanup() {
-    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null;
+    S.slf = null; S.hl = null; S.geo = null; S.land = null; S.duell = null; S.frage = null; S.wand = null; S.quiz = null; S.karten = null; S.alm = null; S.jagd = null; S.seil = null; S.wer = null; S.tick = null; S.kurios = null; S.auktion = null;
     S.cardIdx = null; S.pending = null; S.undo = null; S.undoReq = null; S.winners = null; S.roundResult = null;
     S.players.forEach((p) => { p.score = 0; p.roundPts = 0; p.status = "active"; p.waiting = false; });
     S.game = "querbeet"; S.phase = "querbeet";
@@ -759,6 +770,7 @@
       alm: { length: ALM.LENGTHS[almOpts.length] ? almOpts.length : "normal", map: almMapOk(almOpts.map) ? almOpts.map : "zufall" },
       jagd: { length: JG.LENGTHS[jagdOpts.length] ? jagdOpts.length : "normal", map: jagdMapOk(jagdOpts.map) ? jagdOpts.map : "zufall" },
       kurios: { size: KU.SIZES[kuOpts.size] ? kuOpts.size : "12" },
+      auktion: { size: AU.SIZES[auOpts.size] ? auOpts.size : "8", reveal: AU.REVEALS[auOpts.reveal] ? auOpts.reveal : "ende" },
       tick: { rounds: TK.ROUNDS[tkOpts.rounds] ? tkOpts.rounds : "2", mode: TK.MODES[tkOpts.mode] ? tkOpts.mode : "laut" },
       wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
@@ -792,6 +804,12 @@
     view.wer = S.phase === "wer" ? WER.publicState(S) : null;
     view.tick = S.phase === "tick" ? TK.publicState(S) : null;
     view.kurios = S.phase === "kurios" ? KU.publicState(S) : null;
+    view.auktion = S.phase === "auktion" ? AU.publicState(S) : null;
+    if (view.auktion) { // versteigerte Produkte merken – sie kommen erst wieder, wenn alle einmal dran waren
+      const seen = store.get("s10-au-seen") || [], add = AU.usedKeys(S.auktion).filter((k) => !seen.includes(k));
+      if (add.length) { const all = (window.SCHLAU10_AUKTION || []).map((_, i) => AU.key(i)), next = seen.concat(add).filter((x) => all.includes(x));
+        store.set("s10-au-seen", all.every((x) => next.includes(x)) ? add : next); }
+    }
     if (view.kurios) { // gespielte Fragen merken – sie kommen erst wieder, wenn alle einmal dran waren
       const seen = store.get("s10-kurios-seen") || [], add = KU.usedKeys(S.kurios).filter((k) => !seen.includes(k));
       if (add.length) { const all = (window.SCHLAU10_KURIOS || []).map((_, i) => KU.key(i)), next = seen.concat(add).filter((x) => all.includes(x));
@@ -1580,7 +1598,7 @@
     document.body.classList.toggle("qb-play", !!(view.qb && view.phase !== "querbeet" && view.phase !== "lobby"));
     if (view.phase !== "lobby") qbStartBar();
     if (view.phase !== "watten" && view.phase !== "schnapsen") G.dealReset();
-    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "wer") G.renderWer(); else if (view.phase === "tick") G.renderTick(); else if (view.phase === "kurios") G.renderKurios(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
+    if (view.phase === "lobby") renderLobby(); else if (view.phase === "querbeet") G.renderQuerbeet(); else if (view.phase === "slf") G.renderSlf(); else if (view.phase === "wl") G.renderWl(); else if (view.phase === "geo") G.renderGeo(); else if (view.phase === "land") G.renderLand(); else if (view.phase === "quiz") G.renderQuiz(); else if (view.phase === "karten") G.renderKarten(); else if (view.phase === "hl") G.renderHl(); else if (view.phase === "duell") G.renderDuell(); else if (view.phase === "frage") G.renderFrage(); else if (view.phase === "wand") G.renderWand(); else if (view.phase === "watten") G.renderWatten(); else if (view.phase === "schnapsen") G.renderSchnapsen(); else if (view.phase === "alm") G.renderAlm(); else if (view.phase === "jagd") G.renderJagd(); else if (view.phase === "wer") G.renderWer(); else if (view.phase === "tick") G.renderTick(); else if (view.phase === "kurios") G.renderKurios(); else if (view.phase === "auktion") G.renderAuktion(); else if (view.phase === "seil") G.renderSeil(); else renderGame();
     camDockPlace();
     chipFx();
     G.qbBarRender();
@@ -1737,6 +1755,7 @@
       tkMine: !!(v.tick && v.tick.step === "guess" && (v.tick.giver === myId || (v.tick.need.includes(myId) && !v.tick.guessed.includes(myId) && (v.tick.opts.mode === "laut" || v.tick.hint)))),
       kuMine: !!(v.kurios && v.kurios.step === "pick" && v.kurios.chooser === myId),
       kuKey: v.kurios ? v.kurios.round + ":" + v.kurios.step : null,
+      auKey: v.auktion ? v.auktion.idx + ":" + v.auktion.step + ":" + v.auktion.kidx : null,
       tkKey: v.tick ? v.tick.turnNo + ":" + v.tick.step : null,
       werKey: v.wer ? v.wer.step + ":" + (v.wer.last ? JSON.stringify(v.wer.last) : "") : null,
       fwLast: v.wand && v.wand.last ? v.wand.last.n : 0, fwFin: !!(v.wand && v.wand.step === "final"),
@@ -1799,6 +1818,12 @@
         if (fresh) (v.kurios.cur.pick === v.kurios.cur.right ? sfx.right : sfx.wrong)();
         if (now.kuMine && !prev.kuMine) setTimeout(sfx.turn, 300);
         if (now.kuKey !== prev.kuKey && v.kurios.step === "final") { if ((v.kurios.winners || []).includes(myId)) sfx.win(); else if (v.kurios.seats.includes(myId)) sfx.lose(); confetti(); }
+      }
+      if (v.auktion) {
+        const au = v.auktion, it = au.step === "kasse" ? au.items[au.kcur] : au.items[au.idx];
+        // Ton, sobald der echte Preis eines eigenen Kaufs aufgedeckt wird (gleich nach dem Zuschlag oder beim Kassensturz)
+        if (now.auKey !== prev.auKey && (au.step === "sold" || au.step === "kasse") && it && it.p != null && it.buyer === myId) (it.paid < it.p ? sfx.right : sfx.wrong)();
+        if (now.auKey !== prev.auKey && au.step === "final") { if ((au.winners || []).includes(myId)) sfx.win(); else if (au.seats.includes(myId)) sfx.lose(); confetti(); }
       }
       if (v.tick) {
         if (now.tkMine && !prev.tkMine) setTimeout(sfx.turn, 300);
@@ -1955,6 +1980,7 @@
     wer: () => store.set("s10-wer-seen", []),
     tick: () => store.set("s10-tick-seen", []),
     kurios: () => store.set("s10-kurios-seen", []),
+    auktion: () => store.set("s10-au-seen", []),
     wand: () => store.set("s10-fw-seen", []),
   };
   // Einheitliche Anmerkung unter „Spiel starten“ bei Spielen ab 2 Spielern – nur wenn sie etwas erklärt
@@ -2017,6 +2043,7 @@
           ${chosenGame === "wer" ? werSettingsHtml() : ""}
           ${chosenGame === "tick" ? tkSettingsHtml() : ""}
           ${chosenGame === "kurios" ? kuSettingsHtml() : ""}
+          ${chosenGame === "auktion" ? auSettingsHtml() : ""}
           ${chosenGame === "seil" ? seilSettingsHtml() : ""}
           ${chosenGame === "geo" || chosenGame === "oben" ? geoSettingsHtml(chosenGame === "oben") : ""}
           ${chosenGame === "land" ? landSettingsHtml() : ""}
@@ -2130,6 +2157,7 @@
       if (chosenGame === "wer") return send({ type: "start", game: "wer", opts: werOpts });
       if (chosenGame === "tick") return send({ type: "start", game: "tick", opts: tkOpts });
       if (chosenGame === "kurios") return send({ type: "start", game: "kurios", opts: kuOpts });
+      if (chosenGame === "auktion") return send({ type: "start", game: "auktion", opts: auOpts });
       if (chosenGame === "seil") return send({ type: "start", game: "seil", opts: seilOpts });
       if (chosenGame === "geo") return send({ type: "start", game: "geo", opts: { ...geoOpts, mode: "karte" } });
       if (chosenGame === "hl") return send({ type: "start", game: "hl", opts: { length: hlOpts.length, level: hlOpts.level, scoring: hlOpts.scoring, ...(hlOpts.theme === "allgemein" ? { not: HL_ST } : {}) } });
@@ -2368,7 +2396,7 @@
   // ---------- Spielauswahl & Einstellungen ----------
   // Regeltext eines Spiels (als aufklappbarer Kasten) bzw. nur der Inhalt (für die Regel-Ansicht des Gastgebers)
   function rulesFor(key) {
-    return ({ kurios: kuRulesHtml, tick: tkRulesHtml, wer: werRulesHtml, seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
+    return ({ kurios: kuRulesHtml, auktion: auRulesHtml, tick: tkRulesHtml, wer: werRulesHtml, seil: seilRulesHtml, alm: almRulesHtml, jagd: jagdRulesHtml, slf: slfRulesHtml, wl: wlRulesHtml, geo: geoRulesHtml, oben: obenRulesHtml, land: landRulesHtml, querbeet: qbRulesHtml, hl: hlRulesHtml,
       duell: duRulesHtml, frage: fqRulesHtml, wand: fwRulesHtml, watten: wattenRulesHtml, schnapsen: schRulesHtml, schaetzen: schaetzenRulesHtml, hinweis: hinweisRulesHtml, umriss: umrissRulesHtml, siebzehn: siebzehnRulesHtml, stich: stichRulesHtml, bus: busRulesHtml })[key] || rulesHtml;
   }
   const rulesBody = (key) => rulesFor(key).replace(/^\s*<details[^>]*>\s*<summary>[\s\S]*?<\/summary>/, "").replace(/<\/details>\s*$/, "");
@@ -2638,6 +2666,8 @@
       rules: [["⭐", "Je Etappe bis <b>3 Sterne</b>: geschafft, alle Edelweiß, unter der Zielzeit"], ["💦", "Fällt einer, startet das Level <b>für beide</b> neu"], ...(v.seil.mode === "solo" ? [["🙋", "Allein: mit <b>Q</b> die Figur wechseln"]] : [["🤝", "Nur gemeinsam: Platten halten, huckepack, Fels schieben"]])] };
     if (ph === "kurios" && v.kurios) return { goal: `<em>${N(v.kurios.turns, "Zug", "Züge")}</em> – reihum wählt jeder ein Feld der Tafel. Wer die wahre Aussage erkennt, bekommt einen Punkt. Die meisten Punkte gewinnen.`, path: null,
       rules: [["🃏", "Drei Aussagen – <b>nur eine</b> stimmt"], ["✓", "Richtig <b>+1</b>, falsch kostet nichts"], ["💡", "Danach gibt's die Erklärung"]] };
+    if (ph === "auktion" && v.auktion) return { goal: `<em>${N(v.auktion.total, "Produkt", "Produkte")}</em> kommen unter den Hammer. Am Ende zählt, was du hast: <em>übriges Geld + echter Wert</em> deiner Einkäufe. Wer am meisten hat, gewinnt.`, path: null,
+      rules: [["🔨", "Bieten, wann du willst – bis alle anderen <b>aussteigen</b>"], ...(v.auktion.reveal === "ende" ? [["🧾", "Die echten Preise kommen erst beim <b>Kassensturz</b> am Ende"]] : []), ["✓", "Unter Wert gekauft: <b>Plus</b> (Wert − Gebot)"], ["✗", "Zu teuer gekauft: <b>Minus</b>"]] };
     if (ph === "tick" && v.tick) return { goal: v.tick.seats.length === 2 ? `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – ihr spielt als Team: Je näher der Tipp an der geheimen Zahl, desto mehr Punkte sammelt ihr gemeinsam.`
         : `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – je näher dein Tipp an der geheimen Zahl, desto mehr Punkte. Wer am Ende die meisten hat, gewinnt.`, path: null,
       rules: [["🎯", "Genau getroffen <b>+3</b>, eins daneben <b>+2</b>, zwei daneben <b>+1</b>"], ["🗣️", "Wer den Hinweis gibt, bekommt den <b>Durchschnitt</b> der Ratenden"], ["🔁", "Reihum gibt jeder Hinweise"]] };
@@ -2862,6 +2892,9 @@
     if (view.game === "kurios" && lb.kurios) {
       return `<p class="muted small">Ab 2 Spielern · ${esc((KU.SIZES[lb.kurios.size] || KU.SIZES["12"]).name)} · reihum ein Feld wählen</p>`;
     }
+    if (view.game === "auktion" && lb.auktion) {
+      return `<p class="muted small">Ab 2 Spielern · ${esc((AU.SIZES[lb.auktion.size] || AU.SIZES["8"]).name)} · frei bieten, ohne Zeitdruck · Preise ${lb.auktion.reveal === "sofort" ? "nach jedem Zuschlag" : "am Ende (Kassensturz)"}</p>`;
+    }
     if (view.game === "tick" && lb.tick) {
       return `<p class="muted small">Ab 2 Spielern · ${esc((TK.ROUNDS[lb.tick.rounds] || TK.ROUNDS["2"]).name)} · ${lb.tick.mode === "tippen" ? "Hinweise eintippen" : "Hinweise laut"}</p>`;
     }
@@ -2939,6 +2972,10 @@
     if (almM) almM.onchange = () => { almOpts.map = almM.value; store.set("s10-alm", almOpts); publish(); };
     const sgSw = app.querySelector("#seil-swap");
     if (sgSw) sgSw.onclick = () => { seilOpts.swap = !seilOpts.swap; store.set("s10-seil-opts", seilOpts); publish(); };
+    const auS = app.querySelector("#au-size");
+    if (auS) auS.onchange = () => { auOpts.size = auS.value; store.set("s10-auktion", auOpts); publish(); };
+    const auR = app.querySelector("#au-reveal-opt");
+    if (auR) auR.onchange = () => { auOpts.reveal = auR.value; store.set("s10-auktion", auOpts); publish(); };
     const kuS = app.querySelector("#ku-size");
     if (kuS) kuS.onchange = () => { kuOpts.size = kuS.value; store.set("s10-kurios", kuOpts); publish(); };
     [["#tk-rounds", "rounds"], ["#tk-mode", "mode"]].forEach(([id, k]) => {
@@ -3401,6 +3438,24 @@
       <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
       ${playerNoteHtml(n, false)}`;
   }
+  function auSettingsHtml() {
+    const n = playing().length, D = window.SCHLAU10_AUKTION || [], seen = store.get("s10-au-seen") || [], fresh = D.filter((_, i) => !seen.includes(AU.key(i))).length;
+    return `<label class="field"><span>Länge</span><select id="au-size">${Object.entries(AU.SIZES).map(([k, t]) => `<option value="${k}" ${(AU.SIZES[auOpts.size] ? auOpts.size : "8") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+      <label class="field"><span>Echte Preise aufdecken</span><select id="au-reveal-opt">${Object.entries(AU.REVEALS).map(([k, t]) => `<option value="${k}" ${(AU.REVEALS[auOpts.reveal] ? auOpts.reveal : "ende") === k ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
+      ${freshHtml(fresh, D.length, "Produkte", "auktion")}
+      <button id="start" class="btn primary big" ${n < 2 ? "disabled" : ""}>Spiel starten</button>
+      ${playerNoteHtml(n, false)}`;
+  }
+  const auRulesHtml = `
+    <details class="rules"><summary>Regeln: Unterm Hammer</summary>
+      <ul>
+        <li>Ein <b>Sortiment</b> kommt nacheinander unter den Hammer – die echten Preise kennt keiner. Alle bekommen das gleiche <b>Startgeld</b>.</li>
+        <li><b>Bieten, wann du willst:</b> Schnellknopf oder eigener Betrag, in ganzen Euro, ohne Zeitdruck. Mehr als dein Geld kannst du nicht bieten.</li>
+        <li><b>Aussteigen</b> gilt für das ganze Produkt. Sind alle außer dem Höchstbietenden ausgestiegen, fällt der Hammer: Er bekommt es zu seinem Gebot. Bietet keiner, bleibt es unverkauft.</li>
+        <li>Die <b>echten Preise</b> kommen beim <b>Kassensturz am Ende</b> – Produkt für Produkt, bis dahin weiß keiner, wer vorne liegt (in der Lobby umstellbar: gleich nach jedem Zuschlag). Unter Wert gekauft gibt <b>Plus</b> (echter Preis minus Gebot), zu teuer gekauft <b>Minus</b>.</li>
+        <li>Am Ende zählt dein <b>Endstand: übriges Geld + echter Wert</b> deiner Einkäufe. Wer am meisten hat, gewinnt.</li>
+      </ul>
+    </details>`;
   const kuRulesHtml = `
     <details class="rules"><summary>Regeln: Kaum zu glauben</summary>
       <ul>

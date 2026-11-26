@@ -85,6 +85,7 @@
     wer: { steps: ["Jeder bekommt *geheim eine Person* – alle anderen sehen sie samt Steckbrief, nur du nicht.", "Wer dran ist, stellt *Ja/Nein-Fragen* über sich – die anderen antworten per Knopf.", "Bei *Ja* darfst du weiterfragen, bei *Nein* ist der Nächste dran. *Raten* geht, wenn du dran bist."] },
     tick: { steps: ["Alle sehen eine *Skala* zwischen zwei Gegensätzen – Felder 1 bis 10.", "Wer dran ist, bekommt *geheim eine Zahl* und nennt etwas, das für ihn genau dazu passt.", "Die anderen *tippen die Zahl* – je näher dran, desto mehr Punkte."] },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."] },
+    auktion: { steps: ["Ein *Sortiment* kommt nacheinander unter den Hammer – alle haben das gleiche *Startgeld*.", "*Bieten, wann du willst* – bis alle anderen aussteigen. Dann gehört es dir zu deinem Gebot.", "Beim *Kassensturz* kommen die echten Preise: billiger gekauft = *Plus*, zu teuer = *Minus*. Übriges Geld zählt mit."] },
   };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“

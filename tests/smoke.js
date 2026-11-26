@@ -13,7 +13,7 @@ const path = require("path");
 const puppeteer = require("puppeteer-core");
 
 const ROOT = path.resolve(__dirname, "..");
-const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer", "tick", "kurios",
+const ALL = ["zehn", "wand", "hl", "schaetzen", "hinweis", "umriss", "geo", "land", "oben", "duell", "frage", "wer", "tick", "kurios", "auktion",
   "siebzehn", "bus", "stich", "watten", "schnapsen", "slf", "alm", "jagd", "seil", "querbeet"];
 const GAMES = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -56,6 +56,38 @@ const DEEP = {
     for (const [p, w] of [[me, "Wählenden"], [other, "Zuschauenden"]]) if (!(await until(p, ".ku-expl"))) errs.push(`Kaum zu glauben: keine Erklärung beim ${w}`);
     await me.evaluate(() => document.querySelector("#ku-next").click());
     if (!(await until(other, "[data-kupick]"))) errs.push("Kaum zu glauben: danach ist nicht der andere dran");
+  },
+  // Unterm Hammer (Standard: Preise erst beim Kassensturz): Gast bietet, Gastgeber überbietet mit eigenem Betrag, Gast steigt aus
+  // → Zuschlag ohne Preis bei beiden; die übrigen Produkte steigen beide aus → Kassensturz: eins aufdecken, alle aufdecken, Ergebnis
+  async auktion(host, guest, errs) {
+    const until = async (p, sel, ms = 8000) => { for (let i = 0; i < ms / 250; i++) { if (await p.evaluate((x) => !!document.querySelector(x), sel)) return true; await sleep(250); } return false; };
+    const click = (p, sel) => p.evaluate((x) => { const el = document.querySelector(x); if (el) el.click(); return !!el; }, sel);
+    if (!(await until(guest, "[data-aubid]"))) return errs.push("Unterm Hammer: keine Gebotsknöpfe beim Gast");
+    await click(guest, "[data-aubid]");
+    if (!(await until(guest, ".au-lead"))) return errs.push("Unterm Hammer: Gast führt nach seinem Gebot nicht");
+    if (!(await until(host, ".au-form"))) return errs.push("Unterm Hammer: Gastgeber kann nicht mitbieten");
+    const amt = await host.evaluate(() => Number(document.querySelector("#au-amt").min) + 3);
+    await host.type("#au-amt", String(amt));
+    await host.evaluate(() => document.querySelector(".au-form").requestSubmit());
+    if (!(await until(host, ".au-lead"))) return errs.push("Unterm Hammer: eigenes Gebot des Gastgebers kommt nicht an");
+    if (!(await until(guest, "#au-pass"))) return errs.push("Unterm Hammer: Gast kann nicht aussteigen");
+    await click(guest, "#au-pass");
+    for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".au-hidden"))) errs.push(`Unterm Hammer: kein Zuschlag beim ${w}`);
+    if (!(await host.evaluate((a) => document.querySelector(".au-high b").textContent.includes(String(a)), amt))) errs.push("Unterm Hammer: Zuschlag nicht zum Gebot des Gastgebers");
+    if (await guest.evaluate(() => /Echter Preis/i.test(document.querySelector(".au-card").innerText))) errs.push("Unterm Hammer: echter Preis schon vor dem Kassensturz zu sehen");
+    // restliche Produkte: beide steigen aus, dann weiter – bis zum Kassensturz
+    for (let k = 0; k < 12 && !(await host.evaluate(() => !!document.querySelector("#au-reveal"))); k++) {
+      await click(guest, "#au-next"); await sleep(700);
+      for (const p of [host, guest]) { await until(p, "#au-pass, #au-reveal", 4000); await click(p, "#au-pass"); await sleep(500); }
+      await until(host, "#au-next, #au-reveal", 4000);
+    }
+    if (!(await until(guest, "#au-reveal"))) return errs.push("Unterm Hammer: kein Kassensturz am Ende");
+    await click(guest, "#au-reveal");
+    for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".au-res:not(.au-hidden)"))) errs.push(`Unterm Hammer: beim Kassensturz kein Preis beim ${w}`);
+    await click(host, "#au-revall"); await sleep(1000);
+    if (!(await until(host, "#au-reveal"))) return errs.push("Unterm Hammer: nach „Alle aufdecken“ kein Weiter");
+    await click(host, "#au-reveal");
+    for (const [p, w] of [[host, "Gastgeber"], [guest, "Gast"]]) if (!(await until(p, ".podium"))) errs.push(`Unterm Hammer: kein Ergebnis beim ${w}`);
   },
   // Wie tickst du? (laut, Standard): Hinweisgeber sieht seine Zahl und schreibt freiwillig einen Hinweis, der andere tippt → Auflösung bei beiden
   async tick(host, guest, errs) {

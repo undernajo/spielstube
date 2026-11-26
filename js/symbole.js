@@ -223,9 +223,17 @@
       ${card(5, -12, "#fbf6ea", t(5, "#ef4b5a", "✗"))}${card(41, 12, "#fbf6ea", t(41, "#ef4b5a", "✗"))}${card(23, 0, "#2fbf71", t(23, "#fff", "✓"))}
       <circle cx="32" cy="11" r="8" fill="#f472b6" stroke="#a8326f" stroke-width="1.3"/><text x="32" y="15.5" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="12" fill="#fff">!</text></svg>`;
   }
+  function auktionIcon() { // Auktionshammer über dem Pult, dazu ein Preisschild
+    return `<svg class="wicon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="46" width="34" height="9" rx="3" fill="#8a5a2b" stroke="#5c3a17" stroke-width="1.3"/>
+      <g transform="rotate(-35 30 26)"><rect x="27.5" y="22" width="5" height="30" rx="2" fill="#c98a4b" stroke="#7a4d22" stroke-width="1.2"/>
+        <rect x="18" y="12" width="24" height="12" rx="3.5" fill="#e8a33d" stroke="#8a5a14" stroke-width="1.3"/><rect x="18" y="15.5" width="24" height="2.4" fill="#b87a1f"/></g>
+      <g transform="rotate(12 50 22)"><path d="M42 14 h14 a2 2 0 0 1 2 2 v12 a2 2 0 0 1 -2 2 h-14 l-5 -8 z" fill="#fbf6ea" stroke="#8a7a5a" stroke-width="1.3"/><circle cx="41.5" cy="22" r="1.6" fill="#8a7a5a"/>
+        <text x="50" y="26" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="700" font-size="11" fill="#2fbf71">€</text></g></svg>`;
+  }
   window.S10Icons = {
     busIcon, duellIcon, frageIcon, geoIcon, hinweisIcon, hlIcon, landIcon, obenIcon, qbIcon,
     schaetzenIcon, schnapsenIcon, siebzehnIcon, slfIcon, stichIcon, umrissIcon, wattenIcon, wlIcon,
-    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon
+    zehnIcon, almIcon, jagdIcon, wandIcon, seilIcon, werIcon, tickIcon, kuriosIcon, auktionIcon
   };
 })();
