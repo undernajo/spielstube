@@ -30,7 +30,7 @@
     alm: { kind: "wuerfel", name: "Almsommer", short: "8 Wochen, ohne Gewitter", rule: "Gemeinsame Würfel, jeder kreuzt auf seinem Tal an – fertige Flächen bringen Punkte." },
     jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "12 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
     kurios: { kind: "wissen", min2: true, name: "Kaum zu glauben", short: "3 Fragen pro Spieler", rule: "Reihum ein Feld der Tafel wählen – von drei Aussagen stimmt nur eine. Richtig erkannt = 1 Punkt." },
-    auktion: { kind: "wissen", min2: true, name: "Unterm Hammer", short: "5 Produkte", rule: "Produkte ersteigern, ohne die Preise zu kennen – beim Kassensturz zählt die Differenz zum echten Preis. Übriges Geld zählt mit." },
+    auktion: { kind: "wissen", min2: true, name: "Unterm Hammer", short: "5 Produkte", rule: "Produkte ersteigern, ohne die Preise zu kennen. Billiger gekauft = Gewinn, zu teuer = Verlust." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "6 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
   // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
@@ -51,7 +51,7 @@
     bus: { steps: ["An jeder Station *tippen alle*: Figur oder Zahl? Höher oder tiefer? Zwischen oder außerhalb? Farbe? Wert?", "Richtig = Punkte in deinen *Topf* – die Stationen werden immer wertvoller.", "Ab Station 2 kannst du *aussteigen* und den Topf sichern. Falsch = Topf weg."], win: "Die meisten Punkte nach der Fahrt." },
     stich: { steps: ["Runde 1 mit *1 Karte*, jede Runde *eine mehr*. Alle sagen *geheim* an, wie viele Stiche sie holen.", "*Farbe bedienen* – die höchste Karte holt den Stich, *Trumpf sticht*.", "*Genau getroffen* = Punkte, daneben = Abzug."], win: "Die meisten Punkte nach allen Runden." },
     alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "Bis zu *so viele Felder, wie der Würfel zeigt*, von diesem Gelände ankreuzen – zusammenhängend, Start am Hof.", "Ist eine Fläche *ganz angekreuzt*, bekommst du die Punkte, die in ihrer Ecke stehen."], win: "Die meisten Punkte nach 8 Wochen." },
-    auktion: { steps: ["Ein *Sortiment* kommt nacheinander unter den Hammer – alle haben das gleiche *Startgeld*.", "*Bieten, wann du willst* – bis alle anderen aussteigen. Dann gehört es dir zu deinem Gebot.", "Beim *Kassensturz* kommen die echten Preise: billiger gekauft = *Plus*, zu teuer = *Minus*. Übriges Geld zählt mit."], win: "Der höchste Endstand: übriges Geld + echter Wert der Einkäufe." },
+    auktion: { steps: ["Alle bekommen gleich viel *Startgeld*. Die Produkte kommen *eins nach dem anderen* dran.", "*Biete*, so oft du willst. Wer als *Letzter* übrig bleibt, kauft das Produkt zu seinem Gebot.", "Dann kommt der *echte Preis*: billiger gekauft = *Gewinn*, zu teuer = *Verlust*."], win: "Der höchste Kontostand: übriges Geld + echter Preis von allem, was man gekauft hat." },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."], win: "Die meisten richtig erkannten Aussagen." },
     jagd: { steps: ["*Versteck dein Wild* im eigenen Revier: Fuchs, Hirschpaar, Gamsrudel, Murmeltiere.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn. Eine *Fuchsspur* 🐾 heißt: Der Fuchs steht direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
@@ -76,7 +76,7 @@
       case "alm": return `Die meisten Punkte nach ${n(o.weeks || 8, "Woche", "Wochen")}.`;
       case "jagd": return `Die meisten Punkte für Treffer und erlegtes Wild nach ${n(o.rounds || 12, "Runde", "Runden")}.`;
       case "kurios": return `Die meisten richtig erkannten Aussagen – jeder wählt ${n(o.per || 3, "Feld", "Felder")}.`;
-      case "auktion": return `Der höchste Endstand (übriges Geld + echter Wert der Einkäufe) nach ${n(o.per || 5, "Produkt", "Produkten")}.`;
+      case "auktion": return `Der höchste Kontostand nach ${n(o.per || 5, "Produkt", "Produkten")}: übriges Geld + echter Preis von allem, was man gekauft hat.`;
       case "duell": case "frage": return `Wer zuerst ${n(o.target || 3, "Runde", "Runden")} gewinnt.`;
     }
     return HOWTO[game] ? HOWTO[game].win : "";
@@ -88,7 +88,7 @@
     wer: { steps: ["Jeder bekommt *geheim eine Person* – alle anderen sehen sie samt Steckbrief, nur du nicht.", "Wer dran ist, stellt *Ja/Nein-Fragen* über sich – die anderen antworten per Knopf.", "Bei *Ja* darfst du weiterfragen, bei *Nein* ist der Nächste dran. *Raten* geht, wenn du dran bist."] },
     tick: { steps: ["Alle sehen eine *Skala* zwischen zwei Gegensätzen – Felder 1 bis 10.", "Wer dran ist, bekommt *geheim eine Zahl* und nennt etwas, das für ihn genau dazu passt.", "Die anderen *tippen die Zahl* – je näher dran, desto mehr Punkte."] },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."] },
-    auktion: { steps: ["Ein *Sortiment* kommt nacheinander unter den Hammer – alle haben das gleiche *Startgeld*.", "*Bieten, wann du willst* – bis alle anderen aussteigen. Dann gehört es dir zu deinem Gebot.", "Beim *Kassensturz* kommen die echten Preise: billiger gekauft = *Plus*, zu teuer = *Minus*. Übriges Geld zählt mit."] },
+    auktion: { steps: ["Alle bekommen gleich viel *Startgeld*. Die Produkte kommen *eins nach dem anderen* dran.", "*Biete*, so oft du willst. Wer als *Letzter* übrig bleibt, kauft das Produkt zu seinem Gebot.", "Dann kommt der *echte Preis*: billiger gekauft = *Gewinn*, zu teuer = *Verlust*."] },
   };
   const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "auktion", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“

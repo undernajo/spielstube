@@ -2670,8 +2670,10 @@
       rules: [["⭐", "Je Etappe bis <b>3 Sterne</b>: geschafft, alle Edelweiß, unter der Zielzeit"], ["💦", "Fällt einer, startet das Level <b>für beide</b> neu"], ...(v.seil.mode === "solo" ? [["🙋", "Allein: mit <b>Q</b> die Figur wechseln"]] : [["🤝", "Nur gemeinsam: Platten halten, huckepack, Fels schieben"]])] };
     if (ph === "kurios" && v.kurios) return { goal: `<em>${N(v.kurios.turns, "Zug", "Züge")}</em> – reihum wählt jeder ein Feld der Tafel. Wer die wahre Aussage erkennt, bekommt einen Punkt. Die meisten Punkte gewinnen.`, path: null,
       rules: [["🃏", "Drei Aussagen – <b>nur eine</b> stimmt"], ["✓", "Richtig <b>+1</b>, falsch kostet nichts"], ["💡", "Danach gibt's die Erklärung"]] };
-    if (ph === "auktion" && v.auktion) return { goal: `<em>${N(v.auktion.total, "Produkt", "Produkte")}</em> kommen unter den Hammer. Am Ende zählt, was du hast: <em>übriges Geld + echter Wert</em> deiner Einkäufe. Wer am meisten hat, gewinnt.`, path: null,
-      rules: [["🔨", "Bieten, wann du willst – bis alle anderen <b>aussteigen</b>"], ...(v.auktion.reveal === "ende" ? [["🧾", "Die echten Preise kommen erst beim <b>Kassensturz</b> am Ende"]] : []), ["✓", "Unter Wert gekauft: <b>Plus</b> (Wert − Gebot)"], ["✗", "Zu teuer gekauft: <b>Minus</b>"]] };
+    if (ph === "auktion" && v.auktion) return { goal: `Nach <em>${N(v.auktion.total, "Produkt", "Produkten")}</em> den höchsten Kontostand haben. Kontostand = <em>übriges Geld + echter Preis von allem, was du gekauft hast</em>.`, path: null,
+      rules: [["💡", "Wert <b>100 €</b>, gezahlt <b>60 €</b> → <b class=\"wz-pos\">+40 €</b>"], ["💡", "Wert <b>100 €</b>, gezahlt <b>120 €</b> → <b class=\"wz-neg\">−20 €</b>"],
+        v.auktion.reveal === "ende" ? ["🤫", "Die echten Preise gibt's erst <b>am Ende</b>"] : ["👀", "Den echten Preis siehst du <b>nach jedem Kauf</b>"],
+        ...(v.auktion.hammerMs ? [["🔨", `Kommt <b>${Math.round(v.auktion.hammerMs / 1000)} s</b> kein neues Gebot, fällt der Hammer`]] : [])] };
     if (ph === "tick" && v.tick) return { goal: v.tick.seats.length === 2 ? `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – ihr spielt als Team: Je näher der Tipp an der geheimen Zahl, desto mehr Punkte sammelt ihr gemeinsam.`
         : `<em>${N(v.tick.total, "Hinweis", "Hinweise")}</em> – je näher dein Tipp an der geheimen Zahl, desto mehr Punkte. Wer am Ende die meisten hat, gewinnt.`, path: null,
       rules: [["🎯", "Genau getroffen <b>+3</b>, eins daneben <b>+2</b>, zwei daneben <b>+1</b>"], ["🗣️", "Wer den Hinweis gibt, bekommt den <b>Durchschnitt</b> der Ratenden"], ["🔁", "Reihum gibt jeder Hinweise"]] };
@@ -2748,7 +2750,7 @@
         <div class="qbx-head"><span class="gt-icon big">${gm.icon || "🏆"}</span><div><div class="game-label">So geht's</div><b class="qb-gname">${esc(gm.name || "")}</b></div></div>
         <div class="qbx-body"><div class="qbx-info"><ol class="qbn-steps">${how.steps.map((t, i) => `<li><span class="n">${i + 1}</span><span>${bold(t)}</span></li>`).join("")}</ol>
             <div class="qbx-win"><span>🏆</span><span><b>Ziel:</b> ${spec.goal.replace(/<em>/g, "<b>").replace(/<\/em>/g, "</b>")}</span></div>
-            <div class="wzx-rules">${spec.rules.map(([i, t]) => `<span class="wzx-rule"><i>${i}</i>${t}</span>`).join("")}</div></div>
+            <div class="wzx-rules">${spec.rules.map(([i, t]) => `<span class="wzx-rule"><i>${i}</i><span>${t}</span></span>`).join("")}</div></div>
           <div class="qbx-visual">${demo ? `<div class="qbn-demo">${S10Demo.html()}</div>` : `<span class="gt-icon qbx-bigicon">${gm.icon || "🏆"}</span>`}</div></div>
         <div class="qbx-foot"><span class="muted small">Die Regeln findest du jederzeit in der Lobby unter „So geht's“.</span><div class="qbx-go"><button type="button" class="btn primary" data-wzgo>Los geht's!</button></div></div>
         <button type="button" class="qbm-x" data-wzgo aria-label="Schließen">✕</button></div>`;

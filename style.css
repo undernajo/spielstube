@@ -4441,6 +4441,8 @@ body.qb-play .zk-score.qb-more #next, body.qb-play .zk-score.qb-more #next-now {
 .wzx-rules { display: flex; flex-wrap: wrap; gap: 6px; }
 .wzx-rule { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .06); border: 1px solid var(--line); }
 .wzx-rule i { font-style: normal; }
+.wzx-rule .wz-pos { color: var(--ok); }
+.wzx-rule .wz-neg { color: var(--bad); }
 .wzx .qbx-foot .muted { margin-right: auto; }
 
 #intronote { display: none; }
