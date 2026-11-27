@@ -31,6 +31,7 @@
     jagd: { kind: "taktik", min2: true, name: "Auf der Jagd", short: "12 Runden", rule: "Wild verstecken, dann im Revier des Nachbarn schießen – Treffer und erlegtes Wild bringen Punkte." },
     kurios: { kind: "wissen", min2: true, name: "Kaum zu glauben", short: "3 Fragen pro Spieler", rule: "Reihum ein Feld der Tafel wählen – von drei Aussagen stimmt nur eine. Richtig erkannt = 1 Punkt." },
     auktion: { kind: "wissen", min2: true, name: "Unterm Hammer", short: "5 Produkte", rule: "Produkte ersteigern, ohne die Preise zu kennen. Billiger gekauft = Gewinn, zu teuer = Verlust." },
+    wer: { kind: "raten", min2: true, name: "Wer bin ich?", short: "bis einer seine Person errät", rule: "Jeder bekommt geheim eine bekannte Person – reihum Ja/Nein-Fragen über sich stellen. Wer seine Person zuerst errät, gewinnt die Etappe." },
     umriss: { kind: "karte", name: "Umriss-Rätsel", short: "6 Umrisse", rule: "Nur der Umriss ist zu sehen – welches Land (oder Bundesland, Region, Kanton) ist das?" },
   };
   // „So geht's“ auf der Etappenkarte: drei kurze Schritte (*fett*) und wie man die Etappe gewinnt
@@ -53,6 +54,7 @@
     alm: { steps: ["*3 Würfel für alle* – jeder wählt einen (Gelände + Zahl).", "Bis zu *so viele Felder, wie der Würfel zeigt*, von diesem Gelände ankreuzen – zusammenhängend, Start am Hof.", "Ist eine Fläche *ganz angekreuzt*, bekommst du die Punkte, die in ihrer Ecke stehen."], win: "Die meisten Punkte nach 8 Wochen." },
     auktion: { steps: ["Alle bekommen gleich viel *Startgeld*. Die Produkte kommen *eins nach dem anderen* dran.", "*Biete*, so oft du willst. Wer als *Letzter* übrig bleibt, kauft das Produkt zu seinem Gebot.", "Dann kommt der *echte Preis*: billiger gekauft = *Gewinn*, zu teuer = *Verlust*."], win: "Der höchste Kontostand: übriges Geld + echter Preis von allem, was man gekauft hat." },
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."], win: "Die meisten richtig erkannten Aussagen." },
+    wer: { steps: ["Jeder bekommt *geheim eine Person* – alle anderen sehen sie samt Steckbrief, nur du nicht.", "Wer dran ist, stellt *Ja/Nein-Fragen* über sich – die anderen antworten per Knopf.", "Bei *Ja* darfst du weiterfragen, bei *Nein* ist der Nächste dran. *Raten* geht, wenn du dran bist."], win: "Wer zuerst *seine Person errät*." },
     jagd: { steps: ["*Versteck dein Wild* im eigenen Revier: Fuchs, Hirschpaar, Gamsrudel, Murmeltiere.", "Jede Runde *schießen alle gleichzeitig* ins Revier des Nachbarn. Eine *Fuchsspur* 🐾 heißt: Der Fuchs steht direkt daneben.", "*Treffer* und *erlegtes Wild* bringen Punkte."], win: "Die meisten Punkte nach 12 Runden." },
   };
   // „Etappensieg: …“ passend zur Kurzfassung (Rundenzahl usw. aus den Etappen-Einstellungen)
@@ -78,6 +80,7 @@
       case "kurios": return `Die meisten richtig erkannten Aussagen – jeder wählt ${n(o.per || 3, "Feld", "Felder")}.`;
       case "auktion": return `Der höchste Kontostand nach ${n(o.per || 5, "Produkt", "Produkten")}: übriges Geld + echter Preis von allem, was man gekauft hat.`;
       case "duell": case "frage": return `Wer zuerst ${n(o.target || 3, "Runde", "Runden")} gewinnt.`;
+      case "wer": return "Wer zuerst *seine Person errät* – dann ist die Etappe vorbei.";
     }
     return HOWTO[game] ? HOWTO[game].win : "";
   }
@@ -90,13 +93,13 @@
     kurios: { steps: ["Reihum *wählt jeder ein Feld* der Tafel – zu sehen ist nur ein Stichwort.", "Dann kommen *drei Aussagen* – nur eine davon stimmt.", "Die wahre erkannt = *1 Punkt*. Danach gibt es die Erklärung."] },
     auktion: { steps: ["Alle bekommen gleich viel *Startgeld*. Die Produkte kommen *eins nach dem anderen* dran.", "*Biete*, so oft du willst. Wer als *Letzter* übrig bleibt, kauft das Produkt zu seinem Gebot.", "Dann kommt der *echte Preis*: billiger gekauft = *Gewinn*, zu teuer = *Verlust*."] },
   };
-  const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "auktion", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
+  const ORDER = ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "auktion", "wer", "geo", "land", "umriss", "oben", "siebzehn", "stich", "bus", "alm", "jagd", "slf", "duell", "frage"];
   // Fertige Mischungen je nach Stimmung (null = alle Spiele); setzen nur die Haken bei „Mit dabei“
   const MIXES = {
     alle: { icon: "🎲", name: "Bunt gemischt", games: null },
     wissen: { icon: "🧠", name: "Wissensabend", games: ["zehn", "wand", "hl", "schaetzen", "hinweis", "kurios", "auktion", "duell"] },
     welt: { icon: "🗺️", name: "Rund um die Welt", games: ["geo", "land", "umriss", "oben"] },
-    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd", "kurios", "auktion"] },
+    gaudi: { icon: "🎉", name: "Gaudi", games: ["bus", "siebzehn", "stich", "slf", "frage", "alm", "jagd", "kurios", "auktion", "wer"] },
     karten: { icon: "🃏", name: "Kartenabend", games: ["siebzehn", "stich", "bus"] },
     kurz: { icon: "⚡", name: "Kurz & schnell", games: ["hl", "schaetzen", "bus", "siebzehn", "oben", "geo"] },
     // allein spielbar und ohne Fragenvorrat (nur Karten, Würfel, Buchstaben)
@@ -177,6 +180,8 @@
       case "alm": return { weeks: 8, storms: 0, map: "zufall" }; // Kurzsommer: 8 Wochen ohne Gewitter, Tal ausgelost
       case "jagd": return { rounds: 12, map: "zufall" }; // 12 Runden, Jagdgebiet ausgelost
       case "kurios": return { per: 3 }; // jeder wählt 3 Felder
+      // bis der Erste seine Person errät, mit Bereich-Hinweis; nur sehr bekannte Personen (bei „Profi“ alle). Fragen laut oder getippt wie in der Lobby
+      case "wer": return { theme: st ? "suedtirol" : "mix", level: pro ? "alle" : "leicht", hint: "bereich", end: "erster" };
       case "auktion": return { per: 5, reveal: "ende", hammer: "aus" }; // 5 Produkte, Kassensturz am Ende, ohne Zeitdruck
       case "duell": return { target: 3, timer: "0" }; // ohne Zeitlimit
       case "frage": return { target: 3, write: "0", answer: "0", choices: level === "leicht" ? "3" : "1" }; // leicht: 3 Antworten zur Auswahl, sonst eine vorgegeben

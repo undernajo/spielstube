@@ -146,7 +146,9 @@
     } else {
       const r = st.ranking || [], winners = r.filter((x) => x.at === 1).map((x) => x.id);
       const items = r.map((x, i) => ({ id: x.id, name: nameOf(x.id), pts: r.length - i, txt: x.at ? `nach ${x.q} ${x.q === 1 ? "Frage" : "Fragen"}` : x.gaveUp ? "aufgegeben" : "nicht erraten", sub: st.revealed[x.id] ? esc(st.revealed[x.id].n) : "" }));
-      body = (winners.length ? G.podiumHtml({ items, winners, restartId: "wer-restart" })
+      // in der Stubenmeisterschaft geht es über die Leiste unten weiter – kein „Nochmal spielen“
+      body = (v.qb ? `<div class="banner win"><b>${winners.length ? `${winners.map((id) => esc(nameOf(id))).join(" & ")} ${winners.length > 1 ? "gewinnen" : "gewinnt"} die Etappe!` : "Niemand hat seine Person erraten."}</b></div>`
+        : winners.length ? G.podiumHtml({ items, winners, restartId: "wer-restart" })
         : `<div class="banner"><b>Niemand hat seine Person erraten.</b><div class="banner-actions"><button id="wer-restart" class="btn primary">Nochmal spielen</button>${G.isHost ? `<button id="toLobby" class="btn ghost">Zur Lobby</button>` : ""}</div></div>`)
         + `<div class="wer-reveal">${st.order.map((id) => { const p = st.revealed[id]; return p ? `<div style="--pc:${colorOf(id)}"><small>${esc(nameOf(id))} war</small><b>${esc(p.n)}</b></div>` : ""; }).join("")}</div>`;
     }

@@ -636,6 +636,7 @@
       case "jagd": return !!S.jagd && S.jagd.step === "final";
       case "kurios": return !!S.kurios && S.kurios.step === "final";
       case "auktion": return !!S.auktion && S.auktion.step === "final";
+      case "wer": return !!S.wer && S.wer.step === "final";
     }
     return false;
   }
@@ -657,6 +658,7 @@
       case "jagd": return all(S.jagd.pts);
       case "kurios": return all(S.kurios.score);
       case "auktion": return all(S.auktion.gain); // Gewinn/Verlust in Cent
+      case "wer": return all(Object.fromEntries(Object.entries(S.wer.solved).map(([id, v]) => [id, v.gaveUp ? 0 : 1]))); // erraten = 1
     }
     return all({});
   }
@@ -682,6 +684,7 @@
       case "jagd": ok = JG.start(S, { ...o, free: true }); break;
       case "kurios": ok = KU.start(S, { ...o, avoid: store.get("s10-kurios-seen") || [] }); break;
       case "auktion": ok = AU.start(S, { ...o, avoid: store.get("s10-au-seen") || [] }); break;
+      case "wer": ok = WER.start(S, { ...o, ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", avoid: store.get("s10-wer-seen") || [] }); break;
     }
     if (!ok) { q.plan[q.idx] = { game: "hl", opts: QB.stageOpts("hl") }; HL.start(S, q.plan[q.idx].opts, now); } // z. B. jemand ist gegangen
     return true;
@@ -737,7 +740,7 @@
       : `${D.short} · Kategorien „${(SLF.PRESETS[o.preset] || {}).name || ""}“${easyL}`;
     if (st.game === "hl" && lvl) return `${D.short}${lvl}`;
     if (st.game === "umriss") return `${D.short} · ${LAND.REGION_NAMES[o.region] || ""}${lvl}`;
-    if ((st.game === "schaetzen" || st.game === "hinweis") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
+    if ((st.game === "schaetzen" || st.game === "hinweis" || st.game === "wer") && o.theme === "suedtirol") return `${D.short} · Südtirol`;
     return D.short;
   }
   function qbView() {
