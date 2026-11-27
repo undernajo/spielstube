@@ -131,12 +131,28 @@
 
   // Reihenfolge: jedes Spiel etwa gleich oft (aus einem „Beutel“ ziehen), nie dasselbe Spiel und möglichst
   // nicht dieselbe Art zweimal hintereinander. prev: bisheriger Plan (wird fortgesetzt), bag: Rest des Beutels.
-  function buildPlan(games, n, theme, level, prevPlan, bagIn) {
+  // „Bunt gemischt“: erst die Art auslosen, dann ein Spiel daraus – sonst kämen die vier ähnlichen Landkarten-Spiele
+  // in fast jeder vierten Etappe dran und die Spiele zum richtigen Spielen (Karten, Würfel, Taktik, Wer bin ich?) zu selten
+  const GROUP_OF = (g) => ({ wissen: "wissen", karte: "karte", wort: "wort" })[STAGES[g].kind] || "spiel";
+  const GROUP_W = { wissen: 2.5, spiel: 1.2, wort: 1, karte: 1 }; // ergibt etwa: Wissen 34 %, Spielen 27 %, Wort und Landkarte je 19 %
+  function buildPlan(games, n, theme, level, prevPlan, bagIn, weighted) {
     const out = (prevPlan || []).map((x) => x.game), start = out.length;
     let bag = (bagIn || []).filter((g) => games.includes(g));
     for (let i = 0; i < n; i++) {
-      if (!bag.length) bag = shuffle(games.slice());
       const prev = out[out.length - 1];
+      const fits = (g) => !prev || (g !== prev && STAGES[g].kind !== STAGES[prev].kind);
+      if (weighted) {
+        const groups = [...new Set(games.map(GROUP_OF))].filter((gr) => games.some((g) => GROUP_OF(g) === gr && fits(g)));
+        if (groups.length) {
+          let r = Math.random() * groups.reduce((a, gr) => a + GROUP_W[gr], 0), gr = groups[groups.length - 1];
+          for (const x of groups) { r -= GROUP_W[x]; if (r < 0) { gr = x; break; } }
+          // innerhalb der Art aus dem Beutel, damit jedes Spiel der Art etwa gleich oft drankommt
+          if (!bag.some((g) => GROUP_OF(g) === gr && fits(g))) bag = bag.filter((g) => GROUP_OF(g) !== gr).concat(shuffle(games.filter((g) => GROUP_OF(g) === gr)));
+          const k = bag.findIndex((g) => GROUP_OF(g) === gr && fits(g));
+          if (k >= 0) { out.push(bag.splice(k, 1)[0]); continue; }
+        }
+      }
+      if (!bag.length) bag = shuffle(games.slice());
       let k = bag.findIndex((g) => !prev || (g !== prev && STAGES[g].kind !== STAGES[prev].kind));
       if (k < 0) k = bag.findIndex((g) => g !== prev);
       if (k < 0) { // nur noch das gleiche Spiel im Beutel: neu mischen
@@ -154,7 +170,7 @@
   function extendPlan(q, players) {
     const need = q.idx + 4 - q.plan.length;
     if (need <= 0) return;
-    const games = eligible(q.opts.off, players || q.players || 2, q.opts.on), add = buildPlan(games.length ? games : [q.plan[q.plan.length - 1].game], need, q.opts.theme, q.opts.level, q.plan, q.bag);
+    const games = eligible(q.opts.off, players || q.players || 2, q.opts.on), add = buildPlan(games.length ? games : [q.plan[q.plan.length - 1].game], need, q.opts.theme, q.opts.level, q.plan, q.bag, !q.opts.off.length);
     q.bag = add.bag; q.plan.push(...add);
   }
 
@@ -203,7 +219,7 @@
     const games = eligible(opts && opts.off, players, opts && opts.on);
     if (!games.length) return null;
     const joker = !(opts && opts.joker === false), n = Math.max(1, players || 1);
-    const plan = buildPlan(games, 4, theme, level);
+    const plan = buildPlan(games, 4, theme, level, null, null, !((opts && opts.off) || []).length); // nichts abgewählt = „Bunt gemischt“
     return { opts: { length, off: (opts && opts.off) || [], on: ((opts && opts.on) || []).filter((g) => LUCK.includes(g)), theme, level, joker }, plan, bag: plan.bag, players: n, target: targetFor(length, n),
       idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false, winners: null,
       joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Meisterschaft)
