@@ -22,6 +22,7 @@
   let active = "kraxler";                  // allein: welche Figur gesteuert wird
   let gotLocal = {}, sentWin = false, sentDie = false, t0 = 0, frozen = false;
   const remote = { kraxler: [], gams: [] }; // empfangene Positionen (für Figuren anderer Geräte)
+  const lag = []; let delay = 150, delayAt = 0; // Laufzeit der Positionen (Ankunft minus Absendezeit) für das Nachziehen
   let built = null, mapSel = null, loopOn = false;
 
   const st = () => (G.view && G.view.seil) || null;
@@ -47,7 +48,7 @@
     holdT = {}; simT = 0; prevX = {};
     S.open = { A: false, B: false, C: false, E: false, F: false, bridge: false }; for (const g of L.inv || []) S.open[g] = true;
     gotLocal = {}; sentWin = false; sentDie = false; frozen = false; t0 = performance.now(); camX = 0;
-    remote.kraxler = []; remote.gams = [];
+    remote.kraxler = []; remote.gams = []; lag.length = 0;
     const roles = myRoles(); active = roles.includes("kraxler") ? "kraxler" : roles[0] || "kraxler";
     cur = { gid: st().gid, seq };
   }
@@ -212,18 +213,40 @@
     const s = st();
     if (!s || m.gid !== s.gid || m.seq !== cur.seq || m.t !== "pos" || !remote[m.who]) return;
     if (myRoles().includes(m.who)) return; // eigene Figur nie von außen
-    const arr = remote[m.who]; arr.push({ at: performance.now(), x: m.x, y: m.y, f: m.f, g: m.g, vx: m.vx }); if (arr.length > 30) arr.shift();
+    const now = performance.now(), ts = Number.isFinite(m.ts) ? m.ts : now; // ts: Zeitpunkt beim Absender (ältere Fassungen schicken keinen)
+    const arr = remote[m.who];
+    if (arr.length && ts < arr[arr.length - 1].ts - 3000) { arr.length = 0; lag.length = 0; } // Absender hat neu geladen: Uhr beginnt von vorn
+    if (arr.length && ts <= arr[arr.length - 1].ts) return; // überholte oder doppelte Meldung
+    arr.push({ ts, x: m.x, y: m.y, f: m.f, g: m.g, vx: m.vx }); if (arr.length > 40) arr.shift();
+    lag.push(now - ts); if (lag.length > 60) lag.shift();
     if (m.b && !myRoles().includes("kraxler")) m.b.forEach((p, i) => { if (boulders[i]) { boulders[i].x = p[0]; boulders[i].y = p[1]; } });
     if (m.tr && !myRoles().includes("kraxler")) m.tr.forEach((v, i) => { const t = trees[i]; if (t && t.state !== v) { t.state = v; t.anim = 0; SND.tree(); } });
   });
+  // Die Stände kommen über den Vermittlungsserver oft gebündelt an (mal drei auf einmal, dann eine Pause). Deshalb zählt
+  // nicht, wann ein Stand ankommt, sondern wann er abgeschickt wurde: Die Figur läuft auf der Zeitachse des Absenders,
+  // gerade so weit hinterher, wie es das Schwanken der Leitung verlangt. Bleibt ein Stand aus, läuft sie kurz weiter.
+  function remoteTime(now) {
+    if (!lag.length) return now;
+    const base = Math.min(...lag), sorted = lag.map((d) => d - base).sort((p, q) => p - q);
+    const jitter = sorted[Math.floor(sorted.length * 0.9)] || 0;
+    const want = Math.max(110, Math.min(450, 70 + jitter + 30)); // ein Sendeabstand plus Schwankung plus Reserve
+    const dt = Math.min(0.1, (now - (delayAt || now)) / 1000); delayAt = now;
+    delay += (want - delay) * Math.min(1, dt * 2); // sanft anpassen, sonst springt die Figur
+    return now - base - delay;
+  }
   function remoteBody(who) {
     const s = remote[who]; if (!s.length) return null;
-    const t = performance.now() - 100; // 100 ms hinterher, zwischen zwei Ständen weich nachziehen
-    let a = s[0], b = s[s.length - 1];
-    for (let i = s.length - 1; i > 0; i--) if (s[i - 1].at <= t) { a = s[i - 1]; b = s[i]; break; }
-    const k = b.at === a.at ? 1 : Math.max(0, Math.min(1, (t - a.at) / (b.at - a.at)));
-    const sp = SPEC[who];
-    return { who, x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k, w: sp.w, h: sp.h, face: b.f, ground: b.g, vx: b.vx, local: false };
+    const t = remoteTime(performance.now()), sp = SPEC[who];
+    const out = (x, y, p) => ({ who, x, y, w: sp.w, h: sp.h, face: p.f, ground: p.g, vx: p.vx, local: false });
+    const last = s[s.length - 1];
+    if (t >= last.ts) { // nichts Neueres da: höchstens 0,1 s in Laufrichtung weiterschieben
+      const ahead = Math.min(t - last.ts, 100) / 1000;
+      return out(last.x + (last.g ? last.vx * ahead : 0), last.y, last);
+    }
+    let a = s[0], b = s[0];
+    for (let i = s.length - 1; i > 0; i--) if (s[i - 1].ts <= t) { a = s[i - 1]; b = s[i]; break; }
+    const k = b.ts === a.ts ? 1 : Math.max(0, Math.min(1, (t - a.ts) / (b.ts - a.ts)));
+    return out(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k, b);
   }
   // alle Figuren: eigene (gesteuert) + die der anderen Geräte (nachgezogen)
   function allBodies() {
@@ -461,7 +484,7 @@
       // eigene Positionen (und als Kraxler die Felsen) ca. 15× pro Sekunde an die anderen
       if (now - lastSend > 66 && mine.length) { lastSend = now;
         mine.forEach((w) => { const b = bodies[w];
-          G.liveSend({ t: "pos", gid: s.gid, seq: cur.seq, who: w, x: +b.x.toFixed(3), y: +b.y.toFixed(3), f: b.face, g: b.ground, vx: +b.vx.toFixed(2),
+          G.liveSend({ t: "pos", gid: s.gid, seq: cur.seq, ts: Math.round(now), who: w, x: +b.x.toFixed(3), y: +b.y.toFixed(3), f: b.face, g: b.ground, vx: +b.vx.toFixed(2),
             b: w === "kraxler" ? boulders.map((o) => [+o.x.toFixed(3), +o.y.toFixed(3)]) : null, tr: w === "kraxler" && trees.length ? trees.map((t) => t.state) : null }); }); }
     } else acc = 0;
     // Als Gast: Meldungen an den Gastgeber jede Sekunde nachschicken, bis sie im Spielstand stehen. Hakt die Verbindung
