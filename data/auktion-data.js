@@ -2,7 +2,7 @@
 //   e = Emoji, n = Name, k = Kategorie (siehe SCHLAU10_AUKTION_KAT), p = echter Preis in Euro (mit Cent, z. B. 899.99),
 //   b = Steckbrief beim Bieten: was es ist – nie etwas, das den Preis verrät (keine Wörter wie „günstig“, „Luxus“, keine Vergleichspreise),
 //   d = was der Preis genau ist und Stand (erscheint erst beim Aufdecken).
-// Nur Produkte mit festem, nachprüfbarem Preis (Herstellerpreis, Gebühr, Bußgeld, Eintritt, Abo, offizieller Ticket-Nennwert). Preise ändern sich – 2026 haben
+// Nur Produkte mit festem, nachprüfbarem Preis (Herstellerpreis, Gebühr für ein Dokument oder eine Leistung, Eintritt, Abo, offizieller Ticket-Nennwert). Preise ändern sich – 2026 haben
 // z. B. Sony, Nintendo, Valve, Apple und Amazon wegen teurer Speicherchips erhöht. Vor dem Veröffentlichen prüfen und den Stand anpassen.
 // Nur Produkte ab 10 €: darunter ist die Differenz zum echten Preis so klein, dass sie nie etwas entscheidet.
 // n ist der Schlüssel für „schon gespielt“ – beim Umbenennen gilt das Produkt wieder als neu.
@@ -10,7 +10,7 @@
   root.SCHLAU10_AUKTION_KAT = {
     technik: { name: "Technik", e: "💻" },
     spiel: { name: "Spiel & Bauen", e: "🧱" },
-    amt: { name: "Ämter, Gebühren & Strafen", e: "🏛️" },
+    amt: { name: "Ämter & Dokumente", e: "🏛️" },
     reisen: { name: "Reisen & Sehenswürdigkeiten", e: "🧳" },
     alltag: { name: "Unterwegs, Alltag & Abos", e: "🛒" },
     suedtirol: { name: "Südtirol & Dolomiten", e: "🏔️" },
@@ -62,25 +62,15 @@
     { e: "🎟️", n: "PlayStation Plus Premium, ein Jahr", k: "spiel", p: 151.99, b: "Die größte PS-Plus-Stufe mit Spielekatalog, Klassikern und Cloud-Streaming", d: "151,99 € (2026)" },
     { e: "🟩", n: "PC Game Pass, ein Jahr", k: "spiel", p: 155.88, b: "Hunderte Spiele für den PC im Abo, zwölf Monate", d: "12 × 12,99 € (seit April 2026)" },
     { e: "🏎️", n: "LEGO DUPLO F1-Team-Rennautos (10445)", k: "spiel", p: 44.99, b: "Formel-1-Autos aus großen DUPLO-Steinen für Kleinkinder", d: "LEGO-Preis (2026)" },
-    // Ämter, Gebühren & Strafen
+    // Ämter & Dokumente (nur Gebühren, für die man etwas bekommt – keine Strafen oder Steuern, die kauft man nicht)
     { e: "🛂", n: "Reisepass Italien", k: "amt", p: 116, b: "Gebühren für einen neuen italienischen Reisepass für Erwachsene", d: "Heft ca. 73,50 € + Stempelmarke 42,50 €" },
     { e: "🛂", n: "Reisepass Deutschland", k: "amt", p: 70, b: "Gebühr für einen deutschen Reisepass ab 24 Jahren, 10 Jahre gültig", d: "Gebühr seit 2025" },
     { e: "🛂", n: "Reisepass Österreich", k: "amt", p: 112, b: "Gebühr für einen österreichischen Reisepass für Erwachsene", d: "Gebühr seit Juli 2025 (vorher 75,90 €)" },
     { e: "🪪", n: "Elektronische Identitätskarte Italien", k: "amt", p: 22.21, b: "Gebühren für die italienische Carta d'identità elettronica", d: "ca. 22,21 € (je Gemeinde leicht anders)" },
     { e: "📡", n: "RAI-Gebühr (canone), ein Jahr", k: "amt", p: 90, b: "Italiens Rundfunkgebühr pro Haushalt, kommt mit der Stromrechnung", d: "90 € (2025 und 2026)" },
-    { e: "📵", n: "Handy am Steuer erwischt (Deutschland)", k: "amt", p: 100, b: "Bußgeld fürs Telefonieren mit dem Handy in der Hand beim Autofahren, ohne Gefährdung – dazu 1 Punkt", d: "Bußgeldkatalog 2026" },
-    { e: "📵", n: "Handy am Steuer erwischt (Österreich)", k: "amt", p: 100, b: "Organmandat der Polizei, wenn man beim Autofahren mit dem Handy in der Hand telefoniert", d: "seit Mai 2023 (vorher 50 €)" },
-    { e: "📸", n: "Bis 10 km/h zu schnell geblitzt (Italien)", k: "amt", p: 42, b: "Grundbetrag der Strafe in Italien – wer innerhalb von 5 Tagen zahlt, bekommt 30 % Nachlass", d: "Mindestbetrag 42 €, 2026 nicht angehoben" },
     { e: "🧾", n: "Marca da bollo (Stempelmarke Italien)", k: "amt", p: 16, b: "Steuermarke, die in Italien auf viele Anträge und Urkunden geklebt wird", d: "Standardbetrag" },
-    { e: "🚦", n: "Über Rot gefahren (Italien)", k: "amt", p: 167, b: "Mindeststrafe in Italien, wenn man tagsüber bei Rot über die Ampel fährt – dazu 6 Punkte weniger", d: "Mindestbetrag, 2026 nicht angehoben" },
-    { e: "📵", n: "Handy am Steuer erwischt (Italien)", k: "amt", p: 250, b: "Mindeststrafe in Italien fürs Handy in der Hand am Steuer – dazu 5 Punkte weniger", d: "Mindestbetrag seit der Reform Ende 2024" },
-    { e: "♿", n: "Auf einem Behindertenparkplatz geparkt (Italien)", k: "amt", p: 165, b: "Mindeststrafe in Italien fürs Parken auf einem Platz für Menschen mit Behinderung", d: "Mindestbetrag" },
-    { e: "🚌", n: "Auf der Busspur geparkt (Italien)", k: "amt", p: 87, b: "Mindeststrafe in Italien fürs Parken auf einer Busspur oder an einer Haltestelle", d: "Mindestbetrag" },
     { e: "🚗", n: "Führerschein verlängern (Italien, Gebühren)", k: "amt", p: 26.20, b: "Gebühren für die Verlängerung des Führerscheins per PagoPA, ohne Arztvisite", d: "10,20 € Motorizzazione + 16 € Stempelmarke" },
-    { e: "⚖️", n: "Einspruch gegen einen Strafzettel beim Friedensrichter (Italien)", k: "amt", p: 43, b: "Gerichtsgebühr (contributo unificato), um beim Giudice di Pace gegen eine Strafe bis rund 1.000 € zu klagen", d: "contributo unificato" },
     { e: "🔧", n: "Auto-Revision in der Werkstatt (Italien)", k: "amt", p: 79.02, b: "Pflicht-Hauptuntersuchung fürs Auto in einer zugelassenen Werkstatt, alles inklusive", d: "einheitlicher Tarif 2026" },
-    { e: "🏦", n: "Stempelsteuer aufs Bankkonto (Italien), ein Jahr", k: "amt", p: 34.20, b: "Steuer auf ein Girokonto von Privatleuten, wenn im Schnitt mehr als 5.000 € drauf sind", d: "imposta di bollo, Satz 2026" },
-    { e: "🏢", n: "Stempelsteuer auf ein Firmenkonto (Italien), ein Jahr", k: "amt", p: 118, b: "Steuer auf ein Girokonto eines Unternehmens", d: "seit März 2026 (vorher 100 €)" },
     // Reisen & Sehenswürdigkeiten
     { e: "🏰", n: "Eintritt Schloss Neuschwanstein", k: "reisen", p: 21, b: "Führung durch das Märchenschloss von König Ludwig II., Erwachsene", d: "Normalpreis 2026" },
     { e: "🏛️", n: "Eintritt Kolosseum in Rom", k: "reisen", p: 18, b: "Standardticket mit Kolosseum, Forum Romanum und Palatin, Erwachsene", d: "offizielles Standardticket" },
