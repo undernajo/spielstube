@@ -105,8 +105,14 @@
     // allein spielbar und ohne Fragenvorrat (nur Karten, Würfel, Buchstaben)
     solo: { icon: "🙋", name: "Allein & ohne Verbrauch", games: ["siebzehn", "bus", "alm", "slf"] },
   };
+  // Glücksspiele: allein immer dabei, ab 2 Spielern nur, wenn der Gastgeber sie eigens anhakt (on) – sonst entscheidet
+  // in einer Meisterschaft zu zweit reines Glück über einen ganzen Etappensieg. Der Kartenabend hakt sie gleich mit an.
+  const LUCK = ["siebzehn", "bus"];
   const mixOff = (key) => { const m = MIXES[key]; return m && m.games ? ORDER.filter((k) => !m.games.includes(k)) : []; };
-  const mixOf = (off) => Object.keys(MIXES).find((k) => { const o = mixOff(k); return o.length === off.length && o.every((x) => off.includes(x)); }) || null;
+  const mixOn = (key) => key === "karten" ? LUCK.slice() : [];
+  const same = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
+  const mixOf = (off, on, players) => Object.keys(MIXES).find((k) => same(mixOff(k), off)
+    && (players < 2 || same(mixOn(k).filter((g) => !off.includes(g)), (on || []).filter((g) => LUCK.includes(g) && !off.includes(g))))) || null;
   // Themenabende: alle Etappen mit passenden Inhalten
   const THEMES = { mix: { name: "Gemischt" }, suedtirol: { name: "Südtirol" }, welt: { name: "Welt" } };
   // Schwierigkeit für die Spiele mit Stufen (Wo liegt das?, Länder finden, Umriss-Rätsel); „Gemischt“ = bisheriges Verhalten
@@ -118,8 +124,9 @@
   const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
   // Welche Spiele kommen in Frage? Zweier-Spiele nur bei genau zwei Spielern.
-  function eligible(off, players) {
-    return ORDER.filter((k) => !(off || []).includes(k) && (!STAGES[k].two || players === 2) && (!STAGES[k].min2 || players >= 2));
+  function eligible(off, players, on) {
+    return ORDER.filter((k) => !(off || []).includes(k) && (!STAGES[k].two || players === 2) && (!STAGES[k].min2 || players >= 2)
+      && (!LUCK.includes(k) || players < 2 || (on || []).includes(k)));
   }
 
   // Reihenfolge: jedes Spiel etwa gleich oft (aus einem „Beutel“ ziehen), nie dasselbe Spiel und möglichst
@@ -147,7 +154,7 @@
   function extendPlan(q, players) {
     const need = q.idx + 4 - q.plan.length;
     if (need <= 0) return;
-    const games = eligible(q.opts.off, players || q.players || 2), add = buildPlan(games.length ? games : [q.plan[q.plan.length - 1].game], need, q.opts.theme, q.opts.level, q.plan, q.bag);
+    const games = eligible(q.opts.off, players || q.players || 2, q.opts.on), add = buildPlan(games.length ? games : [q.plan[q.plan.length - 1].game], need, q.opts.theme, q.opts.level, q.plan, q.bag);
     q.bag = add.bag; q.plan.push(...add);
   }
 
@@ -193,11 +200,11 @@
     const length = LENGTHS[opts && opts.length] ? Number(opts.length) : 4;
     const theme = THEMES[opts && opts.theme] ? opts.theme : "mix";
     const level = LEVELS[opts && opts.level] ? opts.level : "gemischt";
-    const games = eligible(opts && opts.off, players);
+    const games = eligible(opts && opts.off, players, opts && opts.on);
     if (!games.length) return null;
     const joker = !(opts && opts.joker === false), n = Math.max(1, players || 1);
     const plan = buildPlan(games, 4, theme, level);
-    return { opts: { length, off: (opts && opts.off) || [], theme, level, joker }, plan, bag: plan.bag, players: n, target: targetFor(length, n),
+    return { opts: { length, off: (opts && opts.off) || [], on: ((opts && opts.on) || []).filter((g) => LUCK.includes(g)), theme, level, joker }, plan, bag: plan.bag, players: n, target: targetFor(length, n),
       idx: -1, pts: {}, stages: [], step: "intro", ready: {}, done: false, winners: null,
       joker: {} }; // joker: Spieler-ID -> Etappe, in der sein Joker zählt (einmal pro Meisterschaft)
   }
@@ -238,7 +245,7 @@
     if (!cur || !(q.step === "intro" || q.step === "break")) return false;
     // schon abgelehnte Spiele für diese Etappe kommen nicht wieder – erst wenn alle durch sind, geht es von vorn los
     const tried = q.skipped && q.skipped.at === i ? q.skipped.tried.concat(cur.game) : [cur.game];
-    const all = eligible(q.opts.off, players).filter((g) => g !== cur.game);
+    const all = eligible(q.opts.off, players, q.opts.on).filter((g) => g !== cur.game);
     if (!all.length) return false;
     let games = all.filter((g) => !tried.includes(g)), fresh = tried;
     if (!games.length) { games = all; fresh = [cur.game]; }
@@ -298,5 +305,5 @@
     return Object.keys(q.pts).filter((id) => q.pts[id] === max);
   }
 
-  root.S10Querbeet = { HOWTO_SOLO, winText, skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, mixOff, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
+  root.S10Querbeet = { HOWTO_SOLO, winText, skipStage, extendPlan, fieldsFor, unitFor, targetFor, LENGTHS, STAGES, HOWTO, ORDER, THEMES, LEVELS, MIXES, LUCK, mixOff, mixOn, mixOf, eligible, buildPlan, stageOpts, create, placePoints, finishStage, setJoker, titles, winners };
 })(typeof window !== "undefined" ? window : globalThis);

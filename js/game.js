@@ -96,7 +96,7 @@
   let kgOpts = Object.assign({ rounds: 5, wins: 3, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
   let quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
   const QB = window.S10Querbeet;
-  let qbOpts = Object.assign({ length: 4, off: [], joker: true }, store.get("s10-qb") || {});
+  let qbOpts = Object.assign({ length: 4, off: [], on: [], joker: true }, store.get("s10-qb") || {});
   if (!QB.LENGTHS[qbOpts.length]) qbOpts.length = 4; // alte Auswahl (feste Etappenzahl) gibt es nicht mehr
   const LAND = window.S10Land;
   // Länderkarte (gut 400 KB) erst laden, wenn „Länder finden“ gebraucht wird – gleiche Versionsnummer wie game.js
@@ -177,7 +177,7 @@
     geoOpts = Object.assign({ region: "suedtirol", level: "gemischt", rounds: 10, timer: "t30" }, store.get("s10-geo") || {});
     kgOpts = Object.assign({ rounds: 5, wins: 3, busRounds: 3, stichRounds: 6 }, store.get("s10-kg") || {});
     quizOpts = Object.assign({ rounds: 5, theme: "mix", region: "europa", level: "gemischt" }, store.get("s10-quiz") || {});
-    qbOpts = Object.assign({ length: 4, off: [], joker: true }, store.get("s10-qb") || {});
+    qbOpts = Object.assign({ length: 4, off: [], on: [], joker: true }, store.get("s10-qb") || {});
     landOpts = Object.assign({ region: "europa", level: "gemischt", rounds: 10, timer: "t45" }, store.get("s10-land") || {});
     hlOpts = Object.assign({ length: "mittel", theme: "mix", level: "gemischt", scoring: "serie" }, store.get("s10-hl") || {});
     duOpts = Object.assign({ target: 5, timer: "30" }, store.get("s10-du") || {});
@@ -781,7 +781,7 @@
       wer: { theme: WER.THEMES[werOpts.theme] ? werOpts.theme : "mix", hint: WER.HINTS[werOpts.hint] ? werOpts.hint : "aus", end: WER.ENDS[werOpts.end] ? werOpts.end : "alle", ask: WER.MODES[werOpts.ask] ? werOpts.ask : "laut", level: WER.LEVELS[werOpts.level] ? werOpts.level : "leicht" },
       geo: { region: geoOpts.region, level: geoOpts.level, rounds: Number(geoOpts.rounds), timer: geoOpts.timer },
       hl: { length: hlOpts.length, theme: hlOpts.theme, level: HL.LEVELS[hlOpts.level] ? hlOpts.level : "gemischt", scoring: HL.SCORING[hlOpts.scoring] ? hlOpts.scoring : "serie" },
-      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
+      qb: { length: Number(qbOpts.length), off: qbOpts.off.slice(), on: (qbOpts.on || []).slice(), theme: qbOpts.theme || "mix", level: QB.LEVELS[qbOpts.level] ? qbOpts.level : "gemischt", joker: qbOpts.joker !== false },
       kg: { rounds: Number(kgOpts.rounds), wins: Number(kgOpts.wins), busRounds: Number(kgOpts.busRounds), stichRounds: Number(kgOpts.stichRounds) },
       quiz: { rounds: Number(quizOpts.rounds), theme: quizOpts.theme, region: quizOpts.region, level: quizOpts.level },
       land: { region: landOpts.region, level: landOpts.level, rounds: Number(landOpts.rounds), timer: landOpts.timer },
@@ -2884,7 +2884,7 @@
       return `<p class="muted small">${det} · ${lb.quiz.rounds} Runden</p>`;
     }
     if (view.game === "querbeet" && lb.qb) {
-      return `${qbGamesHtml(lb.qb.off, true)}
+      return `${qbGamesHtml(lb.qb.off, true, lb.qb.on)}
         <p class="muted small">Thema: ${esc((QB.THEMES[lb.qb.theme] || QB.THEMES.mix).name)} · Schwierigkeit: ${esc((QB.LEVELS[lb.qb.level] || QB.LEVELS.gemischt).name)} · ${lb.qb.joker ? "mit Joker" : "ohne Joker"} · ${esc((QB.LENGTHS[lb.qb.length] || QB.LENGTHS[4]).name)} · Wettlauf übers Spielbrett: Letzter ±0, jeder Platz davor ein Feld mehr</p>`;
     }
     if (view.game === "land" && lb.land) {
@@ -3029,16 +3029,21 @@
       const el = app.querySelector(id);
       if (el) el.onchange = () => { quizOpts[k] = k === "rounds" ? Number(el.value) : el.value; store.set("s10-quiz", quizOpts); publish(); };
     });
-    app.querySelectorAll("[data-qbmix]").forEach((b) => b.onclick = () => { qbOpts.off = QB.mixOff(b.dataset.qbmix); store.set("s10-qb", qbOpts); publish(); });
+    app.querySelectorAll("[data-qbmix]").forEach((b) => b.onclick = () => { qbOpts.off = QB.mixOff(b.dataset.qbmix); qbOpts.on = QB.mixOn(b.dataset.qbmix); store.set("s10-qb", qbOpts); publish(); });
     const qbAll = app.querySelector("#qb-all");
-    if (qbAll) qbAll.onclick = () => { qbOpts.off = []; store.set("s10-qb", qbOpts); publish(); };
+    if (qbAll) qbAll.onclick = () => { qbOpts.off = []; qbOpts.on = QB.LUCK.slice(); store.set("s10-qb", qbOpts); publish(); };
     // alle angehakt: „Keine auswählen“ nimmt alle Haken weg (dann einzelne gezielt wieder anhaken)
     const qbNone = app.querySelector("#qb-none");
-    if (qbNone) qbNone.onclick = () => { qbOpts.off = QB.ORDER.slice(); store.set("s10-qb", qbOpts); publish(); };
+    if (qbNone) qbNone.onclick = () => { qbOpts.off = QB.ORDER.slice(); qbOpts.on = []; store.set("s10-qb", qbOpts); publish(); };
     const qbL = app.querySelector("#qb-length");
     if (qbL) qbL.onchange = () => { qbOpts.length = Number(qbL.value); store.set("s10-qb", qbOpts); publish(); };
     app.querySelectorAll("[data-qbgame]").forEach((cb) => cb.onchange = () => {
-      qbOpts.off = [...app.querySelectorAll("[data-qbgame]")].filter((x) => !x.checked).map((x) => x.value);
+      // Glücksspiele zu mehreren: der Haken steht für „eigens dazugenommen“ (on), weggenommen bleiben sie allein trotzdem dabei
+      const multi = playing().length >= 2, k = cb.value;
+      if (multi && QB.LUCK.includes(k)) {
+        qbOpts.on = (qbOpts.on || []).filter((g) => g !== k).concat(cb.checked ? [k] : []);
+        if (cb.checked) qbOpts.off = qbOpts.off.filter((g) => g !== k);
+      } else qbOpts.off = cb.checked ? qbOpts.off.filter((g) => g !== k) : qbOpts.off.concat(k);
       store.set("s10-qb", qbOpts); publish();
     });
     const saveLand = () => { store.set("s10-land", landOpts); publish(); };
@@ -3099,15 +3104,18 @@
       ${!LF ? `<p class="err small">Die Kartenbibliothek konnte nicht geladen werden.</p>` : ""}`;
   }
   // Liste der Querbeet-Spiele: beim Gastgeber zum Anhaken, bei Gästen gleich aussehend, aber nur zum Ansehen
-  function qbGamesHtml(off, readOnly) {
+  function qbGamesHtml(off, readOnly, on) {
     const two = playing().length === 2, solo = playing().length < 2;
-    const mx = QB.mixOf(off), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
+    const luckOff = (k) => !solo && QB.LUCK.includes(k) && !(on || []).includes(k); // Glücksspiel zu mehreren, nicht eigens angehakt
+    const mx = QB.mixOf(off, on, playing().length), mxTxt = mx && QB.MIXES[mx].games ? ` · ${QB.MIXES[mx].icon} ${esc(QB.MIXES[mx].name)}` : "";
     const head = readOnly ? `<span>Mit dabei (wählt der Gastgeber)${mxTxt}</span>`
-      : `<div class="pick-head"><span>Mit dabei</span>${off.length ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>`
+      : `<div class="pick-head"><span>Mit dabei</span>${off.length || QB.ORDER.some(luckOff) ? `<button type="button" id="qb-all" class="linkbtn" style="--gc:var(--accent)">Alle auswählen</button>`
         : `<button type="button" id="qb-none" class="linkbtn" style="--gc:var(--accent)">Keine auswählen</button>`}</div>`;
     return `<div class="field">${head}<div class="setlist qb-games ${readOnly ? "qb-ro" : ""}">${QB.ORDER.map((k) => { const D = QB.STAGES[k], dis = (D.two && !two) || (D.min2 && solo);
-        return `<label class="setopt ${!off.includes(k) && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${!off.includes(k) ? "checked" : ""} ${dis ? "disabled" : ""}>
-          <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.min2 && solo ? "ab 2 Spielern" : D.short)}</span></label>`; }).join("")}</div></div>`;
+        const sel = !off.includes(k) && !luckOff(k);
+        return `<label class="setopt ${sel && !dis ? "on" : ""} ${dis ? "dis" : ""}"><input type="checkbox" ${readOnly ? `tabindex="-1" aria-readonly="true"` : "data-qbgame"} value="${k}" ${sel ? "checked" : ""} ${dis ? "disabled" : ""}>
+          <span class="setname">${esc(D.name)}</span><span class="setcount">${esc(D.two ? (two ? D.short : "nur zu zweit") : D.min2 && solo ? "ab 2 Spielern" : luckOff(k) ? "viel Glück – nur auf Wunsch" : D.short)}</span></label>`; }).join("")}</div>
+      ${!solo ? `<p class="muted small">Busfahrt und Siebzehn und Vier sind fast reines Glück – zu mehreren nur dabei, wenn sie angehakt sind (beim Kartenabend schon).</p>` : ""}</div>`;
   }
   function quizSettingsHtml(mode) {
     const um = mode === "umriss";
@@ -3138,7 +3146,7 @@
   }
   function qbSettingsHtml() {
     const n = playing().length;
-    const games = QB.eligible(qbOpts.off, n);
+    const games = QB.eligible(qbOpts.off, n, qbOpts.on);
     return `<div class="row2"><label class="field"><span>Länge</span><select id="qb-length">${Object.entries(QB.LENGTHS).map(([k, l]) =>
         `<option value="${k}" ${Number(qbOpts.length) === Number(k) ? "selected" : ""} title="${esc(l.name)}">${esc(l.name)}</option>`).join("")}</select></label>
       <label class="field"><span>Thema</span><select id="qb-theme">${Object.entries(QB.THEMES).map(([k, t]) =>
@@ -3148,8 +3156,8 @@
       <label class="field"><span>Joker</span><select id="qb-joker"><option value="1" ${qbOpts.joker !== false ? "selected" : ""}>Mit Joker – jeder darf eine Etappe doppelt zählen lassen</option>
         <option value="0" ${qbOpts.joker === false ? "selected" : ""}>Ohne Joker</option></select></label>
       <div class="field"><span>Mischung je nach Stimmung</span><div class="qb-mixes">${Object.entries(QB.MIXES).map(([k, m]) =>
-        `<button type="button" class="qb-mix ${QB.mixOf(qbOpts.off) === k ? "on" : ""}" data-qbmix="${k}">${m.icon} ${esc(m.name)}</button>`).join("")}</div></div>
-      ${qbGamesHtml(qbOpts.off, false)}
+        `<button type="button" class="qb-mix ${QB.mixOf(qbOpts.off, qbOpts.on, n) === k ? "on" : ""}" data-qbmix="${k}">${m.icon} ${esc(m.name)}</button>`).join("")}</div></div>
+      ${qbGamesHtml(qbOpts.off, false, qbOpts.on)}
       <p class="muted small">Jede Etappe ist eine Kurzfassung. Danach ziehen alle auf dem Spielbrett vor – der Letzte ±0, jeder Platz davor ein Feld mehr${n > 1 ? ` (mit ${n} Spielern: Sieg = ${n - 1} Felder, Ziel bei Feld ${QB.targetFor(Number(qbOpts.length) || 4, n)})` : ""}. Wer zuerst im Ziel ist, ist Stubenmeister.</p>
       <button id="start" class="btn primary big" ${!games.length || n < 1 ? "disabled" : ""}>Meisterschaft starten</button>
       ${!games.length ? `<p class="err small">Bitte mindestens ein Spiel auswählen.</p>` : ""}`;
