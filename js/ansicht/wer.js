@@ -81,11 +81,13 @@
     const tally = () => st.q ? `<ul class="wer-tally">${st.need.concat(Object.keys(st.q.answers).filter((id) => !st.need.includes(id))).map((id) => { const a = st.q.answers[id];
       return `<li style="--pc:${colorOf(id)}" class="${a ? "a-" + a : ""}"><i class="pdot"></i>${esc(nameOf(id))}${id === me ? " (du)" : ""}<b>${a ? resTxt[a] : "…"}</b></li>`; }).join("")}</ul>` : "";
     const waiting = (id, text, icon) => `<div class="fq-wait2" style="--pc:${colorOf(id)}"><span class="ico">${icon}</span><div><b>${esc(nameOf(id))}</b> ${text}<span class="fq-dotsanim"><i></i><i></i><i></i></span></div></div>`;
-    // Notizzettel: Fragen mit Ergebnis und eigene Notizen, in der Reihenfolge, in der sie entstanden sind. Der eigene ist beschreibbar.
+    // Notizzettel: eigene Notizen und eingetippte Fragen (bzw. Rateversuche) mit Ergebnis, in der Reihenfolge, in der sie
+    // entstanden sind. Auf dem eigenen fehlt, was laut gefragt oder geraten wurde (da steht nichts drin); er ist beschreibbar.
     const notes = (id, title) => {
-      const lg = st.log[id] || [], own = id === me && seated && st.step !== "final";
+      const own = id === me && seated && st.step !== "final", mineOnly = id === me;
+      const lg = (st.log[id] || []).map((x, i) => [x, i]).filter(([x]) => !mineOnly || x.n || (x.t && !x.loud && x.t !== "laut geraten"));
       if (!lg.length && !own) return "";
-      const rows = lg.map((x, i) => x.n
+      const rows = lg.map(([x, i]) => x.n
         ? `<li class="wer-memo"><span>📝 ${esc(x.n)}</span>${own ? `<button type="button" class="wer-del" data-wernotedel="${i}" aria-label="Notiz löschen">✕</button>` : ""}</li>`
         : `<li class="r-${x.r}"><span>${x.t ? esc(x.t) : x.nr ? `🗣️ ${x.nr}. Frage (laut)` : "🗣️ laut gefragt"}</span><b>${resTxt[x.r]}</b></li>`).join("");
       return `<div class="wer-notes"><div class="wer-flbl">${title}</div>${rows ? `<ul>${rows}</ul>` : ""}

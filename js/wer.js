@@ -149,7 +149,7 @@
         if (st.step !== "judge" || mine || !st.seats.includes(pid)) return false;
         const ok = !!a.ok;
         st.last = { kind: "guess", by: st.turn, text: st.guess.text, ok, judge: pid };
-        st.log[st.turn].push({ t: st.guess.loud ? "laut geraten" : "Bin ich " + st.guess.text + "?", r: ok ? "ja" : "nein", guess: true });
+        st.log[st.turn].push({ t: st.guess.loud ? "laut geraten" : "Bin ich " + st.guess.text + "?", r: ok ? "ja" : "nein", guess: true, loud: !!st.guess.loud });
         st.last.loud = !!st.guess.loud;
         if (ok) solve(s, st.turn);
         nextTurn(s);
