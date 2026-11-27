@@ -203,7 +203,7 @@
   }
   function die(who, why) {
     if (sentDie || frozen) return;
-    sentDie = true; frozen = true; SND.fail();
+    sentDie = { who, why }; frozen = true; SND.fail();
     send({ type: "sgDie", seq: cur.seq, who, why });
   }
 
@@ -440,7 +440,7 @@
   }
 
   // ---------- Spielschleife ----------
-  let acc = 0, last = performance.now(), lastSend = 0;
+  let acc = 0, last = performance.now(), lastSend = 0, lastRetry = 0;
   function frame(now) {
     const s = st();
     if (!s || G.view.phase !== "seil" || !cv || !cv.isConnected || s.step === "map") { loopOn = false; return; }
@@ -464,6 +464,14 @@
           G.liveSend({ t: "pos", gid: s.gid, seq: cur.seq, who: w, x: +b.x.toFixed(3), y: +b.y.toFixed(3), f: b.face, g: b.ground, vx: +b.vx.toFixed(2),
             b: w === "kraxler" ? boulders.map((o) => [+o.x.toFixed(3), +o.y.toFixed(3)]) : null, tr: w === "kraxler" && trees.length ? trees.map((t) => t.state) : null }); }); }
     } else acc = 0;
+    // Als Gast: Meldungen an den Gastgeber jede Sekunde nachschicken, bis sie im Spielstand stehen. Hakt die Verbindung
+    // kurz, geht eine einzelne Meldung sonst verloren – das Edelweiß (oder der Schlüssel) wäre nur hier weg, beim Gastgeber
+    // bliebe es liegen und die Hüttentür zu. Doppelt Ankommendes verwirft der Gastgeber.
+    if (!G.isHost && s.step === "play" && !s.dead && L && cur.seq === s.seq && now - lastRetry > 1000) { lastRetry = now;
+      for (const id in gotLocal) if (!s.got[id]) send({ type: "sgGet", id, seq: cur.seq });
+      if (sentWin) send({ type: "sgWin", seq: cur.seq });
+      if (sentDie) send({ type: "sgDie", seq: cur.seq, who: sentDie.who, why: sentDie.why });
+    }
     draw(now, s);
     requestAnimationFrame(frame);
   }
