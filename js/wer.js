@@ -171,7 +171,7 @@
   // nur vor der ersten eigenen Frage und nicht mitten in einer laufenden Frage oder einem Tipp
   const canReroll = (st, pid, t) => st.step !== "final" && st.seats.includes(pid) && st.seats.includes(t) && pid !== t && !st.solved[t] && !st.qn[t] && !(t === st.turn && st.step !== "ask")
     && pool(st.opts.theme, st.opts.level).some((i) => !st.used.includes(i));
-  const card = (i) => { const p = data()[i]; return p ? { n: p.n, b: p.b, g: p.g, geb: p.geb, tot: p.tot, ca: !!p.ca, fik: !!p.fik, aus: p.aus || "", land: p.land, beruf: p.beruf, f: p.f.slice(),
+  const card = (i) => { const p = data()[i]; return p ? { n: p.n, b: p.b, g: p.g, geb: p.geb, tot: p.tot, ca: !!p.ca, fik: !!p.fik, aus: p.aus || "", land: p.land, beruf: p.beruf, par: p.par || "", f: p.f.slice(),
     k: p.k || "", sp: p.sp || "", a: (p.a || []).slice(), fam: p.fam || "", w: p.w || "", art: p.art || "", kraft: p.kraft || "", gut: p.gut || "" } : null; };
   // Personen der anderen (nie die eigene, solange sie nicht erraten ist) – nur an den jeweiligen Spieler
   function privateState(s, id) {

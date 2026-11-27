@@ -25,7 +25,7 @@
       <div class="wer-chips"><span>${esc(p.b)}</span><span>${p.g === "w" ? "♀ Frau" : "♂ Mann"}</span>${life.chip ? `<span>${life.chip}</span>` : ""}</div>
       <dl class="wer-dl"><dt>Herkunft</dt><dd>${esc(p.land)}${p.k ? ` <span class="wer-k">· ${esc(p.k)}</span>` : ""}</dd>
         ${p.sp ? `<dt>Sprache</dt><dd>${esc(p.sp)}</dd>` : ""}
-        <dt>${p.fik ? "Was" : "Beruf"}</dt><dd>${esc(p.beruf)}</dd>
+        <dt>${p.fik ? "Was" : "Beruf"}</dt><dd>${esc(p.beruf)}</dd>${p.par ? `<dt>Partei</dt><dd>${esc(p.par)}</dd>` : ""}
         ${p.art ? `<dt>Wesen</dt><dd>${esc(p.art)}</dd>` : ""}${p.kraft ? `<dt>Kräfte</dt><dd>${esc(p.kraft)}</dd>` : ""}${p.gut ? `<dt>Gut/böse</dt><dd>${esc(p.gut)}</dd>` : ""}
         <dt>${p.fik ? "Aus" : "Lebenszeit"}</dt><dd>${life.line}</dd>
         ${p.fam ? `<dt>Familie</dt><dd>${esc(p.fam)}</dd>` : ""}</dl>
