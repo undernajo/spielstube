@@ -243,7 +243,7 @@
       f: ["„Più bella cosa“, „Se bastasse una canzone“", "gewann 1986 das Festival von Sanremo", "nasale, unverwechselbare Stimme"], k: "Europa", sp: "Italienisch", a: ["dunkle Haare"], fam: "3 Kinder, u. a. Tochter Aurora mit Michelle Hunziker" },
     { n: "Laura Pausini", alt: ["Pausini"], b: M, g: "w", geb: 1974, land: "Italien (Faenza)", beruf: "Sängerin",
       f: ["Durchbruch 1993 in Sanremo mit „La solitudine“", "singt auch auf Spanisch", "gewann einen Grammy"], k: "Europa", sp: "Italienisch", a: ["lange, oft blonde Haare"], fam: "verheiratet, 1 Tochter" },
-    { n: "Andrea Bocelli", alt: ["Bocelli"], b: M, g: "m", geb: 1958, land: "Italien (Toskana)", beruf: "Sänger (Tenor)",
+    { n: "Andrea Bocelli", alt: ["Bocelli"], b: M, g: "m", geb: 1958, land: "Italien (Toskana)", beruf: "Sänger (Tenor)", sch: true,
       f: ["seit seiner Kindheit blind", "„Con te partirò“ – als Duett „Time to Say Goodbye“", "singt Oper und Pop"], k: "Europa", sp: "Italienisch", a: ["Bart", "graue Haare", "Augen oft geschlossen"], fam: "zweimal verheiratet, 3 Kinder" },
     { n: "Luciano Pavarotti", alt: ["Pavarotti"], b: M, g: "m", geb: 1935, tot: 2007, land: "Italien (Modena)", beruf: "Opernsänger (Tenor)",
       f: ["einer der „Drei Tenöre“", "„Nessun dorma“", "weißes Taschentuch in der Hand"], k: "Europa", sp: "Italienisch", a: ["schwarzer Vollbart", "sehr beleibt"], fam: "zweimal verheiratet, 4 Töchter" },
