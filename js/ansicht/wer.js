@@ -111,7 +111,7 @@
           ${(st.log[me] || []).filter((x) => !x.n).length < 2 ? `<p class="muted small">Bei <b>Ja</b> darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran.</p>` : ""}`
         : `<div class="wer-me">❓ Du bist dran – wer bist du?</div>${hint}
           <form class="du-form wer-qform" autocomplete="off"><input id="wer-q" maxlength="200" placeholder="Ja/Nein-Frage über dich …" enterkeyhint="send"><button class="btn primary">Fragen</button></form>
-          ${(st.log[me] || []).length < 3 ? `<div class="wer-ideas">${IDEAS.map((x) => `<button type="button" class="wer-idea" data-weridea="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}
+          ${(st.log[me] || []).filter((x) => !x.n).length < 3 ? `<div class="wer-ideas">${IDEAS.map((x) => `<button type="button" class="wer-idea" data-weridea="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}
           <div class="wer-row"><button type="button" id="wer-guess" class="btn primary">🎯 Ich weiß es!</button><button type="button" id="wer-giveup" class="btn ghost sm">Aufgeben</button></div>
           <p class="muted small">Bei <b>Ja</b> darfst du weiterfragen, bei <b>Nein</b> ist der Nächste dran.</p>`;
       body += notes(me, "Dein Notizzettel");
@@ -207,6 +207,9 @@
     };
     form(".wer-qform", "#wer-q", "q", "wbAsk");
     form(".wer-gform", "#wer-g", "g", "wbGuess");
+    // vorgeschlagene Frage antippen: wird gleich gestellt
+    app.querySelectorAll("[data-weridea]").forEach((b) => b.onclick = () => { const f = app.querySelector(".wer-qform"), i = f && f.querySelector("#wer-q");
+      if (i && !i.disabled) { i.value = b.dataset.weridea; f.requestSubmit(); } });
     const nf = app.querySelector(".wer-nform");
     if (nf) { const inp = nf.querySelector("#wer-n"); inp.value = werDraft.n || ""; inp.oninput = () => { werDraft.n = inp.value; };
       if (werDraft.nFocus) { werDraft.nFocus = false; inp.focus(); }
