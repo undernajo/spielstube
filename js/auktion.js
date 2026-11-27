@@ -39,7 +39,7 @@
     // Unter mehreren Ziehungen (Ungespielte zuerst) die nehmen, bei der das teuerste Produkt am besten zum knappen Budget passt
     // (sonst müsste das Startgeld wegen eines einzigen teuren Produkts für alle steigen und das Geld wäre nicht mehr knapp).
     const nCat = new Set(data().map((x) => x.k)).size || 1, maxPer = Math.max(1, Math.ceil(n / nCat));
-    const tier = (i) => { const p = data()[i].p; return p < 40 ? 0 : p <= 250 ? 1 : 2; };
+    const tier = (i) => { const p = data()[i].p; return p < 50 ? 0 : p <= 250 ? 1 : 2; }; // günstig = 10–50 € (billigere gibt es nicht)
     const need = n >= 6 ? [2, 2, 1] : [1, 1, 1]; // mindestens so viele günstige / mittlere / teure
     const fit = (ps) => { const pr = ps.map((i) => data()[i].p); return Math.max(...pr) * 1.1 / (pr.reduce((a, b) => a + b, 0) * 0.6 / seats.length); };
     const draw = () => { // der Reihe nach (Ungespielte zuerst) nehmen, solange die Kategorie noch Platz hat
